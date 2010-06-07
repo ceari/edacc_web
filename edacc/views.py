@@ -18,14 +18,35 @@ def index():
 
     return render('experiments.html', experiments=experiments)
     
-@app.route('/<int:experiment_id>')
+@app.route('/<int:experiment_id>/')
 def experiment(experiment_id):
     # show menu with links to info and evaluation pages
     
     return u'to be implemented'
 
+@app.route('/<int:experiment_id>/solvers')
+def experiment_solvers(experiment_id):
+    """ Show information for all solvers used in the experiment """
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    
+    solvers = list(set(sc.solver for sc in experiment.solver_configurations))
+    solvers.sort(key=lambda s: s.name)
+    
+    return render('experiment_solvers.html', solvers=solvers)
+    
+@app.route('/<int:experiment_id>/instances')
+def experiment_instances(experiment_id):
+    """ Show information for all instances used in the experiment """
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    
+    instances = experiment.instances
+    instances.sort(key=lambda i: i.name)
+    
+    return render('experiment_instances.html', instances=instances)
+
 @app.route('/<int:experiment_id>/results')
 def experiment_results(experiment_id):
+    """ Show table with instances and solver configurations used in the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
     instances = experiment.instances
@@ -47,7 +68,7 @@ def experiment_results(experiment_id):
                                 .filter_by(instance=instance) \
                                 .all()
                 time_avg = sum(j.time for j in jobs) / float(len(jobs))
-                row.append({'time_avg': time_avg})
+                row.append({'time_avg': time_avg, 'solver_config': solver_config})
             results.append({'instance': instance, 'times': row})
             
         if config.CACHING:
