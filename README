@@ -1,0 +1,13 @@
+EDACC Web Frontend
+
+Dependencies:
+Python 2.6.5
+SQLAlchemy 0.6.1 (SQL Toolkit and Object Relational Mapper)
+mysql-python 1.2.3c1 (Python MySQL adapter)
+Flask 0.3.1 (Micro Webframework)
+Werkzeug 0.6.2 (Webframework, Flask dependency)
+Jinja2 2.4 (Template Engine)
+
+optional:
+python-memcached v1.45 + memcached 1.4.5
+
