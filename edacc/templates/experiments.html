@@ -1,0 +1,9 @@
+<h1>Experiments</h1>
+<ul>
+    {% for experiment in experiments %}
+        <li>
+            <h2>{{experiment.name}}</h2>
+            <p>{{experiment.description}}</p>
+        </li>
+    {% endfor %}
+</ul>

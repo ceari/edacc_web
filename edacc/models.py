@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from edacc import config
+from edacc import config, app
 import sqlalchemy
 from sqlalchemy import Table, Integer, ForeignKey, create_engine, MetaData, Column
 from sqlalchemy.engine.url import URL
@@ -70,5 +70,10 @@ mapper(ExperimentResult, metadata.tables['ExperimentResults'],
     }
 )
 
-# thread-local session class
-Session = scoped_session(sessionmaker(bind=engine))
+# thread-local session
+session = scoped_session(sessionmaker(bind=engine))
+
+@app.after_request
+def shutdown_session(response):
+    session.remove()
+    return response

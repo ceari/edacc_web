@@ -4,5 +4,5 @@
 from edacc import app
 from edacc.config import DEBUG
 
-app.run(debug=DEBUG)
+app.run(host='0.0.0.0', debug=DEBUG)
 

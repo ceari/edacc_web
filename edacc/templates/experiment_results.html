@@ -1,0 +1,20 @@
+<h2>Results by instance and solver</h2>
+
+<table border="1">
+    <thead>
+        <th>Instance</th>
+        {% for solver_config in solver_configs  %}
+            <th>{{solver_config.solver.name}}</th>
+        {% endfor %}
+    </thead>
+    <tbody>
+        {% for row in results %}
+            <tr>
+                <td>{{row.instance.name}}</td>
+                {% for job in row.times %}
+                    <td>{{job.time_avg}}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
