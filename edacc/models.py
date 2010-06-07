@@ -6,7 +6,6 @@ from sqlalchemy import Table, Integer, ForeignKey, create_engine, MetaData, Colu
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred, relation, relationship
 
-
 sqlalchemy.convert_unicode = True
 url = URL(drivername=config.DATABASE_DRIVER, username=config.DATABASE_USER, password=config.DATABASE_PASSWORD,
           host=config.DATABASE_HOST, port=config.DATABASE_PORT, database=config.DATABASE_NAME)
@@ -64,6 +63,8 @@ mapper(Experiment, metadata.tables['Experiment'],
 )
 mapper(ExperimentResult, metadata.tables['ExperimentResults'],
     properties = {
+        'resultFile': deferred(metadata.tables['ExperimentResults'].c.resultFile),
+        'clientOutput': deferred(metadata.tables['ExperimentResults'].c.clientOutput),
         'solver_configuration': relation(SolverConfiguration),
         'experiment': relation(Experiment, backref='experiment_results'),
         'instance': relation(Instance),

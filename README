@@ -1,5 +1,7 @@
 EDACC Web Frontend
 
+see http://sourceforge.net/projects/edacc/ for the EDACC project.
+
 Dependencies:
 Python 2.6.5
 SQLAlchemy 0.6.1 (SQL Toolkit and Object Relational Mapper)
@@ -9,5 +11,4 @@ Werkzeug 0.6.2 (Webframework, Flask dependency)
 Jinja2 2.4 (Template Engine)
 
 optional:
-python-memcached v1.45 + memcached 1.4.5
-
+python-memcached v1.45 + memcached 1.4.5 (enable/disable in config.py)

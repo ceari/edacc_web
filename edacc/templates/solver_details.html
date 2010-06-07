@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{solver.name}} Details{% endblock %}
+{% block content %}
+<h2>Details for solver {{solver.name}}</h2>
+
+<table border="1" width="800px">
+    <tr>
+        <td>Name:</td>
+        <td>{{solver.name}}</td>
+    </tr>
+    <tr>
+        <td>Type:</td>
+        <td>{{solver.type}}</td>
+    </tr>
+    <tr>
+        <td>Version:</td>
+        <td>{{solver.version}}</td>
+    </tr>
+    <tr>
+        <td>Description:</td>
+        <td>{{solver.description}}</td>
+    </tr>
+    <tr>
+        <td>Binary Name:</td>
+        <td>{{solver.binaryName}}</td>
+    </tr>
+    <tr>
+        <td>Binary MD5:</td>
+        <td>{{solver.md5}}</td>
+    </tr>
+    <tr>
+        <td>Authors:</td>
+        <td>{{solver.authors}}</td>
+    </tr>
+</table>
+
+<h3>Parameters of solver</h3>
+{% for parameter in solver.parameters %}
+{{parameter.name}}, {{parameter.prefix}}, {{parameter.hasValue}}, {{parameter.value}}<br/>
+{% endfor %}
+
+{% endblock %}

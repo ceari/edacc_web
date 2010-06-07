@@ -1,20 +1,29 @@
-<h2>Results by instance and solver</h2>
-
-<table border="1">
-    <thead>
-        <th>Instance</th>
-        {% for solver_config in solver_configs  %}
-            <th>{{solver_config.solver.name}}</th>
-        {% endfor %}
-    </thead>
-    <tbody>
-        {% for row in results %}
+{% extends "base.html" %}
+{% block title %}Results{% endblock %}
+{% block content %}
+    <h2>Results by instance and solver</h2>
+    
+    <table border="1">
+        <thead>
             <tr>
-                <td>{{row.instance.name}}</td>
-                {% for job in row.times %}
-                    <td>{{job.time_avg}}</td>
+                <th>Instance</th>
+                {% for solver_config in solver_configs  %}
+                    <th>{{solver_config.solver.name}}</th>
                 {% endfor %}
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for row in results %}
+                <tr>
+                    <td>{{row.instance.name}}</td>
+                    {% for jobs in row.times %}
+                        <td>
+                            avg time: {{jobs.time_avg}}<br/>
+                            completed: {{jobs.completed}}/{{jobs.total}} runs
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

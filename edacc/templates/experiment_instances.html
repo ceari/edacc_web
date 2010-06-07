@@ -1,6 +1,21 @@
-<h2>Instances used in experiment</h2>
-<ul>
-    {% for instance in instances %}
-        <li>{{instance.name}}</li>
-    {% endfor %}
-</ul>
+{% extends "base.html" %}
+{% block title %}Instances{% endblock %}
+{% block content %}
+    <h2>Instances used in experiment</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>md5</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for instance in instances %}
+            <tr>
+                <td>{{instance.name}}</td>
+                <td>{{instance.md5}}</td>
+            </td>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

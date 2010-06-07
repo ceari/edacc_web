@@ -6,6 +6,7 @@ from flask import Response, abort
 from edacc import app, plots
 from edacc.models import session, Experiment, Solver, ExperimentResult
 from edacc import config
+from edacc.constants import JOB_FINISHED, JOB_ERROR
 
 if config.CACHING:
     from werkzeug.contrib.cache import MemcachedCache
@@ -13,14 +14,14 @@ if config.CACHING:
 
 @app.route('/')
 def index():
-    # show a list of all experiments in the database
+    """ Show a list of all experiments in the database """
     experiments = session.query(Experiment).all()
 
     return render('experiments.html', experiments=experiments)
     
 @app.route('/<int:experiment_id>/')
 def experiment(experiment_id):
-    # show menu with links to info and evaluation pages
+    """ Show menu with links to info and evaluation pages """
     
     return u'to be implemented'
 
@@ -29,6 +30,7 @@ def experiment_solvers(experiment_id):
     """ Show information for all solvers used in the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
+    # remove duplicates introduced by a solver being used with more than one configuration
     solvers = list(set(sc.solver for sc in experiment.solver_configurations))
     solvers.sort(key=lambda s: s.name)
     
@@ -67,8 +69,13 @@ def experiment_results(experiment_id):
                                 .filter_by(solver_configuration=solver_config) \
                                 .filter_by(instance=instance) \
                                 .all()
+                completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
                 time_avg = sum(j.time for j in jobs) / float(len(jobs))
-                row.append({'time_avg': time_avg, 'solver_config': solver_config})
+                row.append({'time_avg': time_avg,
+                            'completed': completed,
+                            'total': len(jobs),
+                            'solver_config': solver_config
+                            })
             results.append({'instance': instance, 'times': row})
             
         if config.CACHING:
@@ -78,8 +85,18 @@ def experiment_results(experiment_id):
                     instances=instances, solver_configs=solver_configs,
                     results=results)
 
+@app.route('/solver/<int:solver_id>')
+def solver_details(solver_id):
+    solver = session.query(Solver).get(solver_id) or abort(404)
+    
+    return render('solver_details.html', solver=solver)
 
 
 @app.route('/imgtest')
 def imgtest():
-    return Response(response=plots.draw(), mimetype='image/png')
+    import random
+    random.seed()
+    xs = random.sample(xrange(1200), 50)
+    ys = random.sample(xrange(1200), 50)
+
+    return Response(response=plots.scatter(xs,ys), mimetype='image/png')

@@ -7,20 +7,19 @@ from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
 from cStringIO import StringIO
 
-def draw():
+def scatter(xs, ys):
     fig = Figure(frameon=False)
     canvas = FigureCanvas(fig)
-    
-    
+
     ax = fig.add_subplot(111, xlabel='x' ,label="Y over X")
-    ax.set_title('Hello World', {'size': '28'})
-    ax.scatter([1,2,3,4,5], [5,2,7,2,7], s=100, marker='+')
+    ax.set_title('solver x vs solver y', {'size': '28'})
+    ax.scatter(xs, ys, s=100, marker='+')
     
-    ax2 = fig.add_subplot(111, xlabel='x' ,label="Y over X")
-    ax2.scatter([1,2,3,4,5], [2,4,3,1,5], s=100, marker='^', c='black')
+    #ax2 = fig.add_subplot(111, xlabel='x' ,label="Y over X")
+    #ax2.scatter([1,2,3,4,5], [2,4,3,1,5], s=100, marker='^', c='black')
 
     ax2 = fig.add_subplot(111, xlabel='x' ,label="Y over X")
-    ax2.plot([0,10],[0,10], '--', c='black')
+    ax2.plot([0,1200],[0,1200], '--', c='black')
 
     s = StringIO()
     canvas.print_png(s)

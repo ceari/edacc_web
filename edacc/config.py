@@ -5,8 +5,8 @@ DEBUG = True
 
 # Enable or disable memcached usage to cache expensive calculation results
 CACHING = True
-# Cache timout in minutes
-CACHE_TIMEOUT = 5 * 60
+# Cache timout in seconds
+CACHE_TIMEOUT = 5
 # Host and port of the memcache daemon
 MEMCACHED_HOST = '127.0.0.1:11211'
 

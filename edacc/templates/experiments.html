@@ -1,9 +1,13 @@
-<h1>Experiments</h1>
-<ul>
-    {% for experiment in experiments %}
-        <li>
-            <h2>{{experiment.name}}</h2>
-            <p>{{experiment.description}}</p>
-        </li>
-    {% endfor %}
-</ul>
+{% extends "base.html" %}
+{% block title %}Experiments{% endblock %}
+{% block content %}
+    <h1>Experiments</h1>
+    <ul>
+        {% for experiment in experiments %}
+            <li>
+                <h2>{{experiment.name}}</h2>
+                <p>{{experiment.description}}</p>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
