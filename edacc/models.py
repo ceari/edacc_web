@@ -72,7 +72,7 @@ mapper(ExperimentResult, metadata.tables['ExperimentResults'],
 )
 
 # thread-local session
-session = scoped_session(sessionmaker(bind=engine))
+session = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=False))
 
 @app.after_request
 def shutdown_session(response):

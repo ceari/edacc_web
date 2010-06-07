@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Instancedetails{% endblock %}
+{% block content %}
+<h2>Details for instance {{instance.name}}</h2>
+
+<table border="1" width="800px">
+    <tr>
+        <td>Name:</td>
+        <td>{{instance.name}}</td>
+    </tr>
+    <tr>
+        <td>md5:</td>
+        <td>{{instance.md5}}</td>
+    </tr>
+</table>
+
+<a href="{{url_for('instance_download', instance_id=instance.idInstance)}}">Download</a> instance
+
+<p>
+<pre>
+{{instance_text}}
+</pre>
+</p>
+{% endblock %}

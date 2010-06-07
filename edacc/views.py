@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from flask import render_template as render
-from flask import Response, abort
+from flask import Response, abort, Headers
 
 from edacc import app, plots
-from edacc.models import session, Experiment, Solver, ExperimentResult
+from edacc.models import session, Experiment, Solver, ExperimentResult, Instance
 from edacc import config
 from edacc.constants import JOB_FINISHED, JOB_ERROR
 
@@ -84,9 +84,35 @@ def experiment_results(experiment_id):
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     results=results)
+    
+@app.route('/instance/<int:instance_id>')
+def instance_details(instance_id):
+    """ Show instance details """
+    instance = session.query(Instance).filter_by(idInstance=instance_id).first() or abort(404)
+        
+    instance_blob = instance.instance
+    if len(instance_blob) > 1024:
+        # show only the first and last 512 characters if the instance is larger than 1kB
+        instance_text = instance_blob[:512] + "\n\n... [truncated " + str(int((len(instance_blob) - 1024) / 1024.0)) + " kB]\n\n" + instance_blob[-512:]
+    else:
+        instance_text = instance_blob
+    
+    return render('instance_details.html', instance=instance, instance_text=instance_text)
+    
+@app.route('/instance/<int:instance_id>/download')
+def instance_download(instance_id):
+    """ Return HTTP-Response containing the instance blob """
+    instance = session.query(Instance).filter_by(idInstance=instance_id).first() or abort(404)
+    
+    headers = Headers()
+    headers.add('Content-Type', 'text/plain')
+    headers.add('Content-Disposition', 'attachment', filename=instance.name)
+    
+    return Response(response=instance.instance, headers=headers)
 
 @app.route('/solver/<int:solver_id>')
 def solver_details(solver_id):
+    """ Show solver details """
     solver = session.query(Solver).get(solver_id) or abort(404)
     
     return render('solver_details.html', solver=solver)
