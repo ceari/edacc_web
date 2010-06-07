@@ -22,8 +22,9 @@ def index():
 @app.route('/<int:experiment_id>/')
 def experiment(experiment_id):
     """ Show menu with links to info and evaluation pages """
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
-    return u'to be implemented'
+    return render('experiment.html', experiment=experiment)
 
 @app.route('/<int:experiment_id>/solvers')
 def experiment_solvers(experiment_id):

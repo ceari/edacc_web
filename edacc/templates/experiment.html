@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{experiment.name}} Experiment{% endblock %}
+{% block content %}
+    <h1>{{experiment.name}}</h1>
+    
+    <a href="{{url_for('experiment_solvers', experiment_id=experiment.idExperiment)}}">List of solvers used in this experiment</a><br/>
+    <a href="{{url_for('experiment_instances', experiment_id=experiment.idExperiment)}}">List of instances used in this experiment</a><br/>
+    <a href="{{url_for('experiment_results', experiment_id=experiment.idExperiment)}}">Results by solver and instance</a>
+{% endblock %}
