@@ -9,6 +9,7 @@ mysql-python 1.2.3c1 (Python MySQL adapter)
 Flask 0.3.1 (Micro Webframework)
 Werkzeug 0.6.2 (Webframework, Flask dependency)
 Jinja2 2.4 (Template Engine)
+Matplotlib 0.99.3 (Plotting library)
 
 optional:
 python-memcached v1.45 + memcached 1.4.5 (enable/disable in config.py)

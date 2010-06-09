@@ -3,9 +3,8 @@
 from flask import render_template as render
 from flask import Response, abort, Headers
 
-from edacc import app, plots
+from edacc import app, plots, config
 from edacc.models import session, Experiment, Solver, ExperimentResult, Instance
-from edacc import config
 from edacc.constants import JOB_FINISHED, JOB_ERROR
 
 if config.CACHING:
