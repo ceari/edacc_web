@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from flask import render_template as render
-from flask import Response, abort, Headers
+from flask import Response, abort, Headers, Environment
 
-from edacc import app, plots, config
+from edacc import app, plots, config, utils
 from edacc.models import session, Experiment, Solver, ExperimentResult, Instance
 from edacc.constants import JOB_FINISHED, JOB_ERROR
 
@@ -97,7 +97,7 @@ def instance_details(instance_id):
     else:
         instance_text = instance_blob
     
-    return render('instance_details.html', instance=instance, instance_text=instance_text)
+    return render('instance_details.html', instance=instance, instance_text=instance_text, blob_size=len(instance.instance))
     
 @app.route('/instance/<int:instance_id>/download')
 def instance_download(instance_id):

@@ -5,9 +5,13 @@
     {% block head %}
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
     <title>EDACC - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/base.css" type="text/css" />
     {% endblock %}
 </head>
 <body>
+    <div id="header">
+        <span id="title">EDACC Web Frontend</span>
+    </div>
     <div id="content">
         {% block content %}{% endblock %}
     </div>

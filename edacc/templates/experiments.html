@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Experiments{% endblock %}
 {% block content %}
-    <h1>Experiments</h1>
+    <h2>Experiments</h2>
     <ul>
         {% for experiment in experiments %}
             <li>
-                <h2><a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a></h2>
+                <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a>
                 <p>{{experiment.description}}</p>
             </li>
         {% endfor %}

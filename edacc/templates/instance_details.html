@@ -3,7 +3,7 @@
 {% block content %}
 <h2>Details for instance {{instance.name}}</h2>
 
-<table border="1" width="800px">
+<table class="details">
     <tr>
         <td>Name:</td>
         <td>{{instance.name}}</td>
@@ -14,7 +14,7 @@
     </tr>
 </table>
 
-<a href="{{url_for('instance_download', instance_id=instance.idInstance)}}">Download</a> instance
+<a href="{{url_for('instance_download', instance_id=instance.idInstance)}}">Download</a> instance ({{blob_size|download_size}})
 
 <div>
 <pre>
