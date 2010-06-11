@@ -118,6 +118,12 @@ table.results td {
     padding: 3px;
 }
 
+div.navigation {
+    font-size: 14px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
 
 code, pre {
     margin-left: 5px;

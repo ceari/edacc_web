@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{{experiment.name}} Experiment{% endblock %}
 {% block content %}
-    <h1>Experiment: {{experiment.name}}</h1>
+    <div class="navigation">
+        <a href="/">Experiments</a> :: 
+        {{experiment.name}}
+    </div>
+    <h1>Experiment {{experiment.name}}</h1>
     
     <h2>Information about solvers and instances</h2>
     <a href="{{url_for('experiment_solvers', experiment_id=experiment.idExperiment)}}">List of solvers used in this experiment</a><br/>

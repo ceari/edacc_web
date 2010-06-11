@@ -34,7 +34,7 @@ def experiment_solvers(experiment_id):
     solvers = list(set(sc.solver for sc in experiment.solver_configurations))
     solvers.sort(key=lambda s: s.name)
     
-    return render('experiment_solvers.html', solvers=solvers)
+    return render('experiment_solvers.html', solvers=solvers, experiment=experiment)
     
 @app.route('/experiment/<int:experiment_id>/solver-configurations')
 def experiment_solver_configurations(experiment_id):
@@ -54,7 +54,7 @@ def experiment_instances(experiment_id):
     instances = experiment.instances
     instances.sort(key=lambda i: i.name)
     
-    return render('experiment_instances.html', instances=instances)
+    return render('experiment_instances.html', instances=instances, experiment=experiment)
 
 @app.route('/experiment/<int:experiment_id>/results')
 def experiment_results(experiment_id):

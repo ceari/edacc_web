@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Results{% endblock %}
 {% block content %}
+    <div class="navigation">
+        <a href="/">Experiments</a> :: 
+        <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        Results
+    </div>
     <h2>Results by solver configuration and instance</h2>
     
     <table class="results">
