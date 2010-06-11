@@ -95,6 +95,26 @@ def experiment_results(experiment_id):
                     instances=instances, solver_configs=solver_configs,
                     results=results)
     
+@app.route('/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
+def solver_config_results(experiment_id, solver_configuration_id, instance_id):
+    """ Displays list of results (all jobs) for a solver configuration and instance """
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    solver_configuration = session.query(SolverConfiguration).get(solver_configuration_id) or abort(404)
+    instance = session.query(Instance).filter_by(idInstance=instance_id).first() or abort(404)
+    if solver_configuration not in experiment.solver_configurations: abort(404)
+    if instance not in experiment.instances: abort(404)
+    
+    jobs = session.query(ExperimentResult) \
+                    .filter_by(experiment=experiment) \
+                    .filter_by(solver_configuration=solver_configuration) \
+                    .filter_by(instance=instance) \
+                    .all()
+    
+    completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
+    
+    return render('solver_config_results.html', experiment=experiment, solver_configuration=solver_configuration,
+                  instance=instance, results=jobs, completed=completed)
+    
 @app.route('/instance/<int:instance_id>')
 def instance_details(instance_id):
     """ Show instance details """
@@ -173,7 +193,9 @@ def imgtest(experiment_id):
         ys.append(r2)
     
     if request.args.has_key('pdf'):
-        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='pdf'), mimetype='application/pdf')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
+        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='pdf'), mimetype='application/pdf', headers=headers)
     elif request.args.has_key('svg'):
         return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='svg'), mimetype='image/svg+xml')
     else:

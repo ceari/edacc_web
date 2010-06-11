@@ -3,7 +3,7 @@
 {% block content %}
     <h2>Results by solver configuration and instance</h2>
     
-    <table border="1">
+    <table class="results">
         <thead>
             <tr>
                 <th>Instance</th>
@@ -23,7 +23,9 @@
                     {% for jobs in row.times %}
                         <td>
                             avg time: {{jobs.time_avg|round(1)}} sec<br/>
-                            completed: {{jobs.completed}}/{{jobs.total}} runs
+                            completed: {{jobs.completed}}/{{jobs.total}} runs<br/>
+                            <a href="{{url_for('solver_config_results', experiment_id=experiment.idExperiment,
+                            solver_configuration_id=jobs.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">Show</a>
                         </td>
                     {% endfor %}
                 </tr>

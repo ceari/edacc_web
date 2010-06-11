@@ -79,6 +79,14 @@ table.details th {
     border-collapse: collapse;
 }
 
+table.details th {
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+    border-collapse: collapse;
+    padding: 5px;
+}
+
 table.details td {
     border-width: 1px;
     border-style: solid;
@@ -86,6 +94,30 @@ table.details td {
     border-collapse: collapse;
     padding: 3px;
 }
+
+table.results {
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+    border-collapse: collapse;
+    margin: 5px;
+}
+
+table.results th {
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+    border-collapse: collapse;
+}
+
+table.results td {
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+    border-collapse: collapse;
+    padding: 3px;
+}
+
 
 code, pre {
     margin-left: 5px;
