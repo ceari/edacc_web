@@ -199,4 +199,5 @@ def imgtest(experiment_id):
     elif request.args.has_key('svg'):
         return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='svg'), mimetype='image/svg+xml')
     else:
-        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name), mimetype='image/png')
+        p = plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name)
+        return Response(response=p, mimetype='image/png')
