@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Instances{% endblock %}
+{% block title %}Solvers{% endblock %}
 {% block content %}
     <h2>Solvers used in the experiment</h2>
     <ul>
@@ -7,37 +7,4 @@
             <li><a href="{{url_for('solver_details', solver_id=solver.idSolver)}}">{{solver.name}}</a></li>
         {% endfor %}
     </ul>
-    
-    {% for solver in solvers %}
-    <table border="1" width="800px">
-        <tr>
-            <td>Name:</td>
-            <td>{{solver.name}}</td>
-        </tr>
-        <tr>
-            <td>Type:</td>
-            <td>{{solver.type}}</td>
-        </tr>
-        <tr>
-            <td>Version:</td>
-            <td>{{solver.version}}</td>
-        </tr>
-        <tr>
-            <td>Description:</td>
-            <td>{{solver.description}}</td>
-        </tr>
-        <tr>
-            <td>Binary Name:</td>
-            <td>{{solver.binaryName}}</td>
-        </tr>
-        <tr>
-            <td>Binary MD5:</td>
-            <td>{{solver.md5}}</td>
-        </tr>
-        <tr>
-            <td>Authors:</td>
-            <td>{{solver.authors}}</td>
-        </tr>
-    </table>
-    {% endfor %}
 {% endblock %}
