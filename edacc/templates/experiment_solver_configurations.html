@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Solver Configurations{% endblock %}
+{% block content %}
+    <h2>Solver configurations used in the experiment</h2>
+    <ul>
+        {% for solver_config in solver_configurations %}
+            <li>
+                <a href="{{url_for('solver_configuration_details', experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">
+                {{solver_config.solver.name}}
+                </a> ({{solver_config.parameter_instances|length}} parameter{{'s' if solver_config.parameter_instances|length != 1 else '' }} specified)
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

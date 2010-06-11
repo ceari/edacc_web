@@ -1,21 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Results{% endblock %}
 {% block content %}
-    <h2>Results by instance and solver</h2>
+    <h2>Results by solver configuration and instance</h2>
     
     <table border="1">
         <thead>
             <tr>
                 <th>Instance</th>
                 {% for solver_config in solver_configs  %}
-                    <th>{{solver_config.solver.name}}</th>
+                    <th>
+                        <a href="{{url_for('solver_configuration_details', experiment_id=experiment.idExperiment,solver_configuration_id=solver_config.idSolverConfig)}}">
+                        {{solver_config.solver.name}}
+                        </a>
+                    </th>
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
             {% for row in results %}
                 <tr>
-                    <td>{{row.instance.name}}</td>
+                    <td><a href="{{url_for('instance_details', instance_id=row.instance.idInstance)}}">{{row.instance.name}}</a></td>
                     {% for jobs in row.times %}
                         <td>
                             avg time: {{jobs.time_avg}}<br/>

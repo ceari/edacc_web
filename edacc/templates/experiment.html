@@ -4,6 +4,7 @@
     <h1>{{experiment.name}}</h1>
     
     <a href="{{url_for('experiment_solvers', experiment_id=experiment.idExperiment)}}">List of solvers used in this experiment</a><br/>
+    <a href="{{url_for('experiment_solver_configurations', experiment_id=experiment.idExperiment)}}">List of solver configurations used in this experiment</a><br/>
     <a href="{{url_for('experiment_instances', experiment_id=experiment.idExperiment)}}">List of instances used in this experiment</a><br/>
-    <a href="{{url_for('experiment_results', experiment_id=experiment.idExperiment)}}">Results by solver and instance</a>
+    <a href="{{url_for('experiment_results', experiment_id=experiment.idExperiment)}}">Results by solver configuration and instance</a>
 {% endblock %}

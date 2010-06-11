@@ -4,7 +4,7 @@ from flask import render_template as render
 from flask import Response, abort, Headers, Environment
 
 from edacc import app, plots, config, utils
-from edacc.models import session, Experiment, Solver, ExperimentResult, Instance
+from edacc.models import session, Experiment, Solver, ExperimentResult, Instance, SolverConfiguration
 from edacc.constants import JOB_FINISHED, JOB_ERROR
 
 if config.CACHING:
@@ -35,6 +35,16 @@ def experiment_solvers(experiment_id):
     solvers.sort(key=lambda s: s.name)
     
     return render('experiment_solvers.html', solvers=solvers)
+    
+@app.route('/<int:experiment_id>/solver-configurations')
+def experiment_solver_configurations(experiment_id):
+    """ List all solver configurations (solver + parameter set) used in the experiment """
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    
+    solver_configurations = experiment.solver_configurations
+    solver_configurations.sort(key=lambda sc: sc.solver.name.lower())
+    
+    return render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations)
     
 @app.route('/<int:experiment_id>/instances')
 def experiment_instances(experiment_id):
@@ -117,6 +127,30 @@ def solver_details(solver_id):
     
     return render('solver_details.html', solver=solver)
 
+@app.route('/<int:experiment_id>/solver-configurations/<int:solver_configuration_id>')
+def solver_configuration_details(experiment_id, solver_configuration_id):
+    """ Show solver configuration details """
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    solver_config = session.query(SolverConfiguration).get(solver_configuration_id) or abort(404)
+    solver = solver_config.solver
+    parameters = solver_config.parameter_instances
+    parameters.sort(key=lambda p: p.parameter.order)
+    
+    def launch_command(solver, parameters):
+        """ returns a string of what the solver launch command looks like """
+        args = []
+        for p in parameters:
+            args.append(p.parameter.prefix)
+            if p.parameter.hasValue:
+                if p.value == "": # if value not set, use default value from parameters table
+                    args.append(p.parameter.value)
+                else:
+                    args.append(p.value)
+        return "./" + solver.binaryName + " " + " ".join(args)
+    
+    return render('solver_configuration_details.html', launch_command=launch_command(solver, parameters),
+                  solver_config=solver_config, solver=solver, parameters=parameters,)
+    
 
 @app.route('/imgtest')
 def imgtest():

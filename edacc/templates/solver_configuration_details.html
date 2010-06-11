@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{solver.name}} Details{% endblock %}
 {% block content %}
-<h2>Details for solver {{solver.name}}</h2>
+<h2>Details for solver configuration of {{solver.name}}</h2>
 
+Solver:
 <table class="details">
     <tr>
         <td>Name:</td>
@@ -34,9 +35,9 @@
     </tr>
 </table>
 
-<h3>Parameters supported by solver</h3>
-{% for parameter in solver.parameters %}
-{{parameter.name}}, {{parameter.prefix}}, {{parameter.hasValue}}, {{parameter.value}}<br/>
+<h3>Parameters of solver configuration</h3>
+{% for parameter in parameters %}
+{{parameter.parameter.name}}, {{parameter.parameter.prefix}}, value: {% if not parameter.parameter.hasValue %}Flag set{% else %}{{parameter.value}}{% endif %}<br/>
 {% endfor %}
-
+Launch Command: {{launch_command}}
 {% endblock %}
