@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import render_template as render
-from flask import Response, abort, Headers, Environment
+from flask import Response, abort, Headers, Environment, request
 
 from edacc import app, plots, config, utils
 from edacc.models import session, Experiment, Solver, ExperimentResult, Instance, SolverConfiguration
@@ -18,14 +18,14 @@ def index():
 
     return render('experiments.html', experiments=experiments)
     
-@app.route('/<int:experiment_id>/')
+@app.route('/experiment/<int:experiment_id>/')
 def experiment(experiment_id):
     """ Show menu with links to info and evaluation pages """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
     return render('experiment.html', experiment=experiment)
 
-@app.route('/<int:experiment_id>/solvers')
+@app.route('/experiment/<int:experiment_id>/solvers')
 def experiment_solvers(experiment_id):
     """ Show information for all solvers used in the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
@@ -36,7 +36,7 @@ def experiment_solvers(experiment_id):
     
     return render('experiment_solvers.html', solvers=solvers)
     
-@app.route('/<int:experiment_id>/solver-configurations')
+@app.route('/experiment/<int:experiment_id>/solver-configurations')
 def experiment_solver_configurations(experiment_id):
     """ List all solver configurations (solver + parameter set) used in the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
@@ -46,7 +46,7 @@ def experiment_solver_configurations(experiment_id):
     
     return render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations)
     
-@app.route('/<int:experiment_id>/instances')
+@app.route('/experiment/<int:experiment_id>/instances')
 def experiment_instances(experiment_id):
     """ Show information for all instances used in the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
@@ -56,7 +56,7 @@ def experiment_instances(experiment_id):
     
     return render('experiment_instances.html', instances=instances)
 
-@app.route('/<int:experiment_id>/results')
+@app.route('/experiment/<int:experiment_id>/results')
 def experiment_results(experiment_id):
     """ Show table with instances and solver configurations used in the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
@@ -127,7 +127,7 @@ def solver_details(solver_id):
     
     return render('solver_details.html', solver=solver)
 
-@app.route('/<int:experiment_id>/solver-configurations/<int:solver_configuration_id>')
+@app.route('/experiment/<int:experiment_id>/solver-configurations/<int:solver_configuration_id>')
 def solver_configuration_details(experiment_id, solver_configuration_id):
     """ Show solver configuration details """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
@@ -152,11 +152,29 @@ def solver_configuration_details(experiment_id, solver_configuration_id):
                   solver_config=solver_config, solver=solver, parameters=parameters,)
     
 
-@app.route('/imgtest')
-def imgtest():
+@app.route('/imgtest/<int:experiment_id>')
+def imgtest(experiment_id):
+    exp = session.query(Experiment).get(experiment_id) or abort(404)
     import random
     random.seed()
-    xs = random.sample(xrange(1200), 50)
-    ys = random.sample(xrange(1200), 50)
-
-    return Response(response=plots.scatter(xs,ys), mimetype='image/png')
+    
+    # 2 random solverconfigs
+    sc1 = random.choice(exp.solver_configurations)
+    sc2 = random.choice(exp.solver_configurations)
+    
+    results1 = session.query(ExperimentResult).filter_by(experiment=exp, solver_configuration=sc1)
+    results2 = session.query(ExperimentResult).filter_by(experiment=exp, solver_configuration=sc2)
+    xs = []
+    ys = []
+    for instance in exp.instances:
+        r1 = results1.filter_by(instance=instance).all()[0].time
+        r2 = results2.filter_by(instance=instance).all()[0].time
+        xs.append(r1)
+        ys.append(r2)
+    
+    if request.args.has_key('pdf'):
+        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='pdf'), mimetype='application/pdf')
+    elif request.args.has_key('svg'):
+        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='svg'), mimetype='image/svg+xml')
+    else:
+        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name), mimetype='image/png')

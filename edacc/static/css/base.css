@@ -48,14 +48,15 @@ a:hover {
 }
 
 h1 {
-    margin: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     font-size: larger;
     color: black;
 }
 
 h2 {
-    margin: 10px;
-    font-size: large;
+    margin-bottom: 5px;
+    font-size: medium;
     color: black;
 }
 
