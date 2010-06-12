@@ -4,7 +4,7 @@ from edacc import config, app
 import sqlalchemy
 from sqlalchemy import Table, Integer, ForeignKey, create_engine, MetaData, Column
 from sqlalchemy.engine.url import URL
-from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred, relation, relationship
+from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred, relation, relationship, joinedload
 
 sqlalchemy.convert_unicode = True
 url = URL(drivername=config.DATABASE_DRIVER, username=config.DATABASE_USER, password=config.DATABASE_PASSWORD,
@@ -70,6 +70,11 @@ mapper(ExperimentResult, metadata.tables['ExperimentResults'],
         'instance': relation(Instance),
     }
 )
+
+#import logging
+#logging.basicConfig()
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+#logging.getLogger('sqlalchemy.orm.unitofwork').setLevel(logging.DEBUG)
 
 # thread-local session
 session = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=False))

@@ -23,8 +23,26 @@ def job_status_color(value):
         return ''
     else:
         return JOB_STATUS_COLOR[value]
-    
+        
+def parameter_string(solver_config):
+    """ returns a string of the solver configuration parameters """
+    parameters = solver_config.parameter_instances
+    args = []
+    for p in parameters:
+        args.append(p.parameter.prefix)
+        if p.parameter.hasValue:
+            if p.value == "": # if value not set, use default value from parameters table
+                args.append(p.parameter.value)
+            else:
+                args.append(p.value)
+    return " ".join(args)
+        
+def launch_command(solver_config):
+    """ returns a string of what the solver launch command looks like given the solver configuration """
+    return "./" + solver.binaryName + " " + parameter_string(solver_config)
+
     
 app.jinja_env.filters['download_size'] = download_size
 app.jinja_env.filters['job_status'] = job_status
 app.jinja_env.filters['job_status_color'] = job_status_color
+app.jinja_env.filters['launch_command'] = launch_command

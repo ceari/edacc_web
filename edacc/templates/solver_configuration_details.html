@@ -35,9 +35,9 @@ Solver:
     </tr>
 </table>
 
-<h3>Parameters of solver configuration</h3>
+<h3>specified parameters</h3>
 {% for parameter in parameters %}
 {{parameter.parameter.name}}, {{parameter.parameter.prefix}}, value: {% if not parameter.parameter.hasValue %}Flag set{% else %}{{parameter.value}}{% endif %}<br/>
 {% endfor %}
-Launch Command: {{launch_command}}
+Launch Command: {{solver_config|launch_command}}
 {% endblock %}

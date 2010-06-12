@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import json, time
+
 from flask import render_template as render
 from flask import Response, abort, Headers, Environment, request
 
 from edacc import app, plots, config, utils
-from edacc.models import session, Experiment, Solver, ExperimentResult, Instance, SolverConfiguration
+from edacc.models import session, Experiment, Solver, ExperimentResult, Instance, SolverConfiguration, joinedload
 from edacc.constants import JOB_FINISHED, JOB_ERROR
 
 if config.CACHING:
@@ -95,6 +97,26 @@ def experiment_results(experiment_id):
                     instances=instances, solver_configs=solver_configs,
                     results=results)
     
+@app.route('/experiment/<int:experiment_id>/progress')
+def experiment_progress(experiment_id):
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    return render('experiment_progress.html', experiment=experiment)
+
+@app.route('/experiment/<int:experiment_id>/progress-ajax')
+def experiment_progress_ajax(experiment_id):
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    
+    query = session.query(ExperimentResult).enable_eagerloads(True).options(joinedload(ExperimentResult.instance))
+    query.options(joinedload(ExperimentResult.solver_configuration))
+    jobs = query.filter_by(experiment=experiment)
+
+    aaData = []
+    for job in jobs:
+        aaData.append([job.idJob, job.solver_configuration.solver.name, utils.parameter_string(job.solver_configuration),
+               job.instance.name, job.run, job.time, job.seed, utils.job_status(job.status)])
+
+    return json.dumps({'aaData': aaData})
+    
 @app.route('/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
 def solver_config_results(experiment_id, solver_configuration_id, instance_id):
     """ Displays list of results (all jobs) for a solver configuration and instance """
@@ -156,20 +178,7 @@ def solver_configuration_details(experiment_id, solver_configuration_id):
     parameters = solver_config.parameter_instances
     parameters.sort(key=lambda p: p.parameter.order)
     
-    def launch_command(solver, parameters):
-        """ returns a string of what the solver launch command looks like """
-        args = []
-        for p in parameters:
-            args.append(p.parameter.prefix)
-            if p.parameter.hasValue:
-                if p.value == "": # if value not set, use default value from parameters table
-                    args.append(p.parameter.value)
-                else:
-                    args.append(p.value)
-        return "./" + solver.binaryName + " " + " ".join(args)
-    
-    return render('solver_configuration_details.html', launch_command=launch_command(solver, parameters),
-                  solver_config=solver_config, solver=solver, parameters=parameters,)
+    return render('solver_configuration_details.html', solver_config=solver_config, solver=solver, parameters=parameters,)
     
 
 @app.route('/imgtest/<int:experiment_id>')

@@ -1,6 +1,6 @@
 body {
     font-family: Verdana, Arial, Helvetica, sans-serif;
-    font-size: 14px;
+    font-size: 10pt;
 }
 
 a {
@@ -50,13 +50,13 @@ a:hover {
 h1 {
     margin-top: 10px;
     margin-bottom: 10px;
-    font-size: larger;
+    font-size: 13pt;
     color: black;
 }
 
 h2 {
     margin-bottom: 5px;
-    font-size: medium;
+    font-size: 12pt;
     color: black;
 }
 
