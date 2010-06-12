@@ -39,7 +39,7 @@ def parameter_string(solver_config):
         
 def launch_command(solver_config):
     """ returns a string of what the solver launch command looks like given the solver configuration """
-    return "./" + solver.binaryName + " " + parameter_string(solver_config)
+    return "./" + solver_config.solver.binaryName + " " + parameter_string(solver_config)
 
     
 app.jinja_env.filters['download_size'] = download_size
