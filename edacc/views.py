@@ -188,6 +188,33 @@ def solver_configuration_details(experiment_id, solver_configuration_id):
     
     return render('solver_configuration_details.html', solver_config=solver_config, solver=solver, parameters=parameters,)
     
+@app.route('/experiment/<int:experiment_id>/result/<int:result_id>')
+def experiment_result(experiment_id, result_id):
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    result = session.query(ExperimentResult).get(result_id) or abort(404)
+    
+    resultFile = result.resultFile
+    clientOutput = result.clientOutput
+    
+    if clientOutput is not None:
+        if len(clientOutput) > 4*1024:
+            # show only the first and last 2048 characters if the resultFile is larger than 4kB
+            clientOutput_text = clientOutput[:2048] + "\n\n... [truncated " + str(int((len(clientOutput) - 4096) / 1024.0)) + " kB]\n\n" + clientOutput[-2048:]
+        else:
+            clientOutput_text = clientOutput
+    else: clientOutput_text = "No output"
+    
+    if resultFile is not None:
+        if len(resultFile) > 4*1024:
+            # show only the first and last 2048 characters if the resultFile is larger than 4kB
+            resultFile_text = resultFile[:2048] + "\n\n... [truncated " + str(int((len(resultFile) - 4096) / 1024.0)) + " kB]\n\n" + resultFile[-2048:]
+        else:
+            resultFile_text = resultFile
+    else: resultFile_text = "No result"
+    
+    return render('result_details.html', experiment=experiment, result=result, solver=result.solver_configuration.solver,
+                  solver_config=result.solver_configuration, instance=result.instance, resultFile_text=resultFile_text,
+                  clientOutput_text=clientOutput_text)
 
 @app.route('/imgtest/<int:experiment_id>')
 def imgtest(experiment_id):

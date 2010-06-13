@@ -20,7 +20,7 @@
         <tbody>
             {% for result in results %}
                 <tr bgcolor="{{result.status|job_status_color}}">
-                    <td>{{result.idJob}}</td>
+                    <td><a style="color: black;" href="{{url_for('experiment_result', experiment_id=experiment.idExperiment, result_id=result.idJob)}}">{{result.idJob}}</a></td>
                     <td>{{result.status|job_status}}</td>
                     <td>{{result.time|round(1)}}</td>
                 </tr>

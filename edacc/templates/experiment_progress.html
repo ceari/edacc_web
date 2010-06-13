@@ -14,9 +14,13 @@
 
             $('#table_jobs').dataTable({
                 "bPaginate": false,
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                },
                 "bProcessing": true,
                 "sAjaxSource": "{{url_for('experiment_progress_ajax', experiment_id=experiment.idExperiment)}}",
 		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+                    $('td:eq(0)', nRow).html('<a style="color: black;" href="/experiment/{{experiment.idExperiment}}/result/'+aData[0]+'">'+aData[0]+'</a>');
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[7]]);
                     return nRow;
 		},
@@ -32,7 +36,7 @@
     </div>
     <h2>Experiment progress</h2>
     
-    <div style="max-width: 95%">
+    <div style="max-width: 98%">
     <table id="table_jobs" class="display">
         <thead>
             <tr>

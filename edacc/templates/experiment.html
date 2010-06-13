@@ -6,6 +6,9 @@
         {{experiment.name}}
     </div>
     <h1>Experiment {{experiment.name}}</h1>
+    <div>Date: {{experiment.date|datetimeformat('%d.%m.%Y')}}</div>
+    <div>Description: {{experiment.description}}</div>
+    <div></div>
     
     <h2>Progress</h2>
     <a href="{{url_for('experiment_progress', experiment_id=experiment.idExperiment)}}">Live information about experiment progress</a><br/>

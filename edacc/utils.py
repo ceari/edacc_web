@@ -41,8 +41,11 @@ def launch_command(solver_config):
     """ returns a string of what the solver launch command looks like given the solver configuration """
     return "./" + solver_config.solver.binaryName + " " + parameter_string(solver_config)
 
-    
+def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
+    return value.strftime(format)
+
 app.jinja_env.filters['download_size'] = download_size
 app.jinja_env.filters['job_status'] = job_status
 app.jinja_env.filters['job_status_color'] = job_status_color
 app.jinja_env.filters['launch_command'] = launch_command
+app.jinja_env.filters['datetimeformat'] = datetimeformat

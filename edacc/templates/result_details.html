@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Result of {{solver.name}} on {{instance.name}}{% endblock %}
+{% block content %}
+    <div class="navigation">
+        <a href="/">Experiments</a> :: 
+        <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        Result of {{solver.name}} on {{instance.name}}
+    </div>
+    <h2>Result of <a href="{{url_for('solver_configuration_details', experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">{{solver.name}}</a> on <a href="{{url_for('instance_details', instance_id=instance.idInstance)}}">{{instance.name}}</a>, Run #{{result.run}}</h2>
+
+    Launch Command: {{solver_config|launch_command}}
+    
+    <h3>Client output:</h3>
+    <pre>
+        {{clientOutput_text}}
+    </pre>
+    
+    <h3>Result file:</h3>
+    <pre>
+        {{resultFile_text}}
+    </pre>
+    
+{% endblock %}
