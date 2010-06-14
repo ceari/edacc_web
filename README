@@ -3,7 +3,7 @@ EDACC Web Frontend - Experiment Design and Administration for Computer Clusters 
 See http://sourceforge.net/projects/edacc/ for the EDACC project.
 
 Dependencies:
-Python 2.6.5
+Python 2.6.5 http://www.python.org
 SQLAlchemy 0.6.1 (SQL Toolkit and Object Relational Mapper)
 mysql-python 1.2.3c1 (Python MySQL adapter)
 Flask 0.3.1 (Micro Webframework)
@@ -13,3 +13,14 @@ Matplotlib 0.99.3 (Plotting library)
 
 optional:
 python-memcached v1.45 + memcached 1.4.5 (enable/disable in config.py)
+
+Installation:
+The required libraries can most likely be installed using the
+package management tool of your favorite Linux distribution.
+However, they are also available in the Python Package Index PyPi http://pypi.python.org/pypi
+and can be installed using easy_install, a Python package manager that comes
+with setuptools (http://pypi.python.org/pypi/setuptools)
+
+It is recommended not to install these libraries system-wide but in a virtual
+python environment to prevent any conflicts and ensure that the correct versions are
+available for the web frontend.
