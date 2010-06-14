@@ -27,6 +27,8 @@ if __name__ == '__main__':
             time.sleep(1)
             job.status = 3
             job.time = random.randint(100, 1000)
+            job.resultFile = random.choice(["SAT", "i don't know!", "hello world"])
+            job.clientOutput = random.choice(["this solver is sloooow..."])
             session.commit()
         else: break
     
