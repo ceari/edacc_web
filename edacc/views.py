@@ -76,11 +76,12 @@ def experiment_results(experiment_id):
         for instance in instances:
             row = []
             for solver_config in solver_configs:
-                jobs = session.query(ExperimentResult) \
-                                .filter_by(experiment=experiment) \
-                                .filter_by(solver_configuration=solver_config) \
-                                .filter_by(instance=instance) \
-                                .all()
+                query = session.query(ExperimentResult)
+                query.enable_eagerloads(True).options(joinedload(ExperimentResult.instance, ExperimentResult.solver_configuration))
+                jobs = query.filter_by(experiment=experiment) \
+                            .filter_by(solver_configuration=solver_config) \
+                            .filter_by(instance=instance) \
+                            .all()
                 completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
                 runtimes = [j.time for j in jobs]
                 runtimes.sort()
@@ -107,22 +108,28 @@ def experiment_results(experiment_id):
     
 @app.route('/experiment/<int:experiment_id>/progress')
 def experiment_progress(experiment_id):
+    """ Show a live information table about the experiment progress """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     return render('experiment_progress.html', experiment=experiment)
 
 @app.route('/experiment/<int:experiment_id>/progress-ajax')
 def experiment_progress_ajax(experiment_id):
+    """ Returns JSON-serialized table data for the progress table used by the jquery datatable as ajax source """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
+    start = time.time()
     query = session.query(ExperimentResult).enable_eagerloads(True).options(joinedload(ExperimentResult.instance))
     query.options(joinedload(ExperimentResult.solver_configuration))
-    jobs = query.filter_by(experiment=experiment)
-
+    jobs = query.filter_by(experiment=experiment).all()
+    print (time.time() - start) * 1000.0, "ms"
+    
+    start = time.time()
     aaData = []
     for job in jobs:
         aaData.append([job.idJob, job.solver_configuration.solver.name, utils.parameter_string(job.solver_configuration),
                job.instance.name, job.run, job.time, job.seed, utils.job_status(job.status)])
-
+    print (time.time() - start) * 1000.0, "ms"
+    
     return json.dumps({'aaData': aaData})
     
 @app.route('/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
@@ -190,6 +197,7 @@ def solver_configuration_details(experiment_id, solver_configuration_id):
     
 @app.route('/experiment/<int:experiment_id>/result/<int:result_id>')
 def experiment_result(experiment_id, result_id):
+    """ Displays information about a single result (job) """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     result = session.query(ExperimentResult).get(result_id) or abort(404)
     

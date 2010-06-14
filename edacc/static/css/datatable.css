@@ -1,6 +1,6 @@
 .dataTables_processing {
 	position: absolute;
-	top: 50%;
+	top: 10%;
 	left: 50%;
 	width: 250px;
 	height: 30px;
@@ -9,7 +9,7 @@
 	padding: 14px 0 2px 0;
 	border: 1px solid #ddd;
 	text-align: center;
-	color: #999;
+	color: black;
 	font-size: 14px;
 	background-color: white;
 }
