@@ -3,11 +3,15 @@
 {% block content %}
     <h2>Experiments</h2>
     <ul>
-        {% for experiment in experiments %}
-            <li>
-                <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a>
-                <p>{{experiment.description}}</p>
-            </li>
-        {% endfor %}
+        {% if experiments %}
+            {% for experiment in experiments %}
+                <li>
+                    <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.solver_configurations|length}} Solvers, {{experiment.instances|length}} Instances, {{experiment.numRuns}} Runs per solver and instance) 
+                    <p>{{experiment.description}}</p>
+                </li>
+            {% endfor %}
+        {% else %}
+            No experiments in the database
+        {% endif %}
     </ul>
 {% endblock %}
