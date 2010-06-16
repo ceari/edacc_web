@@ -7,7 +7,7 @@
         <a href="{{url_for('experiment_results', experiment_id=experiment.idExperiment)}}">Results</a> :: 
         {{solver_configuration.solver.name}} on {{instance.name}}
     </div>
-    <h2>Results of {{solver_configuration.solver.name}} on {{instance.name}}</h2>
+    <h2>Results of {{solver_configuration.get_name()}} on {{instance.name}}</h2>
     Completed {{completed}}/{{results|length}} runs
     <table class="results">
         <thead>

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{solver.name}} Details{% endblock %}
 {% block content %}
-<h2>Details for solver configuration of {{solver.name}}</h2>
+<h2>Details for solver configuration {{solver_config.get_name()}}</h2>
 
 Solver:
 <table class="details">

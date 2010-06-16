@@ -11,11 +11,11 @@ JOB_FINISHED = (1,2,3,)
 
 # status id to string map
 JOB_STATUS = {-2: 'error',
-              -1: 'waiting',
+              -1: 'not started',
               0: 'running',
               1: 'finished',
-              2: 'finished',
-              3: 'finished'}
+              2: 'terminated by ulimit',
+              3: 'terminated by ulimit'}
 
 JOB_STATUS_COLOR = {-2: '#FF0000',
                     -1: '#4169E1',

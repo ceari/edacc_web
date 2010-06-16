@@ -11,7 +11,7 @@
         {% for solver_config in solver_configurations %}
             <li>
                 <a href="{{url_for('solver_configuration_details', experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">
-                {{solver_config.solver.name}}
+                {{solver_config.get_name()}}
                 </a> ({{solver_config.parameter_instances|length}} parameter{{'s' if solver_config.parameter_instances|length != 1 else '' }} specified)
             </li>
         {% endfor %}

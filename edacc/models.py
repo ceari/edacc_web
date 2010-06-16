@@ -16,7 +16,24 @@ metadata = MetaData(bind=engine)
 metadata.reflect()
 
 class Solver(object): pass
-class SolverConfiguration(object): pass
+class SolverConfiguration(object):
+    def get_number(self):
+        """ Returns an integer i if `self` is the i-th of the solver configurations of the same solver
+            in the experiment `self` is in. If there's only one solver configuration of the solver this
+            function returns 0 """
+        same_solvers = [sc for sc in self.experiment.solver_configurations if sc.solver == self.solver]
+        if len(same_solvers) == 1:
+            return 0
+        else:
+            return same_solvers.index(self) + 1
+            
+    def get_name(self):
+        n = self.get_number()
+        if n == 0:
+            return self.solver.name
+        else:
+            return self.solver.name + " (" + str(n) + ")"
+    
 class Parameter(object): pass
 class ParameterInstance(object): pass
 class Instance(object): pass
@@ -51,7 +68,8 @@ mapper(ParameterInstance, metadata.tables['SolverConfig_has_Parameters'],
 mapper(SolverConfiguration, metadata.tables['SolverConfig'],
     properties = {
         'parameter_instances': relation(ParameterInstance),
-        'solver': relation(Solver)
+        'solver': relation(Solver),
+        'experiment': relation(Experiment),
     }
 )
 mapper(Experiment, metadata.tables['Experiment'],
