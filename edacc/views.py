@@ -29,7 +29,7 @@ def experiment(experiment_id):
 
 @app.route('/experiment/<int:experiment_id>/solvers')
 def experiment_solvers(experiment_id):
-    """ Show information for all solvers used in the experiment """
+    """ Show a list of all solvers used in the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
     # remove duplicates introduced by a solver being used with more than one configuration
@@ -50,7 +50,7 @@ def experiment_solver_configurations(experiment_id):
     
 @app.route('/experiment/<int:experiment_id>/instances')
 def experiment_instances(experiment_id):
-    """ Show information for all instances used in the experiment """
+    """ Show information about all instances used in the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
     instances = experiment.instances
@@ -60,7 +60,7 @@ def experiment_instances(experiment_id):
 
 @app.route('/experiment/<int:experiment_id>/results')
 def experiment_results(experiment_id):
-    """ Show table with instances and solver configurations used in the experiment """
+    """ Show a table with the solver configurations and their results on the instances of the experiment """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
     instances = experiment.instances
@@ -114,7 +114,7 @@ def experiment_progress(experiment_id):
 
 @app.route('/experiment/<int:experiment_id>/progress-ajax')
 def experiment_progress_ajax(experiment_id):
-    """ Returns JSON-serialized data of the experiment results. Used by the jquery datatable as ajax source """
+    """ Returns JSON-serialized data of the experiment results. Used by the jQuery datatable as ajax data source """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
     start = time.time()
@@ -134,7 +134,7 @@ def experiment_progress_ajax(experiment_id):
     
 @app.route('/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
 def solver_config_results(experiment_id, solver_configuration_id, instance_id):
-    """ Displays list of results (all jobs) for a solver configuration and instance """
+    """ Displays list of results (all jobs) of a solver configuration on an instance """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     solver_configuration = session.query(SolverConfiguration).get(solver_configuration_id) or abort(404)
     instance = session.query(Instance).filter_by(idInstance=instance_id).first() or abort(404)

@@ -11,7 +11,7 @@ def download_size(value):
     else: return "%.1f MB" % (value / 1024.0 / 1024.0)
     
 def job_status(value):
-    """ Translates an integer job status to a string pretty representation """
+    """ Translates an integer job status to its string representation """
     if value not in JOB_STATUS:
         return "unknown status"
     else:
@@ -25,7 +25,7 @@ def job_status_color(value):
         return JOB_STATUS_COLOR[value]
         
 def parameter_string(solver_config):
-    """ returns a string of the solver configuration parameters """
+    """ Returns a string of the solver configuration parameters """
     parameters = solver_config.parameter_instances
     args = []
     for p in parameters:
@@ -38,7 +38,7 @@ def parameter_string(solver_config):
     return " ".join(args)
         
 def launch_command(solver_config):
-    """ returns a string of what the solver launch command looks like given the solver configuration """
+    """ Returns a string of what the solver launch command looks like given the solver configuration """
     return "./" + solver_config.solver.binaryName + " " + parameter_string(solver_config)
 
 def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
