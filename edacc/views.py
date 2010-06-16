@@ -108,13 +108,13 @@ def experiment_results(experiment_id):
     
 @app.route('/experiment/<int:experiment_id>/progress')
 def experiment_progress(experiment_id):
-    """ Show a live information table about the experiment progress """
+    """ Show a live information table of the experiment's progress """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     return render('experiment_progress.html', experiment=experiment)
 
 @app.route('/experiment/<int:experiment_id>/progress-ajax')
 def experiment_progress_ajax(experiment_id):
-    """ Returns JSON-serialized table data for the progress table used by the jquery datatable as ajax source """
+    """ Returns JSON-serialized data of the experiment results. Used by the jquery datatable as ajax source """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
     start = time.time()
