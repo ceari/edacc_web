@@ -12,6 +12,7 @@
 	color: black;
 	font-size: 14px;
 	background-color: white;
+	font-weight: bold;
 }
 
 .dataTables_length {
@@ -96,7 +97,6 @@ table.display tr.heading2 td {
 }
 
 table.display td {
-	padding: 3px 10px;
     border-width: 1px;
     border-style: solid;
     border-color: black;

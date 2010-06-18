@@ -24,7 +24,7 @@ if __name__ == '__main__':
             print "running job " + str(job.idJob)
             job.status = 0
             session.commit()
-            time.sleep(1)
+            time.sleep(0.1)
             job.status = 3
             job.time = random.randint(100, 1000)
             job.resultFile = random.choice(["SAT", "i don't know!", "hello world"])

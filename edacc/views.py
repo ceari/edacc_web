@@ -117,18 +117,16 @@ def experiment_progress_ajax(experiment_id):
     """ Returns JSON-serialized data of the experiment results. Used by the jQuery datatable as ajax data source """
     experiment = session.query(Experiment).get(experiment_id) or abort(404)
     
-    start = time.time()
     query = session.query(ExperimentResult).enable_eagerloads(True).options(joinedload(ExperimentResult.instance))
     query.options(joinedload(ExperimentResult.solver_configuration))
     jobs = query.filter_by(experiment=experiment).all()
-    print (time.time() - start) * 1000.0, "ms"
     
-    start = time.time()
     aaData = []
     for job in jobs:
-        aaData.append([job.idJob, job.solver_configuration.solver.name, utils.parameter_string(job.solver_configuration),
-               job.instance.name, job.run, job.time, job.seed, utils.job_status(job.status)])
-    print (time.time() - start) * 1000.0, "ms"
+        iname = job.instance.name
+        if len(iname) > 30: iname = iname[0:30] + '...'
+        aaData.append([job.idJob, job.solver_configuration.get_name(), utils.parameter_string(job.solver_configuration),
+               iname, job.run, job.time, job.seed, utils.job_status(job.status)])
     
     return json.dumps({'aaData': aaData})
     
@@ -160,7 +158,7 @@ def instance_details(instance_id):
     instance_blob = instance.instance
     if len(instance_blob) > 1024:
         # show only the first and last 512 characters if the instance is larger than 1kB
-        instance_text = instance_blob[:512] + "\n\n... [truncated " + str(int((len(instance_blob) - 1024) / 1024.0)) + " kB]\n\n" + instance_blob[-512:]
+        instance_text = instance_blob[:512] + "\n\n... [truncated " + utils.download_size(len(instance_blob) - 1024) + "]\n\n" + instance_blob[-512:]
     else:
         instance_text = instance_blob
     
