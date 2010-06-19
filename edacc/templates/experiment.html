@@ -7,7 +7,7 @@
     </div>
     <h1>Experiment {{experiment.name}}</h1>
     <div>Date: {{experiment.date|datetimeformat('%d.%m.%Y')}}</div>
-    <div>Description: {{experiment.description}}</div>
+    <div>Description: {{experiment.description if experiment.description else "no description"}}</div>
     <div></div>
     
     <h2>Progress</h2>

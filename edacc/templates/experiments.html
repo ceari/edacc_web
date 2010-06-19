@@ -6,8 +6,7 @@
         {% if experiments %}
             {% for experiment in experiments %}
                 <li>
-                    <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.solver_configurations|length}} Solvers, {{experiment.instances|length}} Instances, {{experiment.numRuns}} Runs per solver and instance) 
-                    <p>{{experiment.description}}</p>
+                    <a alt="{{experiment.description}}" title="{{experiment.description}}" href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.solver_configurations|length}} Solvers, {{experiment.instances|length}} Instances) 
                 </li>
             {% endfor %}
         {% else %}

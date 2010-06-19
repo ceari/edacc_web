@@ -137,6 +137,7 @@ div.navigation {
 }
 
 code, pre {
+    white-space: pre-wrap;
     margin-left: 5px;
     margin-right: 5px;
     padding: 3px;
