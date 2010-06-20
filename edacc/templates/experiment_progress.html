@@ -7,14 +7,28 @@
     <script src="/static/js/jquery.timers-1.2.js" type="text/javascript"></script>
     <script src="/static/js/jquery.dataTables.ajaxReloadPlugin.js" type="text/javascript"></script>
     <script type="text/javascript">
-        /* <![CDATA[ */  
+        /* <![CDATA[ */
+        $.fn.dataTableExt.afnSortData['job-status'] = function  ( oSettings, iColumn )
+        {
+            var aData = [];
+            $('td:eq('+iColumn+')', oSettings.oApi._fnGetTrNodes(oSettings)).each(function() {
+                var v = $(this).html()
+                if (v == 'error') aData.push("-2");
+                else if (v == 'not started') aData.push("-1");
+                else if (v == 'running') aData.push("0");
+                else if (v == 'finished') aData.push("1");
+                else if (v == 'terminated by ulimit') aData.push("2");
+            });
+            return aData;
+        }
         $(document).ready(function(){
             var JOB_STATUS_COLOR = {
-                'error':                'red',
-                'not started':          '#4169E1',
-                'running':              'orange',
-                'terminated by ulimit': '#00CC33',
-                'finished':             '#00CC33'
+                '-2':               'red',
+                '-1':               '#4169E1',
+                '0':                'orange',
+                '1':                '#00CC33',
+                '2':                '#00CC33',
+                '3':                '#00CC33'
             };
 
             oTable = $('#table_jobs').dataTable({
@@ -29,7 +43,8 @@
                     $('td:eq(0)', nRow).html('<a style="color: black;" href="/experiment/{{experiment.idExperiment}}/result/'+aData[0]+'">'+aData[0]+'</a>');
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[7]]);
                     return nRow;
-		}
+		},
+                "aoColumns": [null, null, null, null, null, null, null, {"sSortDataType": "job-status", "sType": "numeric"}]
             });
             
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
@@ -48,6 +63,18 @@
             //$('#table_jobs').everyTime(2000, function() {
             //    oTable.fnReloadAjax();
             //});
+            
+            $(document).keydown(function(e)
+            {
+                if (e.which == 116) // override F5 action to ajax reload instead of browser refresh
+                {
+                    $("body").css("cursor", "progress");
+                    oTable.fnReloadAjax(null, function() {
+                        $("body").css("cursor", "auto");
+                    });
+                    return false;
+                }
+            }); 
         });
         /* ]]> */
     </script>

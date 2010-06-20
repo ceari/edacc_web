@@ -49,7 +49,7 @@ if __name__ == '__main__':
             session.commit()
             
             client_line = '/tmp/edacc/solvers/' + launch_command(job.solver_configuration)[2:]
-            client_line += '/tmp/edacc/instances/' + job.instance.name
+            client_line += '/tmp/edacc/instances/' + job.instance.name + ' ' + str(job.seed)
             print "running job", job.idJob, client_line
             stdout = open(str(os.getpid()) + 'stdout~', 'w')
             stderr = open(str(os.getpid()) + 'stderr~', 'w')

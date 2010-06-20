@@ -22,18 +22,23 @@ def scatter(xs, ys, xlabel, ylabel, format='png'):
     fig.patch.set_color('#FFFFFF')    
 
     ax = fig.add_subplot(111, xlabel=xlabel, ylabel=ylabel)
-    ax.set_title('CPU time ' + xlabel+' vs '+ylabel, {'size': '16'})
+    t = ax.set_title('CPU time ' + xlabel +' vs '+ylabel, {'size': '16'})
+    t.set_position((0.5, 1.05))
     ax.scatter(xs, ys, s=100, marker='+', c='#FF0000', edgecolors='#FF0000')
     ax.set_autoscale_on(False)
     
     ax2 = fig.add_subplot(111, xlabel=xlabel, ylabel=ylabel)
+    ax2.get_xaxis().set_label_position('top')
+    ax2.get_yaxis().set_label_position('right')
     ax2.set_autoscale_on(False)
     
-    ax.set_xlim([0,1200])
-    ax.set_ylim([0,1200])
-    ax2.set_xlim([0,1200])
-    ax2.set_ylim([0,1200])
-    ax2.plot([0,1200],[0,1200], '--', c='black')
+    maxtime = 30
+    
+    ax.set_xlim([0,maxtime])
+    ax.set_ylim([0,maxtime])
+    ax2.set_xlim([0,maxtime])
+    ax2.set_ylim([0,maxtime])
+    ax2.plot([0,maxtime],[0,maxtime], '--', c='black')
 
     s = StringIO()
     if format == 'pdf':
