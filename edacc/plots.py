@@ -48,3 +48,43 @@ def scatter(xs, ys, xlabel, ylabel, format='png'):
     elif format == 'png':
         canvas.print_png(s)
     return s.getvalue()
+
+from rpy2 import robjects
+from rpy2.robjects.lib import grid
+from rpy2.robjects.packages import importr
+import time
+
+def test():
+    rprint = robjects.globalenv.get("print")
+    stats = importr('stats')
+    grdevices = importr('grDevices')
+    lattice = importr('lattice')
+    
+    x = [500, 600, 700, 800, 900]
+    y = [24200, 23323, 34434, 43431, 54523]
+    
+    d = {'x': robjects.IntVector(x), 'y': robjects.IntVector(y)}
+    dataf = robjects.DataFrame(d)
+    formula = robjects.Formula('y ~ x')
+    formula.getenvironment()['x'] = dataf.rx2('x')
+    formula.getenvironment()['y'] = dataf.rx2('y')
+    
+    p = lattice.xyplot(formula, pch=3, col="black")
+    
+    grdevices.bitmap(file="test.pdf", type="pdfwrite")
+    robjects.r('trellis.par.set("fontsize", list(text=18, points=10))')
+    rprint(p)
+    grdevices.dev_off()
+    
+    d = {'x': robjects.IntVector(x), 'y': robjects.IntVector(y)}
+    dataf = robjects.DataFrame(d)
+    formula = robjects.Formula('y ~ x')
+    formula.getenvironment()['x'] = dataf.rx2('x')
+    formula.getenvironment()['y'] = dataf.rx2('y')
+    
+    p = lattice.xyplot(formula, pch=3, col="black")
+    
+    grdevices.bitmap(file="/tmp/test.pdf", type="pdfwrite")
+    robjects.r('trellis.par.set("fontsize", list(text=18, points=10))')
+    rprint(p)
+    grdevices.dev_off()
