@@ -17,6 +17,7 @@ if config.CACHING:
 def index():
     """ Show a list of all experiments in the database """
     experiments = session.query(Experiment).all()
+    experiments.sort(key=lambda e: e.name.lower())
 
     return render('experiments.html', experiments=experiments)
     
@@ -124,7 +125,7 @@ def experiment_progress_ajax(experiment_id):
     aaData = []
     for job in jobs:
         iname = job.instance.name
-        if len(iname) > 30: iname = iname[0:30] + '...'
+        #if len(iname) > 30: iname = iname[0:30] + '...'
         aaData.append([job.idJob, job.solver_configuration.get_name(), utils.parameter_string(job.solver_configuration),
                iname, job.run, job.time, job.seed, utils.job_status(job.status)])
     
@@ -225,6 +226,7 @@ def experiment_result(experiment_id, result_id):
 @app.route('/imgtest/<int:experiment_id>')
 def imgtest(experiment_id):
     exp = session.query(Experiment).get(experiment_id) or abort(404)
+    
     import random
     random.seed()
     
@@ -232,8 +234,14 @@ def imgtest(experiment_id):
     sc1 = random.choice(exp.solver_configurations)
     sc2 = random.choice(exp.solver_configurations)
     
-    results1 = session.query(ExperimentResult).filter_by(experiment=exp, solver_configuration=sc1)
-    results2 = session.query(ExperimentResult).filter_by(experiment=exp, solver_configuration=sc2)
+    results1 = session.query(ExperimentResult)
+    results1.enable_eagerloads(True).options(joinedload(ExperimentResult.instance, ExperimentResult.solver_configuration))
+    results1 = results1.filter_by(experiment=exp, solver_configuration=sc1)
+    
+    results2 = session.query(ExperimentResult)
+    results2.enable_eagerloads(True).options(joinedload(ExperimentResult.instance, ExperimentResult.solver_configuration))
+    results2 = results2.filter_by(experiment=exp, solver_configuration=sc2)
+    
     xs = []
     ys = []
     for instance in exp.instances:

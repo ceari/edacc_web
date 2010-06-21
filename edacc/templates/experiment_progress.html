@@ -24,10 +24,15 @@
         $(document).ready(function(){
             var JOB_STATUS_COLOR = {
                 '-2':               'red',
+                'error':            'red',
                 '-1':               '#4169E1',
+                'not started':      '#4169E1',
                 '0':                'orange',
+                'running':          'orange',
                 '1':                '#00CC33',
+                'finished':         '#00CC33',
                 '2':                '#00CC33',
+                'terminated by ulimit': '#00CC33',
                 '3':                '#00CC33'
             };
 
@@ -36,6 +41,7 @@
                 "oLanguage": {
                     "sZeroRecords": "No matching results"
                 },
+                "bAutoWidth": false,
                 "bStateSave": true,
                 "bProcessing": true,
                 "sAjaxSource": "{{url_for('experiment_progress_ajax', experiment_id=experiment.idExperiment)}}",
