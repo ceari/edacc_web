@@ -23,17 +23,11 @@
         }
         $(document).ready(function(){
             var JOB_STATUS_COLOR = {
-                '-2':               'red',
                 'error':            'red',
-                '-1':               '#4169E1',
                 'not started':      '#4169E1',
-                '0':                'orange',
                 'running':          'orange',
-                '1':                '#00CC33',
                 'finished':         '#00CC33',
-                '2':                '#00CC33',
                 'terminated by ulimit': '#00CC33',
-                '3':                '#00CC33'
             };
 
             oTable = $('#table_jobs').dataTable({
@@ -50,7 +44,7 @@
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[7]]);
                     return nRow;
 		},
-                "aoColumns": [null, null, null, null, null, null, null, {"sSortDataType": "job-status", "sType": "numeric"}]
+                "aoColumns": [null, null, null, null, null, null, null, null]
             });
             
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
