@@ -87,12 +87,15 @@ class EDACCClient(threading.Thread):
 
 if __name__ == '__main__':
     exp_id = int(raw_input('Enter experiment id: '))
-    if session.query(Experiment).get(exp_id) is None:
+    experiment = session.query(Experiment).get(exp_id)
+    if experiment is None:
         print "Experiment doesn't exist"
         sys.exit(0)
+    
     fetch_resources(exp_id)
-    print "Starting up .. using " + str(multiprocessing.cpu_count()) + " threads"
-    clients = [EDACCClient(exp_id) for _ in xrange(multiprocessing.cpu_count())]
+    
+    print "Starting up .. using " + str(experiment.grid_queue[0].numCPUs) + " threads"
+    clients = [EDACCClient(exp_id) for _ in xrange(experiment.grid_queue[0].numCPUs)]
     for c in clients:
         c.start()
     for c in clients:
