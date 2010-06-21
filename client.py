@@ -9,7 +9,7 @@ from edacc.utils import launch_command
 from sqlalchemy.sql.expression import func
 
 def setlimits(cputime, mem):
-    resource.setrlimit(resource.RLIMIT_CPU, (cputime, cputime + 1))
+    resource.setrlimit(resource.RLIMIT_CPU, (cputime, cputime + 10))
     resource.setrlimit(resource.RLIMIT_AS, (mem, mem))
 
 def fetch_resources(experiment_id):
@@ -55,31 +55,38 @@ class EDACCClient(threading.Thread):
                 job.startTime = datetime.now()
                 session.commit()
                 
-                client_line = '/tmp/edacc/solvers/' + launch_command(job.solver_configuration)[2:]
+                client_line = '/usr/bin/time -f ";%U;" '
+                client_line += '/tmp/edacc/solvers/' + launch_command(job.solver_configuration)[2:]
                 client_line += '/tmp/edacc/instances/' + job.instance.name + ' ' + str(job.seed)
                 print "running job", job.idJob, client_line
                 stdout = open(self.name + 'stdout~', 'w')
                 stderr = open(self.name + 'stderr~', 'w')
-                p = subprocess.Popen(shlex.split(client_line), preexec_fn=setlimits(experiment.timeOut, experiment.memOut * 1024 * 1024), stdout = stdout, stderr = stderr)
                 start = time.time()
+                p = subprocess.Popen(shlex.split(client_line), preexec_fn=setlimits(experiment.timeOut, experiment.memOut * 1024 * 1024), stdout = stdout, stderr = stderr)
                 p.wait()
-                runtime = time.time() - start
-                job.time = runtime
-                stdout.close()
-                stderr.close()
-                stdout = open(self.name + 'stdout~', 'r')
-                stderr = open(self.name + 'stderr~', 'r')
-                job.resultFile = "STDOUT:\n\n" + stdout.read() + "\n\nSTDERR:\n\n" + stderr.read()
+                print "done .. Realtime:", str(time.time() - start), "s"
                 stdout.close()
                 stderr.close()
                 
+                stdout = open(self.name + 'stdout~', 'r')
+                stderr = open(self.name + 'stderr~', 'r')
+                time_output = stderr.read()
+                tstart = time_output.find(";")
+                tend = time_output.find(";", tstart+1)
+                runtime = float(time_output[tstart+1:tend])
+                
+                job.resultFile = stdout.read()
+                stdout.close()
+                stderr.close()
+                
+                job.time = runtime
+                
                 job.clientOutput = "this solver is damn slooooow, it's friday and I want to go home :-("
-                print "... done (took " + str(runtime) + " s)"
                 if runtime > experiment.timeOut:
                     job.status = 2
                 else:
                     job.status = 1
-                    
+                print "        CPU time:", runtime, "s"
                 session.commit()
             else: break
             
