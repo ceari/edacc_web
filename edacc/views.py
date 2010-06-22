@@ -175,7 +175,7 @@ def instance_download(instance_id):
     headers.add('Content-Disposition', 'attachment', filename=instance.name)
     
     return Response(response=instance.instance, headers=headers)
-
+    
 @app.route('/solver/<int:solver_id>')
 def solver_details(solver_id):
     """ Show solver details """
@@ -222,6 +222,28 @@ def experiment_result(experiment_id, result_id):
     return render('result_details.html', experiment=experiment, result=result, solver=result.solver_configuration.solver,
                   solver_config=result.solver_configuration, instance=result.instance, resultFile_text=resultFile_text,
                   clientOutput_text=clientOutput_text)
+    
+@app.route('/experiment/<int:experiment_id>/result/<int:result_id>/download')
+def experiment_result_download(experiment_id, result_id):
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    result = session.query(ExperimentResult).get(result_id) or abort(404)
+
+    headers = Headers()
+    headers.add('Content-Type', 'text/plain')
+    headers.add('Content-Disposition', 'attachment', filename=result.resultFileName)
+    
+    return Response(response=result.resultFile, headers=headers)
+    
+@app.route('/experiment/<int:experiment_id>/result/<int:result_id>/download-client-output')
+def experiment_result_download_client_output(experiment_id, result_id):
+    experiment = session.query(Experiment).get(experiment_id) or abort(404)
+    result = session.query(ExperimentResult).get(result_id) or abort(404)
+
+    headers = Headers()
+    headers.add('Content-Type', 'text/plain')
+    headers.add('Content-Disposition', 'attachment', filename="client_output_"+result.resultFileName)
+    
+    return Response(response=result.clientOutput, headers=headers)
 
 @app.route('/imgtest/<int:experiment_id>')
 def imgtest(experiment_id):

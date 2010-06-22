@@ -46,13 +46,19 @@ class EDACCClient(threading.Thread):
         if self.experiment is None: return
         experiment = self.experiment
         while True:
-            job = session.query(ExperimentResult) \
+            job = None
+            try:
+                job = session.query(ExperimentResult) \
                         .filter_by(experiment=self.experiment) \
                         .filter_by(status=-1) \
                         .order_by(func.rand()).limit(1).first()
-            if job:
                 job.status = 0
-                job.startTime = datetime.now()
+                session.commit()
+            except:
+                session.rollback()
+        
+            if job:
+                job.startTime = func.now()
                 session.commit()
                 
                 client_line = '/usr/bin/time -f ";%U;" '
@@ -64,7 +70,7 @@ class EDACCClient(threading.Thread):
                 start = time.time()
                 p = subprocess.Popen(shlex.split(client_line), preexec_fn=setlimits(experiment.timeOut, experiment.memOut * 1024 * 1024), stdout = stdout, stderr = stderr)
                 p.wait()
-                print "done .. Realtime:", str(time.time() - start), "s"
+                print "Job", job.idJob, "done .. Realtime:", str(time.time() - start), "s"
                 stdout.close()
                 stderr.close()
                 
@@ -86,9 +92,13 @@ class EDACCClient(threading.Thread):
                     job.status = 2
                 else:
                     job.status = 1
-                print "        CPU time:", runtime, "s"
+                print "             CPU time:", runtime, "s"
                 session.commit()
-            else: break
+            else:
+                if session.query(ExperimentResult) \
+                        .filter_by(experiment=self.experiment) \
+                        .filter_by(status=-1) \
+                        .order_by(func.rand()).count() == 0: break
             
     
 
