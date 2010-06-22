@@ -13,11 +13,11 @@
             var aData = [];
             $('td:eq('+iColumn+')', oSettings.oApi._fnGetTrNodes(oSettings)).each(function() {
                 var v = $(this).html()
-                if (v == 'error') aData.push("-2");
-                else if (v == 'not started') aData.push("-1");
-                else if (v == 'running') aData.push("0");
-                else if (v == 'finished') aData.push("1");
-                else if (v == 'terminated by ulimit') aData.push("2");
+                if (v == 'error') aData.push("Aerror");
+                else if (v == 'not started') aData.push("Bnot started");
+                else if (v == 'running') aData.push("Crunning");
+                else if (v == 'finished') aData.push("Dfinished");
+                else if (v == 'terminated by ulimit') aData.push("Eterminated by ulimit");
             });
             return aData;
         }
@@ -41,10 +41,10 @@
                 "sAjaxSource": "{{url_for('experiment_progress_ajax', experiment_id=experiment.idExperiment)}}",
 		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
                     $('td:eq(0)', nRow).html('<a style="color: black;" href="/experiment/{{experiment.idExperiment}}/result/'+aData[0]+'">'+aData[0]+'</a>');
-                    $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[7]]);
+                    $(nRow).attr("bgcolor", JOB_STATUS_COLOR[$('td:eq(7)', nRow).html()]);
                     return nRow;
 		},
-                "aoColumns": [null, null, null, null, null, null, null, null]
+                "aoColumns": [null, null, null, null, null, null, null, {"sSortDataType": "job-status"}]
             });
             
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
@@ -58,6 +58,19 @@
             $('#refresh').click(function() {
                 oTable.fnReloadAjax();
                 return false;
+            });
+            
+            $('#refresh_interval').change(function() {
+                $(this).stopTime();
+                var v = $(this).val()
+                if (v != '-') {
+                    $(this).everyTime(v * 1000, function() {
+                        $("body").css("cursor", "progress");
+                        oTable.fnReloadAjax(null, function() {
+                            $("body").css("cursor", "auto");
+                        });
+                    });
+                }
             });
             
             //$('#table_jobs').everyTime(2000, function() {
@@ -87,7 +100,8 @@
     </div>
     <h2>Experiment progress</h2>
     
-    <a id="refresh" href="#">Refresh Data</a>
+    <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
+    <select id="refresh_interval"><option value="-" selected>-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>
     <div style="max-width: 98%">
     <table id="table_jobs" class="display">
         <thead>
