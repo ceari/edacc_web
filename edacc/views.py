@@ -20,6 +20,11 @@ def make_unique_id():
     hash.update(str(time.time()) + str(request.headers))
     request.unique_id = hash.hexdigest()
 
+@app.after_request
+def shutdown_session(response):
+    session.remove()
+    return response
+
 @app.route('/')
 def index():
     """ Show a list of all experiments in the database """
