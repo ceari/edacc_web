@@ -88,7 +88,8 @@ class EDACCClient(threading.Thread):
                 job.time = runtime
                 
                 job.clientOutput = "this solver is damn slooooow, it's friday and I want to go home :-("
-                if runtime > experiment.timeOut:
+                
+                if p.returncode == 24:
                     job.status = 2
                 else:
                     job.status = 1
