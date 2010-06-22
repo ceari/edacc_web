@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import json, time
+import json, time, hashlib, os
 
 from flask import render_template as render
-from flask import Response, abort, Headers, Environment, request
+from flask import Response, abort, Headers, Environment, request, session
 
 from edacc import app, plots, config, utils
 from edacc.models import session, Experiment, Solver, ExperimentResult, Instance, SolverConfiguration, joinedload
@@ -12,6 +12,13 @@ from edacc.constants import JOB_FINISHED, JOB_ERROR
 if config.CACHING:
     from werkzeug.contrib.cache import MemcachedCache
     cache = MemcachedCache([config.MEMCACHED_HOST])
+    
+@app.before_request
+def make_unique_id():
+    """ Attach an unique ID to the request (hash of current server time and request headers) """
+    hash = hashlib.md5()
+    hash.update(str(time.time()) + str(request.headers))
+    request.unique_id = hash.hexdigest()
 
 @app.route('/')
 def index():
@@ -251,7 +258,7 @@ def imgtest(experiment_id):
     
     import random
     random.seed()
-    
+
     # 2 random solverconfigs
     sc1 = random.choice(exp.solver_configurations)
     sc2 = random.choice(exp.solver_configurations)
@@ -273,11 +280,19 @@ def imgtest(experiment_id):
         ys.append(r2)
     
     if request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.pdf'
+        plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, filename, format='pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
-        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='pdf'), mimetype='application/pdf', headers=headers)
-    elif request.args.has_key('svg'):
-        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='svg'), mimetype='image/svg+xml')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    #elif request.args.has_key('svg'):
+    #    return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='svg'), mimetype='image/svg+xml')
     else:
-        p = plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name)
-        return Response(response=p, mimetype='image/png')
+        filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.png'
+        plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, filename)
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
+        

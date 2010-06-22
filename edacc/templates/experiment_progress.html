@@ -73,10 +73,6 @@
                 }
             });
             
-            //$('#table_jobs').everyTime(2000, function() {
-            //    oTable.fnReloadAjax();
-            //});
-            
             $(document).keydown(function(e)
             {
                 if (e.which == 116) // override F5 action to ajax reload instead of browser refresh
@@ -101,7 +97,7 @@
     <h2>Experiment progress</h2>
     
     <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
-    <select id="refresh_interval"><option value="-" selected>-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>
+    <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>
     <div style="max-width: 98%">
     <table id="table_jobs" class="display">
         <thead>
@@ -117,7 +113,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr><td colspan="8">processing...</td></tr>
+            <tr><td colspan="8">this table requires JavaScript to be enabled</td></tr>
         </tbody>
     </table>
     </div>

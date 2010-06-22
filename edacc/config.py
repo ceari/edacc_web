@@ -10,6 +10,8 @@ CACHE_TIMEOUT = 5
 # Host and port of the memcache daemon
 MEMCACHED_HOST = '127.0.0.1:11211'
 
+TEMP_DIR = '/tmp/'
+
 DATABASE_DRIVER     = 'mysql'
 DATABASE_NAME       = 'EDACC'
 DATABASE_HOST       = 'localhost'
