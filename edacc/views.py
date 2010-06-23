@@ -286,7 +286,7 @@ def imgtest(experiment_id):
     
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.pdf'
-        plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, filename, format='pdf')
+        plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, exp.timeOut, filename, format='pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -296,7 +296,7 @@ def imgtest(experiment_id):
     #    return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='svg'), mimetype='image/svg+xml')
     else:
         filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.png'
-        plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, filename)
+        plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, exp.timeOut, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response

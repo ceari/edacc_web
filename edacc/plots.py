@@ -6,7 +6,7 @@ grdevices = importr('grDevices')
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",bold="Bitstream Vera Sans:style=Bold",italic="Bitstream Vera Sans:style=Italic",bolditalic="Bitstream Vera Sans:style=Bold Italic,BoldItalic",symbol="Symbol")
                  
-def scatter(xs, ys, xlabel, ylabel, filename, format='png'):
+def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
         grdevices.bitmap(file=filename)
@@ -14,6 +14,7 @@ def scatter(xs, ys, xlabel, ylabel, filename, format='png'):
         grdevices.bitmap(file=filename, type="pdfwrite")
 
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col='red',
+                    xlim=robjects.r.c(0,timeout), ylim=robjects.r.c(0,timeout), xaxs='i', yaxs='i',
                     main=xlabel + " vs. " + ylabel, xlab=xlabel, ylab=ylabel, pch=3, cex=0.75, **{'cex.main': 1.5})
     grdevices.dev_off()
 
