@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json, time, hashlib, os, datetime, cStringIO
+import json, time, hashlib, os, datetime, cStringIO, re
 from functools import wraps
 
 from flask import render_template as render
@@ -35,6 +35,24 @@ def require_admin(f):
         if not session.get('admin'): abort(401)
         return f(*args, **kwargs)
     return decorated_f
+
+def require_login(f):
+    """ View function decorator that checks if the user is logged in to the database specified
+        by the route parameter <database> which gets passed in **kwargs.
+        Therefor, this decorator can only be used for URLs that have a <database> part """
+    @wraps(f)
+    def decorated_f(*args, **kwargs):
+        if not session.get('logged_in'): abort(401)
+        if session.get('database') != kwargs['database']: abort(401)
+        return f(*args, **kwargs)
+    return decorated_f
+
+def password_hash(password):
+    """ Returns a crpytographic hash of the given password seeded with SECRET_KEY as hexstring """
+    hash = hashlib.sha256()
+    hash.update(config.SECRET_KEY)
+    hash.update(password)
+    return hash.hexdigest()
 
 ####################################################################
 #                   Admin View Functions
@@ -92,7 +110,89 @@ def admin_login():
 def admin_logout():
     session.pop('admin', None)
     return redirect('/')
+
+####################################################################
+#                   Accounts View Functions
+####################################################################
     
+@app.route('/<database>/register/', methods=['GET', 'POST'])
+def register(database):
+    """ User registration """
+    db = models.get_database(database) or abort(404)
+    
+    error = None
+    if request.method == 'POST':
+        lastname = request.form['lastname']
+        firstname = request.form['firstname']
+        email = request.form['email']
+        password = request.form['password']
+        password_confirm = request.form['password_confirm']
+        address = request.form['address']
+        affiliation = request.form['affiliation']
+        
+        valid = True
+        if any(len(x) > 255 for x in (lastname, firstname, email, address, affiliation)):
+            error = 'max. 255 characters'
+            valid = False
+        
+        if password != password_confirm:
+            error = "Passwords don't match"
+            valid = False
+        
+        if re.match("^[a-zA-Z0-9._%-+]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$", email) is None:
+            error = "Invalid e-mail address, contact an administrator if this e-mail address is valid"
+            valid = False
+        
+        if db.session.query(db.User).filter_by(email=email).count() > 0:
+            error = "An account with this email address already exists"
+            valid = false
+        
+        if valid:
+            user = db.User()
+            user.lastname = lastname
+            user.firstname = firstname
+            user.password = password_hash(password)
+            user.email = email
+            user.postal_address = address
+            user.affiliation = affiliation
+            
+            db.session.add(user)
+            db.session.commit()
+            return redirect(url_for('experiments_index', database=database))
+    
+    return render('/accounts/register.html', database=database, error=error)
+
+@app.route('/<database>/login/', methods=['GET', 'POST'])
+def login(database):
+    """ User login form and handling for a specific database """
+    db = models.get_database(database) or abort(404)
+    
+    error = None
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        
+        user = db.session.query(db.User).filter_by(email=email).first()
+        if user is None:
+            error = "Account doesn't exist"
+        else:
+            if user.password != password_hash(password):
+                error = 'Invalid password'
+            else:
+                session['logged_in'] = True
+                session['database'] = database
+                return redirect(url_for('experiments_index', database=database))
+    
+    return render('/accounts/login.html', database=database, error=error)
+
+@app.route('/<database>/logout')
+@require_login
+def logout(database):
+    """ User logout for a database """
+    session.pop('logged_in', None)
+    session.pop('database', None)
+    return redirect('/')
+
 ####################################################################
 #                   Web Frontend View Functions
 ####################################################################

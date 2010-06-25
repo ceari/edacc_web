@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+    <h2>Register</h2>
+    
+    To submit solvers and access information about an experiment's progress and results create an account on this website.
+    
+    <form action="{{url_for('register', database=database)}}" method="post">
+        <table>
+            <tr>
+                <td>Last Name:</td>
+                <td><input type="text" name="lastname" /></td>
+            </tr>
+            <tr>
+                <td>First Name:</td>
+                <td><input type="text" name="firstname" /></td>
+            </tr>
+            <tr>
+                <td>e-mail (used to login):</td>
+                <td><input type="text" name="email" /></td>
+            </tr>
+            <tr>
+                <td>Password:</td>
+                <td><input type="password" name="password" /></td>
+            </tr>
+            <tr>
+                <td>Password (confirm):</td>
+                <td><input type="password" name="password_confirm" /></td>
+            </tr>
+            <tr>
+                <td>Postal Address:</td>
+                <td><input type="text" name="address" /></td>
+            </tr>
+            <tr>
+                <td>Affiliation:</td>
+                <td><input type="text" name="affiliation" /></td>
+            </tr>
+            <td colspan="2"><input type="submit" value="Submit" /></td>
+        </table>
+    </form>
+    {% if error %}{{error}}{% endif %}
+{% endblock %}

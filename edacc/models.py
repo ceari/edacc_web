@@ -47,6 +47,7 @@ class EDACCDatabase(object):
         class ExperimentResult(object): pass
         class InstanceClass(object): pass
         class GridQueue(object): pass
+        class User(object): pass
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
         self.Parameter = Parameter
@@ -56,6 +57,7 @@ class EDACCDatabase(object):
         self.ExperimentResult = ExperimentResult
         self.InstanceClass = InstanceClass
         self.GridQueue = GridQueue
+        self.User = User
         
         metadata.reflect()
         
@@ -103,6 +105,11 @@ class EDACCDatabase(object):
                 'solver_configuration': relation(SolverConfiguration),
                 'experiment': relation(Experiment, backref='experiment_results'),
                 'instance': relation(Instance),
+            }
+        )
+        mapper(User, metadata.tables['User'],
+            properties = {
+                'solvers': relation(Solver, backref='user')
             }
         )
         
