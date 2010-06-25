@@ -8,6 +8,10 @@ a {
     color: #47478D;
 }
 
+img {
+    border: 0;
+}
+
 a:link {
     text-decoration: none;
 }
@@ -52,6 +56,12 @@ a:hover {
     color: black;
 }
 
+#admin_login {
+    float: right;
+    font-size: small;
+    color: black;
+}
+
 h1 {
     margin-top: 10px;
     margin-bottom: 10px;
@@ -73,6 +83,10 @@ h3 {
 
 ul {
     list-style-type: disc;
+}
+
+li {
+    margin-top: 5px;
 }
 
 table.details {

@@ -3,8 +3,8 @@
 {% block content %}
     <div class="navigation">
         <a href="/">Experiments</a> :: 
-        <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
-        <a href="{{url_for('experiment_results', experiment_id=experiment.idExperiment)}}">Results</a> :: 
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        <a href="{{url_for('experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results</a> :: 
         {{solver_configuration.solver.name}} on {{instance.name}}
     </div>
     <h2>Results of {{solver_configuration.get_name()}} on {{instance.name}}</h2>
@@ -20,7 +20,7 @@
         <tbody>
             {% for result in results %}
                 <tr bgcolor="{{result.status|job_status_color}}">
-                    <td><a style="color: black;" href="{{url_for('experiment_result', experiment_id=experiment.idExperiment, result_id=result.idJob)}}">{{result.idJob}}</a></td>
+                    <td><a style="color: black;" href="{{url_for('experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">{{result.idJob}}</a></td>
                     <td>{{result.status|job_status}}</td>
                     <td>{{result.time|round(1)}}</td>
                 </tr>

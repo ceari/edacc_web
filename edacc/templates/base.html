@@ -13,6 +13,7 @@
     <div id="header">
         <span id="title">EDACC Web Frontend</span>
         <span id="subtitle">Experiment Design and Administration for Computer Clusters for SAT Solvers</span>
+        <span id="admin_login"><a href="{{url_for('admin_login')}}">Admin</a> {% if session.admin %}(<a href="{{url_for('admin_logout')}}">Logout</a>){% endif %}</a></span>
     </div>
     <div id="content">
         {% block content %}{% endblock %}

@@ -13,7 +13,7 @@
 {% block content %}
     <div class="navigation">
         <a href="/">Experiments</a> :: 
-        <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
         Instances
     </div>
     <h2>Instances used in the experiment</h2>
@@ -31,7 +31,7 @@
         <tbody>
         {% for instance in instances %}
             <tr>
-                <td><a href="{{url_for('instance_details', instance_id=instance.idInstance)}}">{{instance.name}}</a></td>
+                <td><a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a></td>
                 <td>{{instance.numAtoms}}</td>
                 <td>{{instance.numClauses}}</td>
                 <td>{{instance.ratio|round(2)}}</td>

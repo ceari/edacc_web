@@ -4,7 +4,7 @@
 
 import time, sys, subprocess, os, resource, StringIO, shlex, threading, multiprocessing
 from datetime import datetime
-from edacc.models import session, Experiment, ExperimentResult
+from edacc import models
 from edacc.utils import launch_command
 from sqlalchemy.sql.expression import func
 
@@ -12,14 +12,14 @@ def setlimits(cputime, mem):
     resource.setrlimit(resource.RLIMIT_CPU, (cputime, cputime + 10))
     resource.setrlimit(resource.RLIMIT_AS, (mem, mem))
 
-def fetch_resources(experiment_id):
+def fetch_resources(experiment_id, db):
     try:
         os.mkdir('/tmp/edacc')
         os.mkdir('/tmp/edacc/solvers')
         os.mkdir('/tmp/edacc/instances')
     except: pass
     
-    experiment = session.query(Experiment).get(experiment_id)
+    experiment = db.session.query(db.Experiment).get(experiment_id)
     
     for i in experiment.instances:
         if not os.path.exists('/tmp/edacc/instances/' + i.name):
@@ -36,30 +36,32 @@ def fetch_resources(experiment_id):
             
 class EDACCClient(threading.Thread):
     count = 0
-    def __init__(self, experiment_id):
+    def __init__(self, experiment_id, db):
         super(EDACCClient, self).__init__(group=None)
-        self.experiment = session.query(Experiment).get(experiment_id)
+        self.experiment = db.session.query(db.Experiment).get(experiment_id)
         self.name = str(EDACCClient.count)
+        self.db = db
         EDACCClient.count += 1
         
     def run(self):
         if self.experiment is None: return
         experiment = self.experiment
+        db = self.db
         while True:
             job = None
             try:
-                job = session.query(ExperimentResult) \
+                job = db.session.query(db.ExperimentResult) \
                         .filter_by(experiment=self.experiment) \
                         .filter_by(status=-1) \
                         .order_by(func.rand()).limit(1).first()
                 job.status = 0
-                session.commit()
+                db.session.commit()
             except:
-                session.rollback()
+                db.session.rollback()
         
             if job:
                 job.startTime = func.now()
-                session.commit()
+                db.session.commit()
                 
                 client_line = '/usr/bin/time -f ";%U;" '
                 client_line += '/tmp/edacc/solvers/' + launch_command(job.solver_configuration)[2:]
@@ -87,16 +89,18 @@ class EDACCClient(threading.Thread):
                 
                 job.time = runtime
                 
-                job.clientOutput = "this solver is damn slooooow, it's friday and I want to go home :-("
+                cpuinfo = open('/proc/cpuinfo')
+                job.clientOutput = cpuinfo.read()
+                cpuinfo.close()
                 
                 if p.returncode == 24:
                     job.status = 2
                 else:
                     job.status = 1
                 print "             CPU time:", runtime, "s"
-                session.commit()
+                db.session.commit()
             else:
-                if session.query(ExperimentResult) \
+                if db.session.query(db.ExperimentResult) \
                         .filter_by(experiment=self.experiment) \
                         .filter_by(status=-1) \
                         .order_by(func.rand()).count() == 0: break
@@ -104,16 +108,26 @@ class EDACCClient(threading.Thread):
     
 
 if __name__ == '__main__':
-    exp_id = int(raw_input('Enter experiment id: '))
-    experiment = session.query(Experiment).get(exp_id)
+    username = raw_input('Enter database username:').strip()
+    password = raw_input('Enter password:').strip()
+    database = raw_input('Enter database name:').strip()
+    try:
+        models.add_database(username, password, database)
+    except Exception as e:
+        print "Can't connect to database: " + str(e)
+        sys.exit(0)
+    db = models.get_database(database)
+    
+    exp_id = int(raw_input('Enter experiment id: '))   
+    experiment = db.session.query(db.Experiment).get(exp_id)
     if experiment is None:
         print "Experiment doesn't exist"
         sys.exit(0)
     
-    fetch_resources(exp_id)
+    fetch_resources(exp_id, db)
     
     print "Starting up .. using " + str(experiment.grid_queue[0].numCPUs) + " threads"
-    clients = [EDACCClient(exp_id) for _ in xrange(experiment.grid_queue[0].numCPUs)]
+    clients = [EDACCClient(exp_id, db) for _ in xrange(experiment.grid_queue[0].numCPUs)]
     for c in clients:
         c.start()
     for c in clients:

@@ -38,9 +38,9 @@
                 "bAutoWidth": false,
                 "bStateSave": true,
                 "bProcessing": true,
-                "sAjaxSource": "{{url_for('experiment_progress_ajax', experiment_id=experiment.idExperiment)}}",
+                "sAjaxSource": "{{url_for('experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}",
 		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
-                    $('td:eq(0)', nRow).html('<a style="color: black;" href="/experiment/{{experiment.idExperiment}}/result/'+aData[0]+'">'+aData[0]+'</a>');
+                    $('td:eq(0)', nRow).html('<a style="color: black;" href="/{{database}}/experiment/{{experiment.idExperiment}}/result/'+aData[0]+'">'+aData[0]+'</a>');
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[$('td:eq(7)', nRow).html()]);
                     return nRow;
 		},
@@ -91,7 +91,7 @@
 {% block content %}
     <div class="navigation">
         <a href="/">Experiments</a> :: 
-        <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
         Progress
     </div>
     <h2>Experiment progress</h2>

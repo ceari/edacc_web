@@ -3,13 +3,13 @@
 {% block content %}
     <div class="navigation">
         <a href="/">Experiments</a> :: 
-        <a href="{{url_for('experiment', experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
         Solvers
     </div>
     <h2>Solvers used in the experiment</h2>
     <ul>
         {% for solver in solvers %}
-            <li><a href="{{url_for('solver_details', solver_id=solver.idSolver)}}">{{solver.name}}</a></li>
+            <li><a href="{{url_for('solver_details', database=database, solver_id=solver.idSolver)}}">{{solver.name}}</a></li>
         {% endfor %}
     </ul>
 {% endblock %}

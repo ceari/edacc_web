@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Add Database{% endblock %}
+{% block content %}
+    <h2>Add Database</h2>
+    <a href="{{url_for('databases')}}">Back</a>
+    
+    <form action="{{url_for('databases_add')}}" method="post">
+        <table>
+            <tr>
+                <td>Database:</td>
+                <td><input type="text" name="database" /></td>
+            </tr>
+            <tr>
+                <td>Username:</td>
+                <td><input type="text" name="username" /></td>
+            </tr>
+            <tr>
+                <td>Password:</td>
+                <td><input type="text" name="password" /></td>
+            </tr>
+            <td colspan="2"><input type="submit" value="Add" /></td>
+        </table>
+    </form>
+    {% if error %}{{error}}{% endif %}
+{% endblock %}
