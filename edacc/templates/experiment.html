@@ -2,7 +2,7 @@
 {% block title %}{{experiment.name}} Experiment{% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="/">Experiments</a> :: 
+        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> :: 
         {{experiment.name}}
     </div>
     <h1>Experiment {{experiment.name}}</h1>

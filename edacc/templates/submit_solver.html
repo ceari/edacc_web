@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Submit Solver{% endblock %}
+{% block content %}
+    <div class="navigation">
+        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a>
+    </div>
+    <h2>Submit Solver</h2>
+
+    <form action="{{url_for('submit_solver', database=database)}}" method="post" enctype="multipart/form-data">
+        <table>
+            <tr>
+                <td>Solver name:</td>
+                <td><input type="text" name="name" /></td>
+            </tr>
+            <tr>
+                <td>Version:</td>
+                <td><input type="text" name="version" /></td>
+            </tr>
+            <tr>
+                <td>Authors:</td>
+                <td><input type="text" name="authors" /></td>
+            </tr>
+            <tr>
+                <td>Description:</td>
+                <td><textarea name="description"></textarea></td>
+            </tr>
+            <tr>
+                <td>Solver binary:</td>
+                <td><input type="file" name="binary" /></td>
+            </tr>
+            <tr>
+                <td>Solver code archive:</td>
+                <td><input type="file" name="code" /></td>
+            </tr>
+            <td colspan="2"><input type="submit" value="Submit" /></td>
+        </table>
+    </form>
+    {% if error %}{{error}}{% endif %}
+{% endblock %}

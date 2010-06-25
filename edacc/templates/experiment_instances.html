@@ -12,7 +12,7 @@
 {% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="/">Experiments</a> :: 
+        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> :: 
         <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
         Instances
     </div>

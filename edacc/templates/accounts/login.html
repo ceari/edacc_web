@@ -1,12 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
-    <h1>Login</h1>
+    <h2>Login to {{database}}</h2>
     
     <form action="{{url_for('login', database=database)}}" method="post">
-        e-mail: <input type="text" name="email" /><br/>
-        password: <input type="password" name="password" /><br/>
-        <input type="submit" value="Login" />
+        <table>
+            <tr>
+                <td>e-mail:</td><td><input type="text" name="email" /></td>
+            </tr>
+            <tr>
+                <td>Password:</td><td><input type="password" name="password" /></td>
+            </tr>
+            <tr>
+                <td colspan="2"><input type="submit" value="Login" /></td>
+            </tr>
+        </table>
     </form>
-    {% if error %}{{error}}{% endif %}
+    {% if error %}<div>{{error}}</div>{% endif %}
+    <a href="{{url_for('register', database=database)}}">Register</a>
 {% endblock %}

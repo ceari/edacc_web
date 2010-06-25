@@ -4,7 +4,7 @@ import json, time, hashlib, os, datetime, cStringIO, re
 from functools import wraps
 
 from flask import render_template as render
-from flask import Response, abort, Headers, Environment, request, session, url_for, redirect
+from flask import Response, abort, Headers, Environment, request, session, url_for, redirect, flash
 from werkzeug import secure_filename
 
 from edacc import app, plots, config, utils, models
@@ -26,7 +26,7 @@ def make_unique_id():
     hash = hashlib.md5()
     hash.update(str(time.time()) + str(request.headers))
     request.unique_id = hash.hexdigest()
-
+    
 def require_admin(f):
     """ View function decorator that checks if the current user is an admin and
         raises a 401 response if not """
@@ -39,11 +39,20 @@ def require_admin(f):
 def require_login(f):
     """ View function decorator that checks if the user is logged in to the database specified
         by the route parameter <database> which gets passed in **kwargs.
-        Therefor, this decorator can only be used for URLs that have a <database> part """
+        Therefor, this decorator can only be used for URLs that have a <database> part.
+        Also attaches the user object to the request as attribute "User"
+    """
     @wraps(f)
     def decorated_f(*args, **kwargs):
-        if not session.get('logged_in'): abort(401)
-        if session.get('database') != kwargs['database']: abort(401)
+        def redirect_f(*args, **kwargs):
+            return redirect(url_for('login', database=kwargs['database']))
+            
+        if not session.get('logged_in') or session.get('idUser', None) is None: return redirect_f(*args, **kwargs)
+        if session.get('database') != kwargs['database']: return redirect_f(*args, **kwargs)
+        
+        db = models.get_database(kwargs['database'])
+        request.User = db.session.query(db.User).get(session['idUser'])
+        
         return f(*args, **kwargs)
     return decorated_f
 
@@ -181,6 +190,9 @@ def login(database):
             else:
                 session['logged_in'] = True
                 session['database'] = database
+                session['idUser'] = user.idUser
+                session['email'] = user.email
+                flash('Login successful')
                 return redirect(url_for('experiments_index', database=database))
     
     return render('/accounts/login.html', database=database, error=error)
@@ -192,6 +204,72 @@ def logout(database):
     session.pop('logged_in', None)
     session.pop('database', None)
     return redirect('/')
+    
+@app.route('/<database>/submit-solver/', methods=['GET', 'POST'])
+@require_login
+def submit_solver(database):
+    """ Form to submit solvers to a database """
+    db = models.get_database(database) or abort(404)
+    user = db.session.query(db.User).get(session['idUser'])
+
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1] in ['zip']
+
+    error = None
+    if request.method == 'POST':
+        name = request.form['name']
+        binary = request.files['binary']
+        code = request.files['code']
+        description = request.form['description']
+        version = request.form['version']
+        authors = request.form['authors']
+    
+        valid = True
+        if not binary:
+            error = 'You have to provide a binary'
+            valid = False
+        
+        if not code or not allowed_file(code.filename):
+            error = 'You have to provide a zip-archive containing the source code'
+            valid = False
+            
+        hash = hashlib.md5()
+        hash.update(binary.read())
+        if db.session.query(db.Solver).filter_by(md5=hash.hexdigest()).first() is not None:
+            error = 'Solver with this binary already exists'
+            valid = False
+        
+        if valid:
+            solver = db.Solver()
+            solver.name = name
+            solver.binaryName = secure_filename(binary.filename)
+            solver.binary = binary.read()
+            solver.md5 = hash.hexdigest()
+            solver.description = description
+            solver.code = code.read()
+            solver.version = version
+            solver.authors = authors
+            
+            solver.user = request.User
+
+            db.session.add(solver)
+            db.session.commit()
+            
+            flash('Solver submitted successfully')
+            return redirect(url_for('experiments_index', database=database))
+    
+    return render('submit_solver.html', database=database, error=error)
+    
+@app.route('/<database>/solvers')
+@require_login
+def list_solvers(database):
+    """ Lists all solvers that the currently logged in user submitted to the database """
+    db = models.get_database(database) or abort(404)
+    
+    solvers = db.session.query(db.Solver).filter_by(user=request.User)
+   
+    return render('list_solvers.html', database=database, solvers=solvers)
+    
 
 ####################################################################
 #                   Web Frontend View Functions
@@ -206,6 +284,7 @@ def index():
     return render('/databases.html', databases=databases)
 
 @app.route('/<database>/')
+@require_login
 def experiments_index(database):
     """ Show a list of all experiments in the database """
     db = models.get_database(database) or abort(404)
@@ -531,27 +610,3 @@ def imgtest(database, experiment_id):
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
-
-#@app.route('/upload', methods=['GET', 'POST'])
-#def upload_file():
-#    def allowed_file(filename):
-#        return '.' in filename and filename.rsplit('.', 1)[1] in ['zip']
-#    
-#    if request.method == 'POST':
-#        file = request.files['file']
-#        if file and allowed_file(file.filename):
-#            filename = secure_filename(file.filename)
-#            return file.read()
-#            #file.save(os.path.join(UPLOAD_FOLDER, filename))
-#            #return redirect(url_for('uploaded_file',
-#            #                        filename=filename))
-#            #return ''
-#    return '''
-#    <!doctype html>
-#    <title>Upload new File</title>
-#    <h1>Upload new File</h1>
-#    <form action="" method=post enctype=multipart/form-data>
-#      <p><input type=file name=file>
-#         <input type=submit value=Upload>
-#    </form>'''
-    

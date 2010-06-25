@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Experiments{% endblock %}
 {% block content %}
+    <h2>{{database}}</h2>
+    
+    <ul>
+        <li><a href="{{url_for('submit_solver', database=database)}}">Submit</a> a solver</li>
+        <li><a href="{{url_for('list_solvers', database=database)}}">View</a> a list of your submitted solvers</li>
+    </ul>
     <h2>Experiments</h2>
     <ul>
         {% if experiments %}
