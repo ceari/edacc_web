@@ -12,7 +12,10 @@
         {% if experiments %}
             {% for experiment in experiments %}
                 <li>
-                    <a alt="{{experiment.description}}" title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.solver_configurations|length}} Solvers, {{experiment.instances|length}} Instances) 
+                    <a alt="{{experiment.description}}" title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.solver_configurations|length}} Solvers, {{experiment.instances|length}} Instances, 
+                    {% if experiment.is_finished() %} Finished){% endif %}
+                    {% if experiment.is_running() %} In progress){% endif %}
+                    {% if not experiment.is_finished() and not experiment.is_running() %} Not started){% endif %}
                 </li>
             {% endfor %}
         {% else %}

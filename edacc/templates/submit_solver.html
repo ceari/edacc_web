@@ -7,22 +7,22 @@
     <h2>Submit Solver</h2>
 
     <form action="{{url_for('submit_solver', database=database)}}" method="post" enctype="multipart/form-data">
-        <table>
+        <table width="800px">
             <tr>
-                <td>Solver name:</td>
-                <td><input type="text" name="name" /></td>
+                <td width="200px">Solver name:</td>
+                <td><input size="60" type="text" name="name" /></td>
             </tr>
             <tr>
                 <td>Version:</td>
-                <td><input type="text" name="version" /></td>
+                <td><input size="60" type="text" name="version" /></td>
             </tr>
             <tr>
                 <td>Authors:</td>
-                <td><input type="text" name="authors" /></td>
+                <td><input size="60" type="text" name="authors" /></td>
             </tr>
             <tr>
                 <td>Description:</td>
-                <td><textarea name="description"></textarea></td>
+                <td><textarea cols="47" rows="10" name="description"></textarea></td>
             </tr>
             <tr>
                 <td>Solver binary:</td>
@@ -32,7 +32,21 @@
                 <td>Solver code archive:</td>
                 <td><input type="file" name="code" /></td>
             </tr>
-            <td colspan="2"><input type="submit" value="Submit" /></td>
+            <tr>
+                <td>Parameters:</td>
+                <td><input size="80" type="text" name="parameters" /></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Please provide the parameters your solver should use here.
+                    You have to use INSTANCE and SEED (case-sensitive) as variables in the parameter specification.
+                    The system will substitute the instance filename and RNG seed when your solver is run.
+                    Example: "INSTANCE -s SEED -wp 0.05 -flag1" will result in e.g. "./binaryName inst1.cnf -s 6441654 -wp 0.05 -flag1".
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"><input type="submit" value="Submit" /></td>
+            </tr>
         </table>
     </form>
     {% if error %}{{error}}{% endif %}

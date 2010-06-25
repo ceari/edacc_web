@@ -49,3 +49,49 @@ app.jinja_env.filters['job_status'] = job_status
 app.jinja_env.filters['job_status_color'] = job_status_color
 app.jinja_env.filters['launch_command'] = launch_command
 app.jinja_env.filters['datetimeformat'] = datetimeformat
+
+
+def parse_parameters(parameters):
+    """ Parse parameters from the solver submission form, returns a list
+        of tuples (name, prefix, default_value, boolean, order) """
+    parameters = parameters.strip().split()
+    params = []
+    i = 0
+    while i < len(parameters):
+        if parameters[i].startswith('-'):
+            # prefixed parameter
+            if i+1 < len(parameters) and (parameters[i+1] == 'SEED' or parameters[i+1] == 'INSTANCE'):
+                pname = parameters[i+1].lower()
+                prefix = parameters[i]
+                default_value = ''
+                boolean = False
+                params.append((pname, prefix, default_value, boolean, i))
+                i += 2
+            else:
+                pname = parameters[i]
+                prefix = parameters[i]
+                if i+1 == len(parameters) or parameters[i+1].startswith('-'):
+                    boolean = True
+                    default_value = ''
+                    params.append((pname, prefix, default_value, boolean, i))
+                    i += 1
+                else:
+                    boolean = False
+                    default_value = parameters[i+1]
+                    params.append((pname, prefix, default_value, boolean, i))
+                    i += 2
+        else:
+            # parameter without prefix
+            if parameters[i] == 'SEED' or parameters[i] == 'INSTANCE':
+                pname = parameters[i].lower()
+                prefix = ''
+                default_value = ''
+                boolean = False
+            else:
+                pname = parameters[i]
+                prefix = parameters[i]
+                default_value = ''
+                boolean = True
+            params.append((pname, prefix, default_value, boolean, i))
+            i += 1
+    return params

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from edacc import config
+from edacc import config, constants
 import sqlalchemy
 from sqlalchemy import Table, Integer, ForeignKey, create_engine, MetaData, Column
 from sqlalchemy.engine.url import URL
@@ -43,7 +43,15 @@ class EDACCDatabase(object):
         class Parameter(object): pass
         class ParameterInstance(object): pass
         class Instance(object): pass
-        class Experiment(object): pass
+        class Experiment(object):
+            def is_finished(self):
+                """ Returns whether this experiment is finished (true if there are any jobs and all of them are terminated) """
+                if len(self.experiment_results) == 0: return False
+                return all(j.status in constants.JOB_FINISHED or j.status in constants.JOB_ERROR
+                           for j in self.experiment_results)
+            def is_running(self):
+                """ Returns true if there are any running jobs """
+                return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
         class ExperimentResult(object): pass
         class InstanceClass(object): pass
         class GridQueue(object): pass

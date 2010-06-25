@@ -8,13 +8,15 @@
     <h1>Experiment {{experiment.name}}</h1>
     <div>Date: {{experiment.date|datetimeformat('%d.%m.%Y')}}</div>
     <div>Description: {{experiment.description if experiment.description else "no description"}}</div>
-    <div></div>
+    {% if not experiment.is_finished() and not session.admin %}
+    <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While an experiment is in progress or hasn't been started yet, you are only able to see your own solvers.</div>
+    {% endif %}
     
     <h2>Progress</h2>
     <a href="{{url_for('experiment_progress', database=database, experiment_id=experiment.idExperiment)}}">Live information about experiment progress</a><br/>
     
     <h2>Information about solvers and instances</h2>
-    <a href="{{url_for('experiment_solvers', database=database, experiment_id=experiment.idExperiment)}}">List of solvers used</a><br/>
+    <!-- <a href="{{url_for('experiment_solvers', database=database, experiment_id=experiment.idExperiment)}}">List of solvers used</a><br/> -->
     <a href="{{url_for('experiment_solver_configurations', database=database, experiment_id=experiment.idExperiment)}}">List of solver configurations used</a><br/>
     <a href="{{url_for('experiment_instances', database=database, experiment_id=experiment.idExperiment)}}">List of instances used</a><br/>
     

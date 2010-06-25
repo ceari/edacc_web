@@ -36,6 +36,10 @@ def require_admin(f):
         return f(*args, **kwargs)
     return decorated_f
 
+def is_admin():
+    """ Returns true if the current user is logged in as admin """
+    return session.get('admin', False)
+
 def require_login(f):
     """ View function decorator that checks if the user is logged in to the database specified
         by the route parameter <database> which gets passed in **kwargs.
@@ -223,6 +227,7 @@ def submit_solver(database):
         description = request.form['description']
         version = request.form['version']
         authors = request.form['authors']
+        parameters = request.form['parameters']
     
         valid = True
         if not binary:
@@ -237,6 +242,12 @@ def submit_solver(database):
         hash.update(binary.read())
         if db.session.query(db.Solver).filter_by(md5=hash.hexdigest()).first() is not None:
             error = 'Solver with this binary already exists'
+            valid = False
+        
+        if 'SEED' in parameters and 'INSTANCE' in parameters:
+            params = utils.parse_parameters(parameters)
+        else:
+            error = 'You have to specify SEED and INSTANCE as parameters'
             valid = False
         
         if valid:
@@ -254,6 +265,18 @@ def submit_solver(database):
 
             db.session.add(solver)
             db.session.commit()
+            
+            for p in params:
+                param = db.Parameter()
+                param.name = p[0]
+                param.prefix = p[1]
+                param.value = p[2]
+                param.hasValue = not p[3] # p[3] actually means 'is boolean'
+                param.order = p[4]
+                param.solver = solver
+                db.session.add(param)
+            db.session.commit()
+                
             
             flash('Solver submitted successfully')
             return redirect(url_for('experiments_index', database=database))
@@ -297,6 +320,7 @@ def experiments_index(database):
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/')
+@require_login
 def experiment(database, experiment_id):
     """ Show menu with links to info and evaluation pages """
     db = models.get_database(database) or abort(404)
@@ -308,6 +332,7 @@ def experiment(database, experiment_id):
     
 
 @app.route('/<database>/experiment/<int:experiment_id>/solvers')
+@require_login
 def experiment_solvers(database, experiment_id):
     """ Show a list of all solvers used in the experiment """
     db = models.get_database(database) or abort(404)
@@ -317,11 +342,15 @@ def experiment_solvers(database, experiment_id):
     solvers = list(set(sc.solver for sc in experiment.solver_configurations))
     solvers.sort(key=lambda s: s.name)
     
+    if not experiment.is_finished() and not is_admin():
+        solvers = filter(lambda s: s.user == request.User, solvers)
+    
     res = render('experiment_solvers.html', solvers=solvers, experiment=experiment, database=database)
     db.session.remove()
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/solver-configurations')
+@require_login
 def experiment_solver_configurations(database, experiment_id):
     """ List all solver configurations (solver + parameter set) used in the experiment """
     db = models.get_database(database) or abort(404)
@@ -330,11 +359,15 @@ def experiment_solver_configurations(database, experiment_id):
     solver_configurations = experiment.solver_configurations
     solver_configurations.sort(key=lambda sc: sc.solver.name.lower())
     
+    if not experiment.is_finished() and not is_admin():
+        solver_configurations = filter(lambda sc: sc.solver.user == request.User, solver_configurations)
+    
     res = render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations, database=database)
     db.session.remove()
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/instances')
+@require_login
 def experiment_instances(database, experiment_id):
     """ Show information about all instances used in the experiment """
     db = models.get_database(database) or abort(404)
@@ -348,6 +381,7 @@ def experiment_instances(database, experiment_id):
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/results')
+@require_login
 def experiment_results(database, experiment_id):
     """ Show a table with the solver configurations and their results on the instances of the experiment """
     db = models.get_database(database) or abort(404)
@@ -355,6 +389,9 @@ def experiment_results(database, experiment_id):
     
     instances = experiment.instances
     solver_configs = experiment.solver_configurations
+    
+    if not experiment.is_finished() and not is_admin():
+        solver_configs = filter(lambda sc: sc.solver.user == request.User, solver_configs)
     
     if config.CACHING:
         results = cache.get('experiment_results_' + str(experiment_id))
@@ -399,6 +436,7 @@ def experiment_results(database, experiment_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/progress')
+@require_login
 def experiment_progress(database, experiment_id):
     """ Show a live information table of the experiment's progress """
     db = models.get_database(database) or abort(404)
@@ -408,6 +446,7 @@ def experiment_progress(database, experiment_id):
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/progress-ajax')
+@require_login
 def experiment_progress_ajax(database, experiment_id):
     """ Returns JSON-serialized data of the experiment results. Used by the jQuery datatable as ajax data source """
     db = models.get_database(database) or abort(404)
@@ -415,7 +454,10 @@ def experiment_progress_ajax(database, experiment_id):
     
     query = db.session.query(db.ExperimentResult).enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance))
     query.options(joinedload(db.ExperimentResult.solver_configuration))
-    jobs = query.filter_by(experiment=experiment).all()
+    jobs = query.filter_by(experiment=experiment)
+    
+    if not experiment.is_finished() and not is_admin():
+        jobs = filter(lambda j: j.solver_configuration.solver.user == request.User, jobs)
     
     aaData = []
     for job in jobs:
@@ -429,6 +471,7 @@ def experiment_progress_ajax(database, experiment_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
+@require_login
 def solver_config_results(database, experiment_id, solver_configuration_id, instance_id):
     """ Displays list of results (all jobs) of a solver configuration on an instance """
     db = models.get_database(database) or abort(404)
@@ -437,6 +480,8 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
     if solver_configuration not in experiment.solver_configurations: abort(404)
     if instance not in experiment.instances: abort(404)
+    
+    if not experiment.is_finished() and not solver_configuration.solver.user == request.User and not is_admin(): abort(401)
     
     jobs = db.session.query(db.ExperimentResult) \
                     .filter_by(experiment=experiment) \
@@ -452,6 +497,7 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     return res
     
 @app.route('/<database>/instance/<int:instance_id>')
+@require_login
 def instance_details(database, instance_id):
     """ Show instance details """
     db = models.get_database(database) or abort(404)
@@ -469,6 +515,7 @@ def instance_details(database, instance_id):
     return res
     
 @app.route('/<database>/instance/<int:instance_id>/download')
+@require_login
 def instance_download(database, instance_id):
     """ Return HTTP-Response containing the instance blob """
     db = models.get_database(database) or abort(404)
@@ -483,22 +530,28 @@ def instance_download(database, instance_id):
     return res
     
 @app.route('/<database>/solver/<int:solver_id>')
+@require_login
 def solver_details(database, solver_id):
     """ Show solver details """
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+    if solver.user != request.User and not is_admin(): abort(401)
     
     res = render('solver_details.html', solver=solver, database=database)
     db.session.remove()
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/solver-configurations/<int:solver_configuration_id>')
+@require_login
 def solver_configuration_details(database, experiment_id, solver_configuration_id):
     """ Show solver configuration details """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     solver_config = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
     solver = solver_config.solver
+    
+    if not experiment.is_finished() and solver.user != request.User and not is_admin(): abort(401)
+    
     parameters = solver_config.parameter_instances
     parameters.sort(key=lambda p: p.parameter.order)
     
@@ -507,11 +560,14 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>')
+@require_login
 def experiment_result(database, experiment_id, result_id):
     """ Displays information about a single result (job) """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
+    
+    if not experiment.is_finished() and result.solver_configuration.solver.user != request.User and not is_admin(): abort(401)
     
     resultFile = result.resultFile
     clientOutput = result.clientOutput
@@ -539,10 +595,13 @@ def experiment_result(database, experiment_id, result_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download')
+@require_login
 def experiment_result_download(database, experiment_id, result_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
+    
+    if not experiment.is_finished() and result.solver_configuration.solver.user != request.User and not is_admin(): abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -553,10 +612,13 @@ def experiment_result_download(database, experiment_id, result_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-client-output')
+@require_login
 def experiment_result_download_client_output(database, experiment_id, result_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
+    
+    if not experiment.is_finished() and result.solver_configuration.solver.user != request.User and not is_admin(): abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -567,6 +629,7 @@ def experiment_result_download_client_output(database, experiment_id, result_id)
     return res
 
 @app.route('/<database>/imgtest/<int:experiment_id>')
+@require_login
 def imgtest(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
