@@ -93,6 +93,8 @@ class EDACCClient(threading.Thread):
                 job.clientOutput = cpuinfo.read()
                 cpuinfo.close()
                 
+                print "retcode", p.returncode
+                
                 if p.returncode == 24:
                     job.status = 2
                 else:
@@ -108,9 +110,9 @@ class EDACCClient(threading.Thread):
     
 
 if __name__ == '__main__':
-    username = raw_input('Enter database username:').strip()
-    password = raw_input('Enter password:').strip()
-    database = raw_input('Enter database name:').strip()
+    username = raw_input('Enter database username: ').strip()
+    password = raw_input('Enter password: ').strip()
+    database = raw_input('Enter database name: ').strip()
     try:
         models.add_database(username, password, database)
     except Exception as e:
@@ -118,11 +120,14 @@ if __name__ == '__main__':
         sys.exit(0)
     db = models.get_database(database)
     
-    exp_id = int(raw_input('Enter experiment id: '))   
-    experiment = db.session.query(db.Experiment).get(exp_id)
+    exp_name = raw_input('Enter experiment name: ').strip()
+    experiment = db.session.query(db.Experiment).filter_by(name=exp_name).first()
+    
     if experiment is None:
         print "Experiment doesn't exist"
         sys.exit(0)
+    
+    exp_id = experiment.idExperiment
     
     fetch_resources(exp_id, db)
     

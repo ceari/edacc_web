@@ -237,9 +237,10 @@ def submit_solver(database):
         if not code or not allowed_file(code.filename):
             error = 'You have to provide a zip-archive containing the source code'
             valid = False
-            
+        
+        bin = binary.read()
         hash = hashlib.md5()
-        hash.update(binary.read())
+        hash.update(bin)
         if db.session.query(db.Solver).filter_by(md5=hash.hexdigest()).first() is not None:
             error = 'Solver with this binary already exists'
             valid = False
@@ -254,7 +255,7 @@ def submit_solver(database):
             solver = db.Solver()
             solver.name = name
             solver.binaryName = secure_filename(binary.filename)
-            solver.binary = binary.read()
+            solver.binary = bin
             solver.md5 = hash.hexdigest()
             solver.description = description
             solver.code = code.read()

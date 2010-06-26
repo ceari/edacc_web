@@ -4,8 +4,14 @@
     <h1>Admin Login</h1>
     
     <form action="{{url_for('admin_login')}}" method="post">
-        password: <input type="password" name="password" /><br/>
-        <input type="submit" value="Login" />
+    <table>
+        <tr>
+            <td>Password:</td><td><input type="password" name="password" /></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="Login" /></td>
+        </tr>
+    </table>
     </form>
     {% if error %}{{error}}{% endif %}
 {% endblock %}
