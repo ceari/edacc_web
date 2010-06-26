@@ -4,7 +4,7 @@ from edacc import config, constants
 import sqlalchemy
 from sqlalchemy import Table, Integer, ForeignKey, create_engine, MetaData, Column
 from sqlalchemy.engine.url import URL
-from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred, relation, relationship, joinedload
+from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred, relation, relationship, joinedload, joinedload_all
 
 sqlalchemy.convert_unicode = True
 

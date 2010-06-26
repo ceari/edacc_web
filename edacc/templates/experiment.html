@@ -8,6 +8,9 @@
     <h1>Experiment {{experiment.name}}</h1>
     <div>Date: {{experiment.date|datetimeformat('%d.%m.%Y')}}</div>
     <div>Description: {{experiment.description if experiment.description else "no description"}}</div>
+    <div><strong>Status: {% if experiment.is_finished() %} Finished{% endif %}
+                         {% if experiment.is_running() %} In progress{% endif %}
+                         {% if not experiment.is_finished() and not experiment.is_running() %} Not started{% endif %}</strong></div>
     {% if not experiment.is_finished() and not session.admin %}
     <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While an experiment is in progress or hasn't been started yet, you are only able to see your own solvers.</div>
     {% endif %}

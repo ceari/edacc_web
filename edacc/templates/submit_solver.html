@@ -10,15 +10,15 @@
         <table width="800px">
             <tr>
                 <td width="200px">Solver name:</td>
-                <td><input size="60" type="text" name="name" /></td>
+                <td><input size="30" type="text" name="name" /></td>
             </tr>
             <tr>
                 <td>Version:</td>
-                <td><input size="60" type="text" name="version" /></td>
+                <td><input size="30" type="text" name="version" /></td>
             </tr>
             <tr>
                 <td>Authors:</td>
-                <td><input size="60" type="text" name="authors" /></td>
+                <td><input size="30" type="text" name="authors" /></td>
             </tr>
             <tr>
                 <td>Description:</td>
@@ -41,7 +41,9 @@
                 <td>Please provide the parameters your solver should use here.
                     You have to use INSTANCE and SEED (case-sensitive) as variables in the parameter specification.
                     The system will substitute the instance filename and RNG seed when your solver is run.
-                    Example: "INSTANCE -s SEED -wp 0.05 -flag1" will result in e.g. "./binaryName inst1.cnf -s 6441654 -wp 0.05 -flag1".
+                    <div>Example:<br/>
+                    <span class="command">"INSTANCE -s SEED -wp 0.05 -flag1"</span> will result in e.g. <span class="command">"./binaryName inst1.cnf -s 6441654 -wp 0.05 -flag1"</span>.
+                    </div>
                 </td>
             </tr>
             <tr>

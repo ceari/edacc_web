@@ -161,3 +161,10 @@ code, pre {
     font-size: 12px;
     background-color: #E8E8E8 ;
 }
+
+.command {
+    font-family: "Bitstream Vera Sans Mono", Monaco, "Courier New", Courier, monospace;
+    color: black;
+    font-size: 12px;
+    background-color: #E8E8E8 ;
+}

@@ -5,10 +5,13 @@
     <a href="{{url_for('experiments_index', database=database)}}">Experiments</a>
 </div>
 <h2>List of submitted solvers</h2>
-
-<ul>
-    {% for solver in solvers %}
-        <li><a href="{{url_for('solver_details', database=database, solver_id=solver.idSolver)}}">{{solver.name}}</a></li>
-    {% endfor %}
-</ul>
+    {% if solvers %}
+    <ul>
+        {% for solver in solvers %}
+            <li><a href="{{url_for('solver_details', database=database, solver_id=solver.idSolver)}}">{{solver.name}}</a></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    You haven't submitted any solvers yet.
+    {% endif %}
 {% endblock %}

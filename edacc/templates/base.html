@@ -14,17 +14,18 @@
         <span id="title">EDACC Web Frontend</span>
         <span id="subtitle">Experiment Design and Administration for Computer Clusters for SAT Solvers</span>
         <span id="admin_login">
-            {% if session.logged_in %}Logged in as {{session.email}} to <a href="/">{{session.database}}</a> (<a href="{{url_for('logout', database=session.database)}}">Logout</a>) | {% endif %}<a href="{{url_for('admin_login')}}">Admin</a> {% if session.admin %}(<a href="{{url_for('admin_logout')}}">Logout</a>){% endif %}</a><br/>
+            {% if session.logged_in %}Logged in as {{session.email}} to <a href="{{url_for('experiments_index', database=session.database)}}">{{session.database}}</a> (<a href="/">Change</a> | <a href="{{url_for('logout', database=session.database)}}">Logout</a>) | {% endif %}<a href="{{url_for('admin_login')}}">Admin</a> {% if session.admin %}(<a href="{{url_for('admin_logout')}}">Logout</a>){% endif %}</a><br/>
         </span>
     </div>
     <div id="content">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <ul class=flashes>
+        <div>
+        <img src="/static/img/info.png"/>
         {% for message in messages %}
-          <li>{{ message }}</li>
+          {{ message }}<br/>
         {% endfor %}
-        </ul>
+        </div>
       {% endif %}
     {% endwith %}
         {% block content %}{% endblock %}

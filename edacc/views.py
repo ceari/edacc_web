@@ -8,7 +8,7 @@ from flask import Response, abort, Headers, Environment, request, session, url_f
 from werkzeug import secure_filename
 
 from edacc import app, plots, config, utils, models
-from edacc.models import joinedload
+from edacc.models import joinedload, joinedload_all
 from edacc.constants import JOB_FINISHED, JOB_ERROR
 
 if config.CACHING:
@@ -19,6 +19,10 @@ for db in config.DEFAULT_DATABASES:
     models.add_database(db[0], db[1], db[2])
 
 app.secret_key = config.SECRET_KEY
+
+####################################################################
+# various helper functions and decorators
+####################################################################
 
 @app.before_request
 def make_unique_id():
@@ -170,7 +174,14 @@ def register(database):
             user.affiliation = affiliation
             
             db.session.add(user)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+                error = 'Error when trying to save the account'
+                return render('/accounts/register.html', database=database, error=error)
+            
+            flash('Account created successfully. You can log in now.')
             return redirect(url_for('experiments_index', database=database))
     
     return render('/accounts/register.html', database=database, error=error)
@@ -244,6 +255,10 @@ def submit_solver(database):
         if db.session.query(db.Solver).filter_by(md5=hash.hexdigest()).first() is not None:
             error = 'Solver with this binary already exists'
             valid = False
+            
+        if db.session.query(db.Solver).filter_by(name=name, version=version).first() is not None:
+            error = 'Solver with this name and version already exists'
+            valid = False
         
         if 'SEED' in parameters and 'INSTANCE' in parameters:
             params = utils.parse_parameters(parameters)
@@ -261,11 +276,9 @@ def submit_solver(database):
             solver.code = code.read()
             solver.version = version
             solver.authors = authors
-            
             solver.user = request.User
 
             db.session.add(solver)
-            db.session.commit()
             
             for p in params:
                 param = db.Parameter()
@@ -276,7 +289,12 @@ def submit_solver(database):
                 param.order = p[4]
                 param.solver = solver
                 db.session.add(param)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+                flash("Couldn't save solver to the database")
+                return render('submit_solver.html', database=database, error=error)
                 
             
             flash('Solver submitted successfully')
@@ -290,7 +308,7 @@ def list_solvers(database):
     """ Lists all solvers that the currently logged in user submitted to the database """
     db = models.get_database(database) or abort(404)
     
-    solvers = db.session.query(db.Solver).filter_by(user=request.User)
+    solvers = db.session.query(db.Solver).filter_by(user=request.User).all()
    
     return render('list_solvers.html', database=database, solvers=solvers)
     
@@ -453,6 +471,7 @@ def experiment_progress_ajax(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
+    s = time.time()
     query = db.session.query(db.ExperimentResult).enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance))
     query.options(joinedload(db.ExperimentResult.solver_configuration))
     jobs = query.filter_by(experiment=experiment)
@@ -466,6 +485,7 @@ def experiment_progress_ajax(database, experiment_id):
         if len(iname) > 30: iname = iname[0:30] + '...'
         aaData.append([job.idJob, job.solver_configuration.get_name(), utils.parameter_string(job.solver_configuration),
                iname, job.run, job.time, job.seed, utils.job_status(job.status)])
+    print time.time() - s
     
     res = json.dumps({'aaData': aaData})
     db.session.remove()
