@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json, time, hashlib, os, datetime, cStringIO, re
+import json, time, hashlib, os, datetime, cStringIO, re, random
 from functools import wraps
 
 from flask import render_template as render
@@ -24,6 +24,8 @@ app.secret_key = config.SECRET_KEY
 # various helper functions and decorators
 ####################################################################
 
+decorator_with_args = lambda decorator: lambda *args, **kwargs: lambda func: decorator(func, *args, **kwargs)
+
 @app.before_request
 def make_unique_id():
     """ Attach an unique ID to the request (hash of current server time and request headers) """
@@ -44,23 +46,47 @@ def is_admin():
     """ Returns true if the current user is logged in as admin """
     return session.get('admin', False)
 
+@decorator_with_args
+def require_phase(f, phases):
+    """ View function decorator only allowing access if the database is no competition database
+        or the phase of the competition matches one of the phases passed in the iterable argument `phases` """
+    @wraps(f)
+    def decorated_f(*args, **kwargs):
+        db = models.get_database(kwargs['database'])
+        if db.competition_phase() not in phases: abort(404)
+        return f(*args, **kwargs)
+    return decorated_f
+
+def require_competition(f):
+    """ View function decorator only allowing access if the database is a competition database """
+    @wraps(f)
+    def decorated_f(*args, **kwargs):
+        db = models.get_database(kwargs['database'])
+        if not db.is_competition(): abort(404)
+        return f(*args, **kwargs)
+    return decorated_f
+
 def require_login(f):
     """ View function decorator that checks if the user is logged in to the database specified
         by the route parameter <database> which gets passed in **kwargs.
+        Only checked for competition databases that are in a phase < 3 (not finished)
         Therefor, this decorator can only be used for URLs that have a <database> part.
         Also attaches the user object to the request as attribute "User"
     """
     @wraps(f)
     def decorated_f(*args, **kwargs):
-        def redirect_f(*args, **kwargs):
-            return redirect(url_for('login', database=kwargs['database']))
+        db = models.get_database(kwargs['database']) or abort(404)
+        
+        if session.get('logged_in') and session.get('idUser', None): # if logged in already, attach user object
+            request.User = db.session.query(db.User).get(session['idUser'])
+        
+        if db.is_competition() and db.competition_phase() < 3:
+            def redirect_f(*args, **kwargs):
+                return redirect(url_for('login', database=kwargs['database']))
+                
+            if not session.get('logged_in') or session.get('idUser', None) is None: return redirect_f(*args, **kwargs)
+            if session.get('database') != kwargs['database']: return redirect_f(*args, **kwargs)
             
-        if not session.get('logged_in') or session.get('idUser', None) is None: return redirect_f(*args, **kwargs)
-        if session.get('database') != kwargs['database']: return redirect_f(*args, **kwargs)
-        
-        db = models.get_database(kwargs['database'])
-        request.User = db.session.query(db.User).get(session['idUser'])
-        
         return f(*args, **kwargs)
     return decorated_f
 
@@ -133,10 +159,12 @@ def admin_logout():
 ####################################################################
     
 @app.route('/<database>/register/', methods=['GET', 'POST'])
+@require_phase(phases=(1,))
+@require_competition
 def register(database):
     """ User registration """
     db = models.get_database(database) or abort(404)
-    
+
     error = None
     if request.method == 'POST':
         lastname = request.form['lastname']
@@ -146,6 +174,7 @@ def register(database):
         password_confirm = request.form['password_confirm']
         address = request.form['address']
         affiliation = request.form['affiliation']
+        captcha = request.form['captcha']
         
         valid = True
         if any(len(x) > 255 for x in (lastname, firstname, email, address, affiliation)):
@@ -162,8 +191,17 @@ def register(database):
         
         if db.session.query(db.User).filter_by(email=email).count() > 0:
             error = "An account with this email address already exists"
-            valid = false
-        
+            valid = False
+            
+        captcha = map(int, captcha.split())
+        try:
+            if not utils.satisfies(captcha, session['captcha']):
+                valid = False
+                error = "You can't register to a SAT competition without being able to solve a boolean formula!"
+        except:
+            valid = False
+            error = "Wrong format of the solution"
+
         if valid:
             user = db.User()
             user.lastname = lastname
@@ -183,10 +221,17 @@ def register(database):
             
             flash('Account created successfully. You can log in now.')
             return redirect(url_for('experiments_index', database=database))
+            
+    random.seed()
+    f = utils.random_formula(2,3)
+    while not utils.SAT(f):
+        f = utils.random_formula(2,3)
+    session['captcha'] = f
     
     return render('/accounts/register.html', database=database, error=error)
 
 @app.route('/<database>/login/', methods=['GET', 'POST'])
+@require_competition
 def login(database):
     """ User login form and handling for a specific database """
     db = models.get_database(database) or abort(404)
@@ -214,17 +259,24 @@ def login(database):
 
 @app.route('/<database>/logout')
 @require_login
+@require_competition
 def logout(database):
     """ User logout for a database """
+    db = models.get_database(database) or abort(404)
+    
     session.pop('logged_in', None)
     session.pop('database', None)
     return redirect('/')
     
 @app.route('/<database>/submit-solver/', methods=['GET', 'POST'])
 @require_login
+@require_phase(phases=(1,))
+@require_competition
 def submit_solver(database):
     """ Form to submit solvers to a database """
     db = models.get_database(database) or abort(404)
+  
+    
     user = db.session.query(db.User).get(session['idUser'])
 
     def allowed_file(filename):
@@ -304,10 +356,10 @@ def submit_solver(database):
     
 @app.route('/<database>/solvers')
 @require_login
+@require_competition
 def list_solvers(database):
     """ Lists all solvers that the currently logged in user submitted to the database """
     db = models.get_database(database) or abort(404)
-    
     solvers = db.session.query(db.Solver).filter_by(user=request.User).all()
    
     return render('list_solvers.html', database=database, solvers=solvers)
@@ -325,20 +377,25 @@ def index():
     
     return render('/databases.html', databases=databases)
 
-@app.route('/<database>/')
+@app.route('/<database>/experiments')
 @require_login
 def experiments_index(database):
     """ Show a list of all experiments in the database """
     db = models.get_database(database) or abort(404)
     
-    experiments = db.session.query(db.Experiment).all()
-    experiments.sort(key=lambda e: e.name.lower())
+    if db.is_competition() and db.competition_phase() not in (3,4):
+        # Experiments are only visible in phases 3 through 4 in a competition database
+        experiments = []
+    else:
+        experiments = db.session.query(db.Experiment).all()
+        experiments.sort(key=lambda e: e.name.lower())
 
-    res = render('experiments.html', experiments=experiments, database=database)
+    res = render('experiments.html', experiments=experiments, db=db, database=database)
     db.session.remove()
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/')
+@require_phase(phases=(2,3,4))
 @require_login
 def experiment(database, experiment_id):
     """ Show menu with links to info and evaluation pages """
@@ -349,8 +406,8 @@ def experiment(database, experiment_id):
     db.session.remove()
     return res
     
-
 @app.route('/<database>/experiment/<int:experiment_id>/solvers')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_solvers(database, experiment_id):
     """ Show a list of all solvers used in the experiment """
@@ -361,7 +418,8 @@ def experiment_solvers(database, experiment_id):
     solvers = list(set(sc.solver for sc in experiment.solver_configurations))
     solvers.sort(key=lambda s: s.name)
     
-    if not experiment.is_finished() and not is_admin():
+    # if competition db, show only own solvers unless phase == 4
+    if not is_admin() and not db.competition_phase() in (4,):
         solvers = filter(lambda s: s.user == request.User, solvers)
     
     res = render('experiment_solvers.html', solvers=solvers, experiment=experiment, database=database)
@@ -369,6 +427,7 @@ def experiment_solvers(database, experiment_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/solver-configurations')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_solver_configurations(database, experiment_id):
     """ List all solver configurations (solver + parameter set) used in the experiment """
@@ -378,7 +437,8 @@ def experiment_solver_configurations(database, experiment_id):
     solver_configurations = experiment.solver_configurations
     solver_configurations.sort(key=lambda sc: sc.solver.name.lower())
     
-    if not experiment.is_finished() and not is_admin():
+    # if competition db, show only own solvers unless phase == 4
+    if not is_admin() and not db.competition_phase() in (4,):
         solver_configurations = filter(lambda sc: sc.solver.user == request.User, solver_configurations)
     
     res = render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations, database=database)
@@ -386,6 +446,7 @@ def experiment_solver_configurations(database, experiment_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/instances')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_instances(database, experiment_id):
     """ Show information about all instances used in the experiment """
@@ -400,6 +461,7 @@ def experiment_instances(database, experiment_id):
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/results')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_results(database, experiment_id):
     """ Show a table with the solver configurations and their results on the instances of the experiment """
@@ -409,7 +471,8 @@ def experiment_results(database, experiment_id):
     instances = experiment.instances
     solver_configs = experiment.solver_configurations
     
-    if not experiment.is_finished() and not is_admin():
+    # if competition db, show only own solvers unless phase == 4
+    if not is_admin() and db.competition_phase() not in (4,):
         solver_configs = filter(lambda sc: sc.solver.user == request.User, solver_configs)
     
     if config.CACHING:
@@ -455,6 +518,7 @@ def experiment_results(database, experiment_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/progress')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_progress(database, experiment_id):
     """ Show a live information table of the experiment's progress """
@@ -465,6 +529,7 @@ def experiment_progress(database, experiment_id):
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/progress-ajax')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_progress_ajax(database, experiment_id):
     """ Returns JSON-serialized data of the experiment results. Used by the jQuery datatable as ajax data source """
@@ -476,7 +541,8 @@ def experiment_progress_ajax(database, experiment_id):
     query.options(joinedload(db.ExperimentResult.solver_configuration))
     jobs = query.filter_by(experiment=experiment)
     
-    if not experiment.is_finished() and not is_admin():
+    # if competition db, show only own solvers unless phase == 4
+    if not is_admin() and db.competition_phase() not in (4,):
         jobs = filter(lambda j: j.solver_configuration.solver.user == request.User, jobs)
     
     aaData = []
@@ -492,6 +558,7 @@ def experiment_progress_ajax(database, experiment_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
+@require_phase(phases=(3,4))
 @require_login
 def solver_config_results(database, experiment_id, solver_configuration_id, instance_id):
     """ Displays list of results (all jobs) of a solver configuration on an instance """
@@ -502,7 +569,8 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     if solver_configuration not in experiment.solver_configurations: abort(404)
     if instance not in experiment.instances: abort(404)
     
-    if not experiment.is_finished() and not solver_configuration.solver.user == request.User and not is_admin(): abort(401)
+    if not is_admin() and not db.competition_phase() in (4,):
+        if not solver_configuration.solver.user == request.User: abort(401)
     
     jobs = db.session.query(db.ExperimentResult) \
                     .filter_by(experiment=experiment) \
@@ -518,6 +586,7 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     return res
     
 @app.route('/<database>/instance/<int:instance_id>')
+@require_phase(phases=(3,4))
 @require_login
 def instance_details(database, instance_id):
     """ Show instance details """
@@ -536,6 +605,7 @@ def instance_details(database, instance_id):
     return res
     
 @app.route('/<database>/instance/<int:instance_id>/download')
+@require_phase(phases=(3,4))
 @require_login
 def instance_download(database, instance_id):
     """ Return HTTP-Response containing the instance blob """
@@ -551,18 +621,22 @@ def instance_download(database, instance_id):
     return res
     
 @app.route('/<database>/solver/<int:solver_id>')
+@require_phase(phases=(1,2,3,4))
 @require_login
 def solver_details(database, solver_id):
     """ Show solver details """
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
-    if solver.user != request.User and not is_admin(): abort(401)
+    
+    if not is_admin() and not db.competition_phase() in (4,):
+        if solver.user != request.User and not is_admin(): abort(401)
     
     res = render('solver_details.html', solver=solver, database=database)
     db.session.remove()
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/solver-configurations/<int:solver_configuration_id>')
+@require_phase(phases=(1,2,3,4))
 @require_login
 def solver_configuration_details(database, experiment_id, solver_configuration_id):
     """ Show solver configuration details """
@@ -571,7 +645,8 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     solver_config = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
     solver = solver_config.solver
     
-    if not experiment.is_finished() and solver.user != request.User and not is_admin(): abort(401)
+    if not is_admin() and not db.competition_phase() in (4,):
+        if solver.user != request.User: abort(401)
     
     parameters = solver_config.parameter_instances
     parameters.sort(key=lambda p: p.parameter.order)
@@ -581,6 +656,7 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_result(database, experiment_id, result_id):
     """ Displays information about a single result (job) """
@@ -588,7 +664,8 @@ def experiment_result(database, experiment_id, result_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
     
-    if not experiment.is_finished() and result.solver_configuration.solver.user != request.User and not is_admin(): abort(401)
+    if not is_admin() and not db.competition_phase() in (4,):
+        if result.solver_configuration.solver.user != request.User: abort(401)
     
     resultFile = result.resultFile
     clientOutput = result.clientOutput
@@ -616,13 +693,15 @@ def experiment_result(database, experiment_id, result_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_result_download(database, experiment_id, result_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
     
-    if not experiment.is_finished() and result.solver_configuration.solver.user != request.User and not is_admin(): abort(401)
+    if not is_admin() and not db.competition_phase() in (4,):
+        if result.solver_configuration.solver.user != request.User: abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -633,13 +712,15 @@ def experiment_result_download(database, experiment_id, result_id):
     return res
     
 @app.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-client-output')
+@require_phase(phases=(3,4))
 @require_login
 def experiment_result_download_client_output(database, experiment_id, result_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
     
-    if not experiment.is_finished() and result.solver_configuration.solver.user != request.User and not is_admin(): abort(401)
+    if not is_admin() and not db.competition_phase() in (4,):
+        if result.solver_configuration.solver.user != request.User: abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -650,7 +731,6 @@ def experiment_result_download_client_output(database, experiment_id, result_id)
     return res
 
 @app.route('/<database>/imgtest/<int:experiment_id>')
-@require_login
 def imgtest(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)

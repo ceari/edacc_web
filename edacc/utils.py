@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import random
 from edacc import app
 from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR
 
@@ -43,13 +44,22 @@ def launch_command(solver_config):
 
 def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
     return value.strftime(format)
+    
+def competition_phase(value):
+    """ returns a textual label of a competiton phase given by an integer value """
+    if value == 1: return "Submission phase"
+    elif value == 2: return "Experiment creation phase"
+    elif value == 3: return "Competition/Tests running"
+    elif value == 4: return "Competition finished"
+    else: return "unknown phase"
+    
 
 app.jinja_env.filters['download_size'] = download_size
 app.jinja_env.filters['job_status'] = job_status
 app.jinja_env.filters['job_status_color'] = job_status_color
 app.jinja_env.filters['launch_command'] = launch_command
 app.jinja_env.filters['datetimeformat'] = datetimeformat
-
+app.jinja_env.filters['competition_phase'] = competition_phase
 
 def parse_parameters(parameters):
     """ Parse parameters from the solver submission form, returns a list
@@ -95,3 +105,46 @@ def parse_parameters(parameters):
             params.append((pname, prefix, default_value, boolean, i))
             i += 1
     return params
+
+# some SAT functions
+random.seed()
+def random_clause(l):
+    return [random.randint(0, 1) for _ in xrange(l)]
+    
+def random_formula(clauses, clauseLength):
+    return [random_clause(clauseLength) for _ in xrange(clauses)]
+
+def assignment(n):
+    if n == 1:
+        yield [0]
+        yield [1]
+    else:
+        for a in assignment(n - 1):
+            yield a + [0]
+            yield a + [1]
+            
+def satisfies(a, f):
+    sat_clauses = 0
+    for clause in f:
+        for i in xrange(len(clause)):
+            if clause[i] == a[i]: sat_clauses += 1; break
+    if sat_clauses == len(f):
+        return True
+    return False
+        
+def SAT(f):
+    for a in assignment(len(f[0])):
+        if satisfies(a, f): return a
+    return None
+
+def render_formula(f):
+    res = []
+    for c in f:
+        cl = []
+        for i in xrange(len(c)):
+            if c[i] == 0: cl.append(u'\u00ac' + chr(i + ord('A')))
+            else: cl.append(chr(i + ord('A')))
+        res.append('(' + u' \u2228 '.join(cl) + ')')
+    return u' \u2227 '.join(res)
+
+app.jinja_env.filters['render_formula'] = render_formula

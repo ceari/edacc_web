@@ -56,6 +56,7 @@ class EDACCDatabase(object):
         class InstanceClass(object): pass
         class GridQueue(object): pass
         class User(object): pass
+        class DBConfiguration(object): pass
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
         self.Parameter = Parameter
@@ -66,6 +67,7 @@ class EDACCDatabase(object):
         self.InstanceClass = InstanceClass
         self.GridQueue = GridQueue
         self.User = User
+        self.DBConfiguration = DBConfiguration
         
         metadata.reflect()
         
@@ -120,8 +122,36 @@ class EDACCDatabase(object):
                 'solvers': relation(Solver, backref='user')
             }
         )
+        mapper(DBConfiguration, metadata.tables['DBConfiguration'])
         
         self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False, autoflush=False))
+        
+        # initialize DBConfiguration table if not already done
+        if self.session.query(DBConfiguration).get(0) is None:
+            dbConfig = DBConfiguration()
+            dbConfig.id = 0
+            dbConfig.competition = False
+            dbConfig.competitionPhase = None
+            self.session.add(dbConfig)
+            self.session.commit()
+    
+    def is_competition(self):
+        """ returns whether this database is a competition database (user management etc. necessary) or not """
+        return self.session.query(self.DBConfiguration).get(0).competition
+        
+    def set_competition(self, b):
+        self.session.query(self.DBConfiguration).get(0).competition = b
+        self.session.commit()
+    
+    def competition_phase(self):
+        """ returns the competition phase this database is in (or None, if is_competition() == False) as integer"""
+        if not self.is_competition(): return None
+        return int(self.session.query(self.DBConfiguration).get(0).competitionPhase)
+    
+    def set_competition_phase(self, phase):
+        if phase is not None and phase not in (1,2,3,4): return
+        self.session.query(self.DBConfiguration).get(0).competitionPhase = str(phase)
+        self.session.commit()
         
 # Dictionary of the databases this web server is serving
 databases = {}

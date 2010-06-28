@@ -12,7 +12,7 @@
                          {% if experiment.is_running() %} In progress{% endif %}
                          {% if not experiment.is_finished() and not experiment.is_running() %} Not started{% endif %}</strong></div>
     {% if not experiment.is_finished() and not session.admin %}
-    <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While an experiment is in progress or hasn't been started yet, you are only able to see your own solvers.</div>
+    <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While an experiment is in progress, you are only able to see your own solvers.</div>
     {% endif %}
     
     <h2>Progress</h2>
