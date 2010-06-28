@@ -10,10 +10,11 @@ sqlalchemy.convert_unicode = True
 
 class EDACCDatabase(object):
     """ Encapsulates a single EDACC database connection """
-    def __init__(self, username, password, database):
+    def __init__(self, username, password, database, label):
         self.database = database
         self.username = username
         self.password = password
+        self.label = label
         
         url = URL(drivername=config.DATABASE_DRIVER, username=username,
                   password=password, host=config.DATABASE_HOST,
@@ -153,14 +154,17 @@ class EDACCDatabase(object):
         self.session.query(self.DBConfiguration).get(0).competitionPhase = str(phase)
         self.session.commit()
         
+    def __str__(self):
+        return self.label
+        
 # Dictionary of the databases this web server is serving
 databases = {}
 
 def get_databases():
     return databases
 
-def add_database(username, password, database):
-    databases[database] = EDACCDatabase(username, password, database)
+def add_database(username, password, database, label):
+    databases[database] = EDACCDatabase(username, password, database, label)
 
 def remove_database(database):
     if databases.has_key(database):

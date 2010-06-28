@@ -16,7 +16,7 @@ if config.CACHING:
     cache = MemcachedCache([config.MEMCACHED_HOST])
     
 for db in config.DEFAULT_DATABASES:
-    models.add_database(db[0], db[1], db[2])
+    models.add_database(db[0], db[1], db[2], db[3])
 
 app.secret_key = config.SECRET_KEY
 
@@ -53,7 +53,7 @@ def require_phase(f, phases):
     @wraps(f)
     def decorated_f(*args, **kwargs):
         db = models.get_database(kwargs['database'])
-        if db.competition_phase() not in phases: abort(404)
+        if db.is_competition() and db.competition_phase() not in phases: abort(404)
         return f(*args, **kwargs)
     return decorated_f
 
@@ -114,6 +114,7 @@ def databases():
 def databases_add():
     error = None
     if request.method == 'POST':
+        label = request.form['label']
         database = request.form['database']
         username = request.form['username']
         password = request.form['password']
@@ -122,11 +123,10 @@ def databases_add():
             error = "A database with this name already exists"
         else:
             try:
-                models.add_database(username, password, database)
+                models.add_database(username, password, database, label)
                 return redirect(url_for('databases'))
             except Exception as e:
                 error = "Can't add database: " + str(e)
-        
     
     return render('/admin/databases_add.html', error=error)
 
@@ -267,7 +267,7 @@ def logout(database):
     session.pop('logged_in', None)
     session.pop('database', None)
     return redirect('/')
-    
+
 @app.route('/<database>/submit-solver/', methods=['GET', 'POST'])
 @require_login
 @require_phase(phases=(1,))
@@ -364,6 +364,41 @@ def list_solvers(database):
    
     return render('list_solvers.html', database=database, solvers=solvers)
     
+@app.route('/<database>/download-solver/<int:id>/')
+@require_login
+@require_competition
+@require_phase(phases=(1,3,4))
+def download_solver(database, id):
+    """ Lets a user download the binaries of his own solvers """
+    db = models.get_database(database) or abort(404)
+    solver = db.session.query(db.Solver).get(id) or abort(404)
+    if solver.user != request.User: abort(401)
+
+    headers = Headers()
+    headers.add('Content-Type', 'text/plain')
+    headers.add('Content-Disposition', 'attachment', filename=solver.binaryName)
+    
+    res = Response(response=solver.binary, headers=headers)
+    db.session.remove()
+    return res
+
+@app.route('/<database>/download-solver-code/<int:id>/')
+@require_login
+@require_competition
+@require_phase(phases=(1,3,4))
+def download_solver_code(database, id):
+    """ Lets a user download the binaries of his own solvers """
+    db = models.get_database(database) or abort(404)
+    solver = db.session.query(db.Solver).get(id) or abort(404)
+    if solver.user != request.User: abort(401)
+
+    headers = Headers()
+    headers.add('Content-Type', 'text/plain')
+    headers.add('Content-Disposition', 'attachment', filename=solver.name + ".zip")
+    
+    res = Response(response=solver.code, headers=headers)
+    db.session.remove()
+    return res
 
 ####################################################################
 #                   Web Frontend View Functions
@@ -402,7 +437,7 @@ def experiment(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
-    res = render('experiment.html', experiment=experiment, database=database)
+    res = render('experiment.html', experiment=experiment, database=database, db=db)
     db.session.remove()
     return res
     
@@ -419,7 +454,7 @@ def experiment_solvers(database, experiment_id):
     solvers.sort(key=lambda s: s.name)
     
     # if competition db, show only own solvers unless phase == 4
-    if not is_admin() and not db.competition_phase() in (4,):
+    if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         solvers = filter(lambda s: s.user == request.User, solvers)
     
     res = render('experiment_solvers.html', solvers=solvers, experiment=experiment, database=database)
@@ -438,7 +473,7 @@ def experiment_solver_configurations(database, experiment_id):
     solver_configurations.sort(key=lambda sc: sc.solver.name.lower())
     
     # if competition db, show only own solvers unless phase == 4
-    if not is_admin() and not db.competition_phase() in (4,):
+    if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         solver_configurations = filter(lambda sc: sc.solver.user == request.User, solver_configurations)
     
     res = render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations, database=database)
@@ -472,7 +507,7 @@ def experiment_results(database, experiment_id):
     solver_configs = experiment.solver_configurations
     
     # if competition db, show only own solvers unless phase == 4
-    if not is_admin() and db.competition_phase() not in (4,):
+    if not is_admin() and db.is_competition() and db.competition_phase() not in (4,):
         solver_configs = filter(lambda sc: sc.solver.user == request.User, solver_configs)
     
     if config.CACHING:
@@ -542,7 +577,7 @@ def experiment_progress_ajax(database, experiment_id):
     jobs = query.filter_by(experiment=experiment)
     
     # if competition db, show only own solvers unless phase == 4
-    if not is_admin() and db.competition_phase() not in (4,):
+    if not is_admin() and db.is_competition() and db.competition_phase() not in (4,):
         jobs = filter(lambda j: j.solver_configuration.solver.user == request.User, jobs)
     
     aaData = []
@@ -569,7 +604,7 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     if solver_configuration not in experiment.solver_configurations: abort(404)
     if instance not in experiment.instances: abort(404)
     
-    if not is_admin() and not db.competition_phase() in (4,):
+    if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         if not solver_configuration.solver.user == request.User: abort(401)
     
     jobs = db.session.query(db.ExperimentResult) \
@@ -628,10 +663,10 @@ def solver_details(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
     
-    if not is_admin() and not db.competition_phase() in (4,):
+    if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         if solver.user != request.User and not is_admin(): abort(401)
     
-    res = render('solver_details.html', solver=solver, database=database)
+    res = render('solver_details.html', solver=solver, database=database, db=db)
     db.session.remove()
     return res
 
@@ -645,7 +680,7 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     solver_config = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
     solver = solver_config.solver
     
-    if not is_admin() and not db.competition_phase() in (4,):
+    if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         if solver.user != request.User: abort(401)
     
     parameters = solver_config.parameter_instances
@@ -664,7 +699,7 @@ def experiment_result(database, experiment_id, result_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
     
-    if not is_admin() and not db.competition_phase() in (4,):
+    if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         if result.solver_configuration.solver.user != request.User: abort(401)
     
     resultFile = result.resultFile
@@ -700,7 +735,7 @@ def experiment_result_download(database, experiment_id, result_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
     
-    if not is_admin() and not db.competition_phase() in (4,):
+    if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         if result.solver_configuration.solver.user != request.User: abort(401)
 
     headers = Headers()
@@ -719,7 +754,7 @@ def experiment_result_download_client_output(database, experiment_id, result_id)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
     
-    if not is_admin() and not db.competition_phase() in (4,):
+    if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         if result.solver_configuration.solver.user != request.User: abort(401)
 
     headers = Headers()

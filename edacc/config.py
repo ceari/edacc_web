@@ -26,6 +26,6 @@ ADMIN_PASSWORD = 'affe42'
 # List of databases this server connects to at startup
 # Format: Tuples of username, password and database
 DEFAULT_DATABASES = (
-    ('edacc', 'edaccteam', 'EDACC'),
-    ('edacc', 'edaccteam', 'EDACC2'),
+    ('edacc', 'edaccteam', 'EDACC', 'Test Competition'),
+    ('edacc', 'edaccteam', 'EDACC2', 'EDACC2'),
 )

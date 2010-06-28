@@ -11,7 +11,7 @@
     <div><strong>Status: {% if experiment.is_finished() %} Finished{% endif %}
                          {% if experiment.is_running() %} In progress{% endif %}
                          {% if not experiment.is_finished() and not experiment.is_running() %} Not started{% endif %}</strong></div>
-    {% if not experiment.is_finished() and not session.admin %}
+    {% if not experiment.is_finished() and not session.admin and db.is_competition() %}
     <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While an experiment is in progress, you are only able to see your own solvers.</div>
     {% endif %}
     

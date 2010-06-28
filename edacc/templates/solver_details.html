@@ -6,6 +6,10 @@
 </div>
 <h2>Details of solver {{solver.name}}</h2>
 
+{% if session.logged_in and solver.user == request.User %}
+<a href="{{url_for('download_solver', database=database, id=solver.idSolver)}}">Download binary</a> | <a href="{{url_for('download_solver_code', database=database, id=solver.idSolver)}}">Download code</a>
+{% endif %}
+
 <table class="details">
     <tr>
         <td>Name:</td>

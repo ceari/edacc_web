@@ -114,7 +114,7 @@ if __name__ == '__main__':
     password = raw_input('Enter password: ').strip()
     database = raw_input('Enter database name: ').strip()
     try:
-        models.add_database(username, password, database)
+        models.add_database(username, password, database,'')
     except Exception as e:
         print "Can't connect to database: " + str(e)
         sys.exit(0)
