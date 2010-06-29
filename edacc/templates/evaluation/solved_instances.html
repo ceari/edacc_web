@@ -7,5 +7,6 @@
         Evaluation - Number of instances solved within a given amount of time
     </div>
 
-    <img src="{{url_for('cactus_plot', database=database, experiment_id=experiment.idExperiment)}}" />
+    <img src="{{url_for('cactus_plot', database=database, experiment_id=experiment.idExperiment)}}" /><br/>
+    Download as <a href="{{url_for('cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?pdf">PDF</a>
 {% endblock %}

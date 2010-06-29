@@ -44,21 +44,28 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
         grdevices.bitmap(file=filename, units="px", width=600, height=600)
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
-        
+    
+    # list of colors used in the defined order for the different solvers
+    colors = ['red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen', 'darkorchid', 'deeppink', 'darkgreen', 'blue4']
+    
+    # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]), type='p', col='red', las = 1,
                     xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y), xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
-    colors = ['red', 'blue', 'green', 'purple', 'orange', 'black']
     robjects.r.par(new=1)
+
     point_style = 0
     for s in solvers:
         xs = s['xs']
         ys = s['ys']
         
+        # plot points
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=colors[point_style], pch=point_style,
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y), xaxs='i', yaxs='i',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
         robjects.r.par(new=1)
+        
+        # plot lines
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='l', col=colors[point_style],lty=1,
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y), xaxs='i', yaxs='i',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
@@ -67,8 +74,12 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
         point_style += 1
         
     # plot labels and axis
-    robjects.r.mtext('number of solved instances', side=1, line=3, cex=1.2) # right axis label
-    robjects.r.mtext('CPU Time (s)', side=2, padj=0, line=3, cex=1.2) # top axis label
-    robjects.r.mtext('Number of solved instances within a given amount of time', padj=1, side=3, line=3, cex=1.7) # plot title
+    robjects.r.mtext('number of solved instances', side=1, line=3, cex=1.2) # left axis label
+    robjects.r.mtext('CPU Time (s)', side=2, padj=0, line=3, cex=1.2) # bottom axis label
+    robjects.r.mtext('Number of instances solved within a given amount of time', padj=1, side=3, line=3, cex=1.7) # plot title
+    
+    # plot legend
+    robjects.r.legend(1, 32, legend=robjects.StrVector([s['name'] for s in solvers]), col=robjects.StrVector(colors[:len(solvers)]), pch=robjects.IntVector(range(len(solvers))),
+                      lty=robjects.IntVector(range(1,3)))
 
     grdevices.dev_off()

@@ -766,6 +766,8 @@ def experiment_result_download_client_output(database, experiment_id, result_id)
     return res
 
 @app.route('/<database>/experiment/<int:experiment_id>/evaluation-solved-instances')
+@require_phase(phases=(4,))
+@require_login
 def evaluation_solved_instances(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
@@ -773,6 +775,8 @@ def evaluation_solved_instances(database, experiment_id):
     return render('/evaluation/solved_instances.html', database=database, experiment=experiment)
 
 @app.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')
+@require_phase(phases=(4,))
+@require_login
 def evaluation_cputime(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
@@ -785,6 +789,8 @@ def evaluation_cputime(database, experiment_id):
     return render('/evaluation/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2)
 
 @app.route('/<database>/experiment/<int:experiment_id>/cputime-plot/<int:s1>/<int:s2>/')
+@require_phase(phases=(4,))
+@require_login
 def cputime_plot(database, experiment_id, s1, s2):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
@@ -824,6 +830,8 @@ def cputime_plot(database, experiment_id, s1, s2):
         return response
     
 @app.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
+@require_phase(phases=(4,))
+@require_login
 def cactus_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
@@ -834,7 +842,7 @@ def cactus_plot(database, experiment_id):
     
     solvers = []
     for sc in exp.solver_configurations:
-        s = {'xs': [], 'ys': []}
+        s = {'xs': [], 'ys': [], 'name': sc.get_name()}
         sc_res = results.filter_by(solver_configuration=sc, run=0, status=1).order_by(db.ExperimentResult.time)
         i = 1
         for r in sc_res:
@@ -844,11 +852,11 @@ def cactus_plot(database, experiment_id):
         solvers.append(s)
         
     max_x = len(exp.instances) + 10
-    max_y = exp.timeOut
+    max_y = max([max(s['ys']) for s in solvers])
     
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, request.unique_id) + 'cactus.pdf'
-        plots.cactus(solvers, max_x, max_y, filename)
+        plots.cactus(solvers, max_x, max_y, filename, format='pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf')
         os.remove(filename)
         return response
