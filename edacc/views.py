@@ -570,8 +570,7 @@ def experiment_progress_ajax(database, experiment_id):
     """ Returns JSON-serialized data of the experiment results. Used by the jQuery datatable as ajax data source """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    
-    s = time.time()
+
     query = db.session.query(db.ExperimentResult).enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance))
     query.options(joinedload(db.ExperimentResult.solver_configuration))
     jobs = query.filter_by(experiment=experiment)
@@ -586,7 +585,6 @@ def experiment_progress_ajax(database, experiment_id):
         if len(iname) > 30: iname = iname[0:30] + '...'
         aaData.append([job.idJob, job.solver_configuration.get_name(), utils.parameter_string(job.solver_configuration),
                iname, job.run, job.time, job.seed, utils.job_status(job.status)])
-    print time.time() - s
     
     res = json.dumps({'aaData': aaData})
     db.session.remove()
@@ -795,7 +793,6 @@ def cputime_plot(database, experiment_id, s1, s2):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
-    start = time.time()
     sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
     sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
         
@@ -828,7 +825,6 @@ def cputime_plot(database, experiment_id, s1, s2):
         plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, exp.timeOut, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
-        print time.time() - start
         return response
     
 @app.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
@@ -838,7 +834,6 @@ def cactus_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
-    start = time.time()
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results = results.filter_by(experiment=exp)
@@ -870,5 +865,4 @@ def cactus_plot(database, experiment_id):
         plots.cactus(solvers, max_x, max_y, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
-        print time.time() - start
         return response
