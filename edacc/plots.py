@@ -2,94 +2,73 @@
 
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
+from edacc.utils import synchronized
 grdevices = importr('grDevices')
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",bold="Bitstream Vera Sans:style=Bold",italic="Bitstream Vera Sans:style=Italic",bolditalic="Bitstream Vera Sans:style=Bold Italic,BoldItalic",symbol="Symbol")
-                 
+
+@synchronized()
 def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
-        grdevices.bitmap(file=filename)
+        grdevices.bitmap(file=filename, units="px", width=600, height=600)
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
 
-    robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col='red',
+    robjects.r.par(mar=robjects.FloatVector([3,3,6,6])) # set margins to fit in labels on the right and top
+    
+    # plot dashed line from (0,0) to (timeout,timeout)
+    robjects.r.plot(robjects.FloatVector([0,timeout]), robjects.FloatVector([0,timeout]), type='l', col='black', lty=2,
                     xlim=robjects.r.c(0,timeout), ylim=robjects.r.c(0,timeout), xaxs='i', yaxs='i',
-                    main=xlabel + " vs. " + ylabel, xlab=xlabel, ylab=ylabel, pch=3, cex=0.75, **{'cex.main': 1.5})
+                    xaxt='n', yaxt='n', xlab='', ylab='')
+    robjects.r.par(new=1) # to be able to plot in the same graph again
+    
+    # plot running times
+    robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col='red', las = 1,
+                    xlim=robjects.r.c(0,timeout), ylim=robjects.r.c(0,timeout), xaxs='i', yaxs='i',
+                    xlab='', ylab='', pch=3, tck=0.015, **{'cex.axis': 1.2, 'cex.main': 1.5})
+    
+    # plot labels and axis
+    robjects.r.axis(side=4, tck=0.015, las=1, **{'cex.axis': 1.2, 'cex.main': 1.5}) # plot right axis
+    robjects.r.axis(side=3, tck=0.015, las=1, **{'cex.axis': 1.2, 'cex.main': 1.5}) # plot top axis
+    robjects.r.mtext(ylabel, side=4, line=3, cex=1.2) # right axis label
+    robjects.r.mtext(xlabel, side=3, padj=0, line=3, cex=1.2) # top axis label
+    robjects.r.mtext(xlabel + ' vs. ' + ylabel, padj=-1.7, side=3, line=3, cex=1.7) # plot title
+    
     grdevices.dev_off()
 
-#import matplotlib
-#matplotlib.use('Agg')
-#from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-#from matplotlib.figure import Figure
-#from matplotlib.font_manager import FontProperties
-#from matplotlib.patches import Rectangle
-#from cStringIO import StringIO
-#
-#matplotlib.rcParams['font.weight'] = 500
-#
-#def scatter(xs, ys, xlabel, ylabel, format='png'):
-#    if format=='png':
-#        fig = Figure(frameon=True, dpi=80, facecolor='#FFFFFF', edgecolor='#FFFFFF')
-#    else:
-#        fig = Figure(frameon=False, dpi=300, facecolor='#FFFFFF', edgecolor='#FFFFFF')
-#    canvas = FigureCanvas(fig)
-#    
-#    fig.patch.set_fill(True)
-#    fig.patch.set_alpha(1)
-#    fig.patch.set_color('#FFFFFF')    
-#
-#    ax = fig.add_subplot(111, xlabel=xlabel, ylabel=ylabel)
-#    t = ax.set_title('CPU time ' + xlabel +' vs '+ylabel, {'size': '16'})
-#    t.set_position((0.5, 1.05))
-#    ax.scatter(xs, ys, s=100, marker='+', c='#FF0000', edgecolors='#FF0000')
-#    ax.set_autoscale_on(False)
-#    
-#    ax2 = fig.add_subplot(111, xlabel=xlabel, ylabel=ylabel)
-#    ax2.get_xaxis().set_label_position('top')
-#    ax2.get_yaxis().set_label_position('right')
-#    ax2.set_autoscale_on(False)
-#    
-#    maxtime = 30
-#    
-#    ax.set_xlim([0,maxtime])
-#    ax.set_ylim([0,maxtime])
-#    ax2.set_xlim([0,maxtime])
-#    ax2.set_ylim([0,maxtime])
-#    ax2.plot([0,maxtime],[0,maxtime], '--', c='black')
-#
-#    s = StringIO()
-#    if format == 'pdf':
-#        canvas.print_pdf(s)
-#    elif format == 'svg':
-#        canvas.print_svg(s)
-#    elif format == 'png':
-#        canvas.print_png(s)
-#    return s.getvalue()
+@synchronized()
+def cactus(solvers, max_x, max_y, filename, format='png'):
+    if format == 'png':
+        #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
+        grdevices.bitmap(file=filename, units="px", width=600, height=600)
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite")
+        
+    robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]), type='p', col='red', las = 1,
+                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y), xaxs='i', yaxs='i',
+                    xlab='',ylab='', **{'cex.main': 1.5})
+    colors = ['red', 'blue', 'green', 'purple', 'orange', 'black']
+    robjects.r.par(new=1)
+    point_style = 0
+    for s in solvers:
+        xs = s['xs']
+        ys = s['ys']
+        
+        robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=colors[point_style], pch=point_style,
+                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y), xaxs='i', yaxs='i',
+                        axes=False, xlab='',ylab='', **{'cex.main': 1.5})
+        robjects.r.par(new=1)
+        robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='l', col=colors[point_style],lty=1,
+                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y), xaxs='i', yaxs='i',
+                        axes=False, xlab='',ylab='', **{'cex.main': 1.5})
+        robjects.r.par(new=1)
+        
+        point_style += 1
+        
+    # plot labels and axis
+    robjects.r.mtext('number of solved instances', side=1, line=3, cex=1.2) # right axis label
+    robjects.r.mtext('CPU Time (s)', side=2, padj=0, line=3, cex=1.2) # top axis label
+    robjects.r.mtext('Number of solved instances within a given amount of time', padj=1, side=3, line=3, cex=1.7) # plot title
 
-#from rpy2 import robjects
-#from rpy2.robjects.lib import grid
-#from rpy2.robjects.packages import importr
-#import time
-#
-#def test():
-#    rprint = robjects.globalenv.get("print")
-#    stats = importr('stats')
-#    grdevices = importr('grDevices')
-#    lattice = importr('lattice')
-#    
-#    x = [500, 600, 700, 800, 900]
-#    y = [24200, 23323, 34434, 43431, 54523]
-#    
-#    d = {'x': robjects.IntVector(x), 'y': robjects.IntVector(y)}
-#    dataf = robjects.DataFrame(d)
-#    formula = robjects.Formula('y ~ x')
-#    formula.getenvironment()['x'] = dataf.rx2('x')
-#    formula.getenvironment()['y'] = dataf.rx2('y')
-#    
-#    p = lattice.xyplot(formula, pch=3, col="black")
-#    
-#    grdevices.bitmap(file="/tmp/test.pdf", type="pdfwrite")
-#    robjects.r('trellis.par.set("fontsize", list(text=18, points=10))')
-#    rprint(p)
-#    grdevices.dev_off()
+    grdevices.dev_off()

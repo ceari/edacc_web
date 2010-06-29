@@ -27,9 +27,7 @@
     <a href="{{url_for('experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results by solver configuration and instance</a>
     
     <h2>Evaluation</h2>
-    Random comparison:<br/>
-    <img alt="test" src="{{url_for('imgtest', database=database, experiment_id=experiment.idExperiment)}}" /><br/>
-    View random:
-    <a href="{{url_for('imgtest', database=database, experiment_id=experiment.idExperiment)}}?pdf">PDF</a>
-    <a href="{{url_for('imgtest', database=database, experiment_id=experiment.idExperiment)}}?svg">SVG</a>
+    <a href="{{url_for('evaluation_cputime', database=database, experiment_id=experiment.idExperiment)}}">Compare the CPU time of two solvers</a><br/>
+    <a href="{{url_for('evaluation_solved_instances', database=database, experiment_id=experiment.idExperiment)}}">Graph of the number of solved instances within a given amount of time</a>
+
 {% endblock %}

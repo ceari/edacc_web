@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import random
+from threading import Thread, Lock, currentThread
 from edacc import app
 from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR
 
@@ -148,3 +149,20 @@ def render_formula(f):
     return u' \u2227 '.join(res)
 
 app.jinja_env.filters['render_formula'] = render_formula
+    
+class synchronized(object): 
+    def __init__(self, *args):
+        self.lock = Lock()
+    
+    def __call__(self, f):
+        def synced_f(*args, **kwargs):
+            try:
+                self.lock.acquire()
+                try:
+                    return f(*args, **kwargs)
+                except Exception, e:
+                    raise
+            finally:
+                self.lock.release()
+
+        return synced_f

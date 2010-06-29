@@ -28,4 +28,5 @@ ADMIN_PASSWORD = 'affe42'
 DEFAULT_DATABASES = (
     ('edacc', 'edaccteam', 'EDACC', 'Test Competition'),
     ('edacc', 'edaccteam', 'EDACC2', 'EDACC2'),
+    ('root', '', 'EDACC3', 'EDACC3'),
 )

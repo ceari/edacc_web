@@ -765,18 +765,33 @@ def experiment_result_download_client_output(database, experiment_id, result_id)
     db.session.remove()
     return res
 
-@app.route('/<database>/imgtest/<int:experiment_id>')
-def imgtest(database, experiment_id):
+@app.route('/<database>/experiment/<int:experiment_id>/evaluation-solved-instances')
+def evaluation_solved_instances(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    
+    return render('/evaluation/solved_instances.html', database=database, experiment=experiment)
+
+@app.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')
+def evaluation_cputime(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    
+    s1 = request.args.get('s1', None)
+    s2 = request.args.get('s2', None)
+    if s1: s1 = int(s1)
+    if s2: s2 = int(s2)
+    
+    return render('/evaluation/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2)
+
+@app.route('/<database>/experiment/<int:experiment_id>/cputime-plot/<int:s1>/<int:s2>/')
+def cputime_plot(database, experiment_id, s1, s2):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
-    import random
-    random.seed()
-
-    # 2 random solverconfigs
-    sc1 = random.choice(exp.solver_configurations)
-    sc2 = random.choice(exp.solver_configurations)
-    
+    sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
+    sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
+        
     results1 = db.session.query(db.ExperimentResult)
     results1.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
     results1 = results1.filter_by(experiment=exp, solver_configuration=sc1)
@@ -801,11 +816,45 @@ def imgtest(database, experiment_id):
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
         os.remove(filename)
         return response
-    elif request.args.has_key('svg'):
-        return Response(response=plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, format='svg'), mimetype='image/svg+xml')
     else:
         filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.png'
         plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, exp.timeOut, filename)
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
+    
+@app.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
+def cactus_plot(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    
+    results = db.session.query(db.ExperimentResult)
+    results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
+    results = results.filter_by(experiment=exp)
+    
+    solvers = []
+    for sc in exp.solver_configurations:
+        s = {'xs': [], 'ys': []}
+        sc_res = results.filter_by(solver_configuration=sc, run=0, status=1).order_by(db.ExperimentResult.time)
+        i = 1
+        for r in sc_res:
+            s['ys'].append(r.time)
+            s['xs'].append(i)
+            i += 1
+        solvers.append(s)
+        
+    max_x = len(exp.instances) + 10
+    max_y = exp.timeOut
+    
+    if request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, request.unique_id) + 'cactus.pdf'
+        plots.cactus(solvers, max_x, max_y, filename)
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf')
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, request.unique_id) + 'cactus.png'
+        plots.cactus(solvers, max_x, max_y, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
