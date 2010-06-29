@@ -4,7 +4,7 @@
     <div class="navigation">
         <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> :: 
         <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
-        Evaluation - Number of instances solved within a given amount of time
+        Evaluation
     </div>
 
     <img src="{{url_for('cactus_plot', database=database, experiment_id=experiment.idExperiment)}}" /><br/>

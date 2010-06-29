@@ -2,12 +2,10 @@
 
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
-from edacc.utils import synchronized
 grdevices = importr('grDevices')
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",bold="Bitstream Vera Sans:style=Bold",italic="Bitstream Vera Sans:style=Italic",bolditalic="Bitstream Vera Sans:style=Bold Italic,BoldItalic",symbol="Symbol")
 
-@synchronized()
 def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
@@ -37,7 +35,6 @@ def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
     
     grdevices.dev_off()
 
-@synchronized()
 def cactus(solvers, max_x, max_y, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
@@ -79,7 +76,7 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
     robjects.r.mtext('Number of instances solved within a given amount of time', padj=1, side=3, line=3, cex=1.7) # plot title
     
     # plot legend
-    robjects.r.legend(1, 32, legend=robjects.StrVector([s['name'] for s in solvers]), col=robjects.StrVector(colors[:len(solvers)]), pch=robjects.IntVector(range(len(solvers))),
-                      lty=robjects.IntVector(range(1,3)))
+    robjects.r.legend(1, max_y - (max_y * 0.03), legend=robjects.StrVector([s['name'] for s in solvers]), col=robjects.StrVector(colors[:len(solvers)]), pch=robjects.IntVector(range(len(solvers))),
+                      lty=robjects.IntVector(range(1,len(solvers)+1)))
 
     grdevices.dev_off()

@@ -795,6 +795,7 @@ def cputime_plot(database, experiment_id, s1, s2):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
+    start = time.time()
     sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
     sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
         
@@ -827,6 +828,7 @@ def cputime_plot(database, experiment_id, s1, s2):
         plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, exp.timeOut, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
+        print time.time() - start
         return response
     
 @app.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
@@ -836,6 +838,7 @@ def cactus_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
+    start = time.time()
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results = results.filter_by(experiment=exp)
@@ -857,7 +860,9 @@ def cactus_plot(database, experiment_id):
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, request.unique_id) + 'cactus.pdf'
         plots.cactus(solvers, max_x, max_y, filename, format='pdf')
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename='instances_solved_given_time.pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
         os.remove(filename)
         return response
     else:
@@ -865,4 +870,5 @@ def cactus_plot(database, experiment_id):
         plots.cactus(solvers, max_x, max_y, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
+        print time.time() - start
         return response
