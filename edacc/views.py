@@ -69,9 +69,8 @@ def require_competition(f):
 def require_login(f):
     """ View function decorator that checks if the user is logged in to the database specified
         by the route parameter <database> which gets passed in **kwargs.
-        Only checked for competition databases that are in a phase < 3 (not finished)
-        Therefor, this decorator can only be used for URLs that have a <database> part.
-        Also attaches the user object to the request as attribute "User"
+        Only checked for competition databases that are in a phase < 3 (not finished).
+        Also attaches the user object to the request as attribute "User".
     """
     @wraps(f)
     def decorated_f(*args, **kwargs):
@@ -104,6 +103,7 @@ def password_hash(password):
 @app.route('/admin/databases/')
 @require_admin
 def databases():
+    """ Show a list of databases this web frontend is serving """
     databases = list(models.get_databases().itervalues())
     databases.sort(key=lambda db: db.database.lower())
     
@@ -112,6 +112,7 @@ def databases():
 @app.route('/admin/databases/add/', methods=['GET', 'POST'])
 @require_admin
 def databases_add():
+    """ Display a form to add databases to the web frontend """
     error = None
     if request.method == 'POST':
         label = request.form['label']
@@ -133,11 +134,13 @@ def databases_add():
 @app.route('/admin/databases/remove/<database>/')
 @require_admin
 def databases_remove(database):
+    """ Remove the specified database from the set of databases the web frontend is serving """
     models.remove_database(database)
     return redirect(url_for('databases'))
     
 @app.route('/admin/login/', methods=['GET', 'POST'])
 def admin_login():
+    """ Admin login form """
     if session.get('admin'): return redirect(url_for('databases'))
     
     error = None
@@ -151,6 +154,7 @@ def admin_login():
 
 @app.route('/admin/logout/')
 def admin_logout():
+    """ Log out the currently logged in admin """
     session.pop('admin', None)
     return redirect('/')
 
@@ -233,7 +237,7 @@ def register(database):
 @app.route('/<database>/login/', methods=['GET', 'POST'])
 @require_competition
 def login(database):
-    """ User login form and handling for a specific database """
+    """ User login form and handling for a specific database. Users can only be logged in to one database at a time """
     db = models.get_database(database) or abort(404)
     
     error = None
@@ -406,7 +410,7 @@ def download_solver_code(database, id):
 
 @app.route('/')
 def index():
-    """ Show a list of all managed databases """
+    """ Show a list of all served databases """
     databases = list(models.get_databases().itervalues())
     databases.sort(key=lambda db: db.database.lower())
     
@@ -729,6 +733,7 @@ def experiment_result(database, experiment_id, result_id):
 @require_phase(phases=(3,4))
 @require_login
 def experiment_result_download(database, experiment_id, result_id):
+    """ Returns the specified job client output file as HTTP response """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
@@ -748,6 +753,7 @@ def experiment_result_download(database, experiment_id, result_id):
 @require_phase(phases=(3,4))
 @require_login
 def experiment_result_download_client_output(database, experiment_id, result_id):
+    """ Returns the specified job client output as HTTP response """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
@@ -767,6 +773,8 @@ def experiment_result_download_client_output(database, experiment_id, result_id)
 @require_phase(phases=(4,))
 @require_login
 def evaluation_solved_instances(database, experiment_id):
+    """ Shows a page with a cactus plot of the instances solved within a given amount of time of all solver configurations
+        of the specified experiment """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
@@ -776,6 +784,7 @@ def evaluation_solved_instances(database, experiment_id):
 @require_phase(phases=(4,))
 @require_login
 def evaluation_cputime(database, experiment_id):
+    """ Shows a page that lets users plot the cputimes of two solver configurations on the instances of the experiment """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
@@ -790,6 +799,8 @@ def evaluation_cputime(database, experiment_id):
 @require_phase(phases=(4,))
 @require_login
 def cputime_plot(database, experiment_id, s1, s2):
+    """ Plots the cputimes of the two specified solver configurations on the experiment's instances against each
+        other in a scatter plot and returns the image in a HTTP response """
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
@@ -831,6 +842,8 @@ def cputime_plot(database, experiment_id, s1, s2):
 @require_phase(phases=(4,))
 @require_login
 def cactus_plot(database, experiment_id):
+    """ Renders a cactus plot of the instances solved within a given amount of time of all solver configurations
+        of the specified experiment """
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     

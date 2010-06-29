@@ -7,6 +7,7 @@ grdevices = importr('grDevices')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",bold="Bitstream Vera Sans:style=Bold",italic="Bitstream Vera Sans:style=Italic",bolditalic="Bitstream Vera Sans:style=Bold Italic,BoldItalic",symbol="Symbol")
 
 def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
+    """ Scatter plot of the points given in the lists `xs` and `ys` """
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
         grdevices.bitmap(file=filename, units="px", width=600, height=600)
@@ -36,6 +37,9 @@ def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
     grdevices.dev_off()
 
 def cactus(solvers, max_x, max_y, filename, format='png'):
+    """ Cactus plot of the passed solvers configurations. `solvers` has to be a list of dictionaries
+        with the keys `xs`, `ys` and `name`. For each y in `ys` the corresponding x in `xs` should be
+        the number of instances solved within y seconds """
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
         grdevices.bitmap(file=filename, units="px", width=600, height=600)
