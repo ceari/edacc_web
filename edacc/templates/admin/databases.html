@@ -8,7 +8,7 @@
     <h3>The Web Frontend is connected to the following databases:</h3>
     <ul>
     {% for db in databases %}
-        <li>{{db.username}}@{{db.database}}<a href="{{url_for('databases_remove', database=db.database)}}"><img style="margin-left: 5px;" title="Remove" src="/static/img/remove.png"/></a></li>
+        <li>{{db}} ({{db.username}}@{{db.database}})<a href="{{url_for('databases_remove', database=db.database)}}"><img style="margin-left: 5px;" title="Remove" src="/static/img/remove.png"/></a></li>
     {% endfor %}
     </ul>
 {% endblock %}

@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Experiments{% endblock %}
 {% block content %}
+    <div class="navigation">
+        Experiments
+    </div>
     <h2>{{db}}{% if db.is_competition() %} ({{db.competition_phase()|competition_phase}}){% endif %}</h2>
     {% if db.is_competition() and not session.logged_in %}<a href="{{url_for('login', database=database)}}">Login</a>{% endif %}
     

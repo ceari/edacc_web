@@ -232,7 +232,7 @@ def register(database):
         f = utils.random_formula(2,3)
     session['captcha'] = f
     
-    return render('/accounts/register.html', database=database, error=error)
+    return render('/accounts/register.html', database=database, db=db, error=error)
 
 @app.route('/<database>/login/', methods=['GET', 'POST'])
 @require_competition
@@ -256,10 +256,11 @@ def login(database):
                 session['database'] = database
                 session['idUser'] = user.idUser
                 session['email'] = user.email
+                session['db'] = str(db)
                 flash('Login successful')
                 return redirect(url_for('experiments_index', database=database))
     
-    return render('/accounts/login.html', database=database, error=error)
+    return render('/accounts/login.html', database=database, error=error, db=db)
 
 @app.route('/<database>/logout')
 @require_login
@@ -350,13 +351,13 @@ def submit_solver(database):
             except:
                 db.session.rollback()
                 flash("Couldn't save solver to the database")
-                return render('submit_solver.html', database=database, error=error)
+                return render('submit_solver.html', database=database, error=error, db=db)
                 
             
             flash('Solver submitted successfully')
             return redirect(url_for('experiments_index', database=database))
     
-    return render('submit_solver.html', database=database, error=error)
+    return render('submit_solver.html', database=database, error=error, db=db)
     
 @app.route('/<database>/solvers')
 @require_login
@@ -366,7 +367,7 @@ def list_solvers(database):
     db = models.get_database(database) or abort(404)
     solvers = db.session.query(db.Solver).filter_by(user=request.User).all()
    
-    return render('list_solvers.html', database=database, solvers=solvers)
+    return render('list_solvers.html', database=database, solvers=solvers, db=db)
     
 @app.route('/<database>/download-solver/<int:id>/')
 @require_login
@@ -461,7 +462,7 @@ def experiment_solvers(database, experiment_id):
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         solvers = filter(lambda s: s.user == request.User, solvers)
     
-    res = render('experiment_solvers.html', solvers=solvers, experiment=experiment, database=database)
+    res = render('experiment_solvers.html', solvers=solvers, experiment=experiment, database=database, db=db)
     db.session.remove()
     return res
     
@@ -480,7 +481,7 @@ def experiment_solver_configurations(database, experiment_id):
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
         solver_configurations = filter(lambda sc: sc.solver.user == request.User, solver_configurations)
     
-    res = render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations, database=database)
+    res = render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations, database=database, db=db)
     db.session.remove()
     return res
     
@@ -495,7 +496,7 @@ def experiment_instances(database, experiment_id):
     instances = experiment.instances
     instances.sort(key=lambda i: i.name)
     
-    res = render('experiment_instances.html', instances=instances, experiment=experiment, database=database)
+    res = render('experiment_instances.html', instances=instances, experiment=experiment, database=database, db=db)
     db.session.remove()
     return res
 
@@ -552,7 +553,7 @@ def experiment_results(database, experiment_id):
         
     res = render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
-                    results=results, database=database)
+                    results=results, database=database, db=db)
     db.session.remove()
     return res
     
@@ -563,7 +564,7 @@ def experiment_progress(database, experiment_id):
     """ Show a live information table of the experiment's progress """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    res = render('experiment_progress.html', experiment=experiment, database=database)
+    res = render('experiment_progress.html', experiment=experiment, database=database, db=db)
     db.session.remove()
     return res
 
@@ -618,7 +619,7 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
     
     res = render('solver_config_results.html', experiment=experiment, solver_configuration=solver_configuration,
-                  instance=instance, results=jobs, completed=completed, database=database)
+                  instance=instance, results=jobs, completed=completed, database=database, db=db)
     db.session.remove()
     return res
     
@@ -637,7 +638,7 @@ def instance_details(database, instance_id):
     else:
         instance_text = instance_blob
     
-    res = render('instance_details.html', instance=instance, instance_text=instance_text, blob_size=len(instance.instance), database=database)
+    res = render('instance_details.html', instance=instance, instance_text=instance_text, blob_size=len(instance.instance), database=database, db=db)
     db.session.remove()
     return res
     
@@ -688,7 +689,7 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     parameters = solver_config.parameter_instances
     parameters.sort(key=lambda p: p.parameter.order)
     
-    res = render('solver_configuration_details.html', solver_config=solver_config, solver=solver, parameters=parameters, database=database)
+    res = render('solver_configuration_details.html', solver_config=solver_config, solver=solver, parameters=parameters, database=database, db=db)
     db.session.remove()
     return res
     
@@ -725,7 +726,7 @@ def experiment_result(database, experiment_id, result_id):
     
     res = render('result_details.html', experiment=experiment, result=result, solver=result.solver_configuration.solver,
                   solver_config=result.solver_configuration, instance=result.instance, resultFile_text=resultFile_text,
-                  clientOutput_text=clientOutput_text, database=database)
+                  clientOutput_text=clientOutput_text, database=database, db=db)
     db.session.remove()
     return res
     
@@ -793,7 +794,7 @@ def evaluation_cputime(database, experiment_id):
     if s1: s1 = int(s1)
     if s2: s2 = int(s2)
     
-    return render('/evaluation/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2)
+    return render('/evaluation/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2, db=db)
 
 @app.route('/<database>/experiment/<int:experiment_id>/cputime-plot/<int:s1>/<int:s2>/')
 @require_phase(phases=(4,))
