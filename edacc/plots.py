@@ -10,7 +10,7 @@ def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
     """ Scatter plot of the points given in the lists `xs` and `ys` """
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
-        grdevices.bitmap(file=filename, units="px", width=600, height=600)
+        grdevices.png(file=filename, units="px", width=600, height=600, type="Xlib")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
 
@@ -42,7 +42,7 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
         the number of instances solved within y seconds """
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
-        grdevices.bitmap(file=filename, units="px", width=600, height=600)
+        grdevices.png(file=filename, units="px", width=600, height=600, type="Xlib")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     
@@ -81,6 +81,6 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
     
     # plot legend
     robjects.r.legend(1, max_y - (max_y * 0.03), legend=robjects.StrVector([s['name'] for s in solvers]), col=robjects.StrVector(colors[:len(solvers)]), pch=robjects.IntVector(range(len(solvers))),
-                      lty=robjects.IntVector(range(1,len(solvers)+1)))
+                      lty=1)
 
     grdevices.dev_off()
