@@ -7,6 +7,13 @@
     <title>EDACC - {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/base.css" type="text/css" />
     <script src="/static/js/jquery-1.4.2.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        /* <![CDATA[ */
+            $(document).ready(function() {
+                $('#flash').delay(3000).fadeOut();
+            });
+        /* ]]> */
+    </script>
     {% endblock %}
 </head>
 <body>
@@ -18,16 +25,16 @@
         </span>
     </div>
     <div id="content">
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div>
-        <img src="/static/img/info.png"/>
-        {% for message in messages %}
-          {{ message }}<br/>
-        {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div id="flash">
+            <img src="/static/img/info.png"/>
+            {% for message in messages %}
+              {{ message }}<br/>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
         {% block content %}{% endblock %}
     </div>
 </body>

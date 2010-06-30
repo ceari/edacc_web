@@ -273,16 +273,17 @@ def logout(database):
     session.pop('database', None)
     return redirect('/')
 
+@app.route('/<database>/submit-solver/<int:id>', methods=['GET', 'POST']) # for resubmissions of the same solver
 @app.route('/<database>/submit-solver/', methods=['GET', 'POST'])
 @require_login
 @require_phase(phases=(1,))
 @require_competition
-def submit_solver(database):
+def submit_solver(database, id=None):
     """ Form to submit solvers to a database """
     db = models.get_database(database) or abort(404)
-  
-    
     user = db.session.query(db.User).get(session['idUser'])
+    
+    if id: solver = db.session.query(db.Solver).get(id) or abort(404)
 
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1] in ['zip']
@@ -309,11 +310,11 @@ def submit_solver(database):
         bin = binary.read()
         hash = hashlib.md5()
         hash.update(bin)
-        if db.session.query(db.Solver).filter_by(md5=hash.hexdigest()).first() is not None:
+        if not id and db.session.query(db.Solver).filter_by(md5=hash.hexdigest()).first() is not None:
             error = 'Solver with this binary already exists'
             valid = False
             
-        if db.session.query(db.Solver).filter_by(name=name, version=version).first() is not None:
+        if not id and db.session.query(db.Solver).filter_by(name=name, version=version).first() is not None:
             error = 'Solver with this name and version already exists'
             valid = False
         
@@ -324,7 +325,8 @@ def submit_solver(database):
             valid = False
         
         if valid:
-            solver = db.Solver()
+            if not id:
+                solver = db.Solver()
             solver.name = name
             solver.binaryName = secure_filename(binary.filename)
             solver.binary = bin
@@ -335,7 +337,12 @@ def submit_solver(database):
             solver.authors = authors
             solver.user = request.User
 
-            db.session.add(solver)
+            if not id: db.session.add(solver)
+            
+            if id: # on resubmissions delete old parameters
+                for p in solver.parameters:
+                    db.session.delete(p)
+                db.session.commit()
             
             for p in params:
                 param = db.Parameter()
@@ -351,13 +358,13 @@ def submit_solver(database):
             except:
                 db.session.rollback()
                 flash("Couldn't save solver to the database")
-                return render('submit_solver.html', database=database, error=error, db=db)
+                return render('submit_solver.html', database=database, error=error, db=db, id=id)
                 
             
             flash('Solver submitted successfully')
             return redirect(url_for('experiments_index', database=database))
     
-    return render('submit_solver.html', database=database, error=error, db=db)
+    return render('submit_solver.html', database=database, error=error, db=db, id=id)
     
 @app.route('/<database>/solvers')
 @require_login

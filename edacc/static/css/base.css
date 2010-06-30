@@ -62,6 +62,14 @@ a:hover {
     color: black;
 }
 
+#flash {
+    text-align: center;
+    margin: auto;
+    min-width: 25%;
+    padding: 5px;
+    border: 1px solid black;
+}
+
 h1 {
     margin-top: 10px;
     margin-bottom: 10px;
