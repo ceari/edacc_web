@@ -10,7 +10,7 @@ def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
     """ Scatter plot of the points given in the lists `xs` and `ys` """
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
-        grdevices.png(file=filename, units="px", width=600, height=600, type="Xlib")
+        grdevices.png(file=filename, units="px", width=600, height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
 
@@ -42,7 +42,7 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
         the number of instances solved within y seconds """
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
-        grdevices.png(file=filename, units="px", width=600, height=600, type="Xlib")
+        grdevices.png(file=filename, units="px", width=600, height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     

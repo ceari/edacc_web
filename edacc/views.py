@@ -372,7 +372,7 @@ def list_solvers(database):
 @app.route('/<database>/download-solver/<int:id>/')
 @require_login
 @require_competition
-@require_phase(phases=(1,3,4))
+@require_phase(phases=(1,2,3,4))
 def download_solver(database, id):
     """ Lets a user download the binaries of his own solvers """
     db = models.get_database(database) or abort(404)
@@ -390,7 +390,7 @@ def download_solver(database, id):
 @app.route('/<database>/download-solver-code/<int:id>/')
 @require_login
 @require_competition
-@require_phase(phases=(1,3,4))
+@require_phase(phases=(1,2,3,4))
 def download_solver_code(database, id):
     """ Lets a user download the binaries of his own solvers """
     db = models.get_database(database) or abort(404)
@@ -819,10 +819,10 @@ def cputime_plot(database, experiment_id, s1, s2):
     xs = []
     ys = []
     for instance in exp.instances:
-        r1 = results1.filter_by(instance=instance).all()[0].time
-        r2 = results2.filter_by(instance=instance).all()[0].time
-        xs.append(r1)
-        ys.append(r2)
+        r1 = results1.filter_by(instance=instance).first()
+        r2 = results2.filter_by(instance=instance).first()
+        if r1: xs.append(r1.time)
+        if r2: ys.append(r2.time)
     
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.pdf'

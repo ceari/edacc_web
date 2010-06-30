@@ -17,5 +17,7 @@
         </table>
     </form>
     {% if error %}<div>{{error}}</div>{% endif %}
-    <a href="{{url_for('register', database=database)}}">Register</a>
+    {% if db.competition_phase() == 1 %}
+        <a href="{{url_for('register', database=database)}}">Register</a>
+    {% endif %}
 {% endblock %}

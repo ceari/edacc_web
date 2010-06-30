@@ -7,7 +7,8 @@
     <h2>{{db}}{% if db.is_competition() %} ({{db.competition_phase()|competition_phase}}){% endif %}</h2>
     {% if db.is_competition() and not session.logged_in %}<a href="{{url_for('login', database=database)}}">Login</a>{% endif %}
     
-    {% if session.logged_in %}
+    {% if session.logged_in and session.database == database %}
+    <img src="/static/img/info.png"/> You are logged in to a competition. In this phase of the competition you have the following options:
     <ul>
         {% if db.competition_phase() == 1 %}
         <li><a href="{{url_for('submit_solver', database=database)}}">Submit</a> a solver</li>
@@ -15,6 +16,7 @@
         <li><a href="{{url_for('list_solvers', database=database)}}">View</a> a list of your submitted solvers</li>
     </ul>
     {% endif %}
+    
     <h2>Experiments</h2>
     <ul>
         {% if experiments %}
