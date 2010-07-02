@@ -17,28 +17,36 @@
         Instances
     </div>
     <h2>Instances used in the experiment</h2>
-    <table id="table_instances" class="tablesorter">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th># Atoms</th>
-                <th># Clauses</th>
-                <th>Ratio</th>
-                <th>Max Clause Length</th>
-                <th>MD5</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for instance in instances %}
-            <tr>
-                <td><a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a></td>
-                <td>{{instance.numAtoms}}</td>
-                <td>{{instance.numClauses}}</td>
-                <td>{{instance.ratio|round(2)}}</td>
-                <td>{{instance.maxClauseLength}}</td>
-                <td>{{instance.md5}}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <div>
+        The table below lists the instances that are used in the experiment. Click on the name of an instance in the first column
+        to get to a page with detailed information about the instance and the option to download the instance file.
+    </div>
+    {% if instances|length > 0 %}
+        <table id="table_instances" class="tablesorter">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th># Atoms</th>
+                    <th># Clauses</th>
+                    <th>Ratio</th>
+                    <th>Max Clause Length</th>
+                    <th>MD5</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for instance in instances %}
+                <tr>
+                    <td><a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a></td>
+                    <td>{{instance.numAtoms}}</td>
+                    <td>{{instance.numClauses}}</td>
+                    <td>{{instance.ratio|round(2)}}</td>
+                    <td>{{instance.maxClauseLength}}</td>
+                    <td>{{instance.md5}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        No instances configured yet.
+    {% endif %}
 {% endblock %}

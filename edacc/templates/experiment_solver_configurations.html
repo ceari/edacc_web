@@ -7,6 +7,11 @@
         Solver Configurations
     </div>
     <h2>Solver configurations used in the experiment</h2>
+    <div>
+        A solver configuration consists of a solver and a set of parameters specified. If there is more than one configuration of a solver x,
+        they will be named x (1), x (2) etc.
+    </div>
+    {% if solver_configurations|length > 0 %}
     <ul>
         {% for solver_config in solver_configurations %}
             <li>
@@ -16,4 +21,7 @@
             </li>
         {% endfor %}
     </ul>
+    {% else %}
+        No solvers configured in this experiment yet.
+    {% endif %}
 {% endblock %}

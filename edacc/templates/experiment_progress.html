@@ -95,6 +95,14 @@
         Progress
     </div>
     <h2>Experiment progress</h2>
+    <div style="margin-bottom: 10px;">
+        The table below shows an overview of the individual benchmarks that are performed in this experiment. An experiment can be described as the cartesian product
+        of a set of solvers, a set of instances and an integer number of runs n (labeled 0 through n - 1) of one particular solver on an instance.
+        In this table a row represents one element of this cartesian product.<br/>
+        If you click on the ID of a job in the first column you'll get to a page with more detailed information about the job including output of the solver once the job is finished.<br/>
+        <br/>
+        Notice that the F5 key was overriden on this page to use Ajax to refresh the table data without having to reload the whole page. You can also use the following link or set a periodic refresh interval:
+    </div>
     
     <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
     <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>

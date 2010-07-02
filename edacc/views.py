@@ -4,7 +4,7 @@ import json, time, hashlib, os, datetime, cStringIO, re, random
 from functools import wraps
 
 from flask import render_template as render
-from flask import Response, abort, Headers, Environment, request, session, url_for, redirect, flash
+from flask import Response, abort, Headers, Environment, request, session, url_for, redirect, flash, Request
 from werkzeug import secure_filename
 
 from edacc import app, plots, config, utils, models
@@ -17,6 +17,11 @@ if config.CACHING:
     
 for db in config.DEFAULT_DATABASES:
     models.add_database(db[0], db[1], db[2], db[3])
+    
+class LimitedRequest(Request):
+    max_form_memory_size = 16 * 1024 * 1024 # limit form uploads to 16 MB
+    
+app.request_class = LimitedRequest
 
 app.secret_key = config.SECRET_KEY
 
@@ -798,10 +803,15 @@ def evaluation_cputime(database, experiment_id):
     
     s1 = request.args.get('s1', None)
     s2 = request.args.get('s2', None)
-    if s1: s1 = int(s1)
-    if s2: s2 = int(s2)
-    
-    return render('/evaluation/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2, db=db)
+    solver1, solver2 = None, None
+    if s1:
+        s1 = int(s1)
+        solver1 = db.session.query(db.SolverConfiguration).get(s1)
+    if s2:
+        s2 = int(s2)
+        solver2 = db.session.query(db.SolverConfiguration).get(s2)
+
+    return render('/evaluation/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2, solver1=solver1, solver2=solver2, db=db)
 
 @app.route('/<database>/experiment/<int:experiment_id>/cputime-plot/<int:s1>/<int:s2>/')
 @require_phase(phases=(4,))

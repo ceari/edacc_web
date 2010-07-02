@@ -6,7 +6,7 @@
     <a href="/">Back</a>
     
     <div><img src="/static/img/info.png"/> To submit solvers and access information about an experiment's progress and results create an account on this website.<br/>
-    Passwords are stored as hash values.</div>
+    None of the information submitted here is publicly accessible.</div>
     
     <form action="{{url_for('register', database=database)}}" method="post">
         <table>
@@ -42,8 +42,9 @@
                 <td>Give a solution</td>
                 <td>{{session.captcha|render_formula}}<br/>(space-separated, e.g. 1 0 1 for A=1, B=0, C=1 and don't use your solver for this!)<br/><input type="text" name="captcha" /></td>
             </tr>
-            <td colspan="2"><input type="submit" value="Submit" /></td>
+            {% if error %}<tr><td colspan="2"><div class="form_error">{{error}}</div></td></td>{% endif %}
+            <tr><td colspan="2"><input type="submit" value="Submit" /></td></tr>
         </table>
     </form>
-    {% if error %}{{error}}{% endif %}
+    
 {% endblock %}

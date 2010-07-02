@@ -11,12 +11,12 @@
             <tr>
                 <td>Password:</td><td><input type="password" name="password" /></td>
             </tr>
+            {% if error %}<tr><td colspan="2"><div class="form_error">{{error}}</div></td></tr>{% endif %}
             <tr>
                 <td colspan="2"><input type="submit" value="Login" /></td>
             </tr>
         </table>
     </form>
-    {% if error %}<div>{{error}}</div>{% endif %}
     {% if db.competition_phase() == 1 %}
         <a href="{{url_for('register', database=database)}}">Register</a>
     {% endif %}
