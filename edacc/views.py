@@ -15,6 +15,13 @@ if config.CACHING:
     from werkzeug.contrib.cache import MemcachedCache
     cache = MemcachedCache([config.MEMCACHED_HOST])
     
+if not config.DEBUG:
+    import logging
+    from logging.handlers import FileHandler
+    file_handler = FileHandler(config.LOG_FILE)
+    file_handler.setLevel(logging.WARNING)
+    app.logger.addHandler(file_handler)
+    
 for db in config.DEFAULT_DATABASES:
     models.add_database(db[0], db[1], db[2], db[3])
     
