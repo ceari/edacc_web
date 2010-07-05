@@ -6,7 +6,7 @@ grdevices = importr('grDevices')
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",bold="Bitstream Vera Sans:style=Bold",italic="Bitstream Vera Sans:style=Italic",bolditalic="Bitstream Vera Sans:style=Bold Italic,BoldItalic",symbol="Symbol")
 
-def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
+def scatter(xs, ys, xlabel, ylabel, title, timeout, filename, format='png'):
     """ Scatter plot of the points given in the lists `xs` and `ys` """
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600, height=600, bg="white", pointsize=14)
@@ -32,7 +32,7 @@ def scatter(xs, ys, xlabel, ylabel, timeout, filename, format='png'):
     robjects.r.axis(side=3, tck=0.015, las=1, **{'cex.axis': 1.2, 'cex.main': 1.5}) # plot top axis
     robjects.r.mtext(ylabel, side=4, line=3, cex=1.2) # right axis label
     robjects.r.mtext(xlabel, side=3, padj=0, line=3, cex=1.2) # top axis label
-    robjects.r.mtext(xlabel + ' vs. ' + ylabel, padj=-1.7, side=3, line=3, cex=1.7) # plot title
+    robjects.r.mtext(title, padj=-1.7, side=3, line=3, cex=1.7) # plot title
     
     grdevices.dev_off()
 

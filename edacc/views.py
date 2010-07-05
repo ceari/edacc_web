@@ -847,10 +847,13 @@ def cputime_plot(database, experiment_id, s1, s2):
         r2 = results2.filter_by(instance=instance).first()
         if r1: xs.append(r1.time)
         if r2: ys.append(r2.time)
-    
+
+    title = sc1.solver.name + ' vs. ' + sc2.solver.name
+    xlabel = sc1.solver.name + ' CPU time (s)'
+    ylabel = sc2.solver.name + ' CPU time (s)'
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.pdf'
-        plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, exp.timeOut, filename, format='pdf')
+        plots.scatter(xs, ys, xlabel, ylabel, title, exp.timeOut, filename, format='pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -858,7 +861,7 @@ def cputime_plot(database, experiment_id, s1, s2):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.png'
-        plots.scatter(xs,ys,sc1.solver.name,sc2.solver.name, exp.timeOut, filename)
+        plots.scatter(xs, ys, xlabel, ylabel, title, exp.timeOut, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
