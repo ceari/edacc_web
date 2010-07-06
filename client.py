@@ -14,7 +14,10 @@ from sqlalchemy.sql.expression import func
 
 # Client configuration
 TMP                 = '/tmp' # used for temporary files
-PACKAGE_DIR         = os.path.join(os.path.abspath(os.path.dirname(__file__))) # client.py directory also contains solvers/ and instances/
+
+# directory containing the subdirs solvers/ and instances/ (e.g. from a cluster package)
+# os.path.join(os.path.abspath(os.path.dirname(__file__))) will be the directory containing this client.py file
+PACKAGE_DIR         = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 
 DATABASE_DRIVER     = 'mysql'
 DATABASE_HOST       = 'localhost'
@@ -144,7 +147,7 @@ def fetch_resources(experiment_id, db):
     experiment = db.session.query(db.Experiment).get(experiment_id)
     
     for i in experiment.instances:
-        if not os.path.exists(os.path.join(PACKAGE_DIR, 'instances', i.name)):
+        if not os.path.exists(os.path.join(PACKAGE_DIR, 'instances', str(i.idInstance) + '_' + i.name)):
             f = open(os.path.join(PACKAGE_DIR, 'instances', i.name), 'wb')
             f.write(i.instance)
             f.close()
@@ -187,7 +190,7 @@ class EDACCClient(threading.Thread):
                 
                 client_line = '/usr/bin/time -f ";%U;" '
                 client_line += os.path.join(PACKAGE_DIR, 'solvers', launch_command(job.solver_configuration)[2:])
-                client_line += os.path.join(PACKAGE_DIR, 'instances', job.instance.name) + ' ' + str(job.seed)
+                client_line += os.path.join(PACKAGE_DIR, 'instances', str(job.instance.idInstance) + '_' + job.instance.name) + ' ' + str(job.seed)
 
                 print "running job", job.idJob, client_line
                 stdout = open(os.path.join(TMP, str(job.idJob) + 'stdout~'), 'w')
