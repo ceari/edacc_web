@@ -8,6 +8,6 @@
     </div>
     <div>For each solver of the experiment this graph shows the number of instances x it solved within y seconds.</div>
 
-    <img src="{{url_for('cactus_plot', database=database, experiment_id=experiment.idExperiment)}}" /><br/>
+    <img alt="graph" src="{{url_for('cactus_plot', database=database, experiment_id=experiment.idExperiment)}}" /><br/>
     Download as <a href="{{url_for('cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?pdf">PDF</a>
 {% endblock %}
