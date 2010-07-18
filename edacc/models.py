@@ -39,7 +39,7 @@ class EDACCDatabase(object):
                 if n == 0:
                     return self.solver.name
                 else:
-                    return self.solver.name + " (" + str(n) + ")"
+                    return "%s (%s)" % (self.solver.name, str(n))
             
         class Parameter(object): pass
         class ParameterInstance(object): pass
