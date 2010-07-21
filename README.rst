@@ -1,7 +1,7 @@
 EDACC Web Frontend 
 ==================
 
-Experiment Design and Administration for Computer Clusters for SAT Solvers
+Experiment Design and Administration for Computer Clusters for SAT Solvers.
 See http://sourceforge.net/projects/edacc/ for the EDACC project.
 
 Description
@@ -35,9 +35,7 @@ Dependencies
 - Jinja2 2.4 (Template Engine)
 - rpy2 2.1.3 (Python R interface)
 - R 2.11 (language for statistical computing and graphics)
-
-optional (and not extensively used at this point):
-- python-memcached v1.45 + memcached 1.4.5 (enable/disable in config.py)
+- python-memcached v1.45 + memcached 1.4.5 (optional, enable/disable in config.py)
 
 Installation
 ------------
