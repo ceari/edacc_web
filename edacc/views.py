@@ -15,10 +15,10 @@ if config.CACHING:
     from werkzeug.contrib.cache import MemcachedCache
     cache = MemcachedCache([config.MEMCACHED_HOST])
     
-if not config.DEBUG:
+if config.LOGGING:
     import logging
-    from logging.handlers import FileHandler
-    file_handler = FileHandler(config.LOG_FILE)
+    from logging.handlers import RotatingFileHandler
+    file_handler = RotatingFileHandler(config.LOG_FILE)
     file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)
     
@@ -26,8 +26,8 @@ for db in config.DEFAULT_DATABASES:
     models.add_database(db[0], db[1], db[2], db[3])
     
 class LimitedRequest(Request):
+    """ extending Flask's request class to limit form uploads """
     max_form_memory_size = 16 * 1024 * 1024 # limit form uploads to 16 MB
-    
 app.request_class = LimitedRequest
 
 app.secret_key = config.SECRET_KEY
@@ -36,6 +36,7 @@ app.secret_key = config.SECRET_KEY
 # various helper functions and decorators
 ####################################################################
 
+# decorates a decorator function to be able to parameterize the decorator
 decorator_with_args = lambda decorator: lambda *args, **kwargs: lambda func: decorator(func, *args, **kwargs)
 
 @app.before_request
@@ -82,8 +83,7 @@ def require_login(f):
     """ View function decorator that checks if the user is logged in to the database specified
         by the route parameter <database> which gets passed in **kwargs.
         Only checked for competition databases that are in a phase < 3 (not finished).
-        Also attaches the user object to the request as attribute "User".
-    """
+        Also attaches the user object to the request as attribute "User". """
     @wraps(f)
     def decorated_f(*args, **kwargs):
         db = models.get_database(kwargs['database']) or abort(404)
@@ -102,7 +102,7 @@ def require_login(f):
     return decorated_f
 
 def password_hash(password):
-    """ Returns a crpytographic hash of the given password seeded with SECRET_KEY as hexstring """
+    """ Returns a crpytographic hash of the given password salted with SECRET_KEY as hexstring """
     hash = hashlib.sha256()
     hash.update(config.SECRET_KEY)
     hash.update(password)
