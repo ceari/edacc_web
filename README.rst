@@ -1,8 +1,11 @@
-EDACC Web Frontend - Experiment Design and Administration for Computer Clusters for SAT Solvers
+EDACC Web Frontend 
+==================
 
+Experiment Design and Administration for Computer Clusters for SAT Solvers
 See http://sourceforge.net/projects/edacc/ for the EDACC project.
 
-~ Description
+Description
+-----------
 
 This project accompanies the EDACC Java Swing application and provides a simple way to publish
 experiment information and results on the web that can be accessed using a web browser.
@@ -14,27 +17,30 @@ aswell as the individual jobs that were run.
 Additionally, you can set up an EDACC database to run a solver competition, where users can register
 and submit solvers using the web frontend.
 
-~ Implementation
+Implementation
+--------------
 
 This web application is written in Python and due to using Werkzeug and Flask (web frameworks) it is
 WSGI-compatible, which means it can be deployed on any web server supporting Python and WSGI.
 (e.g. Apache (using mod_wsgi), lighttpd, nginx, Tornado, just to name a few)
 
-~ Dependencies:
+Dependencies
+------------
 
-Python 2.6.5 http://www.python.org
-SQLAlchemy 0.6.1 (SQL Toolkit and Object Relational Mapper)
-mysql-python 1.2.3c1 (Python MySQL adapter)
-Flask 0.3.1 (Micro Webframework)
-Werkzeug 0.6.2 (Webframework, Flask dependency)
-Jinja2 2.4 (Template Engine)
-rpy2 2.1.3 (Python R interface)
-R 2.11 (language for statistical computing and graphics)
+- Python 2.6.5 http://www.python.org
+- SQLAlchemy 0.6.1 (SQL Toolkit and Object Relational Mapper)
+- mysql-python 1.2.3c1 (Python MySQL adapter)
+- Flask 0.3.1 (Micro Webframework)
+- Werkzeug 0.6.2 (Webframework, Flask dependency)
+- Jinja2 2.4 (Template Engine)
+- rpy2 2.1.3 (Python R interface)
+- R 2.11 (language for statistical computing and graphics)
 
 optional (and not extensively used at this point):
-python-memcached v1.45 + memcached 1.4.5 (enable/disable in config.py)
+- python-memcached v1.45 + memcached 1.4.5 (enable/disable in config.py)
 
-~ Installation:
+Installation
+------------
 
 The required libraries can most likely be installed using the
 package management tool of your favorite Linux distribution.
@@ -51,7 +57,8 @@ path in the folder /etc/ld.so.conf.d/ and run ldconfig without parameters as roo
 
 For further information see http://flask.pocoo.org/docs/installation/ and http://flask.pocoo.org/docs/deploying/
 
-~ Quick Installation Guide
+Quick Installation Guide
+------------------------
 
 To illustrate an installation here's what you would have to do on a linux system (assuming Python and pip are installed,
 using e.g. the distribution's package manager)
