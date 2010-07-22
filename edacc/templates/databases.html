@@ -6,7 +6,7 @@
     <h3>The Server is connected to the following databases:</h3>
     <ul>
     {% for db in databases %}
-        <li><a href="{{url_for('experiments_index', database=db.database)}}">{{db}}</a>{% if db.is_competition() %} (Competition){% endif %}</li>
+        <li><a href="{{url_for('frontend.experiments_index', database=db.database)}}">{{db}}</a>{% if db.is_competition() %} (Competition){% endif %}</li>
     {% endfor %}
     </ul>
 {% endblock %}

@@ -2,14 +2,14 @@
 {% block title %}{{solver.name}} Details{% endblock %}
 {% block content %}
 <div class="navigation">
-    <a href="{{url_for('experiments_index', database=database)}}">Experiments</a>
+    <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a>
 </div>
 <h2>Details of solver {{solver.name}}</h2>
 
 {% if session.logged_in and solver.user == request.User %}
-    <a href="{{url_for('download_solver', database=database, id=solver.idSolver)}}">Download binary</a> | <a href="{{url_for('download_solver_code', database=database, id=solver.idSolver)}}">Download code</a>
+    <a href="{{url_for('accounts.download_solver', database=database, id=solver.idSolver)}}">Download binary</a> | <a href="{{url_for('accounts.download_solver_code', database=database, id=solver.idSolver)}}">Download code</a>
     {% if db.is_competition() and db.competition_phase() == 1 %}
-        | <a href="{{url_for('submit_solver', database=database, id=solver.idSolver)}}">Submit a new version of this solver</a>
+        | <a href="{{url_for('accounts.submit_solver', database=database, id=solver.idSolver)}}">Submit a new version of this solver</a>
     {% endif %}
 
 {% endif %}

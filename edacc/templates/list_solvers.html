@@ -2,13 +2,13 @@
 {% block title %}List of submitted solvers{% endblock %}
 {% block content %}
 <div class="navigation">
-    <a href="{{url_for('experiments_index', database=database)}}">Experiments</a>
+    <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a>
 </div>
 <h2>List of submitted solvers</h2>
     {% if solvers %}
     <ul>
         {% for solver in solvers %}
-            <li><a href="{{url_for('solver_details', database=database, solver_id=solver.idSolver)}}">{{solver.name}}</a></li>
+            <li><a href="{{url_for('frontend.solver_details', database=database, solver_id=solver.idSolver)}}">{{solver.name}}</a></li>
         {% endfor %}
     </ul>
     {% else %}

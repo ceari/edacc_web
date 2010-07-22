@@ -16,7 +16,7 @@
 #    IOLoop.instance().start()
 
 
-from edacc import app
+from edacc.web import app
 from edacc.config import DEBUG
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ CACHE_TIMEOUT = 5
 # Host and port of the memcache daemon
 MEMCACHED_HOST = '127.0.0.1:11211'
 
-# temporary directory used to save R plots
+# Directory the web application can use to save temporary files (required)
 TEMP_DIR = '/tmp/'
 
 # Toggle Flask's error logging

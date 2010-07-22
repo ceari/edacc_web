@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import random
-from edacc import app
+from edacc.web import app
 from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR
 
 def download_size(value):

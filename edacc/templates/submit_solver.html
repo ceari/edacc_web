@@ -2,7 +2,7 @@
 {% block title %}Submit Solver{% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a>
+        <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a>
     </div>
     <h2>Submit Solver</h2>
     {% if id %}
@@ -10,7 +10,7 @@
         You are about to submit a new version of a solver you previously submitted. The old version will be deleted.
     </div>
     {% endif %}
-    <form action="{{url_for('submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
+    <form action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
         <table width="800px">
             <tr>
                 <td width="200px">Solver name:</td>
