@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+    edacc.models
+    ------------
+    
+    Provides EDACC database connections.
+"""
 
 from edacc import config, constants
 import sqlalchemy
@@ -7,6 +13,7 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred, relation, relationship, joinedload, joinedload_all
 
 sqlalchemy.convert_unicode = True
+
 
 class EDACCDatabase(object):
     """ Encapsulates a single EDACC database connection """
@@ -19,7 +26,7 @@ class EDACCDatabase(object):
         url = URL(drivername=config.DATABASE_DRIVER, username=username,
                   password=password, host=config.DATABASE_HOST,
                   port=config.DATABASE_PORT, database=database)
-        self.engine = create_engine(url)
+        self.engine = create_engine(url, encoding='cp1252')
         self.metadata = metadata = MetaData(bind=self.engine)
         
         class Solver(object): pass
@@ -167,7 +174,7 @@ def add_database(username, password, database, label):
     databases[database] = EDACCDatabase(username, password, database, label)
 
 def remove_database(database):
-    if databases.has_key(database):
+    if database in databases:
         del databases[database]
         
 def get_database(database):

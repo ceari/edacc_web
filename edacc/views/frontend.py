@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    edacc.views.frontend
+    --------------------
+    
+    This module defines request handler functions for the main functionality
+    of the web application.
+"""
+
 import json, time, hashlib, os, datetime, cStringIO, re, random
 
 from flask import Module
