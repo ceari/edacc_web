@@ -12,8 +12,6 @@ from sqlalchemy import Table, Integer, ForeignKey, create_engine, MetaData, Colu
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred, relation, relationship, joinedload, joinedload_all
 
-sqlalchemy.convert_unicode = True
-
 
 class EDACCDatabase(object):
     """ Encapsulates a single EDACC database connection """
@@ -26,7 +24,7 @@ class EDACCDatabase(object):
         url = URL(drivername=config.DATABASE_DRIVER, username=username,
                   password=password, host=config.DATABASE_HOST,
                   port=config.DATABASE_PORT, database=database)
-        self.engine = create_engine(url, encoding='cp1252')
+        self.engine = create_engine(url, convert_unicode=True) 
         self.metadata = metadata = MetaData(bind=self.engine)
         
         class Solver(object): pass
