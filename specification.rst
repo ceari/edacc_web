@@ -13,6 +13,8 @@ run solvers for SAT and similar problems on computer clusters. This Web Competit
 System aims to extend the existing functionality by providing a way to conduct
 competitions and publish the results on the web.
 
+See http://sourceforge.net/projects/edacc/ for the EDACC project.
+
 Purpose
 ~~~~~~~~
 
@@ -87,13 +89,13 @@ the access to general information, rules etc.
 
 **2. Registration and Submission phase:**
 
-In this phase competitors can register to the system and submit solvers and
+In this phase competitors can register with the system and submit solvers and
 benchmarks using the web interface.
 
 *Registration:*
 Competitors create an account which they have to use to log in to the web interface.
 Account data includes the name, an email address, password and possibly additional
-information such as an postal address and affiliation.
+information such as a postal address and affiliation.
 
 *Solver submission:*
 Competitors submit their solvers to the system using the web interface.
@@ -112,6 +114,9 @@ A benchmark has to be categorized by the user in two ways:
 - Benchmark Type: Defined by the submitter. These types will probably correspond
   to the competition categories but can be further specified by the submitter.
   For example: "Application - CNF encoded MD5 attack"
+
+During this phase competitors have no access to other competitors' solvers or
+benchmarks.
 
 **3. Solver Testing Phase:**
 
@@ -172,22 +177,29 @@ Analyis Options
 
 EDACC is being extended to allow the specification of properties of results
 and instances, for example the "quality" or "simplicity" of a solution produced
-by a solver. These properties can be calculated for all results and instances
-before the release phase and then be used by the web competition system to show
-various plots or allow statistical evaluation by calculating correlation coefficients etc.
+by a solver or the number of variable flips needed.
+These properties can be calculated for all results and instances before the
+release phase and then be used by the web competition system to show various
+plots or allow statistical evaluation by calculating correlation coefficients etc.
 
 Some examples:
 
-- CPU time comparsion of 2 solvers in a scatter plot
+- CPU time comparsion of 2 solvers in a scatter plot.
 - Cactus plot of the number of instances solver given a certain amount of CPU time
-  of all solvers in an experiment
-- CPU time vs. Memory scatter plot of one solver
+  of all solvers in an experiment.
+- CPU time vs. Memory scatter plot of one solver on the instances of an experiment.
+
+Additional features:
+
+- exportable plots (as PDF, SVG, raw numbers, ...)
+- Instance filtering for the relevant plots that contain more than one instance.
+- "clickable" points in the plots leading e.g. to the instance they represent.
 
 
 Technical Details, Implementation
 ---------------------------------
 
-The EDACC Web Competition System will be implemented in Python using various
+The EDACC Web Competition System will be implemented in Python utilizing various
 widely used libraries and will be able to run on any web server that supports
-the Python WSGI standard and has access to an EDACC database. To render plots it
-will interface the statistical computing language R.
+the WSGI standard and has access to an EDACC database. To render plots it will
+interface the statistical computing language R.
