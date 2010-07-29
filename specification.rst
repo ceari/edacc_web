@@ -37,6 +37,8 @@ Solver
   Programs that runs on instances and provides solutions. Specifically: SAT solvers.
 Solver Configuration
   A solver and a set of specified parameters and values that the solver should use.
+Result
+  The output or result of a solver that was run on a benchmark.
 Experiment
   An experiment consists of a set of solvers configurations, a set of instances, and a
   specified number of attempts for each solver on each instance.
@@ -67,8 +69,8 @@ Description
 General Information
 ~~~~~~~~~~~~~~~~~~~
 
-The Web Competition System should be able to display certain static sites providing
-general information about the competition, rules, time schedules, ...
+The Web Competition System should be able to display certain static websites
+providing general information about the competition, rules, time schedules, ...
 
 Competition Phases
 ~~~~~~~~~~~~~~~~~~
@@ -165,10 +167,27 @@ instances. (Examples: Time vs. Memory, "Cactus-Plots", X vs. Y scatter plots, ..
 Benchmarks, results and possibly solver code and binaries are made publicly available
 on the web interface.
 
+Analyis Options
+~~~~~~~~~~~~~~~
+
+EDACC is being extended to allow the specification of properties of results
+and instances, for example the "quality" or "simplicity" of a solution produced
+by a solver. These properties can be calculated for all results and instances
+before the release phase and then be used by the web competition system to show
+various plots or allow statistical evaluation by calculating correlation coefficients etc.
+
+Some examples:
+
+- CPU time comparsion of 2 solvers in a scatter plot
+- Cactus plot of the number of instances solver given a certain amount of CPU time
+  of all solvers in an experiment
+- CPU time vs. Memory scatter plot of one solver
+
+
 Technical Details, Implementation
 ---------------------------------
 
 The EDACC Web Competition System will be implemented in Python using various
 widely used libraries and will be able to run on any web server that supports
-the Python WSGI standard and has access to an EDACC database. To render analysis
-plots the statistics language R will be used.
+the Python WSGI standard and has access to an EDACC database. To render plots it
+will interface the statistical computing language R.
