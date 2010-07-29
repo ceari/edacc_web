@@ -77,13 +77,13 @@ The phases of a competition define the course of events in a competition and spe
 the actions organizers and competitors have to take aswell as the information that
 is visible in the web interface.
 
-1. Category definition phase:
+**1. Category definition phase:**
 
 Organizers define competition categories such as "Random" or "Crafted".
 The web interface will allow no competitor interaction in this phase, except
 the access to general information, rules etc.
 
-2. Registration and Submission phase:
+**2. Registration and Submission phase:**
 
 In this phase competitors can register to the system and submit solvers and
 benchmarks using the web interface.
@@ -111,7 +111,7 @@ A benchmark has to be categorized by the user in two ways:
   to the competition categories but can be further specified by the submitter.
   For example: "Application - CNF encoded MD5 attack"
 
-3. Solver Testing Phase:
+**3. Solver Testing Phase:**
 
 To ensure the submitted solvers are able to run on the competition cluster this
 phase is used by the organizers to test the submitted solvers on a set of instances
@@ -127,7 +127,7 @@ These experiments are then run on the competition cluster.
 During this phase competitors will only be able to see their own solver results and
 benchmarks will only appear by name without further details.
 
-4. Solver Resubmission phase:
+**4. Solver Resubmission phase:**
 
 During this phase competitors have the opportunity to resubmit solvers, if
 bugs or compatibility issues with the cluster/system occured during the solver
@@ -138,7 +138,7 @@ It is up to the organizers how they want to handle updated versions. One possibi
 is to rerun the experiments of the testing phase with the updated solvers and
 let competitors access the same information as in the last phase.
 
-5. Competition phase:
+**5. Competition phase:**
 
 Similar to the testing phase, organizers create the competition experiments based
 on the competition categories. Benchmark selection is a seperate issue and could be
@@ -147,7 +147,7 @@ managed by a jury prior to the experiment creation, for example.
 The experiments are then run on the competition cluster. During this phase, competitors
 have only access to their own solvers' results. Benchmarks appear by name only.
 
-6. Release phase:
+**6. Release phase:**
 
 In this phase competitors gain access to the results of all competing solvers.
 At this point a ranking has to be calculated and displayed using the results of
@@ -160,7 +160,7 @@ Also available in this phase should be analysis options such as various plots
 visualizing the running times of solvers or certain properties of results and
 instances. (Examples: Time vs. Memory, "Cactus-Plots", X vs. Y scatter plots, ...)
 
-7. Post-Relase phase:
+**7. Post-Relase phase:**
 
 Benchmarks, results and possibly solver code and binaries are made publicly available
 on the web interface.
