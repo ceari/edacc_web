@@ -44,7 +44,8 @@ Result
   The output or result of a solver that was run on a benchmark.
 Experiment
   An experiment consists of a set of solvers configurations, a set of instances, and a
-  specified number of attempts for each solver on each instance ("runs").
+  specified number of attempts for each solver on each instance ("runs", interesting for
+  solvers using random number generators).
   A competition will typically consist of several experiments based on categories
   such as Random, Application, ...
 
@@ -111,7 +112,8 @@ information such as a postal address and affiliation.
 *Solver submission:*
 Competitors submit their solvers to the system using the web interface.
 They have to provide a name, version number, authors, a binary and the code.
-Command line parameters of solvers can be specified aswell.
+Command line parameters of solvers can be specified aswell. When creating the experiments,
+organizers can then use the specified parameters to create the solver configurations.
 Additionally, a solver has to be assigned to one or more competition categories
 as defined by the organizers in the previous phase.
 
@@ -178,10 +180,12 @@ benchmarks appear only by name in the web interface.
 **6. Release phase:**
 
 In this phase competitors gain access to the results of all competing solvers.
-At this point a ranking has to be calculated and displayed using the results of
-the solvers, for example number of instances solved correctly and breaking ties
-by the accumulated time. Ranking schemes have to be explored further as fair
-comparison of solvers is no trivial task.
+At this point a ranking has to be calculated using the results of the solvers,
+for example number of instances solved correctly and breaking ties by the accumulated time.
+The ranking will be displayed by the web interface.
+Ranking schemes have to be explored further as fair comparison of solvers is no trivial task.
+The goal is to cleanly encapsulate the ranking calculation, so it's easy to change
+the ranking scheme if needed.
 
 Solvers are ranked in each experiment separately and ranking calculations should
 be done, if possible, dynamically by the web competition system using the data
@@ -198,6 +202,7 @@ on the web interface without requiring registration.
 
 -------------------------------------
 
+
 Results
 ~~~~~~~
 
@@ -209,6 +214,8 @@ Results can be displayed in several ways:
 - *by solver*: The results of one solver on all benchmarks of an experiment in a table
   with a column for each run, if a solver was run multiple times on each benchmark.
   Displayed information could include the runtime and other result properties.
+- *by benchmark*: List of solvers and their results for a selected benchmark.
+  Multiple runs can be represented in mulitple columns.
 - *all solvers and benchmarks*: The results of all solvers on all benchmarks of
   an experiment in tabular format. One cell representing the runs of a solver (columns)
   on a benchmark (rows). Displayed information could include minimum, maximum,
@@ -222,9 +229,9 @@ EDACC is being extended to allow the specification of properties of results
 and instances, for example the "quality" or "simplicity" of a solution produced
 by a solver or the number of variable flips needed.
 These properties can be calculated using the extensions that are being developed
-for all results and instances before the release phase and then be used by the
-web competition system to show various plots or allow statistical evaluation by
-calculating correlation coefficients etc.
+for all results and instances before the release phase by the organizers.
+They can then be used by the web competition system to show various plots or allow
+statistical evaluation by calculating correlation coefficients etc.
 
 Some examples:
 
@@ -232,6 +239,7 @@ Some examples:
 - Cactus plot of the number of instances solver given a certain amount of CPU time
   of all solvers in an experiment.
 - CPU time vs. Memory scatter plot of one solver on the instances of an experiment.
+- CPU time distributions of a solver on a benchmark if there were multiple runs
 
 Additional features:
 
@@ -251,3 +259,7 @@ interface the statistical computing language R.
 All user account data, submitted solvers and benchmarks will be stored in an EDACC
 database. The static pages will have to be placed in a folder with a specified naming
 scheme or alternatively, a third-party Wiki application could be utilized.
+
+There are several places where caching will be useful to reduce page generation times,
+for example result tables, plots and ranking. These can be held in caches, once
+the experiments are finished.
