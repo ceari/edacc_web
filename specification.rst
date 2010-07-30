@@ -35,9 +35,6 @@ User : Competitor
   A person competing with own solvers in the competition.
 Instance : Benchmark
   A specific problem instance, e.g. a boolean formula.
-Solver
-  Programs that run on instances and provide solutions, if possible.
-  Specifically: SAT solvers.
 Solver Configuration
   A solver and a set of specified parameters and their values which the solver should use.
 Result
@@ -150,19 +147,31 @@ During this phase competitors will only be able to see their own solver results 
 benchmarks will only appear by name without further details in the web interface.
 Registration and submission of solvers or benchmarks is no longer possible.
 
+Visible information of each testing experiment:
+
+- Live progress page showing the individual runs of a competitor's solvers as
+  they are being executed.
+- List of instances shown with their name only.
+- List of all solvers the competitor submitted (more precisely the solver
+  configurations created by the organizers with the parameters specified by the
+  submitter)
+- Results as specified in the "Results" section below but restricted to the competitors
+  own solvers.
+
 **4. Solver Resubmission phase:**
 
 *4.1 Organizers:*
 It is up to the organizers how they want to handle updated versions and feedback
 to the competitors. One possibility is to rerun the experiments of the testing
-phase with the updated solvers and let competitors access the same information
-as in the last phase.
+phase with the updated solvers.
 
 *4.2 Competitors:*
 During this phase competitors have the opportunity to resubmit solvers, if
 bugs or compatibility issues with the cluster/system occured during the solver
 testing phase. It is not possible to submit new solvers. Only solvers submitted
 during the second phase can be updated with new versions.
+
+Competitors have access to the same information as in the last phase.
 
 **5. Competition phase:**
 
@@ -174,8 +183,8 @@ managed by a jury prior to experiment creation, for example.
 The experiments are then run on the competition cluster.
 
 *5.2 Competitors:*
-During this phase, competitors have only access to their own solvers' results and
-benchmarks appear only by name in the web interface.
+During this phase, competitors have access to the same information as in the
+testing phase, i.e. restricted to their own solvers' results.
 
 **6. Release phase:**
 
@@ -206,7 +215,7 @@ on the web interface without requiring registration.
 Results
 ~~~~~~~
 
-Results can be displayed in several ways:
+Results are available in several views:
 
 - *single result*: Output (stdout and stderr) and calculated result properties
   of one solver run on a benchmark. Additional technial information including
@@ -225,13 +234,12 @@ Results can be displayed in several ways:
 Analyis Options
 ~~~~~~~~~~~~~~~
 
-EDACC is being extended to allow the specification of properties of results
+EDACC is currently being extended to allow the specification of properties of results
 and instances, for example the "quality" or "simplicity" of a solution produced
 by a solver or the number of variable flips needed.
-These properties can be calculated using the extensions that are being developed
-for all results and instances before the release phase by the organizers.
-They can then be used by the web competition system to show various plots or allow
-statistical evaluation by calculating correlation coefficients etc.
+These properties can be calculated for all results and instances before the release
+phase by the organizers. They can then be used by the web competition system to
+show various plots or allow statistical evaluation by calculating correlation coefficients etc.
 
 Some examples:
 
