@@ -204,7 +204,7 @@ Also available in this phase are analysis options including various plots
 visualizing the running times of solvers or certain properties of results and
 instances. (see "Analysis Options" below)
 
-**7. Post-Relase phase:**
+**7. Post-Release phase:**
 
 Benchmarks, results and possibly solver code and binaries are made publicly available
 on the web interface without requiring registration.
