@@ -19,9 +19,9 @@ Purpose
 ~~~~~~~~
 
 The Web Competition System will assist researchers in hosting solver competitions
-such as SAT Competition (http://www.satcompetition.org/) and provide a convenient
-way to publish and access the setup, results and analysis of such a competition on
-the web.
+such as SAT Competition (http://www.satcompetition.org/) or compare their own solvers
+and provide a convenient way to publish and access the setup, results and analysis
+of such a competition or comparison on the web.
 
 Abbreviations, Glossary
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,12 +38,12 @@ Instance : Benchmark
 Solver
   Programs that runs on instances and provides solutions. Specifically: SAT solvers.
 Solver Configuration
-  A solver and a set of specified parameters and values that the solver should use.
+  A solver and a set of specified parameters and their values that the solver should use.
 Result
   The output or result of a solver that was run on a benchmark.
 Experiment
   An experiment consists of a set of solvers configurations, a set of instances, and a
-  specified number of attempts for each solver on each instance.
+  specified number of attempts for each solver on each instance ("runs").
   A competition will typically consist of several experiments based on categories
   such as Random, Application, ...
 
@@ -83,12 +83,21 @@ is visible in the web interface.
 
 **1. Category definition phase:**
 
-Organizers define competition categories such as "Random" or "Crafted".
+*1.1 Organizers:*
+Define competition categories such as "Random" or "Crafted" in a database table.
+This management functionality can be offered by the web interface.
+
+*1.2 Competitors:*
 The web interface will allow no competitor interaction in this phase, except
 the access to general information, rules etc.
 
 **2. Registration and Submission phase:**
 
+*2.1 Organizers:*
+Organizers are provided with an overview of the registered users and submitted solvers
+and benchmarks.
+
+*2.2 Competitors:*
 In this phase competitors can register with the system and submit solvers and
 benchmarks using the web interface.
 
@@ -99,7 +108,7 @@ information such as a postal address and affiliation.
 
 *Solver submission:*
 Competitors submit their solvers to the system using the web interface.
-They have to supply a name, version number, authors, a binary and the code.
+They have to provide a name, version number, authors, a binary and the code.
 Command line parameters of solvers can be specified aswell.
 Additionally, a solver has to be assigned to one or more competition categories
 as defined by the organizers in the previous phase.
@@ -120,6 +129,7 @@ benchmarks.
 
 **3. Solver Testing Phase:**
 
+*3.1 Organizers:*
 To ensure the submitted solvers are able to run on the competition cluster this
 phase is used by the organizers to test the submitted solvers on a set of instances
 that were submitted by the competitors or added by the organizers.
@@ -131,46 +141,74 @@ based on the benchmark type that was also specified on submission (or if they we
 added by the organizers and are applicable).
 These experiments are then run on the competition cluster.
 
+*3.2 Competitors:*
 During this phase competitors will only be able to see their own solver results and
-benchmarks will only appear by name without further details.
+benchmarks will only appear by name without further details in the web interface.
+Registration and submission of solvers or benchmarks is no longer possible.
 
 **4. Solver Resubmission phase:**
 
+*4.1 Organizers:*
+It is up to the organizers how they want to handle updated versions and feedback
+to the competitors. One possibility is to rerun the experiments of the testing
+phase with the updated solvers and let competitors access the same information
+as in the last phase.
+
+*4.2 Competitors:*
 During this phase competitors have the opportunity to resubmit solvers, if
 bugs or compatibility issues with the cluster/system occured during the solver
 testing phase. It is not possible to submit new solvers. Only solvers submitted
 during the second phase can be updated with new versions.
 
-It is up to the organizers how they want to handle updated versions. One possibility
-is to rerun the experiments of the testing phase with the updated solvers and
-let competitors access the same information as in the last phase.
-
 **5. Competition phase:**
 
+*5.1 Organizers:*
 Similar to the testing phase, organizers create the competition experiments based
 on the competition categories. Benchmark selection is a seperate issue and could be
-managed by a jury prior to the experiment creation, for example.
+managed by a jury prior to experiment creation, for example.
 
-The experiments are then run on the competition cluster. During this phase, competitors
-have only access to their own solvers' results. Benchmarks appear by name only.
+The experiments are then run on the competition cluster.
+
+*5.2 Competitors:*
+During this phase, competitors have only access to their own solvers' results and
+benchmarks appear by name only in the web interface.
 
 **6. Release phase:**
 
 In this phase competitors gain access to the results of all competing solvers.
 At this point a ranking has to be calculated and displayed using the results of
 the solvers, for example number of instances solved correctly and breaking ties
-by the accumulated time.
-Solvers are ranked in each experiment separately and ranking calculations should
-be done dynamically by the web competition system.
+by the accumulated time. Ranking schemes have to be explored further as fair
+comparison of solvers is no trivial task.
 
-Also available in this phase should be analysis options such as various plots
+Solvers are ranked in each experiment separately and ranking calculations should
+be done, if possible, dynamically by the web competition system using the data
+of the finished experiments.
+
+Also available in this phase should be analysis options including various plots
 visualizing the running times of solvers or certain properties of results and
-instances. (Examples: Time vs. Memory, "Cactus-Plots", X vs. Y scatter plots, ...)
+instances. (see "Analysis Options" below)
 
 **7. Post-Relase phase:**
 
 Benchmarks, results and possibly solver code and binaries are made publicly available
-on the web interface.
+on the web interface without requiring registration.
+
+Results
+~~~~~~~
+
+Results can be displayed in several ways:
+
+- Single result: Output (stdout and stderr) and calculated result properties
+  of one solver run on a benchmark. Additional technial information including
+  the client's output.
+- The results of one solver on all benchmarks of an experiment in a table
+  with a column for each run if a solver was run multiple times on each benchmark.
+- The results of all solvers on all benchmarks of an experiment in tabular format.
+  One cell representing the runs of a solver (columns) on a benchmark (rows).
+  Displayed information can include minimum, maximum, median and average run time if
+  there were multiple runs.
+
 
 Analyis Options
 ~~~~~~~~~~~~~~~
@@ -178,9 +216,10 @@ Analyis Options
 EDACC is being extended to allow the specification of properties of results
 and instances, for example the "quality" or "simplicity" of a solution produced
 by a solver or the number of variable flips needed.
-These properties can be calculated for all results and instances before the
-release phase and then be used by the web competition system to show various
-plots or allow statistical evaluation by calculating correlation coefficients etc.
+These properties can be calculated using the extensions that are being developed
+for all results and instances before the release phase and then be used by the
+web competition system to show various plots or allow statistical evaluation by
+calculating correlation coefficients etc.
 
 Some examples:
 
@@ -203,3 +242,7 @@ The EDACC Web Competition System will be implemented in Python utilizing various
 widely used libraries and will be able to run on any web server that supports
 the WSGI standard and has access to an EDACC database. To render plots it will
 interface the statistical computing language R.
+
+All user account data, submitted solvers and benchmarks will be stored in an EDACC
+database. The static pages will have to be placed in a folder with a specified naming
+scheme or alternatively, a Wiki could be utilized.
