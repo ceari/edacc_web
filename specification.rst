@@ -64,8 +64,8 @@ solvers and benchmarks and access the results of the experiments.
 The organizers use the submitted solvers and benchmarks to create experiments and
 run them on a cluster.
 
-Description
------------
+System Description
+------------------
 
 General Information
 ~~~~~~~~~~~~~~~~~~~
