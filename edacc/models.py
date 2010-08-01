@@ -2,8 +2,10 @@
 """
     edacc.models
     ------------
-    
-    Provides EDACC database connections.
+
+    Provides EDACC database connections. The web application can serve multiple
+    databases, which are held in the databases dictionary defined in this
+    module.
 """
 
 from edacc import config, constants
@@ -20,13 +22,13 @@ class EDACCDatabase(object):
         self.username = username
         self.password = password
         self.label = label
-        
+
         url = URL(drivername=config.DATABASE_DRIVER, username=username,
                   password=password, host=config.DATABASE_HOST,
                   port=config.DATABASE_PORT, database=database)
-        self.engine = create_engine(url, convert_unicode=True) 
+        self.engine = create_engine(url, convert_unicode=True)
         self.metadata = metadata = MetaData(bind=self.engine)
-        
+
         class Solver(object): pass
         class SolverConfiguration(object):
             def get_number(self):
@@ -38,14 +40,14 @@ class EDACCDatabase(object):
                     return 0
                 else:
                     return same_solvers.index(self) + 1
-                    
+
             def get_name(self):
                 n = self.get_number()
                 if n == 0:
                     return self.solver.name
                 else:
                     return "%s (%s)" % (self.solver.name, str(n))
-            
+
         class Parameter(object): pass
         class ParameterInstance(object): pass
         class Instance(object): pass
@@ -74,9 +76,9 @@ class EDACCDatabase(object):
         self.GridQueue = GridQueue
         self.User = User
         self.DBConfiguration = DBConfiguration
-        
+
         metadata.reflect()
-        
+
         # Table-Class mapping
         mapper(Parameter, metadata.tables['Parameters'])
         mapper(GridQueue, metadata.tables['gridQueue'])
@@ -112,7 +114,7 @@ class EDACCDatabase(object):
                 'instances': relationship(Instance, secondary=metadata.tables['Experiment_has_Instances']),
                 'solver_configurations': relation(SolverConfiguration),
                 'grid_queue': relationship(GridQueue, secondary=metadata.tables['Experiment_has_gridQueue']),
-            }  
+            }
         )
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
@@ -129,9 +131,9 @@ class EDACCDatabase(object):
             }
         )
         mapper(DBConfiguration, metadata.tables['DBConfiguration'])
-        
+
         self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False, autoflush=False))
-        
+
         # initialize DBConfiguration table if not already done
         if self.session.query(DBConfiguration).get(0) is None:
             dbConfig = DBConfiguration()
@@ -140,28 +142,28 @@ class EDACCDatabase(object):
             dbConfig.competitionPhase = None
             self.session.add(dbConfig)
             self.session.commit()
-    
+
     def is_competition(self):
         """ returns whether this database is a competition database (user management etc. necessary) or not """
         return self.session.query(self.DBConfiguration).get(0).competition
-        
+
     def set_competition(self, b):
         self.session.query(self.DBConfiguration).get(0).competition = b
         self.session.commit()
-    
+
     def competition_phase(self):
         """ returns the competition phase this database is in (or None, if is_competition() == False) as integer"""
         if not self.is_competition(): return None
         return self.session.query(self.DBConfiguration).get(0).competitionPhase
-    
+
     def set_competition_phase(self, phase):
         if phase is not None and phase not in (1,2,3,4): return
         self.session.query(self.DBConfiguration).get(0).competitionPhase = phase
         self.session.commit()
-        
+
     def __str__(self):
         return self.label
-        
+
 # Dictionary of the databases this web server is serving
 databases = {}
 
@@ -174,7 +176,7 @@ def add_database(username, password, database, label):
 def remove_database(database):
     if database in databases:
         del databases[database]
-        
+
 def get_database(database):
     if databases.has_key(database):
         return databases[database]

@@ -1,12 +1,18 @@
-{% extends "base.html" %}
-{% block title %}Databases{% endblock %}
-{% block content %}
-    <h2>Databases</h2>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-    <h3>The Server is connected to the following databases:</h3>
-    <ul>
-    {% for db in databases %}
-        <li><a href="{{url_for('frontend.experiments_index', database=db.database)}}">{{db}}</a>{% if db.is_competition() %} (Competition){% endif %}</li>
-    {% endfor %}
-    </ul>
-{% endblock %}
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Databases</title>
+        <link rel="stylesheet" href="/static/css/base.css" type="text/css" />
+    </head>
+    <body>
+        <h2>Databases</h2>
+
+        <h3>The Server is connected to the following databases:</h3>
+        <ul>
+        {% for db in databases %}
+            <li><a href="{{url_for('frontend.experiments_index', database=db.database)}}">{{db}}</a>{% if db.is_competition() %} (Competition){% endif %}</li>
+        {% endfor %}
+        </ul>
+    </body>
+</html>

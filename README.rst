@@ -1,4 +1,4 @@
-EDACC Web Frontend 
+EDACC Web Frontend
 ==================
 
 Experiment Design and Administration for Computer Clusters for SAT Solvers.
@@ -31,6 +31,7 @@ Dependencies
 - SQLAlchemy 0.6.1 (SQL Toolkit and Object Relational Mapper)
 - mysql-python 1.2.3c1 (Python MySQL adapter)
 - Flask 0.5.2 (Micro Webframework)
+- Flask-WTF 0.2.3 (Flask extension for WTForms)
 - Werkzeug 0.6.2 (Webframework, Flask dependency)
 - Jinja2 2.5 (Template Engine)
 - rpy2 2.1.3 (Python R interface)

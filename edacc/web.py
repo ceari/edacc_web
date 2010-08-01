@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+    edacc.web
+    ---------
+
+    In this module the flask application instance is defined and configured
+    according to the settings in config.py.
+"""
 
 from flask import Flask, Request
 app = Flask(__name__)
@@ -18,14 +25,14 @@ for db in config.DEFAULT_DATABASES:
 
 
 class LimitedRequest(Request):
-    """ extending Flask's request class to limit form uploads """
-    # limit form uploads to 16 MB
+    """ extending Flask's request class to limit form uploads to 16 MB """
     max_form_memory_size = 16 * 1024 * 1024
 
 app.request_class = LimitedRequest
 
 app.secret_key = config.SECRET_KEY
 
+# register view modules
 from edacc.views.admin import admin
 from edacc.views.accounts import accounts
 from edacc.views.frontend import frontend

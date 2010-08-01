@@ -11,6 +11,7 @@ from flask import Module
 from flask import render_template as render
 from flask import Response, abort, request, session, url_for, redirect, flash
 from flask import Request
+from werkzeug import Headers
 
 from edacc import utils, models
 from edacc.views.helpers import require_phase, require_competition, \
