@@ -281,11 +281,12 @@ by the web interface.
 
 ::
 
+    /                           (List of competitions/databases served)
     /<database>
         /Overview               (static)
         /Schedule               (static)
         /Rules                  (static)
-        /Categories             (list of the experiments/categories of the competition)
+        /Categories             (List of the experiments/categories of the competition)
         /<experiment>
             /Ranking            (in phases 6-7)
             /Progress           (3-6, live experiment progress information)
@@ -293,13 +294,13 @@ by the web interface.
                 /By-Solver
                 /By-Benchmark
                 /...
-            /Solvers            (3-6, list of solvers part of the current experiment)
-            /Benchmarks         (3-6, list of benchmarks)
+            /Solvers            (3-6, List of solvers part of the current experiment)
+            /Benchmarks         (3-6, ist of benchmarks)
             /Analysis           (5-6)
                 /CPUTime
                 /TimeVsMemory
                 /...
 
-        /Login                  (login form)
-        /Registration           (registration form)
-        /Admin                  (admin section)
+        /Login                  (Login form)
+        /Registration           (Registration form)
+        /Admin                  (Admin section)
