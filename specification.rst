@@ -271,3 +271,35 @@ scheme or alternatively, a third-party Wiki application could be utilized.
 There are several places where caching will be useful to reduce page generation times,
 for example result tables, plots and ranking. These can be held in caches, once
 the experiments are finished.
+
+Web Interface Structure
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The following URL scheme roughly represents the structure of the web interface.
+The root URL will allow the selection of one of the databases (=competitions) served
+by the web interface.
+
+::
+
+    /<database>
+        /Overview               (static)
+        /Schedule               (static)
+        /Rules                  (static)
+        /Categories             (list of the experiments/categories of the competition)
+        /<experiment>
+            /Ranking            (in phases 6-7)
+            /Progress           (3-6, live experiment progress information)
+            /Results            (3-6)
+                /By-Solver
+                /By-Benchmark
+                /...
+            /Solvers            (3-6, list of solvers part of the current experiment)
+            /Benchmarks         (3-6, list of benchmarks)
+            /Analysis           (5-6)
+                /CPUTime
+                /TimeVsMemory
+                /...
+
+        /Login                  (login form)
+        /Registration           (registration form)
+        /Admin                  (admin section)
