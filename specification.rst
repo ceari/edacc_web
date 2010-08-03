@@ -303,4 +303,9 @@ by the web interface.
 
         /Login                  (Login form)
         /Registration           (Registration form)
+        /Manage                 (For competitors)
+            /Solvers            (List of submitted solvers)
+            /Benchmarks         (List of submitted benchmarks)
+            /Submit-Solver      (Solver submission form)
+            /Submit-Benchmark   (Benchmark submission form)
         /Admin                  (Admin section)

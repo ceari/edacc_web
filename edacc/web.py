@@ -5,6 +5,9 @@
 
     In this module the flask application instance is defined and configured
     according to the settings in config.py.
+
+    :copyright: (c) 2010 by Daniel Diepold.
+    :license: MIT, see LICENSE for details.
 """
 
 from flask import Flask, Request
@@ -20,8 +23,8 @@ if config.LOGGING:
     file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)
 
-for db in config.DEFAULT_DATABASES:
-    models.add_database(db[0], db[1], db[2], db[3])
+for username, password, database, label in config.DEFAULT_DATABASES:
+    models.add_database(username, password, database, label)
 
 
 class LimitedRequest(Request):
@@ -36,7 +39,9 @@ app.secret_key = config.SECRET_KEY
 from edacc.views.admin import admin
 from edacc.views.accounts import accounts
 from edacc.views.frontend import frontend
+from edacc.views.analysis import analysis
 
 app.register_module(admin)
 app.register_module(accounts)
 app.register_module(frontend)
+app.register_module(analysis)

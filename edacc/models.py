@@ -6,13 +6,17 @@
     Provides EDACC database connections. The web application can serve multiple
     databases, which are held in the databases dictionary defined in this
     module.
+
+    :copyright: (c) 2010 by Daniel Diepold.
+    :license: MIT, see LICENSE for details.
 """
 
-from edacc import config, constants
-import sqlalchemy
-from sqlalchemy import Table, Integer, ForeignKey, create_engine, MetaData, Column
+from sqlalchemy import create_engine, MetaData
 from sqlalchemy.engine.url import URL
-from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred, relation, relationship, joinedload, joinedload_all
+from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
+from sqlalchemy.orm import relation, relationship
+
+from edacc import config, constants
 
 
 class EDACCDatabase(object):
@@ -34,7 +38,8 @@ class EDACCDatabase(object):
             def get_number(self):
                 """ Returns an integer i if `self` is the i-th of the solver configurations of the same solver
                     in the experiment `self` is in. If there's only one solver configuration of the solver this
-                    function returns 0 """
+                    function returns 0.
+                """
                 same_solvers = [sc for sc in self.experiment.solver_configurations if sc.solver == self.solver]
                 if len(same_solvers) == 1:
                     return 0
@@ -167,15 +172,19 @@ class EDACCDatabase(object):
 # Dictionary of the databases this web server is serving
 databases = {}
 
+
 def get_databases():
     return databases
+
 
 def add_database(username, password, database, label):
     databases[database] = EDACCDatabase(username, password, database, label)
 
+
 def remove_database(database):
     if database in databases:
         del databases[database]
+
 
 def get_database(database):
     if databases.has_key(database):

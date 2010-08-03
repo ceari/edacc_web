@@ -4,12 +4,14 @@
     -----------------
 
     This module defines request handler functions for system administration.
+
+    :copyright: (c) 2010 by Daniel Diepold.
+    :license: MIT, see LICENSE for details.
 """
 
 from flask import Module
 from flask import render_template as render
-from flask import Response, abort, request, session, url_for, redirect, flash
-from flask import Request
+from flask import request, session, url_for, redirect
 
 from edacc import config, models
 from edacc.views.helpers import require_admin

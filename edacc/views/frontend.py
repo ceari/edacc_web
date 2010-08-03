@@ -5,21 +5,23 @@
 
     This module defines request handler functions for the main functionality
     of the web application.
+
+    :copyright: (c) 2010 by Daniel Diepold.
+    :license: MIT, see LICENSE for details.
 """
 
-import json, time, hashlib, os, datetime, cStringIO, re, random
+import json
 
 from flask import Module
 from flask import render_template as render
-from flask import Response, abort, request, session, url_for, redirect, flash
-from flask import Request
-from werkzeug import secure_filename, Headers
+from flask import Response, abort, request, g
+from werkzeug import Headers
 
 from edacc import plots, config, utils, models
-from edacc.web import app
-from edacc.models import joinedload, joinedload_all
+from sqlalchemy.orm import joinedload
 from edacc.constants import JOB_FINISHED, JOB_ERROR
-from edacc.views.helpers import require_phase, require_competition, require_login, is_admin
+from edacc.views.helpers import require_phase, require_competition
+from edacc.views.helpers import require_login, is_admin
 
 frontend = Module(__name__)
 
@@ -48,6 +50,36 @@ def experiments_index(database):
     db.session.remove()
     return res
 
+@frontend.route('/<database>/overview/')
+@require_competition
+def competition_overview(database):
+    db = models.get_database(database) or abort(404)
+
+    try:
+        return render('/competitions/%s/overview.html' % (database,), db=db, database=database)
+    except:
+        abort(404)
+
+@frontend.route('/<database>/schedule/')
+@require_competition
+def competition_schedule(database):
+    db = models.get_database(database) or abort(404)
+
+    try:
+        return render('/competitions/%s/schedule.html' % (database,), db=db, database=database)
+    except:
+        abort(404)
+
+@frontend.route('/<database>/rules/')
+@require_competition
+def competition_rules(database):
+    db = models.get_database(database) or abort(404)
+
+    try:
+        return render('/competitions/%s/rules.html' % (database,), db=db, database=database)
+    except:
+        abort(404)
+
 @frontend.route('/<database>/experiment/<int:experiment_id>/')
 @require_phase(phases=(2,3,4))
 @require_login
@@ -74,7 +106,7 @@ def experiment_solvers(database, experiment_id):
 
     # if competition db, show only own solvers unless phase == 4
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
-        solvers = filter(lambda s: s.user == request.User, solvers)
+        solvers = filter(lambda s: s.user == g.User, solvers)
 
     res = render('experiment_solvers.html', solvers=solvers, experiment=experiment, database=database, db=db)
     db.session.remove()
@@ -93,7 +125,7 @@ def experiment_solver_configurations(database, experiment_id):
 
     # if competition db, show only own solvers unless phase == 4
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
-        solver_configurations = filter(lambda sc: sc.solver.user == request.User, solver_configurations)
+        solver_configurations = filter(lambda sc: sc.solver.user == g.User, solver_configurations)
 
     res = render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations, database=database, db=db)
     db.session.remove()
@@ -127,43 +159,34 @@ def experiment_results(database, experiment_id):
 
     # if competition db, show only own solvers unless phase == 4
     if not is_admin() and db.is_competition() and db.competition_phase() not in (4,):
-        solver_configs = filter(lambda sc: sc.solver.user == request.User, solver_configs)
+        solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
-    if config.CACHING:
-        results = cache.get('experiment_results_' + str(experiment_id))
-    else:
-        results = None
-
-    if results is None:
-        results = []
-        for instance in instances:
-            row = []
-            for solver_config in solver_configs:
-                query = db.session.query(db.ExperimentResult)
-                query.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
-                jobs = query.filter_by(experiment=experiment) \
-                            .filter_by(solver_configuration=solver_config) \
-                            .filter_by(instance=instance) \
-                            .all()
-                completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
-                runtimes = [j.time for j in jobs]
-                runtimes.sort()
-                time_median = runtimes[len(runtimes) / 2]
-                time_avg = sum(runtimes) / float(len(jobs))
-                time_max = max(runtimes)
-                time_min = min(runtimes)
-                row.append({'time_avg': time_avg,
-                            'time_median': time_median,
-                            'time_max': time_max,
-                            'time_min': time_min,
-                            'completed': completed,
-                            'total': len(jobs),
-                            'solver_config': solver_config
-                            })
-            results.append({'instance': instance, 'times': row})
-
-        if config.CACHING:
-            cache.set('experiment_results_' + str(experiment_id), results, timeout=config.CACHE_TIMEOUT)
+    results = []
+    for instance in instances:
+        row = []
+        for solver_config in solver_configs:
+            query = db.session.query(db.ExperimentResult)
+            query.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+            jobs = query.filter_by(experiment=experiment) \
+                        .filter_by(solver_configuration=solver_config) \
+                        .filter_by(instance=instance) \
+                        .all()
+            completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
+            runtimes = [j.time for j in jobs]
+            runtimes.sort()
+            time_median = runtimes[len(runtimes) / 2]
+            time_avg = sum(runtimes) / float(len(jobs))
+            time_max = max(runtimes)
+            time_min = min(runtimes)
+            row.append({'time_avg': time_avg,
+                        'time_median': time_median,
+                        'time_max': time_max,
+                        'time_min': time_min,
+                        'completed': completed,
+                        'total': len(jobs),
+                        'solver_config': solver_config
+                        })
+        results.append({'instance': instance, 'times': row})
 
     res = render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
@@ -196,7 +219,7 @@ def experiment_progress_ajax(database, experiment_id):
 
     # if competition db, show only own solvers unless phase == 4
     if not is_admin() and db.is_competition() and db.competition_phase() not in (4,):
-        jobs = filter(lambda j: j.solver_configuration.solver.user == request.User, jobs)
+        jobs = filter(lambda j: j.solver_configuration.solver.user == g.User, jobs)
 
     aaData = []
     for job in jobs:
@@ -222,7 +245,7 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     if instance not in experiment.instances: abort(404)
 
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
-        if not solver_configuration.solver.user == request.User: abort(401)
+        if not solver_configuration.solver.user == g.User: abort(401)
 
     jobs = db.session.query(db.ExperimentResult) \
                     .filter_by(experiment=experiment) \
@@ -281,7 +304,7 @@ def solver_details(database, solver_id):
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
 
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
-        if solver.user != request.User and not is_admin(): abort(401)
+        if solver.user != g.User and not is_admin(): abort(401)
 
     res = render('solver_details.html', solver=solver, database=database, db=db)
     db.session.remove()
@@ -293,12 +316,11 @@ def solver_details(database, solver_id):
 def solver_configuration_details(database, experiment_id, solver_configuration_id):
     """ Show solver configuration details """
     db = models.get_database(database) or abort(404)
-    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     solver_config = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
     solver = solver_config.solver
 
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
-        if solver.user != request.User: abort(401)
+        if solver.user != g.User: abort(401)
 
     parameters = solver_config.parameter_instances
     parameters.sort(key=lambda p: p.parameter.order)
@@ -317,7 +339,7 @@ def experiment_result(database, experiment_id, result_id):
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
-        if result.solver_configuration.solver.user != request.User: abort(401)
+        if result.solver_configuration.solver.user != g.User: abort(401)
 
     resultFile = result.resultFile
     clientOutput = result.clientOutput
@@ -350,11 +372,10 @@ def experiment_result(database, experiment_id, result_id):
 def experiment_result_download(database, experiment_id, result_id):
     """ Returns the specified job client output file as HTTP response """
     db = models.get_database(database) or abort(404)
-    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
-        if result.solver_configuration.solver.user != request.User: abort(401)
+        if result.solver_configuration.solver.user != g.User: abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -370,11 +391,10 @@ def experiment_result_download(database, experiment_id, result_id):
 def experiment_result_download_client_output(database, experiment_id, result_id):
     """ Returns the specified job client output as HTTP response """
     db = models.get_database(database) or abort(404)
-    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
     if not is_admin() and db.is_competition() and not db.competition_phase() in (4,):
-        if result.solver_configuration.solver.user != request.User: abort(401)
+        if result.solver_configuration.solver.user != g.User: abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -383,122 +403,3 @@ def experiment_result_download_client_output(database, experiment_id, result_id)
     res = Response(response=result.clientOutput, headers=headers)
     db.session.remove()
     return res
-
-@frontend.route('/<database>/experiment/<int:experiment_id>/evaluation-solved-instances')
-@require_phase(phases=(4,))
-@require_login
-def evaluation_solved_instances(database, experiment_id):
-    """ Shows a page with a cactus plot of the instances solved within a given amount of time of all solver configurations
-        of the specified experiment """
-    db = models.get_database(database) or abort(404)
-    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-
-    return render('/evaluation/solved_instances.html', database=database, experiment=experiment)
-
-@frontend.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')
-@require_phase(phases=(4,))
-@require_login
-def evaluation_cputime(database, experiment_id):
-    """ Shows a page that lets users plot the cputimes of two solver configurations on the instances of the experiment """
-    db = models.get_database(database) or abort(404)
-    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-
-    s1 = request.args.get('s1', None)
-    s2 = request.args.get('s2', None)
-    solver1, solver2 = None, None
-    if s1:
-        s1 = int(s1)
-        solver1 = db.session.query(db.SolverConfiguration).get(s1)
-    if s2:
-        s2 = int(s2)
-        solver2 = db.session.query(db.SolverConfiguration).get(s2)
-
-    return render('/evaluation/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2, solver1=solver1, solver2=solver2, db=db)
-
-@frontend.route('/<database>/experiment/<int:experiment_id>/cputime-plot/<int:s1>/<int:s2>/')
-@require_phase(phases=(4,))
-@require_login
-def cputime_plot(database, experiment_id, s1, s2):
-    """ Plots the cputimes of the two specified solver configurations on the experiment's instances against each
-        other in a scatter plot and returns the image in a HTTP response """
-    db = models.get_database(database) or abort(404)
-    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-
-    sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
-    sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
-
-    results1 = db.session.query(db.ExperimentResult)
-    results1.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
-    results1 = results1.filter_by(experiment=exp, solver_configuration=sc1)
-
-    results2 = db.session.query(db.ExperimentResult)
-    results2.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
-    results2 = results2.filter_by(experiment=exp, solver_configuration=sc2)
-
-    xs = []
-    ys = []
-    for instance in exp.instances:
-        r1 = results1.filter_by(instance=instance).first()
-        r2 = results2.filter_by(instance=instance).first()
-        if r1: xs.append(r1.time)
-        if r2: ys.append(r2.time)
-
-    title = sc1.solver.name + ' vs. ' + sc2.solver.name
-    xlabel = sc1.solver.name + ' CPU time (s)'
-    ylabel = sc2.solver.name + ' CPU time (s)'
-    if request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.pdf'
-        plots.scatter(xs, ys, xlabel, ylabel, title, exp.timeOut, filename, format='pdf')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    else:
-        filename = os.path.join(config.TEMP_DIR, request.unique_id) + '.png'
-        plots.scatter(xs, ys, xlabel, ylabel, title, exp.timeOut, filename)
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response
-
-@frontend.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
-@require_phase(phases=(4,))
-@require_login
-def cactus_plot(database, experiment_id):
-    """ Renders a cactus plot of the instances solved within a given amount of time of all solver configurations
-        of the specified experiment """
-    db = models.get_database(database) or abort(404)
-    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-
-    results = db.session.query(db.ExperimentResult)
-    results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
-    results = results.filter_by(experiment=exp)
-
-    solvers = []
-    for sc in exp.solver_configurations:
-        s = {'xs': [], 'ys': [], 'name': sc.get_name()}
-        sc_res = results.filter_by(solver_configuration=sc, run=0, status=1).order_by(db.ExperimentResult.time)
-        i = 1
-        for r in sc_res:
-            s['ys'].append(r.time)
-            s['xs'].append(i)
-            i += 1
-        solvers.append(s)
-
-    max_x = len(exp.instances) + 10
-    max_y = max([max(s['ys']) for s in solvers])
-
-    if request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, request.unique_id) + 'cactus.pdf'
-        plots.cactus(solvers, max_x, max_y, filename, format='pdf')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename='instances_solved_given_time.pdf')
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    else:
-        filename = os.path.join(config.TEMP_DIR, request.unique_id) + 'cactus.png'
-        plots.cactus(solvers, max_x, max_y, filename)
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response

@@ -3,7 +3,10 @@
     edacc.forms
     -----------
 
-    Various WTF-Forms used by the web frontend
+    Various WTF-Forms used by the web frontend.
+
+    :copyright: (c) 2010 by Daniel Diepold.
+    :license: MIT, see LICENSE for details.
 """
 
 from flaskext.wtf import Form, TextField, PasswordField, TextAreaField

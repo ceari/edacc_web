@@ -4,6 +4,9 @@
     -----------
 
     Utility functions, jinja2 filters, etc.
+
+    :copyright: (c) 2010 by Daniel Diepold.
+    :license: MIT, see LICENSE for details.
 """
 
 import random

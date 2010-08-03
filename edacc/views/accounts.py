@@ -5,13 +5,19 @@
 
     This module defines request handler functions for user account management
     such as registration, login and solver submission.
+
+    :copyright: (c) 2010 by Daniel Diepold.
+    :license: MIT, see LICENSE for details.
 """
 
+import random
+import re
+import hashlib
+
 from flask import Module
-from flask import render_template as render
+from flask import render_template as render, g
 from flask import Response, abort, request, session, url_for, redirect, flash
-from flask import Request
-from werkzeug import Headers
+from werkzeug import Headers, secure_filename
 
 from edacc import utils, models
 from edacc.views.helpers import require_phase, require_competition, \
@@ -138,7 +144,6 @@ def login(database):
 @require_competition
 def logout(database):
     """ User logout for a database """
-    db = models.get_database(database) or abort(404)
 
     session.pop('logged_in', None)
     session.pop('database', None)
@@ -157,6 +162,7 @@ def submit_solver(database, id=None):
 
     if id:
         solver = db.session.query(db.Solver).get(id) or abort(404)
+        if solver.user != user: abort(401)
 
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1] in ['zip']
@@ -212,7 +218,7 @@ def submit_solver(database, id=None):
             solver.code = code.read()
             solver.version = version
             solver.authors = authors
-            solver.user = request.User
+            solver.user = g.User
 
             if not id:
                 db.session.add(solver)
@@ -257,7 +263,7 @@ def list_solvers(database):
         the database
     """
     db = models.get_database(database) or abort(404)
-    solvers = db.session.query(db.Solver).filter_by(user=request.User).all()
+    solvers = db.session.query(db.Solver).filter_by(user=g.User).all()
 
     return render('list_solvers.html', database=database,
                   solvers=solvers, db=db)
@@ -271,7 +277,7 @@ def download_solver(database, id):
     """ Lets a user download the binaries of his own solvers """
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(id) or abort(404)
-    if solver.user != request.User:
+    if solver.user != g.User:
         abort(401)
 
     headers = Headers()
@@ -292,7 +298,7 @@ def download_solver_code(database, id):
     """ Lets a user download the binaries of his own solvers """
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(id) or abort(404)
-    if solver.user != request.User:
+    if solver.user != g.User:
         abort(401)
 
     headers = Headers()

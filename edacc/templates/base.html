@@ -21,10 +21,14 @@
         <span id="title">{{db}}</span>
     </div>
     <div id="navigation">
-        <a href="{{url_for('frontend.experiments_index', database=database)}}">Overview</a>|
-        <a href="">Schedule</a>|
-        <a href="">Rules</a>|
-        <a href="{{url_for('frontend.experiments_index', database=database)}}">Categories</a>
+        <a href="{{url_for('frontend.competition_overview', database=database)}}">Overview</a>
+        |<a href="{{url_for('frontend.competition_schedule', database=database)}}">Schedule</a>
+        |<a href="{{url_for('frontend.competition_rules', database=database)}}">Rules</a>
+        |<a href="{{url_for('frontend.experiments_index', database=database)}}">Categories</a>
+        {% if db.is_competition() and not session.logged_in %}
+        |<a href="{{url_for('accounts.login', database=database)}}">Login</a>
+        |<a href="{{url_for('accounts.register', database=database)}}">Register</a>
+        {% endif %}
         <span id="admin_login">
             {% if session.logged_in %}Logged in as {{session.email}} (<a href="{{url_for('accounts.logout', database=session.database)}}">Logout</a>) {% endif %}
         </span>

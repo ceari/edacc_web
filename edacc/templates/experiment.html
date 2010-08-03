@@ -2,7 +2,7 @@
 {% block title %}{{experiment.name}} Experiment{% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> :: 
+        <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
         {{experiment.name}}
     </div>
     <h1>Experiment {{experiment.name}}</h1>
@@ -14,20 +14,20 @@
     {% if not session.admin and db.is_competition() and db.competition_phase() != 4 %}
     <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While the competition isn't finished, you are only able to see your own solvers.</div>
     {% endif %}
-    
+
     <h2>Progress</h2>
-    <a href="{{url_for('experiment_progress', database=database, experiment_id=experiment.idExperiment)}}">Live information about experiment progress</a><br/>
-    
+    <a href="{{url_for('frontend.experiment_progress', database=database, experiment_id=experiment.idExperiment)}}">Live information about experiment progress</a><br/>
+
     <h2>Information about solvers and instances</h2>
-    <!-- <a href="{{url_for('experiment_solvers', database=database, experiment_id=experiment.idExperiment)}}">List of solvers used</a><br/> -->
-    <a href="{{url_for('experiment_solver_configurations', database=database, experiment_id=experiment.idExperiment)}}">List of solver configurations used</a><br/>
-    <a href="{{url_for('experiment_instances', database=database, experiment_id=experiment.idExperiment)}}">List of instances used</a><br/>
-    
+    <!-- <a href="{{url_for('frontend.experiment_solvers', database=database, experiment_id=experiment.idExperiment)}}">List of solvers used</a><br/> -->
+    <a href="{{url_for('frontend.experiment_solver_configurations', database=database, experiment_id=experiment.idExperiment)}}">List of solver configurations used</a><br/>
+    <a href="{{url_for('frontend.experiment_instances', database=database, experiment_id=experiment.idExperiment)}}">List of instances used</a><br/>
+
     <h2>Results</h2>
-    <a href="{{url_for('experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results by solver configuration and instance</a>
-    
+    <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results by solver configuration and instance</a>
+
     <h2>Evaluation</h2>
-    <a href="{{url_for('evaluation_cputime', database=database, experiment_id=experiment.idExperiment)}}">Compare the CPU time of two solvers</a><br/>
-    <a href="{{url_for('evaluation_solved_instances', database=database, experiment_id=experiment.idExperiment)}}">Graph of the number of solved instances within a given amount of time</a>
+    <a href="{{url_for('analysis.evaluation_cputime', database=database, experiment_id=experiment.idExperiment)}}">Compare the CPU time of two solvers</a><br/>
+    <a href="{{url_for('analysis.evaluation_solved_instances', database=database, experiment_id=experiment.idExperiment)}}">Graph of the number of solved instances within a given amount of time</a>
 
 {% endblock %}
