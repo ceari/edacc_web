@@ -19,7 +19,7 @@ from flask import render_template as render, g
 from flask import Response, abort, request, session, url_for, redirect, flash
 from werkzeug import Headers, secure_filename
 
-from edacc import utils, models
+from edacc import utils, models, forms
 from edacc.views.helpers import require_phase, require_competition, \
                                 require_login, password_hash
 
@@ -113,17 +113,15 @@ def login(database):
         only be logged in to one database at a time
     """
     db = models.get_database(database) or abort(404)
+    form = forms.LoginForm(request.form)
 
     error = None
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-
-        user = db.session.query(db.User).filter_by(email=email).first()
+    if request.method == 'POST' and form.validate():
+        user = db.session.query(db.User).filter_by(email=form.email.data).first()
         if user is None:
             error = "Account doesn't exist"
         else:
-            if user.password != password_hash(password):
+            if user.password != password_hash(form.password.data):
                 error = 'Invalid password'
             else:
                 session['logged_in'] = True
@@ -136,7 +134,7 @@ def login(database):
                                         database=database))
 
     return render('/accounts/login.html', database=database, error=error,
-                  db=db)
+                  db=db, form=form)
 
 
 @accounts.route('/<database>/logout')
@@ -162,7 +160,8 @@ def submit_solver(database, id=None):
 
     if id:
         solver = db.session.query(db.Solver).get(id) or abort(404)
-        if solver.user != user: abort(401)
+        if solver.user != user:
+            abort(401)
 
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1] in ['zip']

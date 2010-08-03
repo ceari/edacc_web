@@ -2,21 +2,41 @@
 {% block title %}Login{% endblock %}
 {% block content %}
     <h2>Login to {{database}}</h2>
-    
+
     <form action="{{url_for('login', database=database)}}" method="post">
+        {{form.csrf}}
         <table>
             <tr>
-                <td>e-mail:</td><td><input type="text" name="email" /></td>
+                <td>{{form.email.label}}</td><td>{{form.email()}}</td>
             </tr>
+            {% if form.email.errors %}
+                <tr><td colspan="2"><div class="form_error">
+                    {% for error in form.email.errors %}
+                        {{error}}&nbsp;
+                    {% endfor %}
+                </div></td></tr>
+            {% endif %}
             <tr>
-                <td>Password:</td><td><input type="password" name="password" /></td>
+                <td>{{form.password.label}}</td><td>{{form.password()}}</td>
             </tr>
+            {% if form.password.errors %}
+                <tr><td colspan="2"><div class="form_error">
+                    {% for error in form.password.errors %}
+                        {{error}}&nbsp;
+                    {% endfor %}
+                </div></td></tr>
+            {% endif %}
             {% if error %}<tr><td colspan="2"><div class="form_error">{{error}}</div></td></tr>{% endif %}
             <tr>
                 <td colspan="2"><input type="submit" value="Login" /></td>
             </tr>
         </table>
     </form>
+    {% if 'csrf' in form.errors %}
+        <div class="form_error">
+            Missing or invalid CSRF token
+        </div>
+    {% endif %}
     {% if db.competition_phase() == 1 %}
         <a href="{{url_for('register', database=database)}}">Register</a>
     {% endif %}
