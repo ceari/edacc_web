@@ -118,6 +118,18 @@ li {
     margin-top: 5px;
 }
 
+ul.errors {
+    margin: 0;
+    padding: 0;
+}
+
+ul.errors li {
+    list-style-type: none;
+    color: red;
+    margin: 0;
+    padding: 0;
+}
+
 table.details {
     border-width: 1px;
     border-style: solid;

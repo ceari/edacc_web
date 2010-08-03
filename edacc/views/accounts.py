@@ -32,70 +32,51 @@ accounts = Module(__name__)
 def register(database):
     """ User registration """
     db = models.get_database(database) or abort(404)
+    form = forms.RegistrationForm()
 
-    error = None
-    if request.method == 'POST':
-        lastname = request.form['lastname']
-        firstname = request.form['firstname']
-        email = request.form['email']
-        password = request.form['password']
-        password_confirm = request.form['password_confirm']
-        address = request.form['address']
-        affiliation = request.form['affiliation']
-        captcha = request.form['captcha']
+    errors = []
+    if form.validate_on_submit():
+        if db.session.query(db.User).filter_by(email=form.email.data) \
+                                    .count() > 0:
+            errors.append("An account with this email address already exists")
 
-        valid = True
-        if any(len(x) > 255 for x in (lastname, firstname, email, address,
-                                      affiliation)):
-            error = 'max. 255 characters'
-            valid = False
-
-        if password != password_confirm:
-            error = "Passwords don't match"
-            valid = False
-
-        if re.match("^[a-zA-Z0-9._%-+]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$",
-                    email) is None:
-            error = "Invalid e-mail address, contact an administrator if \
-                    this e-mail address is valid"
-            valid = False
-
-        if db.session.query(db.User).filter_by(email=email).count() > 0:
-            error = "An account with this email address already exists"
-            valid = False
-
-        captcha = map(int, captcha.split())
         try:
+            captcha = map(int, form.captcha.data.split())
             if not utils.satisfies(captcha, session['captcha']):
-                valid = False
-                error = "You can't register to a SAT competition without \
-                        being able to solve a boolean formula!"
+                error.append("You can't register to a SAT competition without \
+                    being able to solve a SAT challenge!")
         except:
-            valid = False
-            error = "Wrong format of the solution"
+            errors.append("Wrong format of the solution")
 
-        if valid:
+        if not errors:
             user = db.User()
-            user.lastname = lastname
-            user.firstname = firstname
-            user.password = password_hash(password)
-            user.email = email
-            user.postal_address = address
-            user.affiliation = affiliation
+            user.lastname = form.lastname.data
+            user.firstname = form.firstname.data
+            user.password = password_hash(form.password.data)
+            user.email = form.email.data
+            user.postal_address = form.address.data
+            user.affiliation = form.affiliation.data
 
             db.session.add(user)
             try:
                 db.session.commit()
             except:
                 db.session.rollback()
-                error = 'Error when trying to save the account'
+                errors.append('Error when trying to save the account. Please \
+                              contact an administrator.')
                 return render('/accounts/register.html', database=database,
-                              error=error)
+                              db=db, errors=errors, form=form)
 
+            try:
+                del session['captcha']
+            except:
+                pass
             flash('Account created successfully. You can log in now.')
             return redirect(url_for('frontend.experiments_index',
                                     database=database))
 
+    # Save captcha to the session. The user will have to provide a solution for
+    # the same captcha that was given to him.
     random.seed()
     f = utils.random_formula(2, 3)
     while not utils.SAT(f):
@@ -103,7 +84,7 @@ def register(database):
     session['captcha'] = f
 
     return render('/accounts/register.html', database=database, db=db,
-                  error=error)
+                  errors=errors, form=form)
 
 
 @accounts.route('/<database>/login/', methods=['GET', 'POST'])
@@ -113,10 +94,10 @@ def login(database):
         only be logged in to one database at a time
     """
     db = models.get_database(database) or abort(404)
-    form = forms.LoginForm(request.form)
+    form = forms.LoginForm()
 
     error = None
-    if request.method == 'POST' and form.validate():
+    if form.validate_on_submit():
         user = db.session.query(db.User).filter_by(email=form.email.data).first()
         if user is None:
             error = "Account doesn't exist"

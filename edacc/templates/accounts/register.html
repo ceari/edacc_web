@@ -1,50 +1,41 @@
+{% from "_formhelpers.html" import render_field %}
 {% extends "base.html" %}
 {% block title %}Register{% endblock %}
 {% block content %}
     <h2>Register</h2>
-    
+
     <a href="/">Back</a>
-    
+
     <div><img src="/static/img/info.png"/> To submit solvers and access information about an experiment's progress and results create an account on this website.<br/>
     None of the information submitted here is publicly accessible.</div>
-    
+
     <form action="{{url_for('register', database=database)}}" method="post">
+        {{ form.csrf }}
         <table>
-            <tr>
-                <td>Last Name:</td>
-                <td><input size="30" type="text" name="lastname" /></td>
-            </tr>
-            <tr>
-                <td>First Name:</td>
-                <td><input size="30" type="text" name="firstname" /></td>
-            </tr>
-            <tr>
-                <td>e-mail (used to login):</td>
-                <td><input size="30" type="text" name="email" /></td>
-            </tr>
-            <tr>
-                <td>Password:</td>
-                <td><input size="30" type="password" name="password" /></td>
-            </tr>
-            <tr>
-                <td>Password (confirm):</td>
-                <td><input size="30" type="password" name="password_confirm" /></td>
-            </tr>
-            <tr>
-                <td>Postal Address:</td>
-                <td><textarea cols="25" rows="5" name="address"></textarea></td>
-            </tr>
-            <tr>
-                <td>Affiliation:</td>
-                <td><textarea cols="25" rows="5" name="affiliation"></textarea></td>
-            </tr>
+            {{ render_field(form.lastname, size=30, maxlength=255) }}
+            {{ render_field(form.firstname, size=30, maxlength=255) }}
+            {{ render_field(form.email, size=30, maxlength=255) }}
+            {{ render_field(form.password, size=30, maxlength=255) }}
+            {{ render_field(form.password_confirm, size=30, maxlength=255) }}
+            {{ render_field(form.address, cols=25, rows=5) }}
+            {{ render_field(form.affiliation, cols=25, rows=5) }}
             <tr>
                 <td>Give a solution</td>
                 <td>{{session.captcha|render_formula}}<br/>(space-separated, e.g. 1 0 1 for A=1, B=0, C=1 and don't use your solver for this!)<br/><input type="text" name="captcha" /></td>
             </tr>
-            {% if error %}<tr><td colspan="2"><div class="form_error">{{error}}</div></td></td>{% endif %}
+            {% if errors %}
+                <tr>
+                    <td colspan="2">
+                        <ul class="errors">
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% endif %}
             <tr><td colspan="2"><input type="submit" value="Submit" /></td></tr>
         </table>
     </form>
-    
+
 {% endblock %}

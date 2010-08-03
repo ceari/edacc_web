@@ -32,7 +32,7 @@ class RegistrationForm(Form):
     password_confirm = PasswordField('Confirm Password')
     address = TextAreaField('Postal Address')
     affiliation = TextAreaField('Affiliation')
-    captcha = TextField('Give a solution')
+    captcha = TextField()
 
 class LoginForm(Form):
     email = TextField('Email', [validators.Required(u'required')])
