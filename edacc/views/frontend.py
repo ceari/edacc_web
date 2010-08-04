@@ -14,10 +14,10 @@ import json
 
 from flask import Module
 from flask import render_template as render
-from flask import Response, abort, request, g
+from flask import Response, abort, g
 from werkzeug import Headers
 
-from edacc import plots, config, utils, models
+from edacc import utils, models
 from sqlalchemy.orm import joinedload
 from edacc.constants import JOB_FINISHED, JOB_ERROR
 from edacc.views.helpers import require_phase, require_competition
@@ -33,8 +33,7 @@ def index():
 
     return render('/databases.html', databases=databases)
 
-@frontend.route('/<database>/experiments')
-@require_login
+@frontend.route('/<database>/experiments/')
 def experiments_index(database):
     """ Show a list of all experiments in the database """
     db = models.get_database(database) or abort(404)
@@ -49,6 +48,11 @@ def experiments_index(database):
     res = render('experiments.html', experiments=experiments, db=db, database=database)
     db.session.remove()
     return res
+
+@frontend.route('/<database>/categories')
+@require_competition
+def categories(database):
+    return 'categories'
 
 @frontend.route('/<database>/overview/')
 @require_competition
@@ -81,7 +85,6 @@ def competition_rules(database):
         abort(404)
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/')
-@require_phase(phases=(2,3,4))
 @require_login
 def experiment(database, experiment_id):
     """ Show menu with links to info and evaluation pages """
@@ -93,7 +96,6 @@ def experiment(database, experiment_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/solvers')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_solvers(database, experiment_id):
     """ Show a list of all solvers used in the experiment """
@@ -113,7 +115,6 @@ def experiment_solvers(database, experiment_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/solver-configurations')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_solver_configurations(database, experiment_id):
     """ List all solver configurations (solver + parameter set) used in the experiment """
@@ -132,7 +133,6 @@ def experiment_solver_configurations(database, experiment_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/instances')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_instances(database, experiment_id):
     """ Show information about all instances used in the experiment """
@@ -147,7 +147,6 @@ def experiment_instances(database, experiment_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_results(database, experiment_id):
     """ Show a table with the solver configurations and their results on the instances of the experiment """
@@ -195,7 +194,6 @@ def experiment_results(database, experiment_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_progress(database, experiment_id):
     """ Show a live information table of the experiment's progress """
@@ -206,7 +204,6 @@ def experiment_progress(database, experiment_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress-ajax')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_progress_ajax(database, experiment_id):
     """ Returns JSON-serialized data of the experiment results. Used by the jQuery datatable as ajax data source """
@@ -233,7 +230,6 @@ def experiment_progress_ajax(database, experiment_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
-@require_phase(phases=(3,4))
 @require_login
 def solver_config_results(database, experiment_id, solver_configuration_id, instance_id):
     """ Displays list of results (all jobs) of a solver configuration on an instance """
@@ -261,7 +257,6 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     return res
 
 @frontend.route('/<database>/instance/<int:instance_id>')
-@require_phase(phases=(3,4))
 @require_login
 def instance_details(database, instance_id):
     """ Show instance details """
@@ -280,7 +275,6 @@ def instance_details(database, instance_id):
     return res
 
 @frontend.route('/<database>/instance/<int:instance_id>/download')
-@require_phase(phases=(3,4))
 @require_login
 def instance_download(database, instance_id):
     """ Return HTTP-Response containing the instance blob """
@@ -296,7 +290,6 @@ def instance_download(database, instance_id):
     return res
 
 @frontend.route('/<database>/solver/<int:solver_id>')
-@require_phase(phases=(1,2,3,4))
 @require_login
 def solver_details(database, solver_id):
     """ Show solver details """
@@ -311,7 +304,6 @@ def solver_details(database, solver_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/solver-configurations/<int:solver_configuration_id>')
-@require_phase(phases=(1,2,3,4))
 @require_login
 def solver_configuration_details(database, experiment_id, solver_configuration_id):
     """ Show solver configuration details """
@@ -330,7 +322,6 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_result(database, experiment_id, result_id):
     """ Displays information about a single result (job) """
@@ -367,7 +358,6 @@ def experiment_result(database, experiment_id, result_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_result_download(database, experiment_id, result_id):
     """ Returns the specified job client output file as HTTP response """
@@ -386,7 +376,6 @@ def experiment_result_download(database, experiment_id, result_id):
     return res
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-client-output')
-@require_phase(phases=(3,4))
 @require_login
 def experiment_result_download_client_output(database, experiment_id, result_id):
     """ Returns the specified job client output as HTTP response """

@@ -16,8 +16,8 @@
 {% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> :: 
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
         Results
     </div>
     <h2>Results by solver configuration and instance</h2>

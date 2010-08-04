@@ -11,7 +11,6 @@
 """
 
 import random
-import re
 import hashlib
 
 from flask import Module
@@ -43,7 +42,7 @@ def register(database):
         try:
             captcha = map(int, form.captcha.data.split())
             if not utils.satisfies(captcha, session['captcha']):
-                error.append("You can't register to a SAT competition without \
+                errors.append("You can't register to a SAT competition without \
                     being able to solve a SAT challenge!")
         except:
             errors.append("Wrong format of the solution")
@@ -100,10 +99,10 @@ def login(database):
     if form.validate_on_submit():
         user = db.session.query(db.User).filter_by(email=form.email.data).first()
         if user is None:
-            error = "Account doesn't exist"
+            error = "Invalid password or username."
         else:
             if user.password != password_hash(form.password.data):
-                error = 'Invalid password'
+                error = 'Invalid password or username.'
             else:
                 session['logged_in'] = True
                 session['database'] = database

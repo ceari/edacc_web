@@ -2,8 +2,8 @@
 {% block title %}Result of {{solver.name}} on {{instance.name}}{% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> :: 
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
         Result of {{solver.name}} on {{instance.name}}
     </div>
     <h2>Result of <a href="{{url_for('solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">{{solver_config.get_name()}}</a> on <a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a>, Run #{{result.run}}</h2>
@@ -11,14 +11,14 @@
     <div style="font-weight: bold">
     Status: {{result.status|job_status}}
     </div>
-    
+
     <h3>Client output:</h3>
     (<a href="{{url_for('experiment_result_download_client_output', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
-    
+
     <pre>{{clientOutput_text}}</pre>
-    
+
     <h3>Result file:</h3>
     (<a href="{{url_for('experiment_result_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
     <pre>{{resultFile_text}}</pre>
-    
+
 {% endblock %}

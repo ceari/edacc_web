@@ -12,16 +12,16 @@
     <form action="{{url_for('register', database=database)}}" method="post">
         {{ form.csrf }}
         <table>
-            {{ render_field(form.lastname, size=30, maxlength=255) }}
-            {{ render_field(form.firstname, size=30, maxlength=255) }}
-            {{ render_field(form.email, size=30, maxlength=255) }}
-            {{ render_field(form.password, size=30, maxlength=255) }}
-            {{ render_field(form.password_confirm, size=30, maxlength=255) }}
-            {{ render_field(form.address, cols=25, rows=5) }}
-            {{ render_field(form.affiliation, cols=25, rows=5) }}
+            {{ render_field(form.lastname, size=40, maxlength=255) }}
+            {{ render_field(form.firstname, size=40, maxlength=255) }}
+            {{ render_field(form.email, size=40, maxlength=255) }}
+            {{ render_field(form.password, size=40, maxlength=255) }}
+            {{ render_field(form.password_confirm, size=40, maxlength=255) }}
+            {{ render_field(form.address, cols=30, rows=5) }}
+            {{ render_field(form.affiliation, cols=30, rows=5) }}
             <tr>
                 <td>Give a solution</td>
-                <td>{{session.captcha|render_formula}}<br/>(space-separated, e.g. 1 0 1 for A=1, B=0, C=1 and don't use your solver for this!)<br/><input type="text" name="captcha" /></td>
+                <td>{{session.captcha|render_formula}}<br/>(space-separated, e.g. 1 0 1 for A=1, B=0, C=1<br/> Don't use your solver for this!)<br/><input size="40" type="text" name="captcha" /></td>
             </tr>
             {% if errors %}
                 <tr>
@@ -34,8 +34,8 @@
                     </td>
                 </tr>
             {% endif %}
-            <tr><td colspan="2"><input type="submit" value="Submit" /></td></tr>
         </table>
+        <input type="submit" value="Submit" />
     </form>
 
 {% endblock %}

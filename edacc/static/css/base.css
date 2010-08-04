@@ -59,6 +59,13 @@ a:hover {
 
 #content {
     margin-left: 3px;
+    min-height: 500px;
+    clear: both;
+}
+
+#footer {
+    padding: 3px;
+    border-top: 1px solid #ccc;
 }
 
 #title {
@@ -120,6 +127,7 @@ li {
 
 ul.errors {
     margin: 0;
+    margin-left: 5px;
     padding: 0;
 }
 
@@ -128,6 +136,35 @@ ul.errors li {
     color: red;
     margin: 0;
     padding: 0;
+}
+
+form {
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+form table {
+    border-collapse: collapse;
+    border-color: #ccc;
+}
+
+form td, th {
+    font-size: 12px;
+    line-height: 13px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+
+input, textarea, select {
+    margin: 3px;
+    margin-left: 5px;
+    vertical-align: middle;
+    font-family: "Lucida Grande", Verdana, Arial, sans-serif;
+    font-weight: normal;
+    font-size: 12px;
 }
 
 table.details {

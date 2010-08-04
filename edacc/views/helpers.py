@@ -12,28 +12,16 @@
 
 
 
-import hashlib, time
+import hashlib
 from functools import wraps
 
-from flask import abort, request, session, url_for, redirect, g
+from flask import abort, session, url_for, redirect, g
 
 from edacc import config, models
-from edacc.web import app
 
-# decorates a decorator function to be able to specify parameters
+# decorates a decorator function to be able to specify parameters :-)
 decorator_with_args = lambda decorator: lambda *args, **kwargs:\
                       lambda func: decorator(func, *args, **kwargs)
-
-
-@app.before_request
-def make_unique_id():
-    """ Attach an unique ID to the request (hash of current server time and
-        request headers)
-    """
-    hash = hashlib.md5()
-    hash.update(str(time.time()))
-    hash.update(str(request.headers))
-    g.unique_id = hash.hexdigest()
 
 
 def require_admin(f):

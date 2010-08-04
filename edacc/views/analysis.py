@@ -23,7 +23,6 @@ from edacc.views.helpers import require_phase, require_login
 analysis = Module(__name__)
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-solved-instances')
-@require_phase(phases=(4,))
 @require_login
 def evaluation_solved_instances(database, experiment_id):
     """ Shows a page with a cactus plot of the instances solved within a given amount of time of all solver configurations
@@ -31,11 +30,10 @@ def evaluation_solved_instances(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    return render('/evaluation/solved_instances.html', database=database, experiment=experiment, db=db)
+    return render('/analysis/solved_instances.html', database=database, experiment=experiment, db=db)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')
-@require_phase(phases=(4,))
 @require_login
 def evaluation_cputime(database, experiment_id):
     """ Shows a page that lets users plot the cputimes of two solver configurations on the instances of the experiment """
@@ -52,11 +50,10 @@ def evaluation_cputime(database, experiment_id):
         s2 = int(s2)
         solver2 = db.session.query(db.SolverConfiguration).get(s2)
 
-    return render('/evaluation/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2, solver1=solver1, solver2=solver2, db=db)
+    return render('/analysis/cputime.html', database=database, experiment=experiment, s1=s1, s2=s2, solver1=solver1, solver2=solver2, db=db)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cputime-plot/<int:s1>/<int:s2>/')
-@require_phase(phases=(4,))
 @require_login
 def cputime_plot(database, experiment_id, s1, s2):
     """ Plots the cputimes of the two specified solver configurations on the experiment's instances against each
@@ -103,7 +100,6 @@ def cputime_plot(database, experiment_id, s1, s2):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
-@require_phase(phases=(4,))
 @require_login
 def cactus_plot(database, experiment_id):
     """ Renders a cactus plot of the instances solved within a given amount of time of all solver configurations

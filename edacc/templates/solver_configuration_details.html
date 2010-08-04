@@ -2,7 +2,7 @@
 {% block title %}{{solver.name}} Details{% endblock %}
 {% block content %}
 <div class="navigation">
-    <a href="{{url_for('experiments_index', database=database)}}">Experiments</a>
+    » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a>
 </div>
 <h2>Details for solver configuration {{solver_config.get_name()}}</h2>
 

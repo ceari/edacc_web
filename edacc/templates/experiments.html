@@ -2,30 +2,14 @@
 {% block title %}Experiments{% endblock %}
 {% block content %}
     <div class="navigation">
-        Experiments
+        » Experiments
     </div>
-    <h2>{{db}}{% if db.is_competition() %} ({{db.competition_phase()|competition_phase}}){% endif %}</h2>
-    {% if db.is_competition() and not session.logged_in %}<a href="{{url_for('accounts.login', database=database)}}">Log in</a> to access your submitted solvers{% endif %}
-    
-    {% if session.logged_in and session.database == database %}
-    <img src="/static/img/info.png"/> You are logged in to a competition. In this phase of the competition you have the following options:
-    <ul>
-        {% if db.competition_phase() == 1 %}
-        <li><a href="{{url_for('accounts.submit_solver', database=database)}}">Submit</a> a solver</li>
-        {% endif %}
-        <li><a href="{{url_for('accounts.list_solvers', database=database)}}">View</a> a list of your submitted solvers</li>
-    </ul>
-    {% endif %}
-    
-    <h2>Experiments</h2>
+
     <ul>
         {% if experiments %}
             {% for experiment in experiments %}
                 <li>
-                    <a title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.solver_configurations|length}} Solvers, {{experiment.instances|length}} Instances, 
-                    {% if experiment.is_finished() %} Finished){% endif %}
-                    {% if experiment.is_running() %} In progress){% endif %}
-                    {% if not experiment.is_finished() and not experiment.is_running() %} Not started){% endif %}
+                    <a title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.solver_configurations|length}} Solvers, {{experiment.instances|length}} Instances)
                 </li>
             {% endfor %}
         {% else %}

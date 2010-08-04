@@ -2,15 +2,12 @@
 {% block title %}{{experiment.name}} Experiment{% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
         {{experiment.name}}
     </div>
-    <h1>Experiment {{experiment.name}}</h1>
+    <h1>{{experiment.name}}</h1>
     <div>Date: {{experiment.date|datetimeformat('%d.%m.%Y')}}</div>
     <div>Description: {{experiment.description if experiment.description else "no description"}}</div>
-    <div><strong>Status: {% if experiment.is_finished() %} Finished{% endif %}
-                         {% if experiment.is_running() %} In progress{% endif %}
-                         {% if not experiment.is_finished() and not experiment.is_running() %} Not started{% endif %}</strong></div>
     {% if not session.admin and db.is_competition() and db.competition_phase() != 4 %}
     <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While the competition isn't finished, you are only able to see your own solvers.</div>
     {% endif %}
@@ -26,7 +23,7 @@
     <h2>Results</h2>
     <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results by solver configuration and instance</a>
 
-    <h2>Evaluation</h2>
+    <h2>Analysis</h2>
     <a href="{{url_for('analysis.evaluation_cputime', database=database, experiment_id=experiment.idExperiment)}}">Compare the CPU time of two solvers</a><br/>
     <a href="{{url_for('analysis.evaluation_solved_instances', database=database, experiment_id=experiment.idExperiment)}}">Graph of the number of solved instances within a given amount of time</a>
 

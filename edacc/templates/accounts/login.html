@@ -10,10 +10,8 @@
             {{ render_field(form.email) }}
             {{ render_field(form.password) }}
             {% if error %}<tr><td colspan="2"><div class="form_error">{{ error }}</div></td></tr>{% endif %}
-            <tr>
-                <td colspan="2"><input type="submit" value="Login" /></td>
-            </tr>
         </table>
+        <input type="submit" value="Login" />
     </form>
     {% if 'csrf' in form.errors %}
         <div class="form_error">

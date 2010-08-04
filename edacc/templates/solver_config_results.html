@@ -2,9 +2,9 @@
 {% block title %}Results of {{solver_configuration.solver.name}} on {{instance.name}}{% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> :: 
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
-        <a href="{{url_for('experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results</a> :: 
+        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        <a href="{{url_for('experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results</a> ::
         {{solver_configuration.solver.name}} on {{instance.name}}
     </div>
     <h2>Results of {{solver_configuration.get_name()}} on {{instance.name}}</h2>

@@ -46,20 +46,20 @@
 		},
                 "aoColumns": [null, null, null, null, null, null, null, {"sSortDataType": "job-status"}]
             });
-            
+
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
-            
+
             $('#img_clear').click(function() {
                 if ($('#table_jobs_filter input').val() != "") {
                     $('#table_jobs_filter input').val('').keyup();
                 }
             });
-            
+
             $('#refresh').click(function() {
                 oTable.fnReloadAjax();
                 return false;
             });
-            
+
             $('#refresh_interval').change(function() {
                 $(this).stopTime();
                 var v = $(this).val()
@@ -72,7 +72,7 @@
                     });
                 }
             });
-            
+
             $(document).keydown(function(e)
             {
                 if (e.which == 116) // override F5 action to ajax reload instead of browser refresh
@@ -83,15 +83,15 @@
                     });
                     return false;
                 }
-            }); 
+            });
         });
         /* ]]> */
     </script>
 {% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> :: 
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> :: 
+        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
         Progress
     </div>
     <h2>Experiment progress</h2>
@@ -103,7 +103,7 @@
         <br/>
         Notice that the F5 key was overriden on this page to use Ajax to refresh the table data without having to reload the whole page. You can also use the following link or set a periodic refresh interval:
     </div>
-    
+
     <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
     <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>
     <div style="max-width: 98%">

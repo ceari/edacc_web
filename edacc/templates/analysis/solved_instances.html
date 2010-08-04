@@ -2,9 +2,9 @@
 {% block title %}Number of instances solved within a given amount of time{% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
         <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
-        Evaluation
+        Analysis
     </div>
     <div>For each solver of the experiment this graph shows the number of instances x it solved within y seconds.</div>
 

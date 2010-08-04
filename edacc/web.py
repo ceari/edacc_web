@@ -10,7 +10,9 @@
     :license: MIT, see LICENSE for details.
 """
 
-from flask import Flask, Request
+import uuid, datetime
+
+from flask import Flask, Request, g
 app = Flask(__name__)
 
 from edacc import config, models
@@ -32,8 +34,10 @@ class LimitedRequest(Request):
     max_form_memory_size = 16 * 1024 * 1024
 
 app.request_class = LimitedRequest
-
-app.secret_key = config.SECRET_KEY
+app.config.update(
+    SECRET_KEY = config.SECRET_KEY,
+    PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=1)
+)
 
 # register view modules
 from edacc.views.admin import admin
@@ -45,3 +49,9 @@ app.register_module(admin)
 app.register_module(accounts)
 app.register_module(frontend)
 app.register_module(analysis)
+
+
+@app.before_request
+def make_unique_id():
+    """ Attach an unique ID to the request """
+    g.unique_id = uuid.uuid1().hex

@@ -25,11 +25,10 @@ class RegistrationForm(Form):
                        validators.Length(max=255),
                        validators.Email(message='Invalid e-mail address')])
     password = PasswordField('Password',
-                             [validators.Required(),
-                              validators.EqualTo('password_confirm',
-                                                 message='Passwords must match')
-                              ])
-    password_confirm = PasswordField('Confirm Password')
+                             [validators.Required()])
+    password_confirm = PasswordField('Confirm Password',
+                                     [validators.EqualTo('password',
+                                        message='Passwords must match')])
     address = TextAreaField('Postal Address')
     affiliation = TextAreaField('Affiliation')
     captcha = TextField()

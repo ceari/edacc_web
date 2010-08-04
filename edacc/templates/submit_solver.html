@@ -2,7 +2,7 @@
 {% block title %}Submit Solver{% endblock %}
 {% block content %}
     <div class="navigation">
-        <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a>
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a>
     </div>
     <h2>Submit Solver</h2>
     {% if id %}
@@ -50,10 +50,8 @@
                     </div>
                 </td>
             </tr>
-            <tr>
-                <td colspan="2"><input type="submit" value="Submit" /></td>
-            </tr>
         </table>
+        <input type="submit" value="Submit" />
     </form>
     {% if error %}{{error}}{% endif %}
 {% endblock %}
