@@ -60,7 +60,7 @@ def databases_remove(database):
        frontend is serving
     """
     models.remove_database(database)
-    return redirect(url_for('frontend.databases'))
+    return redirect('admin.databases')
 
 
 @admin.route('/admin/login/', methods=['GET', 'POST'])
@@ -75,7 +75,7 @@ def admin_login():
             error = 'Invalid password'
         else:
             session['admin'] = True
-            return redirect(url_for('frontend.databases'))
+            return redirect(url_for('admin.databases'))
     return render('/admin/login.html', error=error)
 
 

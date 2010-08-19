@@ -12,7 +12,7 @@
 
 import uuid, datetime
 
-from flask import Flask, Request, g
+from flask import Flask, Request, g, session
 app = Flask(__name__)
 
 from edacc import config, models

@@ -1,9 +1,7 @@
-{% extends "base.html" %}
-{% block title %}Admin Login{% endblock %}
-{% block content %}
+
     <h1>Admin Login</h1>
-    
-    <form action="{{url_for('admin_login')}}" method="post">
+
+    <form action="{{url_for('admin.admin_login')}}" method="post">
     <table>
         <tr>
             <td>Password:</td><td><input type="password" name="password" /></td>
@@ -14,4 +12,3 @@
     </table>
     </form>
     {% if error %}{{error}}{% endif %}
-{% endblock %}

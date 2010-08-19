@@ -1,10 +1,8 @@
-{% extends "base.html" %}
-{% block title %}Add Database{% endblock %}
-{% block content %}
+
     <h2>Add Database</h2>
-    <a href="{{url_for('databases')}}">Back</a>
-    
-    <form action="{{url_for('databases_add')}}" method="post">
+    <a href="{{url_for('admin.databases')}}">Back</a>
+
+    <form action="{{url_for('admin.databases_add')}}" method="post">
         <table>
             <tr>
                 <td>Label:</td>
@@ -26,4 +24,3 @@
         </table>
     </form>
     {% if error %}{{error}}{% endif %}
-{% endblock %}

@@ -26,7 +26,7 @@ accounts = Module(__name__)
 
 
 @accounts.route('/<database>/register/', methods=['GET', 'POST'])
-@require_phase(phases=(1,))
+@require_phase(phases=(2,))
 @require_competition
 def register(database):
     """ User registration """
@@ -131,79 +131,70 @@ def logout(database):
 @accounts.route('/<database>/submit-solver/<int:id>', methods=['GET', 'POST'])
 @accounts.route('/<database>/submit-solver/', methods=['GET', 'POST'])
 @require_login
-@require_phase(phases=(1,))
+@require_phase(phases=(2, 4))
 @require_competition
 def submit_solver(database, id=None):
     """ Form to submit solvers to a database """
     db = models.get_database(database) or abort(404)
-    user = db.session.query(db.User).get(session['idUser'])
 
-    if id:
+    # Disallow submissions of new solvers in phase 4
+    if db.competition_phase() == 4 and id is None:
+        abort(401)
+
+    if id is not None:
         solver = db.session.query(db.Solver).get(id) or abort(404)
-        if solver.user != user:
+        if solver.user != g.User:
             abort(401)
-
-    def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1] in ['zip']
+        form = forms.SolverForm(request.form, solver)
+        form.binary.data = ''
+        form.code.data = ''
+        form.parameters.data = ''
+    else:
+        form = forms.SolverForm(request.form)
 
     error = None
-    if request.method == 'POST':
-        name = request.form['name']
-        binary = request.files['binary']
-        code = request.files['code']
-        description = request.form['description']
-        version = request.form['version']
-        authors = request.form['authors']
-        parameters = request.form['parameters']
-
+    if form.validate_on_submit():
+        name = form.name.data
+        description = form.description.data
+        version = form.version.data
+        authors = form.authors.data
+        parameters = form.parameters.data
+        
         valid = True
-        if not binary:
-            error = 'You have to provide a binary'
-            valid = False
-
-        if not code or not allowed_file(code.filename):
-            error = 'You have to provide a zip-archive containing \
-                    the source code'
-            valid = False
-
-        bin = binary.read()
+        bin = request.files[form.binary.name].read()
         hash = hashlib.md5()
         hash.update(bin)
-        if not id and db.session.query(db.Solver) \
+        if id is None and db.session.query(db.Solver) \
                         .filter_by(md5=hash.hexdigest()).first() is not None:
             error = 'Solver with this binary already exists'
             valid = False
 
-        if not id and db.session.query(db.Solver) \
+        if id is None and db.session.query(db.Solver) \
                         .filter_by(name=name, version=version) \
                         .first() is not None:
             error = 'Solver with this name and version already exists'
             valid = False
 
-        if 'SEED' in parameters and 'INSTANCE' in parameters:
-            params = utils.parse_parameters(parameters)
-        else:
-            error = 'You have to specify SEED and INSTANCE as parameters'
-            valid = False
+        params = utils.parse_parameters(parameters)
 
         if valid:
-            if not id:
+            if id is None:
                 solver = db.Solver()
             solver.name = name
-            solver.binaryName = secure_filename(binary.filename)
+            solver.binaryName = secure_filename(form.binary.data)
             solver.binary = bin
             solver.md5 = hash.hexdigest()
             solver.description = description
-            solver.code = code.read()
+            solver.code = request.files[form.code.name].read()
             solver.version = version
             solver.authors = authors
             solver.user = g.User
 
-            if not id:
+            if id is None:
                 db.session.add(solver)
 
             # on resubmissions delete old parameters
-            if id:
+            if id is not None:
                 for p in solver.parameters:
                     db.session.delete(p)
                 db.session.commit()
@@ -220,18 +211,19 @@ def submit_solver(database, id=None):
                 db.session.add(param)
             try:
                 db.session.commit()
-            except:
+            except Exception as e:
+                print e
                 db.session.rollback()
                 flash("Couldn't save solver to the database")
                 return render('submit_solver.html', database=database,
-                              error=error, db=db, id=id)
+                              error=error, db=db, id=id, form=form)
 
             flash('Solver submitted successfully')
             return redirect(url_for('frontend.experiments_index',
                                     database=database))
 
     return render('submit_solver.html', database=database, error=error,
-                  db=db, id=id)
+                  db=db, id=id, form=form)
 
 
 @accounts.route('/<database>/solvers')
@@ -242,6 +234,8 @@ def list_solvers(database):
         the database
     """
     db = models.get_database(database) or abort(404)
+    if g.User is None:
+        return redirect(url_for('login', database=database))
     solvers = db.session.query(db.Solver).filter_by(user=g.User).all()
 
     return render('list_solvers.html', database=database,
@@ -251,7 +245,6 @@ def list_solvers(database):
 @accounts.route('/<database>/download-solver/<int:id>/')
 @require_login
 @require_competition
-@require_phase(phases=(1, 2, 3, 4))
 def download_solver(database, id):
     """ Lets a user download the binaries of his own solvers """
     db = models.get_database(database) or abort(404)
@@ -272,7 +265,6 @@ def download_solver(database, id):
 @accounts.route('/<database>/download-solver-code/<int:id>/')
 @require_login
 @require_competition
-@require_phase(phases=(1, 2, 3, 4))
 def download_solver_code(database, id):
     """ Lets a user download the binaries of his own solvers """
     db = models.get_database(database) or abort(404)

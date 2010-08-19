@@ -51,7 +51,7 @@ def require_phase(f, phases):
     def decorated_f(*args, **kwargs):
         db = models.get_database(kwargs['database'])
         if db.is_competition() and db.competition_phase() not in phases:
-            abort(404)
+            abort(401)
         return f(*args, **kwargs)
     return decorated_f
 
@@ -72,21 +72,23 @@ def require_competition(f):
 def require_login(f):
     """ View function decorator that checks if the user is logged in to
         the database specified by the route parameter <database> which gets
-        passed in **kwargs. Only checked for competition databases that are
-        in a phase < 3 (not finished).
-        Also attaches the user object to the request as attribute "User".
+        passed in **kwargs. Only checked for competition databases and only if
+        the competition phase is < 7 (no public access).
     """
     @wraps(f)
     def decorated_f(*args, **kwargs):
         db = models.get_database(kwargs['database']) or abort(404)
-
-        # if logged in already, attach user object
-        if session.get('logged_in') and session.get('idUser', None):
+        
+        if session.get('logged_in') and session.get('idUser', None) is not None:
             g.User = db.session.query(db.User).get(session['idUser'])
-        if db.is_competition() and db.competition_phase() < 3:
+        else:
+            g.User = None
+
+        if db.is_competition() and db.competition_phase() < 7:
             def redirect_f(*args, **kwargs):
                 return redirect(url_for('accounts.login',
                                         database=kwargs['database']))
+
             if not session.get('logged_in') or \
                 session.get('idUser', None) is None:
                 return redirect_f(*args, **kwargs)

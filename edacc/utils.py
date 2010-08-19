@@ -56,10 +56,13 @@ def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
 
 def competition_phase(value):
     """ returns a textual label of a competiton phase given by an integer value """
-    if value == 1: return "Submission phase"
-    elif value == 2: return "Experiment creation phase"
-    elif value == 3: return "Competition/Tests running"
-    elif value == 4: return "Competition finished"
+    if value == 1: return "Category Definition Phase"
+    elif value == 2: return "Registration and Submission Phase"
+    elif value == 3: return "Solver Testing Phase"
+    elif value == 4: return "Solver Resubmission Phase"
+    elif value == 5: return "Competition Phase"
+    elif value == 6: return "Release Phase"
+    elif value == 7: return "Post-Release Phase"
     else: return "unknown phase"
 
 

@@ -27,7 +27,7 @@ DATABASE_USER       = 'edacc'
 DATABASE_PASSWORD   = 'edaccteam'
 
 # Experiment this client should run, case-sensitive
-EXPERIMENT_NAME     = 'Exp 1'
+EXPERIMENT_NAME     = 'Seed test'
 
 class EDACCDatabase(object):
     """ Encapsulates a single EDACC database connection """
@@ -148,7 +148,7 @@ def fetch_resources(experiment_id, db):
     
     for i in experiment.instances:
         if not os.path.exists(os.path.join(PACKAGE_DIR, 'instances', str(i.idInstance) + '_' + i.name)):
-            f = open(os.path.join(PACKAGE_DIR, 'instances', i.name), 'wb')
+            f = open(os.path.join(PACKAGE_DIR, 'instances', str(i.idInstance) + '_' + i.name), 'wb')
             f.write(i.instance)
             f.close()
     

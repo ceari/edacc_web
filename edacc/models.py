@@ -70,6 +70,9 @@ class EDACCDatabase(object):
         class GridQueue(object): pass
         class User(object): pass
         class DBConfiguration(object): pass
+        class CompetitionCategory(object): pass
+        class BenchmarkType(object): pass
+
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
         self.Parameter = Parameter
@@ -81,6 +84,8 @@ class EDACCDatabase(object):
         self.GridQueue = GridQueue
         self.User = User
         self.DBConfiguration = DBConfiguration
+        self.CompetitionCategory = CompetitionCategory
+        self.BenchmarkType = BenchmarkType
 
         metadata.reflect()
 
@@ -99,7 +104,11 @@ class EDACCDatabase(object):
             properties = {
                 'binary': deferred(metadata.tables['Solver'].c.binary),
                 'code': deferred(metadata.tables['Solver'].c.code),
-                'parameters': relation(Parameter, backref='solver')
+                'parameters': relation(Parameter, backref='solver'),
+                'competition_categories': relationship(
+                    CompetitionCategory,
+                    backref='solvers',
+                    secondary=metadata.tables['Solver_has_CompetitionCategory'])
             }
         )
         mapper(ParameterInstance, metadata.tables['SolverConfig_has_Parameters'],
@@ -132,10 +141,18 @@ class EDACCDatabase(object):
         )
         mapper(User, metadata.tables['User'],
             properties = {
-                'solvers': relation(Solver, backref='user')
+                'solvers': relation(Solver, backref='user'),
+                'source_classes': relation(InstanceClass, backref='user'),
+                'benchmark_types': relation(BenchmarkType, backref='user')
             }
         )
         mapper(DBConfiguration, metadata.tables['DBConfiguration'])
+        mapper(CompetitionCategory, metadata.tables['CompetitionCategory'])
+        mapper(BenchmarkType, metadata.tables['BenchmarkType'],
+                properties = {
+                    'instances': relation(Instance, backref='benchmark_type')
+                }
+        )
 
         self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False, autoflush=False))
 

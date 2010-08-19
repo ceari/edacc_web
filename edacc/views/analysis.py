@@ -23,6 +23,7 @@ from edacc.views.helpers import require_phase, require_login
 analysis = Module(__name__)
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-solved-instances')
+@require_phase(phases=(5, 6, 7))
 @require_login
 def evaluation_solved_instances(database, experiment_id):
     """ Shows a page with a cactus plot of the instances solved within a given amount of time of all solver configurations
@@ -34,6 +35,7 @@ def evaluation_solved_instances(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')
+@require_phase(phases=(5, 6, 7))
 @require_login
 def evaluation_cputime(database, experiment_id):
     """ Shows a page that lets users plot the cputimes of two solver configurations on the instances of the experiment """
@@ -54,6 +56,7 @@ def evaluation_cputime(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cputime-plot/<int:s1>/<int:s2>/')
+@require_phase(phases=(5, 6, 7))
 @require_login
 def cputime_plot(database, experiment_id, s1, s2):
     """ Plots the cputimes of the two specified solver configurations on the experiment's instances against each
@@ -100,6 +103,7 @@ def cputime_plot(database, experiment_id, s1, s2):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
+@require_phase(phases=(5, 6, 7))
 @require_login
 def cactus_plot(database, experiment_id):
     """ Renders a cactus plot of the instances solved within a given amount of time of all solver configurations

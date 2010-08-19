@@ -54,7 +54,8 @@
         {% block content %}{% endblock %}
     </div>
     <div id="footer">
-        {% if db.is_competition() %}DEBUG: phase: {{ db.competition_phase() }} {% endif %}
+        {% if db.is_competition() %}DEBUG: phase: {{ db.competition_phase()|competition_phase }} {% endif %}
+        <div style="float: right;">EDACC project on <a href="http://sourceforge.net/projects/edacc/">Sourceforge</a> — Code on <a href="http://github.com/ceari/edacc_web">Github</a></div>
     </div>
 </body>
 </html>
