@@ -17,6 +17,7 @@
             {{ render_field(form.description, cols=30, rows=5) }}
             {{ render_field(form.binary) }}
             {{ render_field(form.code) }}
+            {{ render_field(form.competition_categories, explanation='Hold the Ctrl key to select multiple categories.') }}
             {{ render_field(form.parameters, size=40) }}
             <tr>
                 <td></td>

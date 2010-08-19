@@ -1,0 +1,23 @@
+{% from "_formhelpers.html" import render_field %}
+{% extends "base.html" %}
+{% block title %}Submit Benchmark{% endblock %}
+{% block content %}
+    <h2>Submit Benchmark</h2>
+    <form action="{{url_for('accounts.submit_benchmark', database=database)}}" method="post" enctype="multipart/form-data">
+        {{ form.csrf }}
+        <table width="800px">
+            {{ render_field(form.instance) }}
+            {{ render_field(form.name, size=40, maxlength=255, explanation='Name of the instance. If left blank the filename will be used.') }}
+            {{ render_field(form.benchmark_type) }}
+            {{ render_field(form.source_class) }}
+            <tr>
+                <td colspan="2"></td>
+            </tr>
+            {{ render_field(form.new_benchmark_type, size=40, maxlength=255) }}
+            {{ render_field(form.new_source_class, size=40) }}
+            {{ render_field(form.new_source_class_description, cols=30, rows=5) }}
+        </table>
+        <input type="submit" value="Submit" />
+    </form>
+    {% if error %}{{error}}{% endif %}
+{% endblock %}

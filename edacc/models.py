@@ -66,12 +66,18 @@ class EDACCDatabase(object):
                 """ Returns true if there are any running jobs """
                 return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
         class ExperimentResult(object): pass
-        class InstanceClass(object): pass
+        class InstanceClass(object):
+            def __str__(self):
+                return self.name
         class GridQueue(object): pass
         class User(object): pass
         class DBConfiguration(object): pass
-        class CompetitionCategory(object): pass
-        class BenchmarkType(object): pass
+        class CompetitionCategory(object):
+            def __str__(self):
+                return self.name
+        class BenchmarkType(object):
+            def __str__(self):
+                return self.name
 
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration

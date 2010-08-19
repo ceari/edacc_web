@@ -12,17 +12,20 @@
 from flaskext.wtf import Form, TextField, PasswordField, TextAreaField
 from flaskext.wtf import FileField, Required, Length, Email, EqualTo
 from flaskext.wtf import ValidationError
-from wtforms.ext.sqlalchemy.fields import QuerySelectField
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
+                                            QuerySelectField
+
+ERROR_REQUIRED = 'This field is required.'
 
 class RegistrationForm(Form):
     lastname = TextField('Last Name',
-                         [Required('This field is required.'),
+                         [Required(ERROR_REQUIRED),
                           Length(max=255)])
     firstname = TextField('First Name',
-                          [Required('This field is required.'),
+                          [Required(ERROR_REQUIRED),
                            Length(max=255)])
     email = TextField('Email',
-                      [Required('This field is required.'),
+                      [Required(ERROR_REQUIRED),
                        Length(max=255),
                        Email(message='Invalid e-mail address.')])
     password = PasswordField('Password',
@@ -35,19 +38,24 @@ class RegistrationForm(Form):
     captcha = TextField()
 
 class LoginForm(Form):
-    email = TextField('Email', [Required('This field is required.')])
+    email = TextField('Email', [Required(ERROR_REQUIRED)])
     password = PasswordField('Password',
-                             [Required('This field is required.')])
+                             [Required(ERROR_REQUIRED)])
 
 class SolverForm(Form):
-    name = TextField('Name', [Required('This field is required.')])
+    name = TextField('Name', [Required(ERROR_REQUIRED)])
     binary = FileField('Binary')
     code = FileField('Code')
     description = TextAreaField('Description')
-    version = TextField('Version', [Required('This field is required.')])
-    authors = TextField('Authors', [Required('This field is required.')])
-    parameters = TextField('Parameters', [Required('This field is required.')])
-    
+    version = TextField('Version', [Required(ERROR_REQUIRED)])
+    authors = TextField('Authors', [Required(ERROR_REQUIRED)])
+    parameters = TextField('Parameters', [Required(ERROR_REQUIRED)])
+    competition_categories = QuerySelectMultipleField(
+                                'Competition Categories',
+                                query_factory=lambda: [],
+                                validators=[Required('Please choose one or more \
+                                                     categories for your solver \
+                                                     to compete in.')])
 
     def validate_parameters(form, field):
         if not 'SEED' in field.data or not 'INSTANCE' in field.data:
@@ -59,4 +67,28 @@ class SolverForm(Form):
             raise ValidationError('The code archive has to be a .zip file.')
 
 class BenchmarkForm(Form):
-    pass
+    instance = FileField('File')
+    name = TextField('Name')
+    new_benchmark_type = TextField('New Type')
+    benchmark_type = QuerySelectField('Existing Type', allow_blank=True,
+                                      query_factory=lambda: [],
+                                      blank_text='Create a new type')
+    new_source_class = TextField('New Source Class')
+    new_source_class_description = TextField('New Source Class Description')
+    source_class = QuerySelectField('Exisiting Source Class', allow_blank=True,
+                                    query_factory=lambda: [],
+                                    blank_text='Create a new source class')
+
+    def validate_new_benchmark_type(form, field):
+        if form.benchmark_type.data is None and field.data.strip() == '':
+            raise ValidationError('Please specify a new benchmark type or choose \
+                                  an existing one.')
+
+    def validate_new_source_class(form, field):
+        if form.source_class.data is None and field.data.strip() == '':
+            raise ValidationError('Please specify a new source class or choose \
+                                  an existing one.')
+
+    def validate_instance(form, field):
+        if not field.file.filename:
+            raise ValidationError(ERROR_REQUIRED)

@@ -128,6 +128,73 @@ def logout(database):
     return redirect('/')
 
 
+@accounts.route('/<database>/submit-benchmark/', methods=['GET', 'POST'])
+@require_login
+@require_phase(phases=(2,))
+@require_competition
+def submit_benchmark(database):
+    db = models.get_database(database) or abort(404)
+
+    form = forms.BenchmarkForm(request.form)
+    form.source_class.query = db.session.query(db.InstanceClass).filter_by(user=g.User)
+    form.benchmark_type.query = db.session.query(db.BenchmarkType).filter_by(user=g.User)
+
+    error = None
+    if form.validate_on_submit():
+        name = form.name.data.strip()
+        instance_name = form.instance.file.filename
+        instance_blob = form.instance.file.read()
+
+        md5sum = hashlib.md5()
+        md5sum.update(instance_blob)
+        md5sum = md5sum.hexdigest()
+
+        instance = db.Instance()
+        instance.name = secure_filename(instance_name) if name == '' else secure_filename(name)
+        if db.session.query(db.Instance).filter_by(name=instance.name).first() is not None:
+            error = 'A benchmark with this name already exists.'
+
+        instance.instance = instance_blob
+        instance.md5 = md5sum
+        db.session.add(instance)
+
+        if form.benchmark_type.data is None:
+            benchmark_type = db.BenchmarkType()
+            db.session.add(benchmark_type)
+            benchmark_type.name = secure_filename(form.new_benchmark_type.data)
+            benchmark_type.user = g.User
+            benchmark_type.instances.append(instance)
+        else:
+            instance.benchmark_type = form.benchmark_type.data
+
+        if form.source_class.data is None:
+            source_class = db.InstanceClass()
+            db.session.add(source_class)
+            source_class.name = form.new_source_class.data
+            source_class.description = form.new_source_class_description.data
+            source_class.source = True
+            source_class.user = g.User
+            instance.source_class = source_class
+        else:
+            instance.source_class = form.source_class.data
+
+        if not error:
+            try:
+                db.session.commit()
+                flash('Benchmark submitted.')
+                return redirect(url_for('accounts.submit_benchmark',
+                                        database=database))
+            except Exception as e:
+                print e
+                db.session.rollback()
+                flash('An error occured during benchmark submission.')
+                return redirect(url_for('frontend.experiments_index',
+                                        database=database))
+
+    return render('/accounts/submit_benchmark.html', db=db, database=database,
+                  form=form, error=error)
+
+
 @accounts.route('/<database>/submit-solver/<int:id>', methods=['GET', 'POST'])
 @accounts.route('/<database>/submit-solver/', methods=['GET', 'POST'])
 @require_login
@@ -152,6 +219,8 @@ def submit_solver(database, id=None):
     else:
         form = forms.SolverForm(request.form)
 
+    form.competition_categories.query = db.session.query(db.CompetitionCategory).all()
+
     error = None
     if form.validate_on_submit():
         name = form.name.data
@@ -159,7 +228,7 @@ def submit_solver(database, id=None):
         version = form.version.data
         authors = form.authors.data
         parameters = form.parameters.data
-        
+
         valid = True
         bin = request.files[form.binary.name].read()
         hash = hashlib.md5()
@@ -215,14 +284,14 @@ def submit_solver(database, id=None):
                 print e
                 db.session.rollback()
                 flash("Couldn't save solver to the database")
-                return render('submit_solver.html', database=database,
+                return render('/accounts/submit_solver.html', database=database,
                               error=error, db=db, id=id, form=form)
 
             flash('Solver submitted successfully')
             return redirect(url_for('frontend.experiments_index',
                                     database=database))
 
-    return render('submit_solver.html', database=database, error=error,
+    return render('/accounts/submit_solver.html', database=database, error=error,
                   db=db, id=id, form=form)
 
 
@@ -238,7 +307,7 @@ def list_solvers(database):
         return redirect(url_for('login', database=database))
     solvers = db.session.query(db.Solver).filter_by(user=g.User).all()
 
-    return render('list_solvers.html', database=database,
+    return render('/accounts/list_solvers.html', database=database,
                   solvers=solvers, db=db)
 
 
