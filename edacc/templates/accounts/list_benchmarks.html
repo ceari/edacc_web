@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}List of submitted benchmarks{% endblock %}
+{% block content %}
+<h2>List of submitted benchmarks</h2>
+    {% if instances %}
+    <ul>
+        {% for instance in instances %}
+            <li><a href="{{url_for('frontend.instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    You haven't submitted any benchmarks yet.
+    {% endif %}
+{% endblock %}

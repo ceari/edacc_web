@@ -29,7 +29,8 @@ class EDACCDatabase(object):
 
         url = URL(drivername=config.DATABASE_DRIVER, username=username,
                   password=password, host=config.DATABASE_HOST,
-                  port=config.DATABASE_PORT, database=database)
+                  port=config.DATABASE_PORT, database=database,
+                  query={'charset': 'utf8', 'use_unicode': 0})
         self.engine = create_engine(url, convert_unicode=True)
         self.metadata = metadata = MetaData(bind=self.engine)
 
@@ -102,8 +103,8 @@ class EDACCDatabase(object):
         mapper(Instance, metadata.tables['Instances'],
             properties = {
                 'instance': deferred(metadata.tables['Instances'].c.instance),
-                'instance_classes': relationship(InstanceClass, secondary=metadata.tables['Instances_has_instanceClass']),
-                'source_class': relation(InstanceClass)
+                'instance_classes': relationship(InstanceClass, secondary=metadata.tables['Instances_has_instanceClass'], backref='instances'),
+                'source_class': relation(InstanceClass, backref='source_instances')
             }
         )
         mapper(Solver, metadata.tables['Solver'],
@@ -155,9 +156,9 @@ class EDACCDatabase(object):
         mapper(DBConfiguration, metadata.tables['DBConfiguration'])
         mapper(CompetitionCategory, metadata.tables['CompetitionCategory'])
         mapper(BenchmarkType, metadata.tables['BenchmarkType'],
-                properties = {
-                    'instances': relation(Instance, backref='benchmark_type')
-                }
+            properties = {
+                'instances': relation(Instance, backref='benchmark_type')
+            }
         )
 
         self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False, autoflush=False))

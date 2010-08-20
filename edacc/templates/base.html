@@ -33,6 +33,9 @@
         {% endif %}
         {% endif %}
         <a href="{{url_for('frontend.experiments_index', database=database)}}">Results</a>
+        {% if db.is_competition() and session.logged_in %}
+            |<a href="{{url_for('accounts.manage', database=database)}}">Manage</a>
+        {% endif %}
         <span id="admin_login">
             {% if db.is_competition() and not session.logged_in %}
             <a href="{{url_for('accounts.login', database=database)}}">Login</a>

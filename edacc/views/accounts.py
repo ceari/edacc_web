@@ -10,6 +10,7 @@
     :license: MIT, see LICENSE for details.
 """
 
+import itertools
 import random
 import hashlib
 
@@ -128,6 +129,16 @@ def logout(database):
     return redirect('/')
 
 
+@accounts.route('/<database>/manage/')
+@require_login
+@require_competition
+def manage(database):
+    """ Management for users with links to solver and benchmark submission """
+    db = models.get_database(database) or abort(404)
+
+    return render('/accounts/manage.html', database=database, db=db)
+
+
 @accounts.route('/<database>/submit-benchmark/', methods=['GET', 'POST'])
 @require_login
 @require_phase(phases=(2,))
@@ -163,7 +174,7 @@ def submit_benchmark(database):
             db.session.add(benchmark_type)
             benchmark_type.name = secure_filename(form.new_benchmark_type.data)
             benchmark_type.user = g.User
-            benchmark_type.instances.append(instance)
+            instance.benchmark_type = benchmark_type
         else:
             instance.benchmark_type = form.benchmark_type.data
 
@@ -185,7 +196,6 @@ def submit_benchmark(database):
                 return redirect(url_for('accounts.submit_benchmark',
                                         database=database))
             except Exception as e:
-                print e
                 db.session.rollback()
                 flash('An error occured during benchmark submission.')
                 return redirect(url_for('frontend.experiments_index',
@@ -215,7 +225,8 @@ def submit_solver(database, id=None):
         form = forms.SolverForm(request.form, solver)
         form.binary.data = ''
         form.code.data = ''
-        form.parameters.data = ''
+        if request.method == 'GET':
+            form.parameters.data = ''
     else:
         form = forms.SolverForm(request.form)
 
@@ -258,6 +269,7 @@ def submit_solver(database, id=None):
             solver.version = version
             solver.authors = authors
             solver.user = g.User
+            solver.competition_categories = form.competition_categories.data
 
             if id is None:
                 db.session.add(solver)
@@ -275,7 +287,7 @@ def submit_solver(database, id=None):
                 param.value = p[2]
                 # p[3] actually means 'is boolean'
                 param.hasValue = not p[3]
-                param.order = p[4]
+                param.order = int(p[4])
                 param.solver = solver
                 db.session.add(param)
             try:
@@ -295,7 +307,7 @@ def submit_solver(database, id=None):
                   db=db, id=id, form=form)
 
 
-@accounts.route('/<database>/solvers')
+@accounts.route('/<database>/manage/solvers/')
 @require_login
 @require_competition
 def list_solvers(database):
@@ -303,12 +315,25 @@ def list_solvers(database):
         the database
     """
     db = models.get_database(database) or abort(404)
-    if g.User is None:
-        return redirect(url_for('login', database=database))
     solvers = db.session.query(db.Solver).filter_by(user=g.User).all()
 
     return render('/accounts/list_solvers.html', database=database,
                   solvers=solvers, db=db)
+
+
+@accounts.route('/<database>/manage/benchmarks/')
+@require_login
+@require_competition
+def list_benchmarks(database):
+    """ Lists all benchmarks that the currently logged in user submitted to the
+        database
+    """
+    db = models.get_database(database) or abort(404)
+    user_source_classes = db.session.query(db.InstanceClass).filter_by(user=g.User).all()
+    instances = itertools.chain(*[sc.source_instances for sc in user_source_classes])
+
+    return render('/accounts/list_benchmarks.html', database=database,
+                  db=db, instances=instances)
 
 
 @accounts.route('/<database>/download-solver/<int:id>/')

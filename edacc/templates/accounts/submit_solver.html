@@ -5,7 +5,8 @@
     <h2>Submit Solver</h2>
     {% if id %}
     <div>
-        You are about to submit a new version of a solver you previously submitted. The old version will be deleted.
+        <img alt="Info" title="Info" src="/static/img/info.png" />
+        You are about to submit a new version of a solver you previously submitted. The old version will be replaced by the new one.
     </div>
     {% endif %}
     <form action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
