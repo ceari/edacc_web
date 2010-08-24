@@ -21,12 +21,15 @@
     <a href="{{url_for('frontend.experiment_instances', database=database, experiment_id=experiment.idExperiment)}}">List of instances used</a><br/>
 
     <h2>Results</h2>
-    <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results by solver configuration and instance</a> (runs accumulated)<br/>
-    <a>by solver configuration</a><br/>
+    <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">By solver configuration and instance</a> (runs accumulated)<br/>
+    <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment) }}">By solver configuration</a><br/>
     <a>by instance</a>
 
     <h2>Analysis</h2>
     <a href="{{url_for('analysis.evaluation_cputime', database=database, experiment_id=experiment.idExperiment)}}">Compare the CPU time of two solvers</a><br/>
     <a href="{{url_for('analysis.evaluation_solved_instances', database=database, experiment_id=experiment.idExperiment)}}">Graph of the number of solved instances within a given amount of time</a>
+
+    <h2>Ranking</h2>
+    <a href="{{url_for('analysis.ranking', database=database, experiment_id=experiment.idExperiment)}}">Point Biserial Correlation based ranking</a><br/>
 
 {% endblock %}

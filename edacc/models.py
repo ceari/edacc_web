@@ -15,6 +15,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
 from sqlalchemy.orm import relation, relationship
+from sqlalchemy.sql.expression import func
 
 from edacc import config, constants
 
@@ -53,6 +54,9 @@ class EDACCDatabase(object):
                     return self.solver.name
                 else:
                     return "%s (%s)" % (self.solver.name, str(n))
+
+            def __str__(self):
+                return self.get_name()
 
         class Parameter(object): pass
         class ParameterInstance(object): pass
@@ -135,6 +139,7 @@ class EDACCDatabase(object):
                 'instances': relationship(Instance, secondary=metadata.tables['Experiment_has_Instances']),
                 'solver_configurations': relation(SolverConfiguration),
                 'grid_queue': relationship(GridQueue, secondary=metadata.tables['Experiment_has_gridQueue']),
+                'results': relation(ExperimentResult)
             }
         )
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],

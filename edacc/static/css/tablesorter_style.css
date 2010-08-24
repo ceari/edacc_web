@@ -3,7 +3,6 @@ table.tablesorter {
 	background-color: #CDCDCD;
 	margin:10px 0pt 15px;
 	font-size: 10pt;
-	width: 100%;
 	text-align: left;
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
@@ -11,6 +10,7 @@ table.tablesorter thead tr th, table.tablesorter tfoot tr th {
 	border: 1px solid #FFF;
 	font-size: 8pt;
 	padding: 4px;
+	padding-right: 20px;
 }
 table.tablesorter thead tr .header {
 	background-image: url(/static/img/tablesorter/bg.gif);

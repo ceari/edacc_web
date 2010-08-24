@@ -18,8 +18,11 @@ grdevices = importr('grDevices')
 #                 italic="Bitstream Vera Sans:style=Italic",
 #                 symbol="Symbol")
 
-def scatter(xs, ys, xlabel, ylabel, title, timeout, filename, format='png'):
-    """ Scatter plot of the points given in the lists `xs` and `ys`. """
+def scatter(points, xlabel, ylabel, title, timeout, filename, format='png'):
+    """ Scatter plot of the points given in the list points.
+        Each element should be a dictionary containing a key x and a key y with
+        the data to be plotted.
+    """
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
         #               height=600, bg="white", pointsize=14)
@@ -43,6 +46,9 @@ def scatter(xs, ys, xlabel, ylabel, title, timeout, filename, format='png'):
     # to be able to plot in the same graph again
     robjects.r.par(new=1)
 
+    xs = [p['x'] for p in points]
+    ys = [p['y'] for p in points]
+
     # plot running times
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
                     type='p', col='red', las = 1,
@@ -50,6 +56,11 @@ def scatter(xs, ys, xlabel, ylabel, title, timeout, filename, format='png'):
                     xaxs='i', yaxs='i',
                     xlab='', ylab='', pch=3, tck=0.015,
                     **{'cex.axis': 1.2, 'cex.main': 1.5})
+
+    pts = zip(robjects.r.grconvertX(robjects.FloatVector(xs), "user", "device"),
+              robjects.r.grconvertY(robjects.FloatVector(ys), "user", "device"))
+    pts = [{'x': pts[i][0], 'y': pts[i][1], 'instance': points[i]['instance']} for i in xrange(len(pts))]
+
 
     # plot labels and axis
     robjects.r.axis(side=4, tck=0.015, las=1,
@@ -61,6 +72,7 @@ def scatter(xs, ys, xlabel, ylabel, title, timeout, filename, format='png'):
     robjects.r.mtext(title, padj=-1.7, side=3, line=3, cex=1.7) # plot title
 
     grdevices.dev_off()
+    return pts
 
 def cactus(solvers, max_x, max_y, filename, format='png'):
     """ Cactus plot of the passed solvers configurations. `solvers` has to be

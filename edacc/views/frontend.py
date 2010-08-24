@@ -13,8 +13,8 @@
 import json
 
 from flask import Module
-from flask import render_template as render
-from flask import Response, abort, g
+from flask import render_template
+from flask import Response, abort, g, request
 from werkzeug import Headers
 
 from edacc import utils, models
@@ -22,8 +22,16 @@ from sqlalchemy.orm import joinedload
 from edacc.constants import JOB_FINISHED, JOB_ERROR
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
+from edacc import forms
 
 frontend = Module(__name__)
+
+
+def render(*args, **kwargs):
+    from tidylib import tidy_document
+    res = render_template(*args, **kwargs)
+    doc, errs = tidy_document(res)
+    return doc
 
 
 @frontend.route('/')
@@ -34,7 +42,7 @@ def index():
 
     return render('/databases.html', databases=databases)
 
-@frontend.route('/<database>/')
+@frontend.route('/<database>/index')
 @frontend.route('/<database>/experiments/')
 @require_phase(phases=(2, 3, 4, 5, 6, 7))
 def experiments_index(database):
@@ -100,9 +108,7 @@ def experiment(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    res = render('experiment.html', experiment=experiment, database=database, db=db)
-    db.session.remove()
-    return res
+    return render('experiment.html', experiment=experiment, database=database, db=db)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/solvers')
@@ -224,8 +230,20 @@ def experiment_results_by_solver(database, experiment_id):
     if not is_admin() and db.is_competition() and db.competition_phase() not in (6, 7):
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
+    form = forms.ResultBySolverForm(request.args)
+    form.solver_config.query = solver_configs
+
+    results = []
+    if form.solver_config.data:
+        solver_config = form.solver_config.data
+        instances = experiment.instances
+        for i in instances:
+            runs = db.session.query(db.ExperimentResult).filter_by(experiment=experiment, solver_configuration=solver_config).filter_by(instance=i).all()
+            results.append((i, runs))
+
     return render('experiment_results_by_solver.html', db=db, database=database,
-                  solver_configs=solver_configs)
+                  solver_configs=solver_configs, experiment=experiment,
+                  form=form, results=results)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-instance')

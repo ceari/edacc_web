@@ -51,7 +51,7 @@ def require_phase(f, phases):
     def decorated_f(*args, **kwargs):
         db = models.get_database(kwargs['database'])
         if db.is_competition() and db.competition_phase() not in phases:
-            abort(401)
+            abort(403)
         return f(*args, **kwargs)
     return decorated_f
 
@@ -78,7 +78,7 @@ def require_login(f):
     @wraps(f)
     def decorated_f(*args, **kwargs):
         db = models.get_database(kwargs['database']) or abort(404)
-        
+
         if session.get('logged_in') and session.get('idUser', None) is not None:
             g.User = db.session.query(db.User).get(session['idUser'])
         else:

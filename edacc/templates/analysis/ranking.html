@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Ranking{% endblock %}
+{% block content %}
+    <div class="navigation">
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        Ranking
+    </div>
+    <h2>Ranking</h2>
+    <h3>Point Biserial Correlation Matrix</h3>
+    <table border="1">
+        <tr>
+            <td>r(row_solver, col_solver)</td>
+            {% for s2 in experiment.solver_configurations %}
+                <td>{{s2}}</th>
+            {% endfor %}
+        </tr>
+
+    {% for s1 in experiment.solver_configurations %}
+        <tr>
+            <td>{{ s1 }}</td>
+            {% for s2 in experiment.solver_configurations %}
+                <td>
+                    {{pointbiserialcorr(s1, s2)}}
+                </td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </table>
+    Negative values suggest that the solver of the row is better than the solver of the column.
+
+    <h3>Ranking</h3>
+
+    {% for sc in scs %}
+        {{ loop.index }} - {{ sc }}<br/>
+    {% endfor %}
+{% endblock %}

@@ -1,5 +1,24 @@
 {% extends "base.html" %}
-{% block title %}CPU Time{% endblock %}
+{% block title %}CPU Time Comparison{% endblock %}
+{% block head %}
+    {{ super() }}
+    {% if form.solver1.data and form.solver2.data %}
+    <script src="/static/js/jquery.tablesorter.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $.ajax({
+              url: "{{url_for('analysis.cputime_plot', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}?imagemap",
+              dataType: 'json',
+              success: function(data) {
+                $.each(data['data'], function(ix, val) {
+                    $('#instances').append('<area shape="circle" coords="'+val['x']+','+val['y']+',5" href="'+val['url']+'" title="'+val['alt']+'"');
+                })
+              }
+            });
+        });
+    </script>
+    {% endif %}
+{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
@@ -8,27 +27,21 @@
     </div>
     <h2>CPU Time comparsion</h2>
     <div style="margin-bottom: 5px;">
-    Choose two solvers to plot their CPU times of the first run on the instances of the experiment against each other in a scatter plot.
+    Choose two solvers to plot their CPU times on the instances of the experiment against each other in a scatter plot.
     </div>
     <form method="get" action="{{url_for('analysis.evaluation_cputime', database=database, experiment_id=experiment.idExperiment)}}">
         Plot
-        <select name="s1">
-            {% for sc in experiment.solver_configurations %}
-                <option value="{{sc.idSolverConfig}}"{% if s1 == sc.idSolverConfig %} selected="selected"{% endif %}>{{sc.get_name()}}</option>
-            {% endfor %}
-        </select>
+        {{ form.solver1 }}
         against
-        <select name="s2">
-            {% for sc in experiment.solver_configurations %}
-                <option value="{{sc.idSolverConfig}}"{% if s2 == sc.idSolverConfig %} selected="selected"{% endif %}>{{sc.get_name()}}</option>
-            {% endfor %}
-        </select>
+        {{ form.solver2 }}
+        for run {{ form.run }}
         <input type="submit" value="Show" />
     </form>
-    {% if s1 and s2 %}
-    <div style="margin-top: 10px; margin-bottom: 10px;">Points above the dashed line represent instances where <strong>{{solver1.get_name()}}</strong> performed better whereas
-    points below the dashed line represent instances where <strong>{{solver2.get_name()}}</strong> performed better.</div>
-    <img alt="graph" style="margin: 10px;" src="{{url_for('cputime_plot', database=database, experiment_id=experiment.idExperiment, s1=s1, s2=s2)}}" /><br/>
-    Download as <a href="{{url_for('cputime_plot', database=database, experiment_id=experiment.idExperiment, s1=s1, s2=s2)}}?pdf">PDF</a>
+    {% if form.solver1.data and form.solver2.data %}
+        <div style="margin-top: 10px; margin-bottom: 10px;">Points above the dashed line represent instances where <strong>{{form.solver1.data.get_name()}}</strong> performed better whereas
+        points below the dashed line represent instances where <strong>{{form.solver2.data.get_name()}}</strong> performed better.</div>
+        <img usemap="#instances" alt="graph" style="margin: 10px;" src="{{url_for('cputime_plot', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}" /><br/>
+        Download as <a href="{{url_for('cputime_plot', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}?pdf">PDF</a>
+        <map id="instances" name="instances"></map>
     {% endif %}
 {% endblock %}

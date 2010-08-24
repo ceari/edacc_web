@@ -1,0 +1,46 @@
+{% from "_formhelpers.html" import render_field %}
+{% extends "base.html" %}
+{% block title %}Results by Solver{% endblock %}
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="/static/css/tablesorter_style.css" type="text/css" />
+    <script src="/static/js/jquery.tablesorter.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('#table_results').tablesorter({sortList: [[0,0]], widgets: ['zebra'], headers: {1: {sorter: false}}});
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="navigation">
+        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        Results by Solver
+    </div>
+    <form method="get" action="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}">
+        Solver: {{form.solver_config}}
+        <input type="submit" value="Show" />
+    </form>
+    {% if results %}
+        <table id="table_results" class="tablesorter">
+            <thead>
+                <tr>
+                    <th>Instance</th>
+                    <th colspan="{{experiment.numRuns}}">Runs</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    <tr>
+                        <td style="padding-right: 20px;">
+                            <a href="{{ url_for('frontend.instance_details', database=database, instance_id=result.0.idInstance) }}">{{ result.0.name }}</a>
+                        </td>
+                        {% for run in result.1 %}
+                            <td><a href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.time }}</a></td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

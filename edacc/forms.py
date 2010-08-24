@@ -10,7 +10,7 @@
 """
 
 from flaskext.wtf import Form, TextField, PasswordField, TextAreaField
-from flaskext.wtf import FileField, Required, Length, Email, EqualTo
+from flaskext.wtf import FileField, Required, Length, Email, EqualTo, SelectField
 from flaskext.wtf import ValidationError
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
                                             QuerySelectField
@@ -92,3 +92,11 @@ class BenchmarkForm(Form):
     def validate_instance(form, field):
         if not field.file.filename:
             raise ValidationError(ERROR_REQUIRED)
+
+class ResultBySolverForm(Form):
+    solver_config = QuerySelectField('Solver Configuration')
+
+class CPUTimeComparisonForm(Form):
+    solver1 = QuerySelectField('First Solver')
+    solver2 = QuerySelectField('Second Solver')
+    run = SelectField('Plot for run')
