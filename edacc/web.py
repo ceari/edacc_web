@@ -12,7 +12,7 @@
 
 import uuid, datetime
 
-from flask import Flask, Request, g, session
+from flask import Flask, Request, g
 app = Flask(__name__)
 
 from edacc import config, models
@@ -55,3 +55,13 @@ app.register_module(analysis)
 def make_unique_id():
     """ Attach an unique ID to the request """
     g.unique_id = uuid.uuid1().hex
+
+
+@app.after_request
+def shutdown_session(response):
+    """ remove session from thread - might not even be needed for non-declarative
+        SQLAlchemy usage.
+    """
+    for db in models.get_databases().itervalues():
+        db.session.remove()
+    return response

@@ -29,9 +29,12 @@
     </table>
     Negative values suggest that the solver of the row is better than the solver of the column.
 
-    <h3>Ranking</h3>
-
+    <h3>Ranking by Point Biserial Correlation ordering</h3>
     {% for sc in scs %}
         {{ loop.index }} - {{ sc }}<br/>
+    {% endfor %}
+    <h3>Ranking by number of solved instances</h3>
+    {% for sc in scs_nbsolved %}
+        {{ loop.index }} - {{ sc['sc'] }} ({{sc['solved']}})<br/>
     {% endfor %}
 {% endblock %}

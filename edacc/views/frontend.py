@@ -11,6 +11,8 @@
 """
 
 import json
+import csv
+import StringIO
 
 from flask import Module
 from flask import render_template
@@ -56,9 +58,7 @@ def experiments_index(database):
         experiments = db.session.query(db.Experiment).all()
         experiments.sort(key=lambda e: e.name.lower())
 
-    res = render('experiments.html', experiments=experiments, db=db, database=database)
-    db.session.remove()
-    return res
+    return render('experiments.html', experiments=experiments, db=db, database=database)
 
 
 @frontend.route('/<database>/categories')
@@ -127,9 +127,7 @@ def experiment_solvers(database, experiment_id):
     if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
         solvers = filter(lambda s: s.user == g.User, solvers)
 
-    res = render('experiment_solvers.html', solvers=solvers, experiment=experiment, database=database, db=db)
-    db.session.remove()
-    return res
+    return render('experiment_solvers.html', solvers=solvers, experiment=experiment, database=database, db=db)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/solver-configurations')
@@ -147,9 +145,7 @@ def experiment_solver_configurations(database, experiment_id):
     if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
         solver_configurations = filter(lambda sc: sc.solver.user == g.User, solver_configurations)
 
-    res = render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations, database=database, db=db)
-    db.session.remove()
-    return res
+    return render('experiment_solver_configurations.html', experiment=experiment, solver_configurations=solver_configurations, database=database, db=db)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/instances')
@@ -163,9 +159,7 @@ def experiment_instances(database, experiment_id):
     instances = experiment.instances
     instances.sort(key=lambda i: i.name)
 
-    res = render('experiment_instances.html', instances=instances, experiment=experiment, database=database, db=db)
-    db.session.remove()
-    return res
+    return render('experiment_instances.html', instances=instances, experiment=experiment, database=database, db=db)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results/')
@@ -210,11 +204,9 @@ def experiment_results(database, experiment_id):
                         })
         results.append({'instance': instance, 'times': row})
 
-    res = render('experiment_results.html', experiment=experiment,
+    return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     results=results, database=database, db=db)
-    db.session.remove()
-    return res
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
@@ -241,6 +233,19 @@ def experiment_results_by_solver(database, experiment_id):
             runs = db.session.query(db.ExperimentResult).filter_by(experiment=experiment, solver_configuration=solver_config).filter_by(instance=i).all()
             results.append((i, runs))
 
+        if 'csv' in request.args:
+            csv_response = StringIO.StringIO()
+            csv_writer = csv.writer(csv_response)
+            csv_writer.writerow(['Instance', 'Runs'])
+            for res in results:
+                csv_writer.writerow([res[0].name] + [r.time for r in res[1]])
+            csv_response.seek(0)
+
+            headers = Headers()
+            headers.add('Content-Type', 'text/csv')
+            headers.add('Content-Disposition', 'attachment', filename=("results_%s.csv" % (str(solver_config),)))
+            return Response(response=csv_response.read(), headers=headers)
+
     return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
                   form=form, results=results)
@@ -255,8 +260,41 @@ def experiment_results_by_instance(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     instances = experiment.instances
+    solver_configs = experiment.solver_configurations
 
-    # TODO
+    if not is_admin() and db.is_competition() and db.competition_phase() not in (6, 7):
+        solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
+
+    form = forms.ResultByInstanceForm(request.args)
+    form.instance.query = instances
+
+    results = []
+    if form.instance.data:
+        instance = form.instance.data
+        for sc in solver_configs:
+            runs = db.session.query(db.ExperimentResult) \
+                        .filter_by(experiment=experiment,
+                                   instance=instance,
+                                   solver_configuration=sc).all()
+            results.append((sc, runs))
+
+        if 'csv' in request.args:
+            csv_response = StringIO.StringIO()
+            csv_writer = csv.writer(csv_response)
+            csv_writer.writerow(['Solver', 'Runs'])
+            for res in results:
+                csv_writer.writerow([str(res[0])] + [r.time for r in res[1]])
+            csv_response.seek(0)
+
+            headers = Headers()
+            headers.add('Content-Type', 'text/csv')
+            headers.add('Content-Disposition', 'attachment', filename=("results_%s.csv" % (str(instance),)))
+            return Response(response=csv_response.read(), headers=headers)
+
+
+    return render('experiment_results_by_instance.html', db=db, database=database,
+                  instances=instances, experiment=experiment,
+                  form=form, results=results)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress/')
@@ -292,9 +330,7 @@ def experiment_progress_ajax(database, experiment_id):
         aaData.append([job.idJob, job.solver_configuration.get_name(), utils.parameter_string(job.solver_configuration),
                iname, job.run, job.time, job.seed, utils.job_status(job.status)])
 
-    res = json.dumps({'aaData': aaData})
-    db.session.remove()
-    return res
+    return json.dumps({'aaData': aaData})
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
@@ -320,10 +356,8 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
 
     completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
 
-    res = render('solver_config_results.html', experiment=experiment, solver_configuration=solver_configuration,
+    return render('solver_config_results.html', experiment=experiment, solver_configuration=solver_configuration,
                   instance=instance, results=jobs, completed=completed, database=database, db=db)
-    db.session.remove()
-    return res
 
 
 @frontend.route('/<database>/instance/<int:instance_id>')
@@ -341,9 +375,7 @@ def instance_details(database, instance_id):
     else:
         instance_text = instance_blob
 
-    res = render('instance_details.html', instance=instance, instance_text=instance_text, blob_size=len(instance.instance), database=database, db=db)
-    db.session.remove()
-    return res
+    return render('instance_details.html', instance=instance, instance_text=instance_text, blob_size=len(instance.instance), database=database, db=db)
 
 
 @frontend.route('/<database>/instance/<int:instance_id>/download')
@@ -358,9 +390,7 @@ def instance_download(database, instance_id):
     headers.add('Content-Type', 'text/plain')
     headers.add('Content-Disposition', 'attachment', filename=instance.name)
 
-    res = Response(response=instance.instance, headers=headers)
-    db.session.remove()
-    return res
+    return Response(response=instance.instance, headers=headers)
 
 
 @frontend.route('/<database>/solver/<int:solver_id>')
@@ -392,9 +422,7 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     parameters = solver_config.parameter_instances
     parameters.sort(key=lambda p: p.parameter.order)
 
-    res = render('solver_configuration_details.html', solver_config=solver_config, solver=solver, parameters=parameters, database=database, db=db)
-    db.session.remove()
-    return res
+    return render('solver_configuration_details.html', solver_config=solver_config, solver=solver, parameters=parameters, database=database, db=db)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>')
@@ -428,11 +456,9 @@ def experiment_result(database, experiment_id, result_id):
             resultFile_text = resultFile
     else: resultFile_text = "No result"
 
-    res = render('result_details.html', experiment=experiment, result=result, solver=result.solver_configuration.solver,
+    return render('result_details.html', experiment=experiment, result=result, solver=result.solver_configuration.solver,
                   solver_config=result.solver_configuration, instance=result.instance, resultFile_text=resultFile_text,
                   clientOutput_text=clientOutput_text, database=database, db=db)
-    db.session.remove()
-    return res
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download')
@@ -450,9 +476,7 @@ def experiment_result_download(database, experiment_id, result_id):
     headers.add('Content-Type', 'text/plain')
     headers.add('Content-Disposition', 'attachment', filename=result.resultFileName)
 
-    res = Response(response=result.resultFile, headers=headers)
-    db.session.remove()
-    return res
+    return Response(response=result.resultFile, headers=headers)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-client-output')
@@ -470,6 +494,4 @@ def experiment_result_download_client_output(database, experiment_id, result_id)
     headers.add('Content-Type', 'text/plain')
     headers.add('Content-Disposition', 'attachment', filename="client_output_"+result.resultFileName)
 
-    res = Response(response=result.clientOutput, headers=headers)
-    db.session.remove()
-    return res
+    return Response(response=result.clientOutput, headers=headers)

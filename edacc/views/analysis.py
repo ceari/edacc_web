@@ -44,11 +44,12 @@ def ranking(database, experiment_id):
         d = 0.0
         num = 0
         for i in experiment.instances:
-            res1 = [res.time for res in experiment.results if res.solver_configuration == s1 and res.instance == i]
-            res2 = [res.time for res in experiment.results if res.solver_configuration == s2 and res.instance == i]
+            res1 = [res.time if res.status == 1 else experiment.timeOut for res in experiment.results if res.solver_configuration == s1 and res.instance == i]
+            res2 = [res.time if res.status == 1 else experiment.timeOut for res in experiment.results if res.solver_configuration == s2 and res.instance == i]
             ranked_data = list(stats.stats.rankdata(res1 + res2))
-            r, p = stats.pointbiserialr([1] * len(res1) + [0] * len(res2), ranked_data)
 
+            r, p = stats.pointbiserialr([1] * len(res1) + [0] * len(res2), ranked_data)
+            #print str(s1), str(s2), r, p
             if p < alpha:
                 d += r
                 num += 1
@@ -64,12 +65,17 @@ def ranking(database, experiment_id):
         elif r > 0: return -1
         else: return 0
 
+    scs_nbsolved = [{'sc': sc,
+                     'solved': sum(1 for res in experiment.results if res.solver_configuration == sc and res.status == 1)}
+                        for sc in experiment.solver_configurations]
+    scs_nbsolved = reversed(sorted(scs_nbsolved, key=lambda sc: sc['solved']))
+
     #rmatrix = [[pointbiserialcorr(s1, s2) for s1 in experiment.solver_configurations] for s2 in experiment.solver_configurations]
 
     scs = reversed(sorted(experiment.solver_configurations, cmp=comp))
 
     return render('/analysis/ranking.html', database=database, db=db,
-                  experiment=experiment, scs=scs, pointbiserialcorr=pointbiserialcorr)
+                  experiment=experiment, scs=scs, pointbiserialcorr=pointbiserialcorr, scs_nbsolved=scs_nbsolved)
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-solved-instances/')
 @require_phase(phases=(5, 6, 7))
@@ -125,9 +131,9 @@ def cputime_plot(database, experiment_id, s1, s2, run):
     if run == 'average':
         for instance in exp.instances:
             s1_jobs = results1.filter_by(instance=instance).all()
-            s1_avg = sum(j.time for j in s1_jobs) / len(s1_jobs)
+            s1_avg = sum(j.time if j.status == 1 else exp.timeOut for j in s1_jobs) / len(s1_jobs)
             s2_jobs = results2.filter_by(instance=instance).all()
-            s2_avg = sum(j.time for j in s2_jobs) / len(s2_jobs)
+            s2_avg = sum(j.time if j.status == 1 else exp.timeOut for j in s2_jobs) / len(s2_jobs)
             points.append({
                 'x': s1_avg,
                 'y': s2_avg,
@@ -147,8 +153,8 @@ def cputime_plot(database, experiment_id, s1, s2, run):
             r1 = results1.filter_by(instance=instance, run=int(run)).first()
             r2 = results2.filter_by(instance=instance, run=int(run)).first()
             points.append({
-                'x': r1.time,
-                'y': r2.time,
+                'x': r1.time if r1.status == 1 else exp.timeOut,
+                'y': r2.time if r1.status == 1 else exp.timeOut,
                 'instance': instance
             })
 
@@ -201,14 +207,13 @@ def cactus_plot(database, experiment_id):
         sc_res = results.filter_by(solver_configuration=sc, status=1).order_by(db.ExperimentResult.time)
         i = 1
         for r in sc_res:
-            if r.time < exp.timeOut - 1:
-                s['ys'].append(r.time)
-                s['xs'].append(i)
-                i += 1
+            s['ys'].append(r.time)
+            s['xs'].append(i)
+            i += 1
         solvers.append(s)
 
-    max_x = max([max(s['xs']) for s in solvers]) + 10
-    max_y = max([max(s['ys']) for s in solvers])
+    max_x = max([max(s['xs'] or [0]) for s in solvers]) + 10
+    max_y = max([max(s['ys'] or [0]) for s in solvers])
 
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.pdf'
@@ -224,3 +229,23 @@ def cactus_plot(database, experiment_id):
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
+
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/box-plot/')
+@require_phase(phases=(6, 7))
+@require_login
+def box_plot(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    results = {}
+    for sc in exp.solver_configurations:
+        results[str(sc)] = [res.time for res in db.session.query(db.ExperimentResult)
+                                    .filter_by(experiment=exp,
+                                               solver_configuration=sc).all()]
+
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
+    plots.box_plot(results, filename, 'png')
+    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+    os.remove(filename)
+    return response

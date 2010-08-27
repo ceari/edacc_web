@@ -15,7 +15,6 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
 from sqlalchemy.orm import relation, relationship
-from sqlalchemy.sql.expression import func
 
 from edacc import config, constants
 
@@ -60,7 +59,9 @@ class EDACCDatabase(object):
 
         class Parameter(object): pass
         class ParameterInstance(object): pass
-        class Instance(object): pass
+        class Instance(object):
+            def __str__(self):
+                return self.name
         class Experiment(object):
             def is_finished(self):
                 """ Returns whether this experiment is finished (true if there are any jobs and all of them are terminated) """

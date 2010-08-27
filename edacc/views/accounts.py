@@ -202,7 +202,7 @@ def submit_benchmark(database):
                 flash('Benchmark submitted.')
                 return redirect(url_for('accounts.submit_benchmark',
                                         database=database))
-            except Exception as e:
+            except:
                 db.session.rollback()
                 flash('An error occured during benchmark submission.')
                 return redirect(url_for('frontend.experiments_index',
@@ -358,9 +358,7 @@ def download_solver(database, id):
     headers.add('Content-Disposition', 'attachment',
                 filename=solver.binaryName)
 
-    res = Response(response=solver.binary, headers=headers)
-    db.session.remove()
-    return res
+    return Response(response=solver.binary, headers=headers)
 
 
 @accounts.route('/<database>/download-solver-code/<int:id>/')
@@ -378,6 +376,4 @@ def download_solver_code(database, id):
     headers.add('Content-Disposition', 'attachment',
                 filename=solver.name + ".zip")
 
-    res = Response(response=solver.code, headers=headers)
-    db.session.remove()
-    return res
+    return Response(response=solver.code, headers=headers)

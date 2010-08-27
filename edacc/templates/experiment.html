@@ -23,7 +23,7 @@
     <h2>Results</h2>
     <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">By solver configuration and instance</a> (runs accumulated)<br/>
     <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment) }}">By solver configuration</a><br/>
-    <a>by instance</a>
+    <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a>
 
     <h2>Analysis</h2>
     <a href="{{url_for('analysis.evaluation_cputime', database=database, experiment_id=experiment.idExperiment)}}">Compare the CPU time of two solvers</a><br/>

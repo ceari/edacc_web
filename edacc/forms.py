@@ -96,6 +96,9 @@ class BenchmarkForm(Form):
 class ResultBySolverForm(Form):
     solver_config = QuerySelectField('Solver Configuration')
 
+class ResultByInstanceForm(Form):
+    instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
+
 class CPUTimeComparisonForm(Form):
     solver1 = QuerySelectField('First Solver')
     solver2 = QuerySelectField('Second Solver')
