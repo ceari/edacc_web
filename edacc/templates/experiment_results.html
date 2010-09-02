@@ -45,6 +45,7 @@
                         <td>
                             median/min/max/avg time:<br/>
                             {{jobs.time_median|round(1)}}/{{jobs.time_min|round(1)}}/{{jobs.time_max|round(1)}}/{{jobs.time_avg|round(1)}} sec<br/>
+                            stddev: {{jobs.time_stddev|round(2)}}, variation coeff.: {{jobs.var_coeff|round(2)}}<br/>
                             completed: {{jobs.completed}}/{{jobs.total}} runs<br/>
                             <a href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
                             solver_configuration_id=jobs.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">Show</a>

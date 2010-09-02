@@ -8,6 +8,7 @@
         {{solver_configuration.solver.name}} on {{instance.name}}
     </div>
     <h2>Results of {{solver_configuration.get_name()}} on {{instance.name}}</h2>
+    <div style="float:left;">
     Completed {{completed}}/{{results|length}} runs
     <table class="results">
         <thead>
@@ -27,4 +28,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
+    <img src="{{url_for('analysis.histogram', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig, instance_id=instance.idInstance)}}" />
+    <img src="{{url_for('analysis.ecdf', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig, instance_id=instance.idInstance)}}" />
 {% endblock %}

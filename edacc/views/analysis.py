@@ -40,7 +40,7 @@ def ranking(database, experiment_id):
 
     from scipy import stats
     def pointbiserialcorr(s1, s2):
-        alpha = 0.05
+        alpha = 0.05 # level of statistical significant difference
         d = 0.0
         num = 0
         for i in experiment.instances:
@@ -49,13 +49,15 @@ def ranking(database, experiment_id):
             ranked_data = list(stats.stats.rankdata(res1 + res2))
 
             r, p = stats.pointbiserialr([1] * len(res1) + [0] * len(res2), ranked_data)
-            #print str(s1), str(s2), r, p
+
+            # only take instances with significant differences into account
             if p < alpha:
+                #print str(s1), str(s2), str(i), r, p
                 d += r
                 num += 1
 
         if num > 0:
-            return d / num
+            return d / num # return mean difference
         else:
             return 0 # s1 == s2
 
@@ -246,6 +248,47 @@ def box_plot(database, experiment_id):
 
     filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
     plots.box_plot(results, filename, 'png')
+    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+    os.remove(filename)
+    return response
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/histogram/<int:solver_configuration_id>/<int:instance_id>/')
+@require_phase(phases=(6, 7))
+@require_login
+def histogram(database, experiment_id, solver_configuration_id, instance_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    sc = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
+    instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
+
+    results = [r.time for r in db.session.query(db.ExperimentResult)
+                                    .filter_by(experiment=exp,
+                                               solver_configuration=sc,
+                                               instance=instance).all()]
+
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'hist.png'
+    plots.hist(results, filename, 'png')
+    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+    os.remove(filename)
+    return response
+
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/ecdf/<int:solver_configuration_id>/<int:instance_id>/')
+@require_phase(phases=(6, 7))
+@require_login
+def ecdf(database, experiment_id, solver_configuration_id, instance_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    sc = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
+    instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
+
+    results = [r.time for r in db.session.query(db.ExperimentResult)
+                                    .filter_by(experiment=exp,
+                                               solver_configuration=sc,
+                                               instance=instance).all()]
+
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'ecdf.png'
+    plots.ecdf(results, filename, 'png')
     response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
     os.remove(filename)
     return response

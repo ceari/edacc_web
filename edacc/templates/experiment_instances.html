@@ -6,7 +6,7 @@
     <script src="/static/js/jquery.tablesorter.js" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-            $('#table_instances').tablesorter({sortList: [[0,0]], widgets: ['zebra']});
+            $('#table_instances').tablesorter({sortList: [[0,0]], widgets: ['zebra'], headers: {6: {sorter: false}}});
         });
     </script>
 {% endblock %}
@@ -31,6 +31,7 @@
                     <th>Ratio</th>
                     <th>Max Clause Length</th>
                     <th>MD5</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -42,6 +43,7 @@
                     <td>{{instance.ratio|round(2)}}</td>
                     <td>{{instance.maxClauseLength}}</td>
                     <td>{{instance.md5}}</td>
+                    <td><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{instance.idInstance}}">Results</a></td>
                 </tr>
             {% endfor %}
             </tbody>

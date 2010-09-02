@@ -13,6 +13,7 @@
 import json
 import csv
 import StringIO
+import numpy
 
 from flask import Module
 from flask import render_template
@@ -189,15 +190,14 @@ def experiment_results(database, experiment_id):
                         .all()
             completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
             runtimes = [j.time for j in jobs]
-            runtimes.sort()
-            time_median = runtimes[len(runtimes) / 2]
-            time_avg = sum(runtimes) / float(len(jobs))
             time_max = max(runtimes)
             time_min = min(runtimes)
-            row.append({'time_avg': time_avg,
-                        'time_median': time_median,
+            row.append({'time_avg': numpy.average(runtimes),
+                        'time_median': numpy.median(runtimes),
                         'time_max': time_max,
                         'time_min': time_min,
+                        'time_stddev': numpy.std(runtimes),
+                        'var_coeff': numpy.std(runtimes) / numpy.average(runtimes),
                         'completed': completed,
                         'total': len(jobs),
                         'solver_config': solver_config

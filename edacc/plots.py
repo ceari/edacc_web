@@ -9,6 +9,7 @@
     :license: MIT, see LICENSE for details.
 """
 
+import numpy
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 grdevices = importr('grDevices')
@@ -154,5 +155,42 @@ def box_plot(data, filename, format='png'):
         data[key] = robjects.FloatVector(data[key])
 
     robjects.r.boxplot(robjects.DataFrame(data), main="Boxplot", horizontal=True)
+
+    grdevices.dev_off()
+
+def hist(data, filename, format='png'):
+    if format == 'png':
+        #cairo.CairoPNG(file=filename, units="px", width=600,
+        #               height=600, bg="white", pointsize=14)
+        grdevices.png(file=filename, units="px", width=600,
+                      height=600, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite")
+
+
+    #robjects.r.hist(robjects.FloatVector(data), main="Histogram", breaks=30,
+    #                xlab='CPU Time', probability=True)
+    d = robjects.r.density(robjects.FloatVector(data))
+    robjects.r.plot(d, main='Density estimation', xlab='CPU Time')
+
+    grdevices.dev_off()
+
+def ecdf(data, filename, format='png'):
+    if format == 'png':
+        #cairo.CairoPNG(file=filename, units="px", width=600,
+        #               height=600, bg="white", pointsize=14)
+        grdevices.png(file=filename, units="px", width=600,
+                      height=600, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite")
+
+    robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(data)),
+                    main="Empirical Cumulative Distribution Function",
+                    xlab='CPU time', ylab='P(solve)',
+                    xlim=robjects.r.c(0,max(data)), ylim=robjects.r.c(0,1.0))
+    robjects.r.par(new=1)
+    exp = robjects.r.pexp(robjects.FloatVector(range(int(max(data)))), rate=1.0/numpy.average(data))
+    robjects.r.plot(exp, main='', xlab='', ylab='',
+                    xlim=robjects.r.c(0,max(data)), ylim=robjects.r.c(0,1.0))
 
     grdevices.dev_off()
