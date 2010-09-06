@@ -13,6 +13,7 @@ import numpy
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 grdevices = importr('grDevices')
+np = importr('np')
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",
 #                 bold="Bitstream Vera Sans:style=Bold",
@@ -61,7 +62,9 @@ def scatter(points, xlabel, ylabel, title, timeout, filename, format='png'):
     pts = zip(robjects.r.grconvertX(robjects.FloatVector(xs), "user", "device"),
               robjects.r.grconvertY(robjects.FloatVector(ys), "user", "device"))
     pts = [{'x': pts[i][0], 'y': pts[i][1], 'instance': points[i]['instance']} for i in xrange(len(pts))]
-
+    #m1 = robjects.r.matrix(robjects.FloatVector(xs), nrow=len(xs))
+    #m2 = robjects.r.matrix(robjects.FloatVector(ys), nrow=len(ys))
+    #print robjects.r.cancor(m1, m2)
 
     # plot labels and axis
     robjects.r.axis(side=4, tck=0.015, las=1,
@@ -170,8 +173,9 @@ def hist(data, filename, format='png'):
 
     #robjects.r.hist(robjects.FloatVector(data), main="Histogram", breaks=30,
     #                xlab='CPU Time', probability=True)
-    d = robjects.r.density(robjects.FloatVector(data))
-    robjects.r.plot(d, main='Density estimation', xlab='CPU Time')
+    d = np.npudens(robjects.FloatVector(data))
+    robjects.r.plot(d, main='Non-parametric kernel density estimation',
+                    xlab='CPU Time', ylab='P(solve)')
 
     grdevices.dev_off()
 
@@ -188,9 +192,9 @@ def ecdf(data, filename, format='png'):
                     main="Empirical Cumulative Distribution Function",
                     xlab='CPU time', ylab='P(solve)',
                     xlim=robjects.r.c(0,max(data)), ylim=robjects.r.c(0,1.0))
-    robjects.r.par(new=1)
-    exp = robjects.r.pexp(robjects.FloatVector(range(int(max(data)))), rate=1.0/numpy.average(data))
-    robjects.r.plot(exp, main='', xlab='', ylab='',
-                    xlim=robjects.r.c(0,max(data)), ylim=robjects.r.c(0,1.0))
+    #robjects.r.par(new=1)
+    #exp = robjects.r.pexp(robjects.FloatVector(range(int(max(data)))), rate=1.0/numpy.average(data))
+    #robjects.r.plot(exp, main='', xlab='', ylab='',
+    #                xlim=robjects.r.c(0,max(data)), ylim=robjects.r.c(0,1.0))
 
     grdevices.dev_off()
