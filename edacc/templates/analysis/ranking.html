@@ -7,34 +7,9 @@
         Ranking
     </div>
     <h2>Ranking</h2>
-    <h3>Point Biserial Correlation Matrix</h3>
-    <table border="1">
-        <tr>
-            <td>r(row_solver, col_solver)</td>
-            {% for s2 in experiment.solver_configurations %}
-                <td>{{s2}}</th>
-            {% endfor %}
-        </tr>
-
-    {% for s1 in experiment.solver_configurations %}
-        <tr>
-            <td>{{ s1 }}</td>
-            {% for s2 in experiment.solver_configurations %}
-                <td>
-                    {{pointbiserialcorr(s1, s2)}}
-                </td>
-            {% endfor %}
-        </tr>
-    {% endfor %}
-    </table>
-    Negative values suggest that the solver of the row is better than the solver of the column.
 
     <h3>Ranking by Point Biserial Correlation ordering</h3>
-    {% for sc in scs %}
+    {% for sc in ranked_solvers %}
         {{ loop.index }} - {{ sc }}<br/>
-    {% endfor %}
-    <h3>Ranking by number of solved instances</h3>
-    {% for sc in scs_nbsolved %}
-        {{ loop.index }} - {{ sc['sc'] }} ({{sc['solved']}})<br/>
     {% endfor %}
 {% endblock %}

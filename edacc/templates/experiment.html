@@ -30,6 +30,6 @@
     <a href="{{url_for('analysis.evaluation_solved_instances', database=database, experiment_id=experiment.idExperiment)}}">Graph of the number of solved instances within a given amount of time</a>
 
     <h2>Ranking</h2>
-    <a href="{{url_for('analysis.ranking', database=database, experiment_id=experiment.idExperiment)}}">Point Biserial Correlation based ranking</a><br/>
+    <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Point Biserial Correlation based ranking</a><br/>
 
 {% endblock %}

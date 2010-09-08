@@ -44,11 +44,13 @@ from edacc.views.admin import admin
 from edacc.views.accounts import accounts
 from edacc.views.frontend import frontend
 from edacc.views.analysis import analysis
+from edacc.views.plot import plot
 
 app.register_module(admin)
 app.register_module(accounts)
 app.register_module(frontend)
 app.register_module(analysis)
+app.register_module(plot)
 
 
 @app.before_request
