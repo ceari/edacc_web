@@ -7,7 +7,7 @@
     <script type="text/javascript">
         $(document).ready(function(){
             $.ajax({
-              url: "{{url_for('analysis.cputime_plot', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}?imagemap",
+              url: "{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}?imagemap",
               dataType: 'json',
               success: function(data) {
                 $.each(data['data'], function(ix, val) {
@@ -29,7 +29,7 @@
     <div style="margin-bottom: 5px;">
     Choose two solvers to plot their CPU times on the instances of the experiment against each other in a scatter plot.
     </div>
-    <form method="get" action="{{url_for('analysis.evaluation_cputime', database=database, experiment_id=experiment.idExperiment)}}">
+    <form method="get" action="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">
         Plot
         {{ form.solver1 }}
         against
@@ -40,8 +40,8 @@
     {% if form.solver1.data and form.solver2.data %}
         <div style="margin-top: 10px; margin-bottom: 10px;">Points above the dashed line represent instances where <strong>{{form.solver1.data.get_name()}}</strong> performed better whereas
         points below the dashed line represent instances where <strong>{{form.solver2.data.get_name()}}</strong> performed better.</div>
-        <img usemap="#instances" alt="graph" style="margin: 10px;" src="{{url_for('cputime_plot', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}" /><br/>
-        Download as <a href="{{url_for('cputime_plot', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}?pdf">PDF</a>
+        <img usemap="#instances" alt="graph" style="margin: 10px;" src="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}" /><br/>
+        Download as <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment, s1=form.solver1.data.idSolverConfig, s2=form.solver2.data.idSolverConfig, run=form.run.data)}}?pdf">PDF</a>
         <map id="instances" name="instances"></map>
     {% endif %}
 {% endblock %}

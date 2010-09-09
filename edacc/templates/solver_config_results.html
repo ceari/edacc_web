@@ -29,6 +29,6 @@
         </tbody>
     </table>
     </div>
-    <img src="{{url_for('analysis.histogram', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig, instance_id=instance.idInstance)}}" />
-    <img src="{{url_for('analysis.ecdf', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig, instance_id=instance.idInstance)}}" />
+    <img src="{{url_for('plot.histogram', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig, instance_id=instance.idInstance)}}" />
+    <img src="{{url_for('plot.ecdf', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig, instance_id=instance.idInstance)}}" />
 {% endblock %}
