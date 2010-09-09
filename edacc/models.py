@@ -184,7 +184,6 @@ class EDACCDatabase(object):
 
     def set_competition(self, b):
         self.session.query(self.DBConfiguration).get(0).competition = b
-        self.session.commit()
 
     def competition_phase(self):
         """ returns the competition phase this database is in (or None, if is_competition() == False) as integer"""
@@ -192,9 +191,8 @@ class EDACCDatabase(object):
         return self.session.query(self.DBConfiguration).get(0).competitionPhase
 
     def set_competition_phase(self, phase):
-        if phase is not None and phase not in (1,2,3,4): return
+        if phase is not None and phase not in (1,2,3,4,5,6,7): return
         self.session.query(self.DBConfiguration).get(0).competitionPhase = phase
-        self.session.commit()
 
     def __str__(self):
         return self.label
