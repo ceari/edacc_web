@@ -28,15 +28,21 @@ from edacc.views.helpers import require_phase, require_login
 plot = Module(__name__)
 
 
-@plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-1property/<int:s1>/<int:s2>/<run>/')
+@plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-1property/')
 @require_phase(phases=(5, 6, 7))
 @require_login
-def scatter_2solver_1property(database, experiment_id, s1, s2, run, instances, result_property):
+def scatter_2solver_1property(database, experiment_id):
     """ Plots the cputimes of the two specified solver configurations on the
         experiment's instances against each other in a scatter plot and
         returns the image as HTTP response """
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    s1 = int(request.args['solver_config1'])
+    s2 = int(request.args['solver_config2'])
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+    run = request.args['run']
+    scaling = request.args['scaling']
 
     sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
     sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
@@ -80,7 +86,7 @@ def scatter_2solver_1property(database, experiment_id, s1, s2, run, instances, r
     ylabel = sc2.solver.name + ' CPU time (s)'
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
-        plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, format='pdf')
+        plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, format='pdf', scaling=scaling)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -88,13 +94,13 @@ def scatter_2solver_1property(database, experiment_id, s1, s2, run, instances, r
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
-        pts = plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename)
+        pts = plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, scaling=scaling)
         if request.args.has_key('imagemap'):
             mapdata = []
             for i in xrange(len(points)):
                 mapdata.append(
-                    {'x': pts[0],
-                     'y': pts[1],
+                    {'x': pts[i][0],
+                     'y': pts[i][1],
                      'url': url_for('frontend.instance_details',
                                     database=database,
                                     instance_id=points[i][2].idInstance),

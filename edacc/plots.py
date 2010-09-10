@@ -21,7 +21,7 @@ np = importr('np') # non-parametric kernel smoothing methods
 #                 italic="Bitstream Vera Sans:style=Italic",
 #                 symbol="Symbol")
 
-def scatter(points, xlabel, ylabel, title, timeout, filename, format='png'):
+def scatter(points, xlabel, ylabel, title, timeout, filename, format='png', scaling='none'):
     """ Scatter plot of the points given in the list :points:
         Each elemento of :points: should be a tuple (x, y).
         Returns a list with the points in device coordinates.
@@ -35,7 +35,7 @@ def scatter(points, xlabel, ylabel, title, timeout, filename, format='png'):
         grdevices.bitmap(file=filename, type="pdfwrite")
 
     # set margins to fit in labels on the right and top
-    robjects.r.par(mar=robjects.FloatVector([3,3,6,6]))
+    robjects.r.par(mar=robjects.FloatVector([4,4,6,6]))
 
     # plot dashed line from (0,0) to (timeout,timeout)
     robjects.r.plot(robjects.FloatVector([0,timeout]),
@@ -52,11 +52,29 @@ def scatter(points, xlabel, ylabel, title, timeout, filename, format='png'):
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
 
+    robjects.r.options(scipen=10)
+
+    min_x = 0
+    min_y = 0
+
+    if scaling == 'none':
+        log = ''
+    elif scaling == 'log':
+        log = 'y'
+        min_x = min([x for x in xs if x > 0])
+        min_y = min([y for y in ys if y > 0])
+    elif scaling == 'loglog':
+        log = 'xy'
+        min_x = min([x for x in xs if x > 0])
+        min_y = min([y for y in ys if y > 0])
+
+    min_v = min(min_x, min_y)
+
     # plot running times
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
                     type='p', col='red', las = 1,
-                    xlim=robjects.r.c(0,timeout), ylim=robjects.r.c(0,timeout),
-                    xaxs='i', yaxs='i',
+                    xlim=robjects.r.c(min_v,timeout), ylim=robjects.r.c(min_v,timeout),
+                    xaxs='i', yaxs='i', log=log,
                     xlab='', ylab='', pch=3, tck=0.015,
                     **{'cex.axis': 1.2, 'cex.main': 1.5})
 

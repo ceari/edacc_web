@@ -9,7 +9,7 @@
     :license: MIT, see LICENSE for details.
 """
 
-from flaskext.wtf import Form, TextField, PasswordField, TextAreaField
+from flaskext.wtf import Form, TextField, PasswordField, TextAreaField, RadioField
 from flaskext.wtf import FileField, Required, Length, Email, EqualTo, SelectField
 from flaskext.wtf import ValidationError
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
@@ -99,7 +99,11 @@ class ResultBySolverForm(Form):
 class ResultByInstanceForm(Form):
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
 
-class CPUTimeComparisonForm(Form):
-    solver1 = QuerySelectField('First Solver')
-    solver2 = QuerySelectField('Second Solver')
+class TwoSolversOnePropertyScatterPlotForm(Form):
+    solver_config1 = QuerySelectField('First Solver Configuration')
+    solver_config2 = QuerySelectField('Second Solver Configuration')
+    #solver_property = SelectField('Property')
+    instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance)
+    scaling = RadioField('Axes scale', choices=[('none', 'none'), ('log', 'log'),
+                                             ('loglog', 'log-log')])
     run = SelectField('Plot for run')

@@ -15,3 +15,26 @@
   </td>
 </tr>
 {% endmacro %}
+
+
+{% macro render_radio_field(field, explanation=None) %}
+<tr>
+  <td style="vertical-align: middle;">{{ field.label }}</td>
+  <td>
+    {% if field.errors %}
+      <ul class="errors">
+        {% for error in field.errors %}<li>{{ error }}{% endfor %}
+      </ul>
+    {% endif %}
+    <ul style="margin: 0; padding: 0; list-style: none;">
+    {% for subfield in field %}
+      <li>{{ subfield }}{{subfield.label}}</li>
+    {% endfor %}
+    </ul>
+    {% if explanation %}
+    <br/>
+    {{ explanation }}
+    {% endif %}
+  </td>
+</tr>
+{% endmacro %}

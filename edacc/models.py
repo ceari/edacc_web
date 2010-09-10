@@ -71,7 +71,13 @@ class EDACCDatabase(object):
             def is_running(self):
                 """ Returns true if there are any running jobs """
                 return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
-        class ExperimentResult(object): pass
+        class ExperimentResult(object):
+            def get_time(self):
+                """ Returns the CPU time needed for this result or the
+                    experiment's timeOut value if the status is
+                    not "finished" (correct).
+                """
+                return self.time if self.status == 1 else self.experiment.timeOut
         class InstanceClass(object):
             def __str__(self):
                 return self.name
@@ -148,7 +154,7 @@ class EDACCDatabase(object):
         )
         mapper(Experiment, metadata.tables['Experiment'],
             properties = {
-                'instances': relationship(Instance, secondary=metadata.tables['Experiment_has_Instances']),
+                'instances': relationship(Instance, secondary=metadata.tables['Experiment_has_Instances'], backref='experiments'),
                 'solver_configurations': relation(SolverConfiguration),
                 'grid_queue': relationship(GridQueue, secondary=metadata.tables['Experiment_has_gridQueue']),
                 'results': relation(ExperimentResult)
