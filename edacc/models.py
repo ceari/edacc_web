@@ -84,6 +84,11 @@ class EDACCDatabase(object):
         class BenchmarkType(object):
             def __str__(self):
                 return self.name
+        class InstanceProperty(object): pass
+        class PropertyValueType(object): pass
+        class SolverProperty(object): pass
+        class ExperimentResultSolverProperty(object): pass
+        class SolverPropertyValue(object): pass
 
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
@@ -98,6 +103,11 @@ class EDACCDatabase(object):
         self.DBConfiguration = DBConfiguration
         self.CompetitionCategory = CompetitionCategory
         self.BenchmarkType = BenchmarkType
+        self.InstanceProperty = InstanceProperty
+        self.PropertyValueType = PropertyValueType
+        self.SolverProperty = SolverProperty
+        self.ExperimentResultSolverProperty = ExperimentResultSolverProperty
+        self.SolverPropertyValue = SolverPropertyValue
 
         metadata.reflect()
 
@@ -109,7 +119,8 @@ class EDACCDatabase(object):
             properties = {
                 'instance': deferred(metadata.tables['Instances'].c.instance),
                 'instance_classes': relationship(InstanceClass, secondary=metadata.tables['Instances_has_instanceClass'], backref='instances'),
-                'source_class': relation(InstanceClass, backref='source_instances')
+                'source_class': relation(InstanceClass, backref='source_instances'),
+                'properties': relationship(InstanceProperty, secondary=metadata.tables['Instance_has_InstanceProperty']),
             }
         )
         mapper(Solver, metadata.tables['Solver'],
@@ -143,13 +154,25 @@ class EDACCDatabase(object):
                 'results': relation(ExperimentResult)
             }
         )
+        mapper(SolverProperty, metadata.tables['SolverProperty'],
+            properties = {
+                'value_type': relation(PropertyValueType)
+            }
+        )
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
                 'resultFile': deferred(metadata.tables['ExperimentResults'].c.resultFile),
                 'clientOutput': deferred(metadata.tables['ExperimentResults'].c.clientOutput),
                 'solver_configuration': relation(SolverConfiguration),
+                'solver_properties': relationship(ExperimentResultSolverProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),
                 'instance': relation(Instance),
+            }
+        )
+        mapper(ExperimentResultSolverProperty, metadata.tables['ExperimentResult_has_SolverProperty'],
+            properties = {
+                'solver_property': relationship(SolverProperty, backref='experiment_results'),
+                'values': relation(SolverPropertyValue)
             }
         )
         mapper(User, metadata.tables['User'],
@@ -166,6 +189,9 @@ class EDACCDatabase(object):
                 'instances': relation(Instance, backref='benchmark_type')
             }
         )
+        mapper(PropertyValueType, metadata.tables['PropertyValueType'])
+        mapper(SolverPropertyValue, metadata.tables['SolverPropertyValue'])
+        mapper(InstanceProperty, metadata.tables['InstanceProperty'])
 
         self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False, autoflush=False))
 
