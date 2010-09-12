@@ -36,7 +36,7 @@
                             <a href="{{ url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=result.0.idSolverConfig) }}">{{ result.0}}</a>
                         </td>
                         {% for run in result.1 %}
-                            <td><a href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.time }}</a></td>
+                            <td style="background-color: {{run.status|job_status_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time() }}</a></td>
                         {% endfor %}
                     </tr>
                 {% endfor %}

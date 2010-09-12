@@ -12,13 +12,13 @@
     Status: {{result.status|job_status}}
     </div>
 
+    <h3>Result file:</h3>
+    (<a href="{{url_for('experiment_result_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
+    <pre>{{resultFile_text}}</pre>
+
     <h3>Client output:</h3>
     (<a href="{{url_for('experiment_result_download_client_output', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
 
     <pre>{{clientOutput_text}}</pre>
-
-    <h3>Result file:</h3>
-    (<a href="{{url_for('experiment_result_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
-    <pre>{{resultFile_text}}</pre>
 
 {% endblock %}

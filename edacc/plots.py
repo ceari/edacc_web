@@ -37,14 +37,15 @@ def scatter(points, xlabel, ylabel, title, timeout, filename, format='png', scal
     # set margins to fit in labels on the right and top
     robjects.r.par(mar=robjects.FloatVector([4,4,6,6]))
 
-    # plot dashed line from (0,0) to (timeout,timeout)
-    robjects.r.plot(robjects.FloatVector([0,timeout]),
-                    robjects.FloatVector([0,timeout]),
-                    type='l', col='black', lty=2,
-                    xlim=robjects.r.c(0,timeout), ylim=robjects.r.c(0,timeout),
-                    xaxs='i', yaxs='i',
-                    xaxt='n', yaxt='n',
-                    xlab='', ylab='')
+    if scaling != 'log':
+        # plot dashed line from (0,0) to (timeout,timeout)
+        robjects.r.plot(robjects.FloatVector([0,timeout]),
+                        robjects.FloatVector([0,timeout]),
+                        type='l', col='black', lty=2,
+                        xlim=robjects.r.c(0,timeout), ylim=robjects.r.c(0,timeout),
+                        xaxs='i', yaxs='i',
+                        xaxt='n', yaxt='n',
+                        xlab='', ylab='')
 
     # to be able to plot in the same graph again
     robjects.r.par(new=1)

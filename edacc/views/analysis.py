@@ -54,7 +54,12 @@ def cactus_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    return render('/analysis/solved_instances.html', database=database, experiment=experiment, db=db)
+    form = forms.CactusPlotForm(request.args)
+    form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
+    return render('/analysis/solved_instances.html', database=database,
+                  experiment=experiment, db=db, form=form, GET_data=GET_data)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')

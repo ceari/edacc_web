@@ -125,7 +125,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id, solver, r
 @plot.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
 @require_phase(phases=(5, 6, 7))
 @require_login
-def cactus_plot(database, experiment_id, instances, result_property):
+def cactus_plot(database, experiment_id):
     """ Renders a cactus plot of the instances solved within a given "amount" of
         a result property of all solver configurations of the specified
         experiment
@@ -136,6 +136,7 @@ def cactus_plot(database, experiment_id, instances, result_property):
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results = results.filter_by(experiment=exp)
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
 
     solvers = []
     for sc in exp.solver_configurations:
@@ -143,9 +144,10 @@ def cactus_plot(database, experiment_id, instances, result_property):
         sc_res = results.filter_by(solver_configuration=sc, status=1).order_by(db.ExperimentResult.time)
         i = 1
         for r in sc_res:
-            s['ys'].append(r.time)
-            s['xs'].append(i)
-            i += 1
+            if r.instance in instances or instances == []:
+                s['ys'].append(r.get_time())
+                s['xs'].append(i)
+                i += 1
         solvers.append(s)
 
     max_x = max([max(s['xs'] or [0]) for s in solvers]) + 10
