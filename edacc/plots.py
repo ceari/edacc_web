@@ -46,9 +46,8 @@ def scatter(points, xlabel, ylabel, title, timeout, filename, format='png', scal
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
                         xlab='', ylab='')
-
-    # to be able to plot in the same graph again
-    robjects.r.par(new=1)
+        # to be able to plot in the same graph again
+        robjects.r.par(new=1)
 
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
