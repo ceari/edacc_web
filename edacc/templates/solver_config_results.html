@@ -9,26 +9,24 @@
     </div>
     <h2>Results of {{solver_configuration.get_name()}} on {{instance.name}}</h2>
     <div style="float:left;">
-    Completed {{completed}}/{{results|length}} runs
-    <table class="results">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Status</th>
-                <th>Time (sec)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for result in results %}
-                <tr bgcolor="{{result.status|job_status_color}}">
-                    <td><a style="color: black;" href="{{url_for('experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">{{result.idJob}}</a></td>
-                    <td>{{result.status|job_status}}</td>
-                    <td>{{result.get_time()}}</td>
+        Completed {{completed}}/{{results|length}} runs
+        <table class="results">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Time (sec)</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    <tr bgcolor="{{result.status|job_status_color}}">
+                        <td><a style="color: black;" href="{{url_for('experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">{{result.idJob}}</a></td>
+                        <td>{{result.status|job_status}}</td>
+                        <td>{{result.get_time()}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <img src="{{url_for('plot.histogram', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig, instance_id=instance.idInstance)}}" />
-    <img src="{{url_for('plot.ecdf', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig, instance_id=instance.idInstance)}}" />
 {% endblock %}

@@ -14,6 +14,7 @@ from rpy2 import robjects
 from rpy2.robjects.packages import importr
 grdevices = importr('grDevices') # plotting target devices
 np = importr('np') # non-parametric kernel smoothing methods
+stats = importr('stats')
 
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",
@@ -143,11 +144,11 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
 
         point_style += 1
 
-    # plot labels and axis
+    # plot labels and axes
     robjects.r.mtext('number of solved instances', side=1,
-                     line=3, cex=1.2) # left axis label
-    robjects.r.mtext('CPU Time (s)', side=2, padj=0,
                      line=3, cex=1.2) # bottom axis label
+    robjects.r.mtext('CPU Time (s)', side=2, padj=0,
+                     line=3, cex=1.2) # left axis label
     robjects.r.mtext('Number of instances solved within a given amount of time',
                      padj=1, side=3, line=3, cex=1.7) # plot title
 
@@ -158,6 +159,56 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
                       pch=robjects.IntVector(range(len(solvers))), lty=1)
 
     grdevices.dev_off()
+
+
+def rtd_comparison(results1, results2, solver1, solver2, filename, format='png'):
+    if format == 'png':
+        #cairo.CairoPNG(file=filename, units="px", width=600,
+        #               height=600, bg="white", pointsize=14)
+        grdevices.png(file=filename, units="px", width=600,
+                      height=600, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite")
+
+    max_x = max([max(results1), max(results2)])
+
+    #print stats.wilcox_test(robjects.FloatVector(results1), robjects.FloatVector(results2), paired=False)
+
+    # plot without data to create the frame
+    robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
+                    type='p', col='red', las = 1,
+                    xlim=robjects.r.c(0.0, max_x), ylim=robjects.r.c(0.0, 1.0),
+                    xaxs='i', yaxs='i',
+                    xlab='',ylab='', **{'cex.main': 1.5})
+    robjects.r.par(new=1)
+
+    # plot the two distributions
+    robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results1)),
+                    main='',
+                    xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='red',
+                    xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(0.0,1.0))
+    robjects.r.par(new=1)
+    robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results2)),
+                    main='',
+                    xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='blue',
+                    xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(0.0,1.0))
+
+    # plot labels and axes
+    robjects.r.mtext('CPU Time (s)', side=1,
+                     line=3, cex=1.2) # bottom axis label
+    robjects.r.mtext('P(solve within x seconds)', side=2, padj=0,
+                     line=3, cex=1.2) # left axis label
+    robjects.r.mtext('RTD Comparison',
+                     padj=1, side=3, line=3, cex=1.7) # plot title
+
+    # plot legend
+    robjects.r.legend(max_x - (max_x * 0.3), 0.1,
+                      legend=robjects.StrVector([solver1, solver2]),
+                      col=robjects.StrVector(['red', 'blue']),
+                      pch=robjects.IntVector([0,1]), lty=1)
+
+    grdevices.dev_off()
+
 
 def box_plot(data, filename, format='png'):
     if format == 'png':
@@ -174,6 +225,7 @@ def box_plot(data, filename, format='png'):
     robjects.r.boxplot(robjects.DataFrame(data), main="Boxplot", horizontal=True)
 
     grdevices.dev_off()
+
 
 def hist(data, filename, format='png'):
     if format == 'png':

@@ -15,6 +15,8 @@
 import os
 import json
 import numpy
+import StringIO
+import csv
 
 from flask import Module
 from flask import render_template, url_for
@@ -84,7 +86,20 @@ def scatter_2solver_1property(database, experiment_id):
     title = sc1.solver.name + ' vs. ' + sc2.solver.name
     xlabel = sc1.solver.name + ' CPU time (s)'
     ylabel = sc2.solver.name + ' CPU time (s)'
-    if request.args.has_key('pdf'):
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(['Instance', "CPU Time (s) " + str(sc1), "CPU Time (s) " + str(sc2)])
+        for x, y, i in points:
+            csv_writer.writerow([str(i), x, y])
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
+
+    elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
         plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, format='pdf', scaling=scaling)
         headers = Headers()
@@ -169,6 +184,33 @@ def cactus_plot(database, experiment_id):
         return response
 
 
+@plot.route('/<database>/experiment/<int:experiment_id>/rtd-comparison-plot/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def rtd_comparison_plot(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
+    s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
+    s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
+
+    results1 = [r.get_time() for r in db.session.query(db.ExperimentResult)
+                                    .filter_by(experiment=exp,
+                                               solver_configuration=s1,
+                                               instance=instance).all()]
+    results2 = [r.get_time() for r in db.session.query(db.ExperimentResult)
+                                    .filter_by(experiment=exp,
+                                               solver_configuration=s2,
+                                               instance=instance).all()]
+
+
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
+    plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, 'png')
+    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+    os.remove(filename)
+    return response
+
 @plot.route('/<database>/experiment/<int:experiment_id>/box-plot/')
 @require_phase(phases=(6, 7))
 @require_login
@@ -178,7 +220,7 @@ def box_plot(database, experiment_id):
 
     results = {}
     for sc in exp.solver_configurations:
-        results[str(sc)] = [res.time for res in db.session.query(db.ExperimentResult)
+        results[str(sc)] = [res.get_time() for res in db.session.query(db.ExperimentResult)
                                     .filter_by(experiment=exp,
                                                solver_configuration=sc).all()]
 
@@ -187,6 +229,7 @@ def box_plot(database, experiment_id):
     response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
     os.remove(filename)
     return response
+
 
 @plot.route('/<database>/experiment/<int:experiment_id>/histogram/<int:solver_configuration_id>/<int:instance_id>/')
 @require_phase(phases=(6, 7))
@@ -197,7 +240,7 @@ def histogram(database, experiment_id, solver_configuration_id, instance_id):
     sc = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
 
-    results = [r.time for r in db.session.query(db.ExperimentResult)
+    results = [r.get_time() for r in db.session.query(db.ExperimentResult)
                                     .filter_by(experiment=exp,
                                                solver_configuration=sc,
                                                instance=instance).all()]
@@ -218,7 +261,7 @@ def ecdf(database, experiment_id, solver_configuration_id, instance_id):
     sc = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
 
-    results = [r.time for r in db.session.query(db.ExperimentResult)
+    results = [r.get_time() for r in db.session.query(db.ExperimentResult)
                                     .filter_by(experiment=exp,
                                                solver_configuration=sc,
                                                instance=instance).all()]

@@ -31,9 +31,7 @@
             instances[{{loop.index0}}]["maxClauseLength"] = {{instance.maxClauseLength}};
             {% endfor %}
             var selected_instances = new Array();
-            {% for instance in request.args.getlist('instances') %}
-            selected_instances.push({{instance}});
-            {% endfor %}
+            {% for instance in request.args.getlist('instances') %}selected_instances.push({{instance}});{% endfor %}
 
             function match(instance, filter) {
                 if (filter == '') return true;
@@ -93,7 +91,7 @@
         <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
         Analysis
     </div>
-    <div style="margin: 5px; float: left;">
+    <div style="margin-right: 5px; float: left;">
         <h2>Compare the results of two solvers</h2>
         <div style="margin-bottom: 5px;">
         Choose two solvers to plot their result properties on the instances of<br/>
@@ -108,8 +106,8 @@
             <tr>
                 <td style="vertical-align: middle;">Filter instances</td>
                 <td>{{form.instance_filter}}<img id="instance_filter_apply" src="/static/img/search.png"/><img id="instance_filter_clear" src="/static/img/clear.png"/><br/>
-                    JS expression filter. Valid variables are name, numAtoms,<br/> numClauses, ratio and maxClauseLength.
-
+                    JS expression filter. Valid variables are name, numAtoms,<br/> numClauses, ratio and maxClauseLength.<br/>
+                        Example: (numAtoms >= 6000 && numAtoms <= 8000)
                 </td>
             </tr>
             {{ render_radio_field(form.scaling) }}
@@ -121,7 +119,7 @@
         {% autoescape false %}
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
             <img usemap="#map_instances" alt="graph" style="margin: 10px;" src="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-            Download as <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a>
+            Download as <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
             <map id="map_instances" name="map_instances"/>
         </div>
         {% endautoescape %}

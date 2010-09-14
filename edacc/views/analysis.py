@@ -61,6 +61,53 @@ def cactus_plot(database, experiment_id):
     return render('/analysis/solved_instances.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
 
+@analysis.route('/<database>/experiment/<int:experiment_id>/rtd-comparison/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def rtd_comparison(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    form = forms.RTDComparisonForm(request.args)
+    form.instance.query = experiment.instances
+    form.solver_config1.query = experiment.solver_configurations
+    form.solver_config2.query = experiment.solver_configurations
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
+    if form.solver_config1.data and form.solver_config2.data and form.instance.data:
+        instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
+        s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
+        s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
+
+        results1 = [r.get_time() for r in db.session.query(db.ExperimentResult)
+                                        .filter_by(experiment=experiment,
+                                                   solver_configuration=s1,
+                                                   instance=instance).all()]
+        results2 = [r.get_time() for r in db.session.query(db.ExperimentResult)
+                                        .filter_by(experiment=experiment,
+                                                   solver_configuration=s2,
+                                                   instance=instance).all()]
+
+        from scipy import stats
+        ks_statistic, ks_p_value = stats.ks_2samp(results1, results2)
+        try:
+            wx_statistic, wx_p_value = stats.mannwhitneyu(results1, results2)
+            wx_error = None
+        except ValueError as e:
+            wx_statistic, wx_p_value = None, None
+            wx_error = str(e)
+
+
+        return render('/analysis/rtd_comparison.html', database=database,
+              experiment=experiment, db=db, form=form, GET_data=GET_data,
+              ks_statistic=ks_statistic, ks_p_value=ks_p_value,
+              wx_statistic=wx_statistic, wx_p_value=wx_p_value,
+              wx_error=wx_error)
+
+
+    return render('/analysis/rtd_comparison.html', database=database,
+                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')
 @require_phase(phases=(5, 6, 7))
