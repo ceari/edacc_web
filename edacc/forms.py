@@ -103,7 +103,7 @@ class TwoSolversOnePropertyScatterPlotForm(Form):
     solver_config1 = QuerySelectField('First Solver Configuration')
     solver_config2 = QuerySelectField('Second Solver Configuration')
     instance_filter = TextField('Filter Instances')
-    #solver_property = SelectField('Property')
+    solver_property = SelectField('Property')
     instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance)
     scaling = RadioField('Axes scale', choices=[('none', 'none'), ('log', 'log'),
                                              ('loglog', 'log-log')])
@@ -117,5 +117,10 @@ class CactusPlotForm(Form):
 class RTDComparisonForm(Form):
     solver_config1 = QuerySelectField('First Solver Configuration')
     solver_config2 = QuerySelectField('Second Solver Configuration')
+    instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
+    instance_filter = TextField('Filter Instances')
+
+class RTDPlotsForm(Form):
+    sc = QuerySelectMultipleField('Solver Configurations')
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
     instance_filter = TextField('Filter Instances')

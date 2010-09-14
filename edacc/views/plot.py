@@ -45,6 +45,9 @@ def scatter_2solver_1property(database, experiment_id):
     instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
     run = request.args['run']
     scaling = request.args['scaling']
+    solver_property = request.args['solver_property']
+    if solver_property != 'cputime':
+        solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
 
     sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
     sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
@@ -60,32 +63,37 @@ def scatter_2solver_1property(database, experiment_id):
     points = []
     if run == 'average':
         for instance in instances:
-            s1_avg = numpy.average([j.time if j.status == 1 else exp.timeOut for j in results1.filter_by(instance=instance).all()])
-            s2_avg = numpy.average([j.time if j.status == 1 else exp.timeOut for j in results2.filter_by(instance=instance).all()])
+            s1_avg = numpy.average([j.get_property_value(solver_property, db) for j in results1.filter_by(instance=instance).all()])
+            s2_avg = numpy.average([j.get_property_value(solver_property, db) for j in results2.filter_by(instance=instance).all()])
             points.append((s1_avg, s2_avg, instance))
     elif run == 'median':
         for instance in instances:
-            x = numpy.median([j.time if j.status == 1 else exp.timeOut for j in results1.filter_by(instance=instance).all()])
-            y = numpy.median([j.time if j.status == 1 else exp.timeOut for j in results2.filter_by(instance=instance).all()])
+            x = numpy.median([j.get_property_value(solver_property, db) for j in results1.filter_by(instance=instance).all()])
+            y = numpy.median([j.get_property_value(solver_property, db) for j in results2.filter_by(instance=instance).all()])
             points.append((x, y, instance))
     elif run == 'all':
         for instance in instances:
-            xs = [j.time if j.status == 1 else exp.timeOut for j in results1.filter_by(instance=instance).all()]
-            ys = [j.time if j.status == 1 else exp.timeOut for j in results2.filter_by(instance=instance).all()]
+            xs = [j.get_property_value(solver_property, db) for j in results1.filter_by(instance=instance).all()]
+            ys = [j.get_property_value(solver_property, db) for j in results2.filter_by(instance=instance).all()]
             points += zip(xs, ys, [instance] * len(xs))
     else:
         for instance in instances:
             r1 = results1.filter_by(instance=instance, run=int(run)).first()
             r2 = results2.filter_by(instance=instance, run=int(run)).first()
             points.append((
-                r1.time if r1.status == 1 else exp.timeOut,
-                r2.time if r1.status == 1 else exp.timeOut,
+                r1.get_property_value(solver_property, db),
+                r2.get_property_value(solver_property, db),
                 instance
             ))
 
     title = sc1.solver.name + ' vs. ' + sc2.solver.name
-    xlabel = sc1.solver.name + ' CPU time (s)'
-    ylabel = sc2.solver.name + ' CPU time (s)'
+    if solver_property == 'cputime':
+        xlabel = sc1.solver.name + ' CPU Time'
+        ylabel = sc2.solver.name + ' CPU Time'
+    else:
+        xlabel = sc1.solver.name + ' ' + solver_prop.name
+        ylabel = sc2.solver.name + ' ' + solver_prop.name
+
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
@@ -152,15 +160,19 @@ def cactus_plot(database, experiment_id):
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results = results.filter_by(experiment=exp)
     instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+    solver_property = request.args['solver_property']
+    if solver_property != 'cputime':
+        solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
 
     solvers = []
     for sc in exp.solver_configurations:
         s = {'xs': [], 'ys': [], 'name': sc.get_name()}
-        sc_res = results.filter_by(solver_configuration=sc, status=1).order_by(db.ExperimentResult.time)
+        sc_res = results.filter_by(solver_configuration=sc, status=1)
+        sc_res = sorted(sc_res, key=lambda r: r.get_property_value(solver_property, db))
         i = 1
         for r in sc_res:
             if r.instance in instances or instances == []:
-                s['ys'].append(r.get_time())
+                s['ys'].append(r.get_property_value(solver_property, db))
                 s['xs'].append(i)
                 i += 1
         solvers.append(s)
@@ -168,17 +180,24 @@ def cactus_plot(database, experiment_id):
     max_x = max([max(s['xs'] or [0]) for s in solvers]) + 10
     max_y = max([max(s['ys'] or [0]) for s in solvers])
 
+    if solver_property == 'cputime':
+        ylabel = 'CPU Time (s)'
+        title = 'Number of solved instances within a given amount of CPU time'
+    else:
+        ylabel = solver_prop.name
+        title = 'Number of solved instances within a given amount of ' + solver_prop.name
+
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.pdf'
-        plots.cactus(solvers, max_x, max_y, filename, format='pdf')
+        plots.cactus(solvers, max_x, max_y, ylabel, title, filename, format='pdf')
         headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename='instances_solved_given_time.pdf')
+        headers.add('Content-Disposition', 'attachment', filename='instances_solved.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
         os.remove(filename)
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.png'
-        plots.cactus(solvers, max_x, max_y, filename)
+        plots.cactus(solvers, max_x, max_y, ylabel, title, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
@@ -204,12 +223,53 @@ def rtd_comparison_plot(database, experiment_id):
                                                solver_configuration=s2,
                                                instance=instance).all()]
 
+    if request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
+        plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, format='pdf')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename='rtdcomp.pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
+        plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, 'png')
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
 
-    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
-    plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, 'png')
-    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-    os.remove(filename)
-    return response
+
+@plot.route('/<database>/experiment/<int:experiment_id>/rtds-plot/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def rtds_plot(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
+    solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('sc')]
+
+    results = []
+    for sc in solver_configs:
+        sc_results = db.session.query(db.ExperimentResult) \
+                        .filter_by(experiment=exp, instance=instance,
+                                   solver_configuration=sc).all()
+        results.append((sc, [j.get_time() for j in sc_results]))
+
+    if request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
+        plots.rtds(results, filename, 'pdf')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename='rtds.pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
+        plots.rtds(results, filename, 'png')
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
 
 @plot.route('/<database>/experiment/<int:experiment_id>/box-plot/')
 @require_phase(phases=(6, 7))

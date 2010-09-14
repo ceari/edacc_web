@@ -56,6 +56,10 @@ def cactus_plot(database, experiment_id):
 
     form = forms.CactusPlotForm(request.args)
     form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    result_properties = db.get_result_properties()
+    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
+
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/solved_instances.html', database=database,
@@ -109,6 +113,22 @@ def rtd_comparison(database, experiment_id):
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
 
 
+@analysis.route('/<database>/experiment/<int:experiment_id>/rtds/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def rtds(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    form = forms.RTDPlotsForm(request.args)
+    form.instance.query = experiment.instances
+    form.sc.query = experiment.solver_configurations
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
+    return render('/analysis/rtds.html', database=database,
+                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+
+
 @analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')
 @require_phase(phases=(5, 6, 7))
 @require_login
@@ -126,12 +146,16 @@ def scatter_2solver_1property(database, experiment_id):
                         ('median', 'All runs - median time'),
                         ('all', 'All runs')
                         ] + runs
+    result_properties = db.get_result_properties()
+    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
 
     GET_data = ""
     if form.solver_config1.data and form.solver_config2.data:
         GET_data = "solver_config1=" + str(form.solver_config1.data.idSolverConfig)
         GET_data += "&solver_config2=" + str(form.solver_config2.data.idSolverConfig)
         GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
+        GET_data += "&solver_property=" + form.solver_property.data
         GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
 
     return render('/analysis/scatter_2solver_1property.html', database=database,

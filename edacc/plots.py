@@ -93,7 +93,7 @@ def scatter(points, xlabel, ylabel, title, timeout, filename, format='png', scal
     grdevices.dev_off()
     return pts
 
-def cactus(solvers, max_x, max_y, filename, format='png'):
+def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     """ Cactus plot of the passed solvers configurations. `solvers` has to be
         a list of dictionaries with the keys `xs`, `ys` and `name`. For each
         y in `ys` the corresponding x in `xs` should be the number of
@@ -147,13 +147,13 @@ def cactus(solvers, max_x, max_y, filename, format='png'):
     # plot labels and axes
     robjects.r.mtext('number of solved instances', side=1,
                      line=3, cex=1.2) # bottom axis label
-    robjects.r.mtext('CPU Time (s)', side=2, padj=0,
+    robjects.r.mtext(ylabel, side=2, padj=0,
                      line=3, cex=1.2) # left axis label
-    robjects.r.mtext('Number of instances solved within a given amount of time',
+    robjects.r.mtext(title,
                      padj=1, side=3, line=3, cex=1.7) # plot title
 
     # plot legend
-    robjects.r.legend(1, max_y - (max_y * 0.03),
+    robjects.r.legend("topleft", inset=0.01,
                       legend=robjects.StrVector([s['name'] for s in solvers]),
                       col=robjects.StrVector(colors[:len(solvers)]),
                       pch=robjects.IntVector(range(len(solvers))), lty=1)
@@ -202,13 +202,64 @@ def rtd_comparison(results1, results2, solver1, solver2, filename, format='png')
                      padj=1, side=3, line=3, cex=1.7) # plot title
 
     # plot legend
-    robjects.r.legend(max_x - (max_x * 0.3), 0.1,
+    robjects.r.legend("bottomright", inset=.01,
                       legend=robjects.StrVector([solver1, solver2]),
                       col=robjects.StrVector(['red', 'blue']),
                       pch=robjects.IntVector([0,1]), lty=1)
 
     grdevices.dev_off()
 
+def rtds(results, filename, format='png'):
+    if format == 'png':
+        #cairo.CairoPNG(file=filename, units="px", width=600,
+        #               height=600, bg="white", pointsize=14)
+        grdevices.png(file=filename, units="px", width=600,
+                      height=600, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite")
+
+    max_x = max([max(r[1]) for r in results])
+
+    # plot without data to create the frame
+    robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
+                    type='p', col='red', las = 1,
+                    xlim=robjects.r.c(0.0, max_x), ylim=robjects.r.c(0.0, 1.0),
+                    xaxs='i', yaxs='i',
+                    xlab='',ylab='', **{'cex.main': 1.5})
+    robjects.r.par(new=1)
+
+    # list of colors used in the defined order for the different solvers
+    colors = [
+        'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
+        'darkorchid', 'deeppink', 'darkgreen', 'blue4'
+    ]
+
+
+    # plot the distributions
+    point_style = 0
+    for res in results:
+        robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(res[1])),
+                        main='', col=colors[point_style], pch=point_style,
+                        xlab='', ylab='', xaxs='i', yaxs='i', las=1,
+                        xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(0.0,1.0))
+        robjects.r.par(new=1)
+        point_style += 1
+
+    # plot labels and axes
+    robjects.r.mtext('CPU Time (s)', side=1,
+                     line=3, cex=1.2) # bottom axis label
+    robjects.r.mtext('P(solve within x seconds)', side=2, padj=0,
+                     line=3, cex=1.2) # left axis label
+    robjects.r.mtext('Runtime Distributions',
+                     padj=1, side=3, line=3, cex=1.7) # plot title
+
+    # plot legend
+    robjects.r.legend("bottomright", inset=.01,
+                      legend=robjects.StrVector([str(r[0]) for r in results]),
+                      col=robjects.StrVector(colors[:len(results)]),
+                      pch=robjects.IntVector(range(len(results))), lty=1)
+
+    grdevices.dev_off()
 
 def box_plot(data, filename, format='png'):
     if format == 'png':
@@ -242,25 +293,5 @@ def hist(data, filename, format='png'):
     d = np.npudens(robjects.FloatVector(data))
     robjects.r.plot(d, main='Non-parametric kernel density estimation',
                     xlab='CPU Time', ylab='P(solve)')
-
-    grdevices.dev_off()
-
-def ecdf(data, filename, format='png'):
-    if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=600,
-        #               height=600, bg="white", pointsize=14)
-        grdevices.png(file=filename, units="px", width=600,
-                      height=600, type="cairo")
-    elif format == 'pdf':
-        grdevices.bitmap(file=filename, type="pdfwrite")
-
-    robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(data)),
-                    main="Empirical Cumulative Distribution Function",
-                    xlab='CPU time', ylab='P(solve)',
-                    xlim=robjects.r.c(0,max(data)), ylim=robjects.r.c(0,1.0))
-    #robjects.r.par(new=1)
-    #exp = robjects.r.pexp(robjects.FloatVector(range(int(max(data)))), rate=1.0/numpy.average(data))
-    #robjects.r.plot(exp, main='', xlab='', ylab='',
-    #                xlim=robjects.r.c(0,max(data)), ylim=robjects.r.c(0,1.0))
 
     grdevices.dev_off()
