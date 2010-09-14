@@ -34,9 +34,7 @@ plot = Module(__name__)
 @require_phase(phases=(5, 6, 7))
 @require_login
 def scatter_2solver_1property(database, experiment_id):
-    """ Plots the cputimes of the two specified solver configurations on the
-        experiment's instances against each other in a scatter plot and
-        returns the image as HTTP response """
+    """ description """
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -139,11 +137,117 @@ def scatter_2solver_1property(database, experiment_id):
         return response
 
 
-def scatter_1solver_instance_vs_result_property(database, experiment_id, solver, run, instances, instance_property, result_property):
+def scatter_1solver_instance_vs_result_property(database, experiment_id):
     pass
 
-def scatter_1solver_result_vs_result_property(database, experiment_id, solver, run, instances, result_property1, result_property2):
-    pass
+@plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-2properties/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def scatter_1solver_result_vs_result_property(database, experiment_id):
+    """ description """
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    solver_config = int(request.args['solver_config'])
+    run = request.args['run']
+    scaling = request.args['scaling']
+    solver_property1 = request.args['solver_property1']
+    solver_property2 = request.args['solver_property2']
+
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+
+    if solver_property1 != 'cputime':
+        solver_prop1 = db.session.query(db.SolverProperty).get(int(solver_property1))
+
+    if solver_property2 != 'cputime':
+        solver_prop2 = db.session.query(db.SolverProperty).get(int(solver_property2))
+
+    solver_config = db.session.query(db.SolverConfiguration).get(solver_config) or abort(404)
+
+    results = db.session.query(db.ExperimentResult)
+    results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+    results = results.filter_by(experiment=exp, solver_configuration=solver_config)
+
+    points = []
+    if run == 'average':
+        for instance in instances:
+            s1_avg = numpy.average([j.get_property_value(solver_property1, db) for j in results.filter_by(instance=instance).all()])
+            s2_avg = numpy.average([j.get_property_value(solver_property2, db) for j in results.filter_by(instance=instance).all()])
+            points.append((s1_avg, s2_avg, instance))
+    elif run == 'median':
+        for instance in instances:
+            x = numpy.median([j.get_property_value(solver_property1, db) for j in results.filter_by(instance=instance).all()])
+            y = numpy.median([j.get_property_value(solver_property2, db) for j in results.filter_by(instance=instance).all()])
+            points.append((x, y, instance))
+    elif run == 'all':
+        for instance in instances:
+            xs = [j.get_property_value(solver_property1, db) for j in results.filter_by(instance=instance).all()]
+            ys = [j.get_property_value(solver_property2, db) for j in results.filter_by(instance=instance).all()]
+            points += zip(xs, ys, [instance] * len(xs))
+    else:
+        for instance in instances:
+            res = results.filter_by(instance=instance, run=int(run)).first()
+            points.append((
+                r1.get_property_value(solver_property1, db),
+                r2.get_property_value(solver_property2, db),
+                instance
+            ))
+
+    if solver_property1 == 'cputime':
+        xlabel = 'CPU Time'
+    else:
+        xlabel = solver_prop1.name
+
+    if solver_property2 == 'cputime':
+        ylabel = 'CPU Time'
+    else:
+        ylabel = solver_prop2.name
+
+    title = str(solver_config)
+
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(['Instance', xlabel, ylabel])
+        for x, y, i in points:
+            csv_writer.writerow([str(i), x, y])
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
+
+    elif request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
+        plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, format='pdf', scaling=scaling)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
+        pts = plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, scaling=scaling)
+        if request.args.has_key('imagemap'):
+            mapdata = []
+            for i in xrange(len(points)):
+                mapdata.append(
+                    {'x': pts[i][0],
+                     'y': pts[i][1],
+                     'url': url_for('frontend.instance_details',
+                                    database=database,
+                                    instance_id=points[i][2].idInstance),
+                     'alt': points[i][2].name
+                    }
+                )
+            return json.dumps({
+                'data': mapdata
+            })
+        else:
+            response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
 
 @plot.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
 @require_phase(phases=(5, 6, 7))
@@ -160,7 +264,7 @@ def cactus_plot(database, experiment_id):
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results = results.filter_by(experiment=exp)
     instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
-    solver_property = request.args['solver_property']
+    solver_property = request.args.get('solver_property') or 'cputime'
     if solver_property != 'cputime':
         solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
 

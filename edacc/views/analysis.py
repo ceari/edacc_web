@@ -129,25 +129,26 @@ def rtds(database, experiment_id):
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
 
 
-@analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-cputime/')
+@analysis.route('/<database>/experiment/<int:experiment_id>/scatter-two-solvers/')
 @require_phase(phases=(5, 6, 7))
 @require_login
 def scatter_2solver_1property(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+    result_properties = db.get_result_properties()
+    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    numRuns = len(experiment.results) / len(experiment.solver_configurations) / len(experiment.instances)
+    runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
+
     form = forms.TwoSolversOnePropertyScatterPlotForm(request.args)
     form.solver_config1.query = experiment.solver_configurations
     form.solver_config2.query = experiment.solver_configurations
     form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
-    numRuns = len(experiment.results) / len(experiment.solver_configurations) / len(experiment.instances)
-    runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
     form.run.choices = [('average', 'All runs - average time'),
                         ('median', 'All runs - median time'),
                         ('all', 'All runs')
                         ] + runs
-    result_properties = db.get_result_properties()
-    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
 
     GET_data = ""
@@ -161,8 +162,43 @@ def scatter_2solver_1property(database, experiment_id):
     return render('/analysis/scatter_2solver_1property.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
 
-def scatter_1solver_instance_vs_result_property():
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-instance-vs-result/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def scatter_1solver_instance_vs_result_property(database, experiment_id):
     pass
 
-def scatter_1solver_result_vs_result_property():
-    pass
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-result-vs-result/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def scatter_1solver_result_vs_result_property(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    result_properties = db.get_result_properties()
+    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    numRuns = len(experiment.results) / len(experiment.solver_configurations) / len(experiment.instances)
+    runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
+
+    form = forms.OneSolverTwoResultPropertiesPlotForm(request.args)
+    form.solver_config.query = experiment.solver_configurations
+    form.solver_property1.choices = [('cputime', 'CPU Time')] + result_properties
+    form.solver_property2.choices = [('cputime', 'CPU Time')] + result_properties
+    form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    form.run.choices = [('average', 'All runs - average time'),
+                        ('median', 'All runs - median time'),
+                        ('all', 'All runs')
+                        ] + runs
+
+    GET_data = ""
+    if form.solver_config.data:
+        GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
+        GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
+        GET_data += "&solver_property1=" + form.solver_property1.data
+        GET_data += "&solver_property2=" + form.solver_property2.data
+        GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
+
+    return render('/analysis/scatter_solver_result_vs_result.html', database=database,
+                  experiment=experiment, db=db, form=form, GET_data=GET_data)

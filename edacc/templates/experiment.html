@@ -27,6 +27,7 @@
 
     <h2>Analysis</h2>
     <a href="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">Compare the results of two solvers</a><br/>
+    <a href="{{url_for('analysis.scatter_1solver_result_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Property vs. Property Plot of a solver (e.g. CPU time vs. Memory)</a><br/>
     <a href="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">Plot the number of solved instances within a given amount of a resource (time, memory, ...)</a><br/>
     <a href="{{url_for('analysis.rtd_comparison', database=database, experiment_id=experiment.idExperiment)}}">RTD Comparison of two solvers on an instance</a><br/>
     <a href="{{url_for('analysis.rtds', database=database, experiment_id=experiment.idExperiment)}}">Plot the runtime distributions of solvers on an instance</a>
