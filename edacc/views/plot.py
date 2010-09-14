@@ -84,6 +84,11 @@ def scatter_2solver_1property(database, experiment_id):
                 instance
             ))
 
+    max_x = max([p[0] for p in points])
+    max_y = max([p[1] for p in points])
+
+    max_x = max_y = max(max_x, max_y)
+
     title = sc1.solver.name + ' vs. ' + sc2.solver.name
     if solver_property == 'cputime':
         xlabel = sc1.solver.name + ' CPU Time'
@@ -95,7 +100,7 @@ def scatter_2solver_1property(database, experiment_id):
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow(['Instance', "CPU Time (s) " + str(sc1), "CPU Time (s) " + str(sc2)])
+        csv_writer.writerow(['Instance', xlabel, ylabel])
         for x, y, i in points:
             csv_writer.writerow([str(i), x, y])
         csv_response.seek(0)
@@ -107,7 +112,7 @@ def scatter_2solver_1property(database, experiment_id):
 
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
-        plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, format='pdf', scaling=scaling)
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', scaling=scaling, diagonal_line=True)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -115,7 +120,7 @@ def scatter_2solver_1property(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
-        pts = plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, scaling=scaling)
+        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, scaling=scaling, diagonal_line=True)
         if request.args.has_key('imagemap'):
             mapdata = []
             for i in xrange(len(points)):
@@ -137,8 +142,118 @@ def scatter_2solver_1property(database, experiment_id):
         return response
 
 
+@plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-instance-vs-result/')
+@require_phase(phases=(5, 6, 7))
+@require_login
 def scatter_1solver_instance_vs_result_property(database, experiment_id):
-    pass
+    """ description """
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    solver_config = int(request.args['solver_config'])
+    run = request.args['run']
+    scaling = request.args['scaling']
+    solver_property = request.args['solver_property']
+    instance_property = request.args['instance_property']
+
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+
+    if solver_property != 'cputime':
+        solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
+
+    if instance_property != 'numAtoms':
+        instance_prop = db.session.query(db.InstanceProperty).get(instance_property)
+
+    solver_config = db.session.query(db.SolverConfiguration).get(solver_config) or abort(404)
+
+    results = db.session.query(db.ExperimentResult)
+    results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+    results = results.filter_by(experiment=exp, solver_configuration=solver_config)
+
+    points = []
+    if run == 'average':
+        for instance in instances:
+            prop_value = instance.get_property_value(instance_property, db)
+            s_avg = numpy.average([j.get_property_value(solver_property, db) for j in results.filter_by(instance=instance).all()])
+            points.append((prop_value, s_avg, instance))
+    elif run == 'median':
+        for instance in instances:
+            prop_value = instance.get_property_value(instance_property, db)
+            y = numpy.median([j.get_property_value(solver_property, db) for j in results.filter_by(instance=instance).all()])
+            points.append((prop_value, y, instance))
+    elif run == 'all':
+        for instance in instances:
+            prop_value = instance.get_property_value(instance_property, db)
+            xs = [prop_value] * len(results.filter_by(instance=instance).all())
+            ys = [j.get_property_value(solver_property, db) for j in results.filter_by(instance=instance).all()]
+            points += zip(xs, ys, [instance] * len(xs))
+    else:
+        for instance in instances:
+            res = results.filter_by(instance=instance, run=int(run)).first()
+            points.append((
+                instance.get_property_value(instance_property, db),
+                res.get_property_value(solver_property, db),
+                instance
+            ))
+
+    if instance_property == 'numAtoms':
+        xlabel = 'Number of Atoms'
+    else:
+        xlabel = instance_prop.name
+
+    if solver_property == 'cputime':
+        ylabel = 'CPU Time'
+    else:
+        ylabel = solver_prop.name
+
+    title = str(solver_config)
+
+    max_x = max([p[0] for p in points])
+    max_y = max([p[1] for p in points])
+
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(['Instance', xlabel, ylabel])
+        for x, y, i in points:
+            csv_writer.writerow([str(i), x, y])
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
+
+    elif request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', scaling=scaling)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
+        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, scaling=scaling)
+        if request.args.has_key('imagemap'):
+            mapdata = []
+            for i in xrange(len(points)):
+                mapdata.append(
+                    {'x': pts[i][0],
+                     'y': pts[i][1],
+                     'url': url_for('frontend.instance_details',
+                                    database=database,
+                                    instance_id=points[i][2].idInstance),
+                     'alt': points[i][2].name
+                    }
+                )
+            return json.dumps({
+                'data': mapdata
+            })
+        else:
+            response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
 
 @plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-2properties/')
 @require_phase(phases=(5, 6, 7))
@@ -188,8 +303,8 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
         for instance in instances:
             res = results.filter_by(instance=instance, run=int(run)).first()
             points.append((
-                r1.get_property_value(solver_property1, db),
-                r2.get_property_value(solver_property2, db),
+                res.get_property_value(solver_property1, db),
+                res.get_property_value(solver_property2, db),
                 instance
             ))
 
@@ -204,6 +319,9 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
         ylabel = solver_prop2.name
 
     title = str(solver_config)
+
+    max_x = max([p[0] for p in points])
+    max_y = max([p[1] for p in points])
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
@@ -220,7 +338,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
-        plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, format='pdf', scaling=scaling)
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', scaling=scaling)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -228,7 +346,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
-        pts = plots.scatter(points, xlabel, ylabel, title, exp.timeOut, filename, scaling=scaling)
+        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, scaling=scaling)
         if request.args.has_key('imagemap'):
             mapdata = []
             for i in xrange(len(points)):

@@ -66,6 +66,15 @@ class EDACCDatabase(object):
             def __str__(self):
                 return self.name
 
+            def get_property_value(self, property, db):
+                """ Returns the value of the property with the given name. """
+                if property == 'numAtoms':
+                    return self.numAtoms
+                else:
+                    property = db.session.query(db.InstanceProperty).get(property)
+                    pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
+                    return pv.get_value()
+
         class Experiment(object):
             def is_finished(self):
                 """ Returns whether this experiment is finished (true if there are any jobs and all of them are terminated) """
@@ -190,7 +199,7 @@ class EDACCDatabase(object):
                 'instance': deferred(metadata.tables['Instances'].c.instance),
                 'instance_classes': relationship(InstanceClass, secondary=metadata.tables['Instances_has_instanceClass'], backref='instances'),
                 'source_class': relation(InstanceClass, backref='source_instances'),
-                'properties': relation(InstanceProperties),
+                'properties': relation(InstanceProperties, backref='instance'),
             }
         )
         mapper(Solver, metadata.tables['Solver'],

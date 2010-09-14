@@ -119,6 +119,16 @@ class OneSolverTwoResultPropertiesPlotForm(Form):
                                              ('loglog', 'log-log')])
     run = SelectField('Plot for run')
 
+class OneSolverInstanceAgainstResultPropertyPlotForm(Form):
+    solver_config = QuerySelectField('Solver Configuration')
+    solver_property = SelectField('Result Property')
+    instance_property = SelectField('Instance Property')
+    instance_filter = TextField('Filter Instances')
+    instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance)
+    scaling = RadioField('Axes scale', choices=[('none', 'none'), ('log', 'log'),
+                                             ('loglog', 'log-log')])
+    run = SelectField('Plot for run')
+
 class CactusPlotForm(Form):
     solver_property = SelectField('Property')
     instance_filter = TextField('Filter Instances')

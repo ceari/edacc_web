@@ -22,9 +22,9 @@ stats = importr('stats')
 #                 italic="Bitstream Vera Sans:style=Italic",
 #                 symbol="Symbol")
 
-def scatter(points, xlabel, ylabel, title, timeout, filename, format='png', scaling='none'):
+def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', scaling='none', diagonal_line=False):
     """ Scatter plot of the points given in the list :points:
-        Each elemento of :points: should be a tuple (x, y).
+        Each element of :points: should be a tuple (x, y).
         Returns a list with the points in device coordinates.
     """
     if format == 'png':
@@ -38,12 +38,12 @@ def scatter(points, xlabel, ylabel, title, timeout, filename, format='png', scal
     # set margins to fit in labels on the right and top
     robjects.r.par(mar=robjects.FloatVector([4,4,6,6]))
 
-    if scaling != 'log':
-        # plot dashed line from (0,0) to (timeout,timeout)
-        robjects.r.plot(robjects.FloatVector([0,timeout]),
-                        robjects.FloatVector([0,timeout]),
+    if scaling != 'log' and diagonal_line:
+        # plot dashed line from (0,0) to (max_x,max_y)
+        robjects.r.plot(robjects.FloatVector([0,max_x]),
+                        robjects.FloatVector([0,max_y]),
                         type='l', col='black', lty=2,
-                        xlim=robjects.r.c(0,timeout), ylim=robjects.r.c(0,timeout),
+                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
                         xlab='', ylab='')
@@ -74,7 +74,7 @@ def scatter(points, xlabel, ylabel, title, timeout, filename, format='png', scal
     # plot running times
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
                     type='p', col='red', las = 1,
-                    xlim=robjects.r.c(min_v,timeout), ylim=robjects.r.c(min_v,timeout),
+                    xlim=robjects.r.c(min_v,max_x), ylim=robjects.r.c(min_v,max_y),
                     xaxs='i', yaxs='i', log=log,
                     xlab='', ylab='', pch=3, tck=0.015,
                     **{'cex.axis': 1.2, 'cex.main': 1.5})

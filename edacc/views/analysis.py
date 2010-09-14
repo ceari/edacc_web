@@ -167,7 +167,36 @@ def scatter_2solver_1property(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def scatter_1solver_instance_vs_result_property(database, experiment_id):
-    pass
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    result_properties = db.get_result_properties()
+    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    instance_properties = db.get_instance_properties()
+    instance_properties = zip([p.name for p in instance_properties], [p.name for p in instance_properties])
+    numRuns = len(experiment.results) / len(experiment.solver_configurations) / len(experiment.instances)
+    runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
+
+    form = forms.OneSolverInstanceAgainstResultPropertyPlotForm(request.args)
+    form.solver_config.query = experiment.solver_configurations
+    form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.instance_property.choices = [('numAtoms', 'Number of Atoms')] + instance_properties
+    form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    form.run.choices = [('average', 'All runs - average time'),
+                        ('median', 'All runs - median time'),
+                        ('all', 'All runs')
+                        ] + runs
+
+    GET_data = ""
+    if form.solver_config.data:
+        GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
+        GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
+        GET_data += "&solver_property=" + form.solver_property.data
+        GET_data += "&instance_property=" + form.instance_property.data
+        GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
+
+    return render('/analysis/scatter_solver_instance_vs_result.html', database=database,
+                  experiment=experiment, db=db, form=form, GET_data=GET_data)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-result-vs-result/')
