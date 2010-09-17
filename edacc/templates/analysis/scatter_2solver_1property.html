@@ -115,6 +115,11 @@
             <tr><td><input type="submit" value="Show" /></td></tr>
             </table>
         </form>
+        {% if form.solver_config1.data %}
+            <h3>Spearman Rank Correlation Coefficient</h3>
+            Correlation Coefficient: {{spearman_r|round(4)}}<br/>
+            <i>p</i>-value: {{spearman_p_value}} (not exact in case there are ties in the data)
+        {% endif %}
     </div>
     {% if form.solver_config1.data and form.solver_config2.data %}
         {% autoescape false %}

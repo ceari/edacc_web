@@ -175,6 +175,7 @@ def scatter_2solver_1property(database, experiment_id):
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
 
     GET_data = ""
+    spearman_r, spearman_p_value = None, None
     if form.solver_config1.data and form.solver_config2.data:
         GET_data = "solver_config1=" + str(form.solver_config1.data.idSolverConfig)
         GET_data += "&solver_config2=" + str(form.solver_config2.data.idSolverConfig)
@@ -186,11 +187,12 @@ def scatter_2solver_1property(database, experiment_id):
                         form.solver_config1.data, form.solver_config2.data,
                         form.instances.data, form.solver_property.data, form.run.data)
 
-        print statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
+        spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
 
 
     return render('/analysis/scatter_2solver_1property.html', database=database,
-                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+                  experiment=experiment, db=db, form=form, GET_data=GET_data,
+                  spearman_r=spearman_r, spearman_p_value=spearman_p_value)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-instance-vs-result/')
@@ -224,6 +226,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
                         ] + runs
 
     GET_data = ""
+    spearman_r, spearman_p_value = None, None
     if form.solver_config.data:
         GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
         GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
@@ -231,8 +234,19 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
         GET_data += "&instance_property=" + form.instance_property.data
         GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
 
+        points = plot.scatter_1solver_instance_vs_result_property_points(db, experiment,
+                        form.solver_config.data, form.instances.data,
+                        form.instance_property.data, form.solver_property.data,
+                        form.run.data)
+
+        #from scipy import stats
+        #print 'pearsonr', stats.pearsonr(stats.rankdata([p[0] for p in points]), stats.rankdata([p[1] for p in points]))
+        spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
+        #print 'spearmanr', spearman_r, spearman_p_value
+
     return render('/analysis/scatter_solver_instance_vs_result.html', database=database,
-                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+                  experiment=experiment, db=db, form=form, GET_data=GET_data,
+                  spearman_r=spearman_r, spearman_p_value=spearman_p_value)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-result-vs-result/')
@@ -263,6 +277,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
                         ] + runs
 
     GET_data = ""
+    spearman_r, spearman_p_value = None, None
     if form.solver_config.data:
         GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
         GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
@@ -270,8 +285,15 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
         GET_data += "&solver_property2=" + form.solver_property2.data
         GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
 
+        points = plot.scatter_1solver_result_vs_result_property_plot(db, experiment,
+                    form.solver_config.data, form.instances.data,
+                    form.solver_property1.data, form.solver_property2.data, form.run.data)
+
+        spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
+
     return render('/analysis/scatter_solver_result_vs_result.html', database=database,
-                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+                  experiment=experiment, db=db, form=form, GET_data=GET_data,
+                  spearman_r=spearman_r, spearman_p_value=spearman_p_value)
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/rtd/')
 @require_phase(phases=(5, 6, 7))
