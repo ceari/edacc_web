@@ -229,6 +229,12 @@ div.navigation {
     font-weight: bold;
 }
 
+#table_results {
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+}
+
 code, pre {
     white-space: pre-wrap;
     margin-left: 5px;

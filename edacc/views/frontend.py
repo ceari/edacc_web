@@ -317,20 +317,28 @@ def experiment_progress_ajax(database, experiment_id):
 
     query = db.session.query(db.ExperimentResult).enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance))
     query.options(joinedload(db.ExperimentResult.solver_configuration))
-    jobs = query.filter_by(experiment=experiment)
 
+    import time
+    start = time.clock()
+    jobs = query.filter_by(experiment=experiment).all()
+    print "db: ", time.clock() - start, 's'
     # if competition db, show only own solvers unless phase is 6 or 7
     if not is_admin() and db.is_competition() and db.competition_phase() not in (6, 7):
         jobs = filter(lambda j: j.solver_configuration.solver.user == g.User, jobs)
 
+    start = time.clock()
     aaData = []
     for job in jobs:
         iname = job.instance.name
         if len(iname) > 30: iname = iname[0:30] + '...'
         aaData.append([job.idJob, job.solver_configuration.get_name(), utils.parameter_string(job.solver_configuration),
                iname, job.run, job.time, job.seed, utils.job_status(job.status)])
+    print "conversion: ", time.clock() - start, 's'
 
-    return json.dumps({'aaData': aaData})
+    start = time.clock()
+    dump = json.dumps({'aaData': aaData})
+    print "json: ", time.clock() - start, 's'
+    return dump
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')

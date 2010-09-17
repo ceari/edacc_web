@@ -1,16 +1,6 @@
 {% from "_formhelpers.html" import render_field %}
 {% extends "base.html" %}
 {% block title %}Results by Solver{% endblock %}
-{% block head %}
-    {{ super() }}
-    <link rel="stylesheet" href="/static/css/tablesorter_style.css" type="text/css" />
-    <script src="/static/js/jquery.tablesorter.js" type="text/javascript"></script>
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $('#table_results').tablesorter({sortList: [[0,0]], widgets: ['zebra'], headers: {1: {sorter: false}}});
-        });
-    </script>
-{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
@@ -22,21 +12,21 @@
         <input type="submit" value="Show" />
     </form>
     {% if results %}
-        <table id="table_results" class="tablesorter">
+        <table id="table_results" class="results">
             <thead>
                 <tr>
                     <th>Instance</th>
-                    <th colspan="{{experiment.numRuns}}">Runs</th>
+                    <th colspan="{{experiment.get_num_runs(db)}}">Runs</th>
                 </tr>
             </thead>
             <tbody>
                 {% for result in results %}
                     <tr>
-                        <td style="padding-right: 20px;">
+                        <td nowrap="nowrap">
                             <a href="{{ url_for('frontend.instance_details', database=database, instance_id=result.0.idInstance) }}">{{ result.0.name }}</a>
                         </td>
                         {% for run in result.1 %}
-                            <td style="vertical-align: middle; background-color: {{run.status|job_status_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time() }}</a></td>
+                            <td style="text-align: center; vertical-align: middle; background-color: {{run.status|job_status_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time() }}</a></td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
