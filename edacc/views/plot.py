@@ -18,39 +18,18 @@ import numpy
 import StringIO
 import csv
 
-from flask import Module
-from flask import render_template as render
-from flask import render_template, url_for
-from flask import Response, abort, request, g
+from flask import Module, render_template as render
+from flask import Response, abort, request, g, url_for
 from werkzeug import Headers
 
-from edacc import plots, config, models, forms, ranking
+from edacc import plots, config, models, statistics
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
 
 plot = Module(__name__)
 
 
-@plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-1property/')
-@require_phase(phases=(5, 6, 7))
-@require_login
-def scatter_2solver_1property(database, experiment_id):
-    """ description """
-    db = models.get_database(database) or abort(404)
-    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-
-    s1 = int(request.args['solver_config1'])
-    s2 = int(request.args['solver_config2'])
-    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
-    run = request.args['run']
-    scaling = request.args['scaling']
-    solver_property = request.args['solver_property']
-    if solver_property != 'cputime':
-        solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
-
-    sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
-    sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
-
+def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, solver_property, run):
     results1 = db.session.query(db.ExperimentResult)
     results1.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
     results1.options(joinedload(db.ExperimentResult.solver_properties), joinedload(db.ExperimentResult.instance))
@@ -87,9 +66,47 @@ def scatter_2solver_1property(database, experiment_id):
                 instance
             ))
 
+    return points
+
+@plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-1property/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def scatter_2solver_1property(database, experiment_id):
+    """ Returns an image with a scatter plot of the result property of two
+        solver configurations' results on instances as HTTP response.
+
+        The data to be plotted has to be specified as GET parameters:
+
+        solver_config1: id of the first solver configuration
+        solver_config2: id of the second solver configuratio
+        instances: id of an instance, multiple occurences allowed.
+        run: 'average', 'median', 'all', or an integer of the run.
+                If the value is 'all', all runs of the solvers will be plotted.
+                If the value is 'average' or 'median', these values will be calculated
+                across multiple runs of one solver on an instance.
+                If the value is an integer, the data of this specific run is used.
+        solver_property: id of a solver property (SolverProperty table) or the special case
+                         'cputime' for the time column of the ExperimentResult table.
+    """
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    s1 = int(request.args['solver_config1'])
+    s2 = int(request.args['solver_config2'])
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+    run = request.args['run']
+    scaling = request.args['scaling']
+    solver_property = request.args['solver_property']
+    if solver_property != 'cputime':
+        solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
+
+    sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
+    sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
+
+    points = scatter_2solver_1property_points(db, exp, sc1, sc2, instances, solver_property, run)
+
     max_x = max([p[0] for p in points])
     max_y = max([p[1] for p in points])
-
     max_x = max_y = max(max_x, max_y) * 1.1
 
     title = sc1.solver.name + ' vs. ' + sc2.solver.name

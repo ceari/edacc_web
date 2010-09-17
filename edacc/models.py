@@ -11,6 +11,8 @@
     :license: MIT, see LICENSE for details.
 """
 
+import pylzma
+
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
@@ -74,6 +76,15 @@ class EDACCDatabase(object):
                     property = db.session.query(db.InstanceProperty).get(property)
                     pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
                     return pv.get_value()
+
+            def get_instance(self):
+                """ Decompresses the instance blob and returns it as string """
+                return pylzma.decompress(self.instance)
+
+            def set_instance(self, uncompressed_instance):
+                """ Compresses the instance and sets the instance blob attribute """
+                self.instance = pylzma.compress(uncompressed_instance)
+
 
         class Experiment(object):
             def is_finished(self):

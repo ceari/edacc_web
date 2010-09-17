@@ -9,18 +9,13 @@
     :license: MIT, see LICENSE for details.
 """
 
-import os
-import json
-import numpy
-
 from flask import Module
-from flask import render_template, url_for
-from flask import Response, abort, request, g
-from werkzeug import Headers
+from flask import render_template
+from flask import abort, request
 
-from edacc import plots, config, models, forms, ranking, statistics
-from sqlalchemy.orm import joinedload
+from edacc import models, forms, ranking, statistics
 from edacc.views.helpers import require_phase, require_login
+from edacc.views import plot
 
 analysis = Module(__name__)
 
@@ -51,6 +46,13 @@ def solver_ranking(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def cactus_plot(database, experiment_id):
+    """ Displays a page where the user can select a set of instances and a
+        result property and obtains a cactus plot of the number of instances
+        solved within a given amount of the result property.
+
+        For example: Number of instances the program can solve when given 100 seconds
+        of CPU time.
+    """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -69,6 +71,18 @@ def cactus_plot(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def rtd_comparison(database, experiment_id):
+    """
+        Displays a page allowing the user to compare the runtime distributions
+        of two solvers on an instance. The solvers and instance can be selected
+        in a form.
+        The page then displays a plot with the two runtime distributions
+        aswell as statistical tests of hypothesis such as "The RTD of solver A
+        is significantly different to that of solver B".
+
+        Statistical tests implemented:
+        - Kolmogorow-Smirnow two-sample test (RTD1 = RTD2)
+        - Mann-Whitney-U-test (RTD1 = RTD2)
+    """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -92,10 +106,9 @@ def rtd_comparison(database, experiment_id):
                                                    solver_configuration=s2,
                                                    instance=instance).all()]
 
-        from scipy import stats
-        ks_statistic, ks_p_value = stats.ks_2samp(results1, results2)
+        ks_statistic, ks_p_value = statistics.kolmogorow_smirnow_2sample_test(results1, results2)
         try:
-            wx_statistic, wx_p_value = stats.mannwhitneyu(results1, results2)
+            wx_statistic, wx_p_value = statistics.wilcox_test(results1, results2)
             wx_error = None
         except ValueError as e:
             wx_statistic, wx_p_value = None, None
@@ -117,6 +130,12 @@ def rtd_comparison(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def rtds(database, experiment_id):
+    """
+        Displays a page allowing the user to choose several solver configurations
+        and an instance and displays a plot with the runtime distributions (as
+        cumulative empirical distribution functions) of the solvers on the
+        chosen instance.
+    """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -133,6 +152,10 @@ def rtds(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def scatter_2solver_1property(database, experiment_id):
+    """
+        Displays a page allowing the user to plot the results of two solvers
+        on the instances against each other in a scatter plot.
+    """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -159,6 +182,13 @@ def scatter_2solver_1property(database, experiment_id):
         GET_data += "&solver_property=" + form.solver_property.data
         GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
 
+        points = plot.scatter_2solver_1property_points(db, experiment,
+                        form.solver_config1.data, form.solver_config2.data,
+                        form.instances.data, form.solver_property.data, form.run.data)
+
+        print statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
+
+
     return render('/analysis/scatter_2solver_1property.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
 
@@ -167,6 +197,12 @@ def scatter_2solver_1property(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def scatter_1solver_instance_vs_result_property(database, experiment_id):
+    """
+        Displays a page allowing the user to plot a result property against
+        an instance property of one solver's results on instances in a scatter
+        plot.
+        For example: Number of Atoms in the instance against CPU time needed
+    """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -203,6 +239,11 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def scatter_1solver_result_vs_result_property(database, experiment_id):
+    """
+        Displays a page allowing the user to plot two result properties of one
+        solver's results on instances in a scatter plot.
+        For example: CPU time vs. Memory used
+    """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -236,6 +277,10 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def rtd(database, experiment_id):
+    """
+        Displays a page with plots of the runtime distribution (as CDF) and
+        the kernel density estimation of a chosen solver on a chosen instance.
+    """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -252,6 +297,14 @@ def rtd(database, experiment_id):
 @require_phase(phases=(5, 6, 7))
 @require_login
 def probabilistic_domination(database, experiment_id):
+    """
+        Displays a page allowing the user to choose two solver configurations and
+        categorizing the instances of the experiment into three groups:
+        - Instances where solver A prob. dominates solver B.
+        - Instances where solver B prob. dominates solver A.
+        - Instances with crossovers in the RTD's CDF
+        See edacc.statistics for a definition of probabilistic domination
+    """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
