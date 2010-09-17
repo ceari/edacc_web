@@ -29,9 +29,11 @@
     <a href="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - One result property of two solvers (e.g. CPU time vs. CPU time)</a><br/>
     <a href="{{url_for('analysis.scatter_1solver_result_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Two result properties of a solver (e.g. CPU time vs. Memory)</a><br/>
     <a href="{{url_for('analysis.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Result property against instance property (e.g. CPU Time against Number of Atoms)</a><br/>
-    <a href="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">Plot the number of solved instances within a given amount of a resource (time, memory, ...)</a><br/>
-    <a href="{{url_for('analysis.rtd_comparison', database=database, experiment_id=experiment.idExperiment)}}">RTD Comparison of two solvers on an instance</a><br/>
-    <a href="{{url_for('analysis.rtds', database=database, experiment_id=experiment.idExperiment)}}">Plot of the runtime distributions of solvers on an instance</a>
+    <a href="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">Cactus plot - Number of solved instances within a given amount of a resource (time, memory, ...)</a><br/>
+    <a href="{{url_for('analysis.rtd', database=database, experiment_id=experiment.idExperiment)}}">RTD plot - RTD and Kernel Density Estimation</a><br/>
+    <a href="{{url_for('analysis.rtd_comparison', database=database, experiment_id=experiment.idExperiment)}}">RTD plot and Analysis - Comparison of two solvers on an instance</a><br/>
+    <a href="{{url_for('analysis.rtds', database=database, experiment_id=experiment.idExperiment)}}">RTD plot - Runtime distributions of several solvers on an instance</a><br/>
+    <a href="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">Analysis - Probabilistic Domination of solvers on the instances</a>
 
     <h2>Ranking</h2>
     <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Point Biserial Correlation based ranking</a><br/>

@@ -18,7 +18,7 @@ from flask import render_template, url_for
 from flask import Response, abort, request, g
 from werkzeug import Headers
 
-from edacc import plots, config, models, forms, ranking
+from edacc import plots, config, models, forms, ranking, statistics
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
 
@@ -138,15 +138,15 @@ def scatter_2solver_1property(database, experiment_id):
 
     result_properties = db.get_result_properties()
     result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
-    numRuns = len(experiment.results) / len(experiment.solver_configurations) / len(experiment.instances)
+    numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 
     form = forms.TwoSolversOnePropertyScatterPlotForm(request.args)
     form.solver_config1.query = experiment.solver_configurations
     form.solver_config2.query = experiment.solver_configurations
     form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
-    form.run.choices = [('average', 'All runs - average time'),
-                        ('median', 'All runs - median time'),
+    form.run.choices = [('average', 'All runs - average'),
+                        ('median', 'All runs - median'),
                         ('all', 'All runs')
                         ] + runs
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
@@ -174,7 +174,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
     instance_properties = db.get_instance_properties()
     instance_properties = zip([p.name for p in instance_properties], [p.name for p in instance_properties])
-    numRuns = len(experiment.results) / len(experiment.solver_configurations) / len(experiment.instances)
+    numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 
     form = forms.OneSolverInstanceAgainstResultPropertyPlotForm(request.args)
@@ -182,8 +182,8 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
     form.instance_property.choices = [('numAtoms', 'Number of Atoms')] + instance_properties
     form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
-    form.run.choices = [('average', 'All runs - average time'),
-                        ('median', 'All runs - median time'),
+    form.run.choices = [('average', 'All runs - average'),
+                        ('median', 'All runs - median'),
                         ('all', 'All runs')
                         ] + runs
 
@@ -208,7 +208,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     result_properties = db.get_result_properties()
     result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
-    numRuns = len(experiment.results) / len(experiment.solver_configurations) / len(experiment.instances)
+    numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 
     form = forms.OneSolverTwoResultPropertiesPlotForm(request.args)
@@ -216,8 +216,8 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     form.solver_property1.choices = [('cputime', 'CPU Time')] + result_properties
     form.solver_property2.choices = [('cputime', 'CPU Time')] + result_properties
     form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
-    form.run.choices = [('average', 'All runs - average time'),
-                        ('median', 'All runs - median time'),
+    form.run.choices = [('average', 'All runs - average'),
+                        ('median', 'All runs - median'),
                         ('all', 'All runs')
                         ] + runs
 
@@ -231,3 +231,56 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     return render('/analysis/scatter_solver_result_vs_result.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/rtd/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def rtd(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    form = forms.RTDPlotForm(request.args)
+    form.instance.query = experiment.instances
+    form.solver_config.query = experiment.solver_configurations
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
+    return render('/analysis/rtd.html', database=database, experiment=experiment,
+                  db=db, form=form, GET_data=GET_data)
+
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/probabilistic-domination/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def probabilistic_domination(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    form = forms.ProbabilisticDominationForm(request.args)
+    form.solver_config1.query = experiment.solver_configurations
+    form.solver_config2.query = experiment.solver_configurations
+    if form.solver_config1.data and form.solver_config2.data:
+        sc1 = form.solver_config1.data
+        sc2 = form.solver_config2.data
+
+        sc1_dom_sc2 = set()
+        sc2_dom_sc1 = set()
+        no_dom = set()
+
+        for instance in experiment.instances:
+            res1 = [r.get_time() for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc1).all()]
+            res2 = [r.get_time() for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc2).all()]
+            d = statistics.prob_domination(res1, res2)
+            if d == 1:
+                sc1_dom_sc2.add(instance)
+            elif d == -1:
+                sc2_dom_sc1.add(instance)
+            else:
+                no_dom.add(instance)
+
+        return render('/analysis/probabilistic_domination.html',
+                      database=database, db=db, experiment=experiment,
+                      form=form, sc1_dom_sc2=sc1_dom_sc2, sc2_dom_sc1=sc2_dom_sc1,
+                      no_dom=no_dom)
+
+    return render('/analysis/probabilistic_domination.html', database=database, db=db,
+                  experiment=experiment, form=form)

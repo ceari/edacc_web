@@ -1,0 +1,3 @@
+{% for p in points %}
+<area shape="circle" coords="{{p.0}},{{p.1}},5" href="{{url_for('frontend.instance_details', database=database, instance_id=p.4.idInstance)}}" title="{{sc}}: {{p.3|round(2)}}&lt;br/&gt;{{p.4.name}}" />
+{% endfor %}

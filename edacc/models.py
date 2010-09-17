@@ -84,6 +84,13 @@ class EDACCDatabase(object):
             def is_running(self):
                 """ Returns true if there are any running jobs """
                 return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
+            def get_num_runs(self, db):
+                num_results = db.session.query(db.ExperimentResult).filter_by(experiment=self).count()
+                num_solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=self).count()
+                num_instances = db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                if num_solver_configs == 0 or num_instances == 0:
+                    return 0
+                return num_results / num_solver_configs / num_instances
 
         class ExperimentResult(object):
             def get_time(self):

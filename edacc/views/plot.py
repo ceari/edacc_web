@@ -19,6 +19,7 @@ import StringIO
 import csv
 
 from flask import Module
+from flask import render_template as render
 from flask import render_template, url_for
 from flask import Response, abort, request, g
 from werkzeug import Headers
@@ -52,10 +53,12 @@ def scatter_2solver_1property(database, experiment_id):
 
     results1 = db.session.query(db.ExperimentResult)
     results1.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+    results1.options(joinedload(db.ExperimentResult.solver_properties), joinedload(db.ExperimentResult.instance))
     results1 = results1.filter_by(experiment=exp, solver_configuration=sc1)
 
     results2 = db.session.query(db.ExperimentResult)
     results2.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+    results2.options(joinedload(db.ExperimentResult.solver_properties), joinedload(db.ExperimentResult.instance))
     results2 = results2.filter_by(experiment=exp, solver_configuration=sc2)
 
     points = []
@@ -87,7 +90,7 @@ def scatter_2solver_1property(database, experiment_id):
     max_x = max([p[0] for p in points])
     max_y = max([p[1] for p in points])
 
-    max_x = max_y = max(max_x, max_y)
+    max_x = max_y = max(max_x, max_y) * 1.1
 
     title = sc1.solver.name + ' vs. ' + sc2.solver.name
     if solver_property == 'cputime':
@@ -121,21 +124,9 @@ def scatter_2solver_1property(database, experiment_id):
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
         pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, scaling=scaling, diagonal_line=True)
+        points = [(pts[i][0], pts[i][1], points[i][0], points[i][1], points[i][2]) for i in xrange(len(points))]
         if request.args.has_key('imagemap'):
-            mapdata = []
-            for i in xrange(len(points)):
-                mapdata.append(
-                    {'x': pts[i][0],
-                     'y': pts[i][1],
-                     'url': url_for('frontend.instance_details',
-                                    database=database,
-                                    instance_id=points[i][2].idInstance),
-                     'alt': points[i][2].name
-                    }
-                )
-            return json.dumps({
-                'data': mapdata
-            })
+            return render('/analysis/imagemap_2solver_1property.html', database=database, points=points, sc1=sc1, sc2=sc2)
         else:
             response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
@@ -208,8 +199,8 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
     title = str(solver_config)
 
-    max_x = max([p[0] for p in points])
-    max_y = max([p[1] for p in points])
+    max_x = max([p[0] for p in points]) * 1.1
+    max_y = max([p[1] for p in points]) * 1.1
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
@@ -235,21 +226,9 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
         pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, scaling=scaling)
+        points = [(pts[i][0], pts[i][1], points[i][0], points[i][1], points[i][2]) for i in xrange(len(points))]
         if request.args.has_key('imagemap'):
-            mapdata = []
-            for i in xrange(len(points)):
-                mapdata.append(
-                    {'x': pts[i][0],
-                     'y': pts[i][1],
-                     'url': url_for('frontend.instance_details',
-                                    database=database,
-                                    instance_id=points[i][2].idInstance),
-                     'alt': points[i][2].name
-                    }
-                )
-            return json.dumps({
-                'data': mapdata
-            })
+            return render('/analysis/imagemap_instance_vs_result.html', database=database, points=points, sc=solver_config)
         else:
             response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
@@ -320,8 +299,8 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     title = str(solver_config)
 
-    max_x = max([p[0] for p in points])
-    max_y = max([p[1] for p in points])
+    max_x = max([p[0] for p in points]) * 1.1
+    max_y = max([p[1] for p in points]) * 1.1
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
@@ -378,29 +357,32 @@ def cactus_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
+    results.options(joinedload(db.ExperimentResult.solver_properties))
     results = results.filter_by(experiment=exp)
-    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+    instances = [int(id) for id in request.args.getlist('instances')]
     solver_property = request.args.get('solver_property') or 'cputime'
     if solver_property != 'cputime':
         solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
 
     solvers = []
+
     for sc in exp.solver_configurations:
         s = {'xs': [], 'ys': [], 'name': sc.get_name()}
-        sc_res = results.filter_by(solver_configuration=sc, status=1)
+        sc_res = results.filter_by(solver_configuration=sc, status=1).all()
         sc_res = sorted(sc_res, key=lambda r: r.get_property_value(solver_property, db))
         i = 1
         for r in sc_res:
-            if r.instance in instances or instances == []:
+            if r.Instances_idInstance in instances or instances == []:
                 s['ys'].append(r.get_property_value(solver_property, db))
                 s['xs'].append(i)
                 i += 1
         solvers.append(s)
 
     max_x = max([max(s['xs'] or [0]) for s in solvers]) + 10
-    max_y = max([max(s['ys'] or [0]) for s in solvers])
+    max_y = max([max(s['ys'] or [0]) for s in solvers]) * 1.1
 
     if solver_property == 'cputime':
         ylabel = 'CPU Time (s)'
@@ -493,63 +475,86 @@ def rtds_plot(database, experiment_id):
         os.remove(filename)
         return response
 
-@plot.route('/<database>/experiment/<int:experiment_id>/box-plot/')
+
+@plot.route('/<database>/experiment/<int:experiment_id>/rtd-plot/')
 @require_phase(phases=(6, 7))
 @require_login
-def box_plot(database, experiment_id):
+def rtd(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-
-    results = {}
-    for sc in exp.solver_configurations:
-        results[str(sc)] = [res.get_time() for res in db.session.query(db.ExperimentResult)
-                                    .filter_by(experiment=exp,
-                                               solver_configuration=sc).all()]
-
-    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
-    plots.box_plot(results, filename, 'png')
-    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-    os.remove(filename)
-    return response
-
-
-@plot.route('/<database>/experiment/<int:experiment_id>/histogram/<int:solver_configuration_id>/<int:instance_id>/')
-@require_phase(phases=(6, 7))
-@require_login
-def histogram(database, experiment_id, solver_configuration_id, instance_id):
-    db = models.get_database(database) or abort(404)
-    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    sc = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
-    instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
+    sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
+    instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
 
     results = [r.get_time() for r in db.session.query(db.ExperimentResult)
                                     .filter_by(experiment=exp,
                                                solver_configuration=sc,
                                                instance=instance).all()]
 
-    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'hist.png'
-    plots.hist(results, filename, 'png')
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.png'
+    plots.rtd(results, filename, 'png')
     response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
     os.remove(filename)
     return response
 
 
-@plot.route('/<database>/experiment/<int:experiment_id>/ecdf/<int:solver_configuration_id>/<int:instance_id>/')
+@plot.route('/<database>/experiment/<int:experiment_id>/kerneldensity-plot/')
 @require_phase(phases=(6, 7))
 @require_login
-def ecdf(database, experiment_id, solver_configuration_id, instance_id):
+def kerneldensity(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    sc = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
-    instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
+    sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
+    instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
 
     results = [r.get_time() for r in db.session.query(db.ExperimentResult)
                                     .filter_by(experiment=exp,
                                                solver_configuration=sc,
                                                instance=instance).all()]
 
-    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'ecdf.png'
-    plots.ecdf(results, filename, 'png')
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.png'
+    plots.kerneldensity(results, filename, 'png')
     response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
     os.remove(filename)
     return response
+
+
+
+#@plot.route('/<database>/experiment/<int:experiment_id>/box-plot/')
+#@require_phase(phases=(6, 7))
+#@require_login
+#def box_plot(database, experiment_id):
+#    db = models.get_database(database) or abort(404)
+#    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+#
+#    results = {}
+#    for sc in exp.solver_configurations:
+#        results[str(sc)] = [res.get_time() for res in db.session.query(db.ExperimentResult)
+#                                    .filter_by(experiment=exp,
+#                                               solver_configuration=sc).all()]
+#
+#    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
+#    plots.box_plot(results, filename, 'png')
+#    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+#    os.remove(filename)
+#    return response
+#
+#
+#@plot.route('/<database>/experiment/<int:experiment_id>/histogram/<int:solver_configuration_id>/<int:instance_id>/')
+#@require_phase(phases=(6, 7))
+#@require_login
+#def histogram(database, experiment_id, solver_configuration_id, instance_id):
+#    db = models.get_database(database) or abort(404)
+#    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+#    sc = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
+#    instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
+#
+#    results = [r.get_time() for r in db.session.query(db.ExperimentResult)
+#                                    .filter_by(experiment=exp,
+#                                               solver_configuration=sc,
+#                                               instance=instance).all()]
+#
+#    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'hist.png'
+#    plots.hist(results, filename, 'png')
+#    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+#    os.remove(filename)
+#    return response

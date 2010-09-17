@@ -9,7 +9,6 @@
     :license: MIT, see LICENSE for details.
 """
 
-import numpy
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 grdevices = importr('grDevices') # plotting target devices
@@ -131,6 +130,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
                         type='p', col=colors[point_style], pch=point_style,
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
                         xaxs='i', yaxs='i',
+                        xaxt='n', yaxt='n',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
         robjects.r.par(new=1)
 
@@ -139,6 +139,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
                         type='l', col=colors[point_style],lty=1,
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
                         xaxs='i', yaxs='i',
+                        xaxt='n', yaxt='n',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
         robjects.r.par(new=1)
 
@@ -172,26 +173,28 @@ def rtd_comparison(results1, results2, solver1, solver2, filename, format='png')
 
     max_x = max([max(results1), max(results2)])
 
-    #print stats.wilcox_test(robjects.FloatVector(results1), robjects.FloatVector(results2), paired=False)
+    #quantile1 = robjects.r.quantile(robjects.FloatVector(results1))[0]
+    #quantile2 = robjects.r.quantile(robjects.FloatVector(results2))[0]
+    #min_x = min([quantile1, quantile2])
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
                     type='p', col='red', las = 1,
-                    xlim=robjects.r.c(0.0, max_x), ylim=robjects.r.c(0.0, 1.0),
+                    xlim=robjects.r.c(0, max_x), ylim=robjects.r.c(-0.05, 1.05),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
 
     # plot the two distributions
     robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results1)),
-                    main='',
+                    main='', xaxt='n', yaxt='n',
                     xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='red',
-                    xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(0.0,1.0))
+                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
     robjects.r.par(new=1)
     robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results2)),
-                    main='',
+                    main='', xaxt='n', yaxt='n',
                     xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='blue',
-                    xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(0.0,1.0))
+                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
 
     # plot labels and axes
     robjects.r.mtext('CPU Time (s)', side=1,
@@ -223,7 +226,7 @@ def rtds(results, filename, format='png'):
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
                     type='p', col='red', las = 1,
-                    xlim=robjects.r.c(0.0, max_x), ylim=robjects.r.c(0.0, 1.0),
+                    xlim=robjects.r.c(0.0, max_x), ylim=robjects.r.c(-0.05, 1.05),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
@@ -241,7 +244,8 @@ def rtds(results, filename, format='png'):
         robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(res[1])),
                         main='', col=colors[point_style], pch=point_style,
                         xlab='', ylab='', xaxs='i', yaxs='i', las=1,
-                        xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(0.0,1.0))
+                        xaxt='n', yaxt='n',
+                        xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(-0.05, 1.05))
         robjects.r.par(new=1)
         point_style += 1
 
@@ -261,7 +265,24 @@ def rtds(results, filename, format='png'):
 
     grdevices.dev_off()
 
-def box_plot(data, filename, format='png'):
+#def box_plot(data, filename, format='png'):
+#    if format == 'png':
+#        #cairo.CairoPNG(file=filename, units="px", width=600,
+#        #               height=600, bg="white", pointsize=14)
+#        grdevices.png(file=filename, units="px", width=600,
+#                      height=600, type="cairo")
+#    elif format == 'pdf':
+#        grdevices.bitmap(file=filename, type="pdfwrite")
+#
+#    for key in data:
+#        data[key] = robjects.FloatVector(data[key])
+#
+#    robjects.r.boxplot(robjects.DataFrame(data), main="Boxplot", horizontal=True)
+#
+#    grdevices.dev_off()
+
+
+def rtd(results, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
         #               height=600, bg="white", pointsize=14)
@@ -270,15 +291,33 @@ def box_plot(data, filename, format='png'):
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
 
-    for key in data:
-        data[key] = robjects.FloatVector(data[key])
+    max_x = max(results or [0])
 
-    robjects.r.boxplot(robjects.DataFrame(data), main="Boxplot", horizontal=True)
+    # plot without data to create the frame
+    robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
+                    type='p', col='red', las = 1,
+                    xlim=robjects.r.c(0, max_x), ylim=robjects.r.c(-0.05, 1.05),
+                    xaxs='i', yaxs='i',
+                    xlab='',ylab='', **{'cex.main': 1.5})
+    robjects.r.par(new=1)
+
+    robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results)),
+                    main='', xaxt='n', yaxt='n',
+                    xlab='', ylab='', xaxs='i', yaxs='i', las=1,
+                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
+
+    # plot labels and axes
+    robjects.r.mtext('CPU Time (s)', side=1,
+                     line=3, cex=1.2) # bottom axis label
+    robjects.r.mtext('P(solve within x seconds)', side=2, padj=0,
+                     line=3, cex=1.2) # left axis label
+    robjects.r.mtext('Runtime Distribution',
+                     padj=1, side=3, line=3, cex=1.7) # plot title
 
     grdevices.dev_off()
 
 
-def hist(data, filename, format='png'):
+def kerneldensity(data, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
         #               height=600, bg="white", pointsize=14)
@@ -287,11 +326,12 @@ def hist(data, filename, format='png'):
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
 
+    robjects.r.plot(np.npudens(robjects.FloatVector(data)),
+                    main='', xaxt='n', yaxt='n',
+                    xlab='', ylab='', xaxs='i', yaxs='i', las=1)
 
-    #robjects.r.hist(robjects.FloatVector(data), main="Histogram", breaks=30,
-    #                xlab='CPU Time', probability=True)
-    d = np.npudens(robjects.FloatVector(data))
-    robjects.r.plot(d, main='Non-parametric kernel density estimation',
-                    xlab='CPU Time', ylab='P(solve)')
+    # plot labels and axes
+    robjects.r.mtext('Nonparametric kernel density estimation',
+                     padj=1, side=3, line=3, cex=1.7) # plot title
 
     grdevices.dev_off()

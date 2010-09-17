@@ -144,3 +144,12 @@ class RTDPlotsForm(Form):
     sc = QuerySelectMultipleField('Solver Configurations')
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
     instance_filter = TextField('Filter Instances')
+
+class RTDPlotForm(Form):
+    solver_config = QuerySelectField('Solver Configuration')
+    instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
+    instance_filter = TextField('Filter Instances')
+
+class ProbabilisticDominationForm(Form):
+    solver_config1 = QuerySelectField('First Solver Configuration')
+    solver_config2 = QuerySelectField('Second Solver Configuration')

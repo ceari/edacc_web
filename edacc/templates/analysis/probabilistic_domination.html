@@ -1,0 +1,39 @@
+{% from "_formhelpers.html" import render_field %}
+{% extends "base.html" %}
+{% block title %}Probabilistic Domination{% endblock %}
+{% block content %}
+    <div class="navigation">
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        Probabilistic Domination
+    </div>
+
+    <div style="margin-left: 5px;">
+        <h2>Probabilistic Domination</h2>
+        <form method="get" action="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">
+            <table>
+                {{ render_field(form.solver_config1) }}
+                {{ render_field(form.solver_config2) }}
+                <tr><td colspan="2"><input type="submit" value="Show" /></td></tr>
+            </table>
+        </form>
+    </div>
+
+    {% if form.solver_config1.data and form.solver_config2.data %}
+    <div>
+        <ul>
+        <li>
+            Instances where {{form.solver_config1.data}} prob. dominates {{form.solver_config2.data}}:<br/>
+            {% for i in sc1_dom_sc2 %}{{i}}<br/>{% endfor %}
+        </li>
+        <li>
+            Instances where {{form.solver_config2.data}} solver prob. dominates {{form.solver_config1.data}}:<br/>
+            {% for i in sc2_dom_sc1 %}{{i}}<br/>{% endfor %}
+        </li>
+        <li>
+            Instances with crossovers in the RTDs:<br/>
+            {% for i in no_dom %}{{i}}<br/>{% endfor %}
+        </li>
+    </div>
+    {% endif %}
+{% endblock %}

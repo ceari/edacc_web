@@ -4,17 +4,17 @@
 {% block head %}
     {{ super() }}
     <script src="/static/js/jquery.tablesorter.js" type="text/javascript"></script>
+    <script src="/static/js/jquery.tooltip.min.js" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
             {% if form.solver_config1.data and form.solver_config2.data %}
             $.ajax({
               {% autoescape false %}
               url: "{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&imagemap",
-              dataType: 'json',
+              dataType: 'html',
               success: function(data) {
-                $.each(data['data'], function(ix, val) {
-                    $('#map_instances').append('<area shape="circle" coords="'+val['x']+','+val['y']+',5" href="'+val['url']+'" title="'+val['alt']+'"');
-                })
+                $('#map_instances').html(data);
+                $("map *").tooltip({positionLeft: true, showURL: false});
               }
               {% endautoescape %}
             });
