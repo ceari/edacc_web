@@ -174,14 +174,15 @@ def scatter_2solver_1property(database, experiment_id):
                         ] + runs
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
 
-    GET_data = ""
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
     spearman_r, spearman_p_value = None, None
     if form.solver_config1.data and form.solver_config2.data:
-        GET_data = "solver_config1=" + str(form.solver_config1.data.idSolverConfig)
-        GET_data += "&solver_config2=" + str(form.solver_config2.data.idSolverConfig)
-        GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
-        GET_data += "&solver_property=" + form.solver_property.data
-        GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
+        #GET_data = "solver_config1=" + str(form.solver_config1.data.idSolverConfig)
+        #GET_data += "&solver_config2=" + str(form.solver_config2.data.idSolverConfig)
+        #GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
+        #GET_data += "&solver_property=" + form.solver_property.data
+        #GET_data += "&xscale=" + (form.xscale.data if form.xscale.data != 'None' else 'linear')
+        #GET_data += "&yscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
 
         points = plot.scatter_2solver_1property_points(db, experiment,
                         form.solver_config1.data, form.solver_config2.data,
@@ -225,14 +226,15 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
                         ('all', 'All runs')
                         ] + runs
 
-    GET_data = ""
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
     spearman_r, spearman_p_value = None, None
     if form.solver_config.data:
-        GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
-        GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
-        GET_data += "&solver_property=" + form.solver_property.data
-        GET_data += "&instance_property=" + form.instance_property.data
-        GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
+        #GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
+        #GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
+        #GET_data += "&solver_property=" + form.solver_property.data
+        #GET_data += "&instance_property=" + form.instance_property.data
+        #GET_data += "&xscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
+        #GET_data += "&yscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
 
         points = plot.scatter_1solver_instance_vs_result_property_points(db, experiment,
                         form.solver_config.data, form.instances.data,
@@ -276,14 +278,15 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
                         ('all', 'All runs')
                         ] + runs
 
-    GET_data = ""
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
     spearman_r, spearman_p_value = None, None
     if form.solver_config.data:
-        GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
-        GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
-        GET_data += "&solver_property1=" + form.solver_property1.data
-        GET_data += "&solver_property2=" + form.solver_property2.data
-        GET_data += "&scaling=" + (form.scaling.data if form.scaling.data != 'None' else 'none')
+        #GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
+        #GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
+        #GET_data += "&solver_property1=" + form.solver_property1.data
+        #GET_data += "&solver_property2=" + form.solver_property2.data
+        #GET_data += "&xscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
+        #GET_data += "&yscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
 
         points = plot.scatter_1solver_result_vs_result_property_plot(db, experiment,
                     form.solver_config.data, form.instances.data,

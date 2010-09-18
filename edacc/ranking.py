@@ -33,10 +33,14 @@ def avg_point_biserial_correlation_ranking(experiment):
         d = 0.0
         num = 0
         for i in experiment.instances:
-            res1 = [res.get_time() for res in experiment.results if res.SolverConfig_idSolverConfig == s1.idSolverConfig and res.Instances_idInstance == i.idInstance]
-            res2 = [res.get_time() for res in experiment.results if res.SolverConfig_idSolverConfig == s2.idSolverConfig and res.Instances_idInstance == i.idInstance]
+            res1 = [res.get_time() for res in experiment.results \
+                    if res.SolverConfig_idSolverConfig == s1.idSolverConfig \
+                    and res.Instances_idInstance == i.idInstance]
+            res2 = [res.get_time() for res in experiment.results \
+                    if res.SolverConfig_idSolverConfig == s2.idSolverConfig \
+                    and res.Instances_idInstance == i.idInstance]
             ranked_data = list(stats.stats.rankdata(res1 + res2))
-            
+
             r, p = stats.pointbiserialr([1] * len(res1) + [0] * len(res2), ranked_data)
             # only take instances with significant differences into account
             if p < alpha:

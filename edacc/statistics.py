@@ -43,7 +43,8 @@ def spearman_correlation(x, y):
         Returns a tuple (rho, p-value)
     """
     try:
-        r = r_stats.cor_test(robjects.FloatVector(x), robjects.FloatVector(y), method='spearman')
+        r = r_stats.cor_test(robjects.FloatVector(x), robjects.FloatVector(y),
+                             method='spearman')
     except Exception:
         return 0.0, 1.0
     cor, p_value = r[3][0], r[2][0] # r is a vector of vectors
@@ -53,12 +54,14 @@ def kolmogorow_smirnow_2sample_test(x, y):
     """ Calculates the Kolmogorow-Smirnow two-sample statistic
         Returns a tuple (value, p-value)
     """
-    r = r_stats.ks_test(robjects.FloatVector(x), robjects.FloatVector(y), alternative='two.sided')
+    r = r_stats.ks_test(robjects.FloatVector(x), robjects.FloatVector(y),
+                        alternative='two.sided')
     return r[0][0], r[1][0]
 
 def wilcox_test(x, y):
     """ Calculates the two sample Wilcoxon test statistic (aka Mann-Whitney)
         Returns a tuple (value, p-value)
     """
-    r = r_stats.wilcox_test(robjects.FloatVector(x), robjects.FloatVector(y), alternative='two.sided')
+    r = r_stats.wilcox_test(robjects.FloatVector(x), robjects.FloatVector(y),
+                            alternative='two.sided', paired=False)
     return r[0][0], r[2][0]

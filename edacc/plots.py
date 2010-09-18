@@ -21,7 +21,7 @@ stats = importr('stats')
 #                 italic="Bitstream Vera Sans:style=Italic",
 #                 symbol="Symbol")
 
-def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', scaling='none', diagonal_line=False):
+def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False):
     """ Scatter plot of the points given in the list :points:
         Each element of :points: should be a tuple (x, y).
         Returns a list with the points in device coordinates.
@@ -29,15 +29,15 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
         #               height=600, bg="white", pointsize=14)
-        grdevices.png(file=filename, units="px", width=600,
-                      height=600, type="cairo")
+        grdevices.png(file=filename, units="px", width=700,
+                      height=700, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
 
     # set margins to fit in labels on the right and top
     robjects.r.par(mar=robjects.FloatVector([4,4,6,6]))
 
-    if scaling != 'log' and diagonal_line:
+    if ((xscale == 'log' and yscale == 'log') or (xscale == '' and yscale == '')) and diagonal_line:
         # plot dashed line from (0,0) to (max_x,max_y)
         robjects.r.plot(robjects.FloatVector([0,max_x]),
                         robjects.FloatVector([0,max_y]),
@@ -57,16 +57,16 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     min_x = 0
     min_y = 0
 
-    if scaling == 'none':
-        log = ''
-    elif scaling == 'log':
-        log = 'y'
-        min_x = min([x for x in xs if x > 0])
-        min_y = min([y for y in ys if y > 0])
-    elif scaling == 'loglog':
-        log = 'xy'
-        min_x = min([x for x in xs if x > 0])
-        min_y = min([y for y in ys if y > 0])
+    log = ''
+    if xscale == 'log':
+        log += 'x'
+        min_x = min([x for x in xs if x > 0.0] or [0.01])
+        min_y = min([y for y in ys if y > 0.0] or [0.01])
+
+    if yscale == 'log':
+        log += 'y'
+        min_x = min([x for x in xs if x > 0.0] or [0.01])
+        min_y = min([y for y in ys if y > 0.0] or [0.01])
 
     min_v = min(min_x, min_y)
 

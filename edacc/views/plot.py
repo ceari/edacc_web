@@ -95,7 +95,8 @@ def scatter_2solver_1property(database, experiment_id):
     s2 = int(request.args['solver_config2'])
     instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
     run = request.args['run']
-    scaling = request.args['scaling']
+    xscale = request.args['xscale']
+    yscale = request.args['yscale']
     solver_property = request.args['solver_property']
     if solver_property != 'cputime':
         solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
@@ -132,7 +133,7 @@ def scatter_2solver_1property(database, experiment_id):
 
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
-        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', scaling=scaling, diagonal_line=True)
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', xscale=xscale, yscale=yscale, diagonal_line=True)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -140,7 +141,7 @@ def scatter_2solver_1property(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
-        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, scaling=scaling, diagonal_line=True)
+        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, xscale=xscale, yscale=yscale, diagonal_line=True)
         points = [(pts[i][0], pts[i][1], points[i][0], points[i][1], points[i][2]) for i in xrange(len(points))]
         if request.args.has_key('imagemap'):
             return render('/analysis/imagemap_2solver_1property.html', database=database, points=points, sc1=sc1, sc2=sc2)
@@ -194,7 +195,8 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
     solver_config = int(request.args['solver_config'])
     run = request.args['run']
-    scaling = request.args['scaling']
+    xscale = request.args['xscale']
+    yscale = request.args['yscale']
     solver_property = request.args['solver_property']
     instance_property = request.args['instance_property']
 
@@ -240,7 +242,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
-        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', scaling=scaling)
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', xscale=xscale, yscale=yscale)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -248,7 +250,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
-        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, scaling=scaling)
+        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, xscale=xscale, yscale=yscale)
         points = [(pts[i][0], pts[i][1], points[i][0], points[i][1], points[i][2]) for i in xrange(len(points))]
         if request.args.has_key('imagemap'):
             return render('/analysis/imagemap_instance_vs_result.html', database=database, points=points, sc=solver_config)
@@ -300,7 +302,8 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     solver_config = int(request.args['solver_config'])
     run = request.args['run']
-    scaling = request.args['scaling']
+    xscale = request.args['xscale']
+    yscale = request.args['yscale']
     solver_property1 = request.args['solver_property1']
     solver_property2 = request.args['solver_property2']
 
@@ -346,7 +349,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
-        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', scaling=scaling)
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', xscale=xscale, yscale=yscale)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -354,7 +357,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
-        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, scaling=scaling)
+        pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, xscale=xscale, yscale=yscale)
         points = [(pts[i][0], pts[i][1], points[i][0], points[i][1], points[i][2]) for i in xrange(len(points))]
         if request.args.has_key('imagemap'):
             return render('/analysis/imagemap_result_vs_result.html', database=database, points=points, sc=solver_config)
