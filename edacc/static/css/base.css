@@ -265,3 +265,12 @@ code, pre {
 
 }
 #tooltip h3, #tooltip div { margin: 0; }
+
+#screenshot{
+	position:absolute;
+	border:1px solid #ccc;
+	background:#333;
+	padding:2px;
+	display:none;
+	color:#fff;
+	}

@@ -437,6 +437,7 @@ def rtd_comparison_plot(database, experiment_id):
     instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
     s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
     s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
+    dim = int(request.args.get('dim', 700))
 
     results1 = [r.get_time() for r in db.session.query(db.ExperimentResult)
                                     .filter_by(experiment=exp,
@@ -449,7 +450,7 @@ def rtd_comparison_plot(database, experiment_id):
 
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
-        plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, format='pdf')
+        plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, format='pdf', dim=dim)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename='rtdcomp.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -457,7 +458,7 @@ def rtd_comparison_plot(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
-        plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, 'png')
+        plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, 'png', dim=dim)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response

@@ -21,16 +21,16 @@ stats = importr('stats')
 #                 italic="Bitstream Vera Sans:style=Italic",
 #                 symbol="Symbol")
 
-def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False):
+def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False, dim=700):
     """ Scatter plot of the points given in the list :points:
         Each element of :points: should be a tuple (x, y).
         Returns a list with the points in device coordinates.
     """
     if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=600,
-        #               height=600, bg="white", pointsize=14)
-        grdevices.png(file=filename, units="px", width=700,
-                      height=700, type="cairo")
+        #cairo.CairoPNG(file=filename, units="px", width=dim,
+        #               height=dim, bg="white", pointsize=14)
+        grdevices.png(file=filename, units="px", width=dim,
+                      height=dim, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
 
@@ -162,12 +162,12 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     grdevices.dev_off()
 
 
-def rtd_comparison(results1, results2, solver1, solver2, filename, format='png'):
+def rtd_comparison(results1, results2, solver1, solver2, filename, format='png', dim=700):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
         #               height=600, bg="white", pointsize=14)
-        grdevices.png(file=filename, units="px", width=600,
-                      height=600, type="cairo")
+        grdevices.png(file=filename, units="px", width=dim,
+                      height=dim, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
 
