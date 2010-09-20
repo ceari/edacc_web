@@ -22,7 +22,7 @@ from edacc import config, constants
 
 
 class EDACCDatabase(object):
-    """ Encapsulates a single EDACC database connection """
+    """ Encapsulates a single EDACC database connection. """
     def __init__(self, username, password, database, label):
         self.database = database
         self.username = username
@@ -36,9 +36,15 @@ class EDACCDatabase(object):
         self.engine = create_engine(url, convert_unicode=True)
         self.metadata = metadata = MetaData(bind=self.engine)
 
-        class Solver(object): pass
+        class Solver(object):
+            """ Maps the Solver table """
+            pass
 
         class SolverConfiguration(object):
+            """ Solver configuration mapping the SolverConfig table.
+                A solver configuration consists of a solver and a set of
+                parameters and their values.
+            """
             def get_number(self):
                 """ Returns an integer i if `self` is the i-th of the solver configurations of the same solver
                     in the experiment `self` is in. If there's only one solver configuration of the solver this
@@ -51,6 +57,7 @@ class EDACCDatabase(object):
                     return same_solvers.index(self) + 1
 
             def get_name(self):
+                """ Returns the name of the solver configuration. """
                 n = self.get_number()
                 if n == 0:
                     return self.solver.name
@@ -60,11 +67,19 @@ class EDACCDatabase(object):
             def __str__(self):
                 return self.get_name()
 
-        class Parameter(object): pass
+        class Parameter(object):
+            """ Maps the Parameters table. """
+            pass
 
-        class ParameterInstance(object): pass
+        class ParameterInstance(object):
+            """ Maps the n:m association table SolverConfig_has_Parameters,
+                which for a parameter specifies its value in the corresponding
+                solver configuration.
+            """
+            pass
 
         class Instance(object):
+            """ Maps the Instances table. """
             def __str__(self):
                 return self.name
 
@@ -87,14 +102,17 @@ class EDACCDatabase(object):
 
 
         class Experiment(object):
+            """ Maps the Experiment table. """
             def is_finished(self):
                 """ Returns whether this experiment is finished (true if there are any jobs and all of them are terminated) """
                 if len(self.experiment_results) == 0: return False
                 return all(j.status in constants.JOB_FINISHED or j.status in constants.JOB_ERROR
                            for j in self.experiment_results)
+
             def is_running(self):
                 """ Returns true if there are any running jobs """
                 return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
+
             def get_num_runs(self, db):
                 num_results = db.session.query(db.ExperimentResult).filter_by(experiment=self).count()
                 num_solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=self).count()
@@ -104,6 +122,9 @@ class EDACCDatabase(object):
                 return num_results / num_solver_configs / num_instances
 
         class ExperimentResult(object):
+            """ Maps the ExperimentResult table. Provides a function
+                to obtain a result property of a job.
+            """
             def get_time(self):
                 """ Returns the CPU time needed for this result or the
                     experiment's timeOut value if the status is

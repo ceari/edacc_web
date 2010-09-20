@@ -50,6 +50,18 @@ def spearman_correlation(x, y):
     cor, p_value = r[3][0], r[2][0] # r is a vector of vectors
     return cor, p_value
 
+def pearson_correlation(x, y):
+    """ Calculates the pearson correlation coefficient.
+        Returns a tuple (rho, p-value)
+    """
+    try:
+        r = r_stats.cor_test(robjects.FloatVector(x), robjects.FloatVector(y),
+                             method='pearson')
+    except Exception:
+        return 0.0, 1.0
+    cor, p_value = r[3][0], r[2][0] # r is a vector of vectors
+    return cor, p_value
+
 def kolmogorow_smirnow_2sample_test(x, y):
     """ Calculates the Kolmogorow-Smirnow two-sample statistic
         Returns a tuple (value, p-value)

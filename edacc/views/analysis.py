@@ -9,6 +9,8 @@
     :license: MIT, see LICENSE for details.
 """
 
+import math
+
 from flask import Module
 from flask import render_template
 from flask import abort, request
@@ -176,6 +178,7 @@ def scatter_2solver_1property(database, experiment_id):
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
     spearman_r, spearman_p_value = None, None
+    pearson_r, pearson_p_value = None, None
     if form.solver_config1.data and form.solver_config2.data:
         #GET_data = "solver_config1=" + str(form.solver_config1.data.idSolverConfig)
         #GET_data += "&solver_config2=" + str(form.solver_config2.data.idSolverConfig)
@@ -188,12 +191,18 @@ def scatter_2solver_1property(database, experiment_id):
                         form.solver_config1.data, form.solver_config2.data,
                         form.instances.data, form.solver_property.data, form.run.data)
 
-        spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
+        if form.xscale.data == 'log':
+            points = map(lambda p: (math.log(p[0]), p[1]), points)
+        if form.yscale.data == 'log':
+            points = map(lambda p: (p[0], math.log(p[1])), points)
 
+        spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
+        pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
 
     return render('/analysis/scatter_2solver_1property.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,
-                  spearman_r=spearman_r, spearman_p_value=spearman_p_value)
+                  spearman_r=spearman_r, spearman_p_value=spearman_p_value,
+                  pearson_r=pearson_r, pearson_p_value=pearson_p_value)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-instance-vs-result/')

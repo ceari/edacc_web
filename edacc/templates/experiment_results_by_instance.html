@@ -15,18 +15,21 @@
         <table id="table_results" class="results">
             <thead>
                 <tr>
-                    <th>Solver</th>
-                    <th colspan="{{experiment.get_num_runs(db)}}">Runs</th>
+                    <th>Run</th>
+                    {% for result in results %}
+                    <th nowrap="nowrap"><a href="{{ url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=result.0.idSolverConfig) }}">{{ result.0}}</a></th>
+                    {% endfor %}
                 </tr>
             </thead>
             <tbody>
-                {% for result in results %}
+                {% for run in range(experiment.get_num_runs(db)) %}
+                    {% set rowloop = loop %}
                     <tr>
-                        <td nowrap="nowrap">
-                            <a href="{{ url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=result.0.idSolverConfig) }}">{{ result.0}}</a>
+                        <td>
+                            #{{loop.index0}}
                         </td>
-                        {% for run in result.1 %}
-                            <td style="background-color: {{run.status|job_status_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time() }}</a></td>
+                        {% for result in results %}
+                            <td style="background-color: {{result[1][rowloop.index0].status|job_status_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result[1][rowloop.index0].idJob) }}">{{ result[1][rowloop.index0].get_time() }}</a></td>
                         {% endfor %}
                     </tr>
                 {% endfor %}

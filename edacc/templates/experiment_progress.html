@@ -36,7 +36,8 @@
                     "sZeroRecords": "No matching results"
                 },
                 "bAutoWidth": false,
-                "aLengthMenu": [[10, 25, 50, 100, 500, -1], ['10', '25', '50', '100', '500', "All"]],
+                "iDisplayLength": 50,
+                "aLengthMenu": [10, 25, 50, 100, 500],
                 "bStateSave": true,
                 "bProcessing": true,
                 "sAjaxSource": "{{url_for('experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}",
@@ -96,6 +97,7 @@
         Progress
     </div>
     <h2>Experiment progress</h2>
+    <!--
     <div style="margin-bottom: 10px;">
         The table below shows an overview of the individual benchmarks that are performed in this experiment. An experiment can be described as the cartesian product
         of a set of solvers, a set of instances and an integer number of runs n (labeled 0 through n - 1) of one particular solver on an instance.
@@ -104,6 +106,7 @@
         <br/>
         Notice that the F5 key was overriden on this page to use Ajax to refresh the table data without having to reload the whole page. You can also use the following link or set a periodic refresh interval:
     </div>
+    -->
 
     <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
     <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>

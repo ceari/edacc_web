@@ -117,9 +117,12 @@
             </table>
         </form>
         {% if form.solver_config1.data %}
-            <h3>Spearman Rank Correlation Coefficient</h3>
+            <h3>Spearman Rank correlation coefficient</h3>
             Correlation Coefficient: {{spearman_r|round(4)}}<br/>
             <i>p</i>-value: {{spearman_p_value}} (not exact in case there are ties in the data)
+            <h3>Pearson product-moment correlation coefficient</h3>
+            Correlation Coefficient: {{pearson_r|round(4)}}<br/>
+            <i>p</i>-value: {{pearson_p_value}}
         {% endif %}
     </div>
     {% if form.solver_config1.data and form.solver_config2.data %}

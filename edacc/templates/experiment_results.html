@@ -22,7 +22,7 @@
     </div>
     <h2>Results by solver configuration and instance</h2>
     <div>
-        In this table multiple runs of a solver on an instance are grouped in one cell and the median, minimum, maximum and average CPU time over all runs are calculated. Click on Show to access a list of the individual runs.
+        In this table multiple runs of a solver on an instance are grouped in one cell and the <strong>median, minimum, maximum and average</strong> CPU time over all runs are calculated. Click on Show to access a list of the individual runs.
     </div>
     <table id="table_results" class="tablesorter" style="width: auto;">
         <thead>
@@ -43,8 +43,7 @@
                     <td><a href="{{url_for('instance_details', database=database, instance_id=row.instance.idInstance)}}">{{row.instance.name}}</a></td>
                     {% for jobs in row.times %}
                         <td>
-                            median/min/max/avg time:<br/>
-                            {{jobs.time_median|round(1)}}/{{jobs.time_min|round(1)}}/{{jobs.time_max|round(1)}}/{{jobs.time_avg|round(1)}} sec<br/>
+                            {{jobs.time_median|round(2)}} / {{jobs.time_min|round(2)}} / {{jobs.time_max|round(2)}} / {{jobs.time_avg|round(2)}} sec<br/>
                             stddev: {{jobs.time_stddev|round(2)}}, variation coeff.: {{jobs.var_coeff|round(2)}}<br/>
                             completed: {{jobs.completed}}/{{jobs.total}} runs<br/>
                             <a href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
