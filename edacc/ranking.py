@@ -6,11 +6,6 @@
     This module implements some possible ranking schemes that can be used
     by the ranking view in the analysis module.
 
-    The ranking view handler calls the function :rank_solvers: of this module,
-    which has to accept the experiment of which the solver configurations should
-    be ranked as parameter and return a list with the solver configurations
-    ordered from best to worst.
-
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
@@ -69,5 +64,3 @@ def number_of_solved_instances_ranking(experiment):
     """
     return list(reversed(sorted(experiment.solver_configurations,
                                 key=lambda s: len([r for r in experiment.results if r.status == 1]))))
-
-rank_solvers = avg_point_biserial_correlation_ranking

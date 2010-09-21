@@ -39,7 +39,8 @@ def solver_ranking(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    ranked_solvers = ranking.rank_solvers(experiment)
+    ranked_solvers = ranking.number_of_solved_instances_ranking(experiment)
+    
 
     return render('/analysis/ranking.html', database=database, db=db,
                   experiment=experiment, ranked_solvers=ranked_solvers)

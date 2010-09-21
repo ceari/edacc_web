@@ -315,24 +315,77 @@ def experiment_progress_ajax(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    query = db.session.query(db.ExperimentResult).enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance))
-    query.options(joinedload(db.ExperimentResult.solver_configuration))
+    columns = ["ExperimentResults.idJob", "SolverConfig.idSolverConfig", "Instances.name",
+               "ExperimentResults.run", "ExperimentResults.time", "ExperimentResults.seed",
+               "ExperimentResults.status"]
 
-    jobs = query.filter_by(experiment=experiment).all()
+    params = []
+    where_clause = ""
+    if request.args.has_key('sSearch') and request.args.get('sSearch') != '':
+        where_clause += "(ExperimentResults.idJob LIKE %s OR "
+        where_clause += "Instances.name LIKE %s OR "
+        where_clause += "ExperimentResults.run LIKE %s OR "
+        where_clause += "ExperimentResults.time LIKE %s OR "
+        where_clause += "ExperimentResults.seed LIKE %s OR "
+        where_clause += "ExperimentResults.status LIKE %s) "
+        params += ['%' + request.args.get('sSearch') + '%'] * 6
+
+    if where_clause != "": where_clause += " AND "
+    where_clause += "ExperimentResults.Experiment_idExperiment = %s "
+    params.append(experiment.idExperiment)
+
+    order = ""
+    if request.args.get('iSortCol_0', '') != '' and int(request.args.get('iSortingCols', 0)) > 0:
+        order = "ORDER BY "
+        for i in xrange(int(request.args.get('iSortingCols', 0))):
+            order += columns[int(request.args.get('iSortCol_' + str(i)))] + " "
+            direction = request.args.get('sSortDir_' + str(i))
+            if direction in ('asc', 'desc'):
+                order += direction + ", "
+        order = order[:-2]
+
+    limit = ""
+    if request.args.get('iDisplayStart', '') != '' and int(request.args.get('iDisplayLength', -1)) != -1:
+        limit = "LIMIT %s, %s"
+        params.append(int(request.args.get('iDisplayStart')))
+        params.append(int(request.args.get('iDisplayLength')))
+
+    conn = db.session.connection()
+    res = conn.execute("""SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob, SolverConfig.idSolverConfig,
+                 Instances.name, ExperimentResults.run, ExperimentResults.time, ExperimentResults.seed,
+                 ExperimentResults.status
+                 FROM ExperimentResults
+                    LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
+                    LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
+                 WHERE """ + where_clause + " " + order + " " + limit, tuple(params))
+
+    jobs = res.fetchall()
+
+    res = conn.execute("SELECT FOUND_ROWS()")
+    numFiltered = res.fetchone()[0]
+    res = conn.execute("SELECT COUNT(ExperimentResults.idJob) FROM ExperimentResults WHERE Experiment_idExperiment = %s", experiment.idExperiment)
+    numTotal = res.fetchone()[0]
+
     # if competition db, show only own solvers unless phase is 6 or 7
     if not is_admin() and db.is_competition() and db.competition_phase() not in (6, 7):
-        jobs = filter(lambda j: j.solver_configuration.solver.user == g.User, jobs)
+        jobs = filter(lambda j: db.session.query(db.SolverConfiguration).get(j[1]).solver.user == g.User, jobs)
+
+    # cache solver configuration names in a dictionary
+    solver_config_names = {}
+    for solver_config in experiment.solver_configurations:
+        solver_config_names[solver_config.idSolverConfig] = solver_config.get_name()
 
     aaData = []
     for job in jobs:
-        iname = job.instance.name
-        if len(iname) > 30: iname = iname[0:30] + '...'
-        aaData.append([job.idJob, job.solver_configuration.get_name(), utils.parameter_string(job.solver_configuration),
-               iname, job.run, job.time, job.seed, utils.job_status(job.status)])
+        aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
+                job[4], job[5], utils.job_status(job[6])])
 
-    dump = json.dumps({'aaData': aaData})
-    return dump
-
+    return json.dumps({
+        'aaData': aaData,
+        'sEcho': request.args.get('sEcho'),
+        'iTotalRecords': str(numTotal),
+        'iTotalDisplayRecords': str(numFiltered),
+    })
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
 @require_phase(phases=(3, 4, 5, 6, 7))

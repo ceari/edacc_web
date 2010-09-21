@@ -36,17 +36,18 @@
                     "sZeroRecords": "No matching results"
                 },
                 "bAutoWidth": false,
+                "bServerSide": true,
                 "iDisplayLength": 50,
-                "aLengthMenu": [10, 25, 50, 100, 500],
+                "aLengthMenu": [10, 25, 50, 100, 500, 1000, 5000, 10000],
                 "bStateSave": true,
                 "bProcessing": true,
                 "sAjaxSource": "{{url_for('experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}",
 		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
                     $('td:eq(0)', nRow).html('<a style="color: black;" href="/{{database}}/experiment/{{experiment.idExperiment}}/result/'+aData[0]+'">'+aData[0]+'</a>');
-                    $(nRow).attr("bgcolor", JOB_STATUS_COLOR[$('td:eq(7)', nRow).html()]);
+                    $(nRow).attr("bgcolor", JOB_STATUS_COLOR[$('td:eq(6)', nRow).html()]);
                     return nRow;
 		},
-                "aoColumns": [null, null, null, null, null, null, null, null]
+                "aoColumns": [null, null, null, null, null, null, null]
             });
 
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
@@ -116,7 +117,6 @@
             <tr>
                 <th>ID</th>
                 <th>Solver</th>
-                <th>Parameters</th>
                 <th>Instance</th>
                 <th>Run</th>
                 <th>Time</th>
