@@ -40,7 +40,7 @@ def solver_ranking(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     ranked_solvers = ranking.number_of_solved_instances_ranking(experiment)
-    
+
 
     return render('/analysis/ranking.html', database=database, db=db,
                   experiment=experiment, ranked_solvers=ranked_solvers)
@@ -60,7 +60,7 @@ def cactus_plot(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.CactusPlotForm(request.args)
-    form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    form.instances.query = sorted(experiment.get_solved_instances(db), key=lambda i: i.name)
     result_properties = db.get_result_properties()
     result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
@@ -90,7 +90,7 @@ def rtd_comparison(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDComparisonForm(request.args)
-    form.instance.query = experiment.instances
+    form.instance.query = experiment.get_solved_instances(db)
     form.solver_config1.query = experiment.solver_configurations
     form.solver_config2.query = experiment.solver_configurations
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
@@ -143,7 +143,7 @@ def rtds(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDPlotsForm(request.args)
-    form.instance.query = experiment.instances
+    form.instance.query = experiment.get_solved_instances(db)
     form.sc.query = experiment.solver_configurations
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
@@ -170,7 +170,7 @@ def scatter_2solver_1property(database, experiment_id):
     form = forms.TwoSolversOnePropertyScatterPlotForm(request.args)
     form.solver_config1.query = experiment.solver_configurations
     form.solver_config2.query = experiment.solver_configurations
-    form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    form.instances.query = sorted(experiment.get_solved_instances(db), key=lambda i: i.name)
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -181,13 +181,6 @@ def scatter_2solver_1property(database, experiment_id):
     spearman_r, spearman_p_value = None, None
     pearson_r, pearson_p_value = None, None
     if form.solver_config1.data and form.solver_config2.data:
-        #GET_data = "solver_config1=" + str(form.solver_config1.data.idSolverConfig)
-        #GET_data += "&solver_config2=" + str(form.solver_config2.data.idSolverConfig)
-        #GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
-        #GET_data += "&solver_property=" + form.solver_property.data
-        #GET_data += "&xscale=" + (form.xscale.data if form.xscale.data != 'None' else 'linear')
-        #GET_data += "&yscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
-
         points = plot.scatter_2solver_1property_points(db, experiment,
                         form.solver_config1.data, form.solver_config2.data,
                         form.instances.data, form.solver_property.data, form.run.data)
@@ -229,8 +222,8 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     form = forms.OneSolverInstanceAgainstResultPropertyPlotForm(request.args)
     form.solver_config.query = experiment.solver_configurations
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
-    form.instance_property.choices = [('numAtoms', 'Number of Atoms')] + instance_properties
-    form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    form.instance_property.choices = instance_properties
+    form.instances.query = sorted(experiment.get_solved_instances(db), key=lambda i: i.name)
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -238,27 +231,25 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
     spearman_r, spearman_p_value = None, None
+    pearson_r, pearson_p_value = None, None
     if form.solver_config.data:
-        #GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
-        #GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
-        #GET_data += "&solver_property=" + form.solver_property.data
-        #GET_data += "&instance_property=" + form.instance_property.data
-        #GET_data += "&xscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
-        #GET_data += "&yscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
-
         points = plot.scatter_1solver_instance_vs_result_property_points(db, experiment,
                         form.solver_config.data, form.instances.data,
                         form.instance_property.data, form.solver_property.data,
                         form.run.data)
 
-        #from scipy import stats
-        #print 'pearsonr', stats.pearsonr(stats.rankdata([p[0] for p in points]), stats.rankdata([p[1] for p in points]))
+        if form.xscale.data == 'log':
+            points = map(lambda p: (math.log(p[0]), p[1]), points)
+        if form.yscale.data == 'log':
+            points = map(lambda p: (p[0], math.log(p[1])), points)
+
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
-        #print 'spearmanr', spearman_r, spearman_p_value
+        pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
 
     return render('/analysis/scatter_solver_instance_vs_result.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,
-                  spearman_r=spearman_r, spearman_p_value=spearman_p_value)
+                  spearman_r=spearman_r, spearman_p_value=spearman_p_value,
+                  pearson_r=pearson_r, pearson_p_value=pearson_p_value)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-result-vs-result/')
@@ -282,7 +273,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations
     form.solver_property1.choices = [('cputime', 'CPU Time')] + result_properties
     form.solver_property2.choices = [('cputime', 'CPU Time')] + result_properties
-    form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    form.instances.query = sorted(experiment.get_solved_instances(db), key=lambda i: i.name)
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -290,23 +281,25 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
     spearman_r, spearman_p_value = None, None
+    pearson_r, pearson_p_value = None, None
     if form.solver_config.data:
-        #GET_data = "solver_config=" + str(form.solver_config.data.idSolverConfig)
-        #GET_data += "&run=" + form.run.data + "&" + "&".join(["instances=%s" % (str(i.idInstance),) for i in form.instances.data])
-        #GET_data += "&solver_property1=" + form.solver_property1.data
-        #GET_data += "&solver_property2=" + form.solver_property2.data
-        #GET_data += "&xscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
-        #GET_data += "&yscale=" + (form.scaling.data if form.scaling.data != 'None' else 'linear')
-
         points = plot.scatter_1solver_result_vs_result_property_plot(db, experiment,
                     form.solver_config.data, form.instances.data,
                     form.solver_property1.data, form.solver_property2.data, form.run.data)
 
+        if form.xscale.data == 'log':
+            points = map(lambda p: (math.log(p[0]), p[1]), points)
+        if form.yscale.data == 'log':
+            points = map(lambda p: (p[0], math.log(p[1])), points)
+
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
+        pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
 
     return render('/analysis/scatter_solver_result_vs_result.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,
-                  spearman_r=spearman_r, spearman_p_value=spearman_p_value)
+                  spearman_r=spearman_r, spearman_p_value=spearman_p_value,
+                  pearson_r=pearson_r, pearson_p_value=pearson_p_value)
+
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/rtd/')
 @require_phase(phases=(5, 6, 7))
@@ -320,7 +313,7 @@ def rtd(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDPlotForm(request.args)
-    form.instance.query = experiment.instances
+    form.instance.query = experiment.get_solved_instances(db)
     form.solver_config.query = experiment.solver_configurations
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
@@ -354,7 +347,7 @@ def probabilistic_domination(database, experiment_id):
         sc2_dom_sc1 = set()
         no_dom = set()
 
-        for instance in experiment.instances:
+        for instance in experiment.get_solved_instances(db):
             res1 = [r.get_time() for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc1).all()]
             res2 = [r.get_time() for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc2).all()]
             d = statistics.prob_domination(res1, res2)

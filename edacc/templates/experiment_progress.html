@@ -23,7 +23,10 @@
         }
         $(document).ready(function(){
             var JOB_STATUS_COLOR = {
-                'error':            'red',
+                'launcher crash':   'red',
+                'watcher crash':    'red',
+                'solver crash':     'red',
+                'verifier crash':   'red',
                 'not started':      '#4169E1',
                 'running':          'orange',
                 'finished':         '#00CC33',
@@ -47,7 +50,7 @@
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[$('td:eq(6)', nRow).html()]);
                     return nRow;
 		},
-                "aoColumns": [null, null, null, null, null, null, null]
+                "aoColumns": [null, null, null, null, null, null, null, null]
             });
 
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
@@ -122,10 +125,11 @@
                 <th>Time</th>
                 <th>Seed</th>
                 <th>Status</th>
+                <th>Result</th>
             </tr>
         </thead>
         <tbody>
-            <tr><td colspan="8">this table requires JavaScript to be enabled</td></tr>
+            <tr><td colspan="8">This table requires JavaScript to be enabled. You might also see this while the data is loading.</td></tr>
         </tbody>
     </table>
     </div>

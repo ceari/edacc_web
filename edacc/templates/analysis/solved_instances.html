@@ -8,13 +8,12 @@
         $(document).ready(function(){
             var instances = new Array();
             {% for instance in form.instances.query %}
-            instances[{{loop.index0}}] = new Object();
-            instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
-            instances[{{loop.index0}}]["name"] = "{{instance.name}}";
-            instances[{{loop.index0}}]["numAtoms"] = {{instance.numAtoms}};
-            instances[{{loop.index0}}]["numClauses"] = {{instance.numClauses}};
-            instances[{{loop.index0}}]["ratio"] = {{instance.ratio}};
-            instances[{{loop.index0}}]["maxClauseLength"] = {{instance.maxClauseLength}};
+                instances[{{loop.index0}}] = new Object();
+                instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
+                instances[{{loop.index0}}]["name"] = "{{instance.name}}";
+                {% for prop in db.get_instance_properties() %}
+                    instances[{{loop.index0}}]["{{prop.name}}"] = {{instance.get_property_value(prop.name, db)}};
+                {% endfor %}
             {% endfor %}
             var selected_instances = new Array();
             {% for instance in request.args.getlist('instances') %}
@@ -23,7 +22,7 @@
 
             function match(instance, filter) {
                 if (filter == '') return true;
-                fields = ["name", "numAtoms", "numClauses", "ratio", "maxClauseLength"];
+                fields = [{% for prop in db.get_instance_properties() %}"prop.name", {% endfor %}]
                 for (f in fields) {
                     var re = new RegExp(fields[f], 'g');
                     if (typeof instance[fields[f]] == 'string') {

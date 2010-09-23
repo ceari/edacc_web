@@ -85,12 +85,9 @@ class EDACCDatabase(object):
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name. """
-                if property == 'numAtoms':
-                    return self.numAtoms
-                else:
-                    property = db.session.query(db.InstanceProperty).get(property)
-                    pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
-                    return pv.get_value()
+                property = db.session.query(db.InstanceProperty).get(property)
+                pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
+                return pv.get_value()
 
             def get_instance(self):
                 """ Decompresses the instance blob and returns it as string """
@@ -114,12 +111,23 @@ class EDACCDatabase(object):
                 return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
 
             def get_num_runs(self, db):
+                """ Returns the number of runs of the experiment """
                 num_results = db.session.query(db.ExperimentResult).filter_by(experiment=self).count()
                 num_solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=self).count()
                 num_instances = db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
                 if num_solver_configs == 0 or num_instances == 0:
                     return 0
                 return num_results / num_solver_configs / num_instances
+
+            def get_solved_instances(self, db):
+                """ Returns the instances of the experiment that all solvers solved in every run """
+                num_jobs_per_instance = db.session.query(db.ExperimentResult).filter_by(experiment=self).count() / \
+                                        db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                instances = []
+                for i in self.instances:
+                    if db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')).filter_by(experiment=self).count() == num_jobs_per_instance:
+                        instances.append(i)
+                return instances
 
         class ExperimentResult(object):
             """ Maps the ExperimentResult table. Provides a function
@@ -128,9 +136,9 @@ class EDACCDatabase(object):
             def get_time(self):
                 """ Returns the CPU time needed for this result or the
                     experiment's timeOut value if the status is
-                    not "finished" (correct).
+                    not correct (certified SAT/UNSAT answer).
                 """
-                return self.time if self.status == 1 else self.experiment.timeOut
+                return self.resultTime if self.resultCode in (10, 11) else self.experiment.CPUTimeLimit
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name.
@@ -279,8 +287,14 @@ class EDACCDatabase(object):
         )
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
-                'resultFile': deferred(metadata.tables['ExperimentResults'].c.resultFile),
-                'clientOutput': deferred(metadata.tables['ExperimentResults'].c.clientOutput),
+                'solverOutput': deferred(metadata.tables['ExperimentResults'].c.solverOutput),
+                'launcherOutput': deferred(metadata.tables['ExperimentResults'].c.launcherOutput),
+                'watcherOutput': deferred(metadata.tables['ExperimentResults'].c.watcherOutput),
+                'verifierOutput': deferred(metadata.tables['ExperimentResults'].c.verifierOutput),
+                'solverOutputFN': deferred(metadata.tables['ExperimentResults'].c.solverOutputFN),
+                'launcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.launcherOutputFN),
+                'watcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.watcherOutputFN),
+                'verifierOutputFN': deferred(metadata.tables['ExperimentResults'].c.verifierOutputFN),
                 'solver_configuration': relation(SolverConfiguration),
                 'solver_properties': relationship(ExperimentResultSolverProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),

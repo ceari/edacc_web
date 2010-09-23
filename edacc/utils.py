@@ -11,7 +11,7 @@
 
 import random
 from edacc.web import app
-from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR
+from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR, JOB_RESULT_CODE
 
 def download_size(value):
     """ Takes an integer number of bytes and returns a pretty string representation """
@@ -26,6 +26,13 @@ def job_status(value):
         return "unknown status"
     else:
         return JOB_STATUS[value]
+
+def result_code(value):
+    """ Translates an integer result code to its string representation """
+    if value not in JOB_RESULT_CODE:
+        return "unknown status"
+    else:
+        return JOB_RESULT_CODE[value]
 
 def job_status_color(value):
     """ Returns an HTML conform color string for the job status """
@@ -68,6 +75,7 @@ def competition_phase(value):
 
 app.jinja_env.filters['download_size'] = download_size
 app.jinja_env.filters['job_status'] = job_status
+app.jinja_env.filters['result_code'] = job_status
 app.jinja_env.filters['job_status_color'] = job_status_color
 app.jinja_env.filters['launch_command'] = launch_command
 app.jinja_env.filters['datetimeformat'] = datetimeformat
@@ -160,3 +168,14 @@ def render_formula(f):
     return u' \u2227 '.join(res)
 
 app.jinja_env.filters['render_formula'] = render_formula
+
+def formatOutputFile(data):
+    if data is not None:
+        if len(data) > 4*1024:
+            # show only the first and last 2048 characters if the resultFile is larger than 4kB
+            resultFile_text = data[:2048] + "\n\n... [truncated " + str(int((len(data) - 4096) / 1024.0)) + " kB]\n\n" + data[-2048:]
+        else:
+            resultFile_text = data
+    else:
+        resultFile_text = "No output"
+    return resultFile_text

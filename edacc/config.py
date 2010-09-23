@@ -39,5 +39,4 @@ ADMIN_PASSWORD = 'affe42'
 # Format: Tuples of username, password, database, label (used on the pages)
 DEFAULT_DATABASES = (
     ('edacc', 'edaccteam', 'EDACC', 'Test Competition 1'),
-    ('edacc', 'edaccteam', 'EDACC2', 'Test Competition 2'),
 )

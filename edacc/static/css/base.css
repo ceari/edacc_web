@@ -212,6 +212,7 @@ table.results th {
     border-style: solid;
     border-color: black;
     border-collapse: collapse;
+    padding: 3px;
 }
 
 table.results td {
