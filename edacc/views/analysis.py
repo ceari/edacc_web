@@ -232,7 +232,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
     spearman_r, spearman_p_value = None, None
     pearson_r, pearson_p_value = None, None
-    if form.solver_config.data:
+    if form.solver_config.data and form.instance_property.data:
         points = plot.scatter_1solver_instance_vs_result_property_points(db, experiment,
                         form.solver_config.data, form.instances.data,
                         form.instance_property.data, form.solver_property.data,

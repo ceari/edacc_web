@@ -30,7 +30,7 @@ def job_status(value):
 def result_code(value):
     """ Translates an integer result code to its string representation """
     if value not in JOB_RESULT_CODE:
-        return "unknown status"
+        return "unknown code"
     else:
         return JOB_RESULT_CODE[value]
 

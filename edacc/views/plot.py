@@ -205,8 +205,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     if solver_property != 'cputime':
         solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
 
-    if instance_property != 'numAtoms':
-        instance_prop = db.session.query(db.InstanceProperty).get(instance_property)
+    instance_prop = db.session.query(db.InstanceProperty).get(instance_property)
 
     solver_config = db.session.query(db.SolverConfiguration).get(solver_config) or abort(404)
 

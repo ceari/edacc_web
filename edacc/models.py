@@ -85,9 +85,12 @@ class EDACCDatabase(object):
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name. """
-                property = db.session.query(db.InstanceProperty).get(property)
-                pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
-                return pv.get_value()
+                try:
+                    property = db.session.query(db.InstanceProperty).get(property)
+                    pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
+                    return pv.get_value()
+                except:
+                    return None
 
             def get_instance(self):
                 """ Decompresses the instance blob and returns it as string """
@@ -125,7 +128,7 @@ class EDACCDatabase(object):
                                         db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
                 instances = []
                 for i in self.instances:
-                    if db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')).filter_by(experiment=self).count() == num_jobs_per_instance:
+                    if db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')).filter_by(experiment=self, instance=i, status=1).count() == num_jobs_per_instance:
                         instances.append(i)
                 return instances
 
@@ -149,9 +152,13 @@ class EDACCDatabase(object):
                 if property == 'cputime':
                     return self.get_time()
                 else:
-                    property = db.session.query(db.SolverProperty).get(int(property))
-                    pv = db.session.query(db.ExperimentResultSolverProperty).filter_by(solver_property=property, experiment_result=self).first()
-                    return pv.get_value()
+                    try:
+                        property = db.session.query(db.SolverProperty).get(int(property))
+                        pv = db.session.query(db.ExperimentResultSolverProperty).filter_by(solver_property=property, experiment_result=self).first()
+                        return pv.get_value()
+                    except:
+                        # if the property or property value doesn't exist return None
+                        return None
 
         class InstanceClass(object):
             def __str__(self):
