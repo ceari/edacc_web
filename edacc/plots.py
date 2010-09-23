@@ -265,21 +265,24 @@ def rtds(results, filename, format='png'):
 
     grdevices.dev_off()
 
-#def box_plot(data, filename, format='png'):
-#    if format == 'png':
-#        #cairo.CairoPNG(file=filename, units="px", width=600,
-#        #               height=600, bg="white", pointsize=14)
-#        grdevices.png(file=filename, units="px", width=600,
-#                      height=600, type="cairo")
-#    elif format == 'pdf':
-#        grdevices.bitmap(file=filename, type="pdfwrite")
-#
-#    for key in data:
-#        data[key] = robjects.FloatVector(data[key])
-#
-#    robjects.r.boxplot(robjects.DataFrame(data), main="Boxplot", horizontal=True)
-#
-#    grdevices.dev_off()
+def box_plot(data, filename, format='png'):
+    if format == 'png':
+        #cairo.CairoPNG(file=filename, units="px", width=600,
+        #               height=600, bg="white", pointsize=14)
+        grdevices.png(file=filename, units="px", width=600,
+                      height=600, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite")
+
+    for key in data:
+        data[key] = robjects.FloatVector(data[key])
+
+    robjects.r.boxplot(robjects.DataFrame(data), main="Boxplot", horizontal=True)
+
+    robjects.r.mtext('CPU Time (s)', side=1,
+                     line=3, cex=1.2) # bottom axis label
+
+    grdevices.dev_off()
 
 
 def rtd(results, filename, format='png'):

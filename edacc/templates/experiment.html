@@ -26,6 +26,7 @@
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a>
 
     <h2>Analysis</h2>
+    <a href="{{url_for('analysis.box_plots', database=database, experiment_id=experiment.idExperiment)}}">Box plot - Box plots of the runtimes of solvers on instances</a><br/>
     <a href="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - One result property of two solvers (e.g. CPU time vs. CPU time)</a><br/>
     <a href="{{url_for('analysis.scatter_1solver_result_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Two result properties of a solver (e.g. CPU time vs. Memory)</a><br/>
     <a href="{{url_for('analysis.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Result property against instance property (e.g. CPU Time against Number of Atoms)</a><br/>

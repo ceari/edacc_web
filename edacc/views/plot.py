@@ -537,6 +537,28 @@ def kerneldensity(database, experiment_id):
     os.remove(filename)
     return response
 
+@plot.route('/<database>/experiment/<int:experiment_id>/box-plots-plot/')
+@require_phase(phases=(6, 7))
+@require_login
+def box_plots(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+    solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('solver_configs')]
+
+    results = {}
+    for sc in solver_configs:
+        points = []
+        for instance in instances:
+            points += [res.get_time() for res in db.session.query(db.ExperimentResult).filter_by(experiment=exp, instance=instance, solver_configuration=sc).all()]
+        results[str(sc)] = points
+
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
+    plots.box_plot(results, filename, 'png')
+    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+    os.remove(filename)
+    return response
 
 
 #@plot.route('/<database>/experiment/<int:experiment_id>/box-plot/')

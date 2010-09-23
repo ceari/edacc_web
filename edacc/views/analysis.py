@@ -365,3 +365,22 @@ def probabilistic_domination(database, experiment_id):
 
     return render('/analysis/probabilistic_domination.html', database=database, db=db,
                   experiment=experiment, form=form)
+
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/box-plots/')
+@require_phase(phases=(5, 6, 7))
+@require_login
+def box_plots(database, experiment_id):
+    """ Displays a page allowing the user to plot box plots with the results of all runs
+        of some solvers on some instances
+    """
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    form = forms.BoxPlotForm(request.args)
+    form.solver_configs.query = experiment.solver_configurations
+    form.instances.query = experiment.get_solved_instances(db)
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
+    return render('/analysis/box_plots.html', database=database, db=db,
+                  experiment=experiment, form=form, GET_data=GET_data)
