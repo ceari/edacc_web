@@ -37,14 +37,14 @@ def result_code(value):
 def job_status_color(value):
     """ Returns an HTML conform color string for the job status """
     if value not in JOB_STATUS:
-        return ''
+        return 'grey'
     else:
         return JOB_STATUS_COLOR[value]
 
 def job_result_code_color(value):
     """ Returns an HTML conform color string for the job result code """
     if value not in JOB_RESULT_CODE_COLOR:
-        return ''
+        return 'grey'
     else:
         return JOB_RESULT_CODE_COLOR[value]
 

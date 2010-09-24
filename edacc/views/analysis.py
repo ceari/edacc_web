@@ -102,7 +102,7 @@ def rtd_comparison(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDComparisonForm(request.args)
-    form.instance.query = experiment.get_solved_instances(db) or EmptyQuery()
+    form.instance.query = experiment.instances or EmptyQuery()
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
@@ -155,7 +155,7 @@ def rtds(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDPlotsForm(request.args)
-    form.instance.query = experiment.get_solved_instances(db) or EmptyQuery()
+    form.instance.query = experiment.instances or EmptyQuery()
     form.sc.query = experiment.solver_configurations or EmptyQuery()
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
@@ -182,7 +182,7 @@ def scatter_2solver_1property(database, experiment_id):
     form = forms.TwoSolversOnePropertyScatterPlotForm(request.args)
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
-    form.instances.query = sorted(experiment.get_solved_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.instances.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -235,7 +235,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
     form.instance_property.choices = instance_properties
-    form.instances.query = sorted(experiment.get_solved_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.instances.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -285,7 +285,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     form.solver_property1.choices = [('cputime', 'CPU Time')] + result_properties
     form.solver_property2.choices = [('cputime', 'CPU Time')] + result_properties
-    form.instances.query = sorted(experiment.get_solved_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.instances.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -325,7 +325,7 @@ def rtd(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDPlotForm(request.args)
-    form.instance.query = experiment.get_solved_instances(db) or EmptyQuery()
+    form.instance.query = experiment.instances or EmptyQuery()
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
@@ -391,7 +391,7 @@ def box_plots(database, experiment_id):
 
     form = forms.BoxPlotForm(request.args)
     form.solver_configs.query = experiment.solver_configurations or EmptyQuery()
-    form.instances.query = experiment.get_solved_instances(db) or EmptyQuery()
+    form.instances.query = experiment.instances or EmptyQuery()
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/box_plots.html', database=database, db=db,
