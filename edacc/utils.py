@@ -11,7 +11,7 @@
 
 import random
 from edacc.web import app
-from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR, JOB_RESULT_CODE
+from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR, JOB_RESULT_CODE, JOB_RESULT_CODE_COLOR
 
 def download_size(value):
     """ Takes an integer number of bytes and returns a pretty string representation """
@@ -40,6 +40,13 @@ def job_status_color(value):
         return ''
     else:
         return JOB_STATUS_COLOR[value]
+
+def job_result_code_color(value):
+    """ Returns an HTML conform color string for the job result code """
+    if value not in JOB_RESULT_CODE_COLOR:
+        return ''
+    else:
+        return JOB_RESULT_CODE_COLOR[value]
 
 def parameter_string(solver_config):
     """ Returns a string of the solver configuration parameters """
@@ -77,6 +84,7 @@ app.jinja_env.filters['download_size'] = download_size
 app.jinja_env.filters['job_status'] = job_status
 app.jinja_env.filters['result_code'] = job_status
 app.jinja_env.filters['job_status_color'] = job_status_color
+app.jinja_env.filters['job_result_code_color'] = job_result_code_color
 app.jinja_env.filters['launch_command'] = launch_command
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 app.jinja_env.filters['competition_phase'] = competition_phase

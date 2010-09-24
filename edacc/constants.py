@@ -38,6 +38,17 @@ JOB_RESULT_CODE = {
     -25: 'output size limit exceeded',
 }
 
+JOB_RESULT_CODE_COLOR = {
+    11: '#00CC33',
+    10: '#00CC33',
+    0: '#D3D3D3',
+    -21: 'red',
+    -22: 'red',
+    -23: 'red',
+    -24: 'red',
+    -25: 'red',
+}
+
 JOB_STATUS_COLOR = {
     -5: '#FF0000',
     -4: '#FF0000',

@@ -14,6 +14,7 @@ import json
 import csv
 import StringIO
 import numpy
+import datetime
 
 from flask import Module
 from flask import render_template
@@ -22,7 +23,7 @@ from werkzeug import Headers
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload
-from edacc.constants import JOB_FINISHED, JOB_ERROR
+from edacc.constants import JOB_FINISHED, JOB_ERROR, JOB_RUNNING
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
 from edacc import forms
@@ -358,7 +359,7 @@ def experiment_progress_ajax(database, experiment_id):
     conn = db.session.connection()
     res = conn.execute("""SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob, SolverConfig.idSolverConfig,
                  Instances.name, ExperimentResults.run, ExperimentResults.resultTime, ExperimentResults.seed,
-                 ExperimentResults.status, ExperimentResults.resultCode
+                 ExperimentResults.status, ExperimentResults.resultCode, TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW()) AS runningTime
                  FROM ExperimentResults
                     LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
                     LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
@@ -382,8 +383,12 @@ def experiment_progress_ajax(database, experiment_id):
 
     aaData = []
     for job in jobs:
+        status = utils.job_status(job[6])
+        if job[6] in JOB_RUNNING:
+            status += ' (' + str(datetime.timedelta(seconds=job[8])) + ')'
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
                 job[4], job[5], utils.job_status(job[6]), utils.result_code(job[7])])
+
 
     return json.dumps({
         'aaData': aaData,

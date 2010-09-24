@@ -211,10 +211,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
     points = scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, instances, instance_property, solver_property, run)
 
-    if instance_property == 'numAtoms':
-        xlabel = 'Number of Atoms'
-    else:
-        xlabel = instance_prop.name
+    xlabel = instance_prop.name
 
     if solver_property == 'cputime':
         ylabel = 'CPU Time'
@@ -390,11 +387,11 @@ def cactus_plot(database, experiment_id):
 
     for sc in exp.solver_configurations:
         s = {'xs': [], 'ys': [], 'name': sc.get_name()}
-        sc_res = results.filter_by(solver_configuration=sc, status=1).all()
+        sc_res = results.filter_by(solver_configuration=sc, status=1).filter(db.ExperimentResult.resultCode.like('1%')).all()
         sc_res = sorted(sc_res, key=lambda r: r.get_property_value(solver_property, db))
         i = 1
         for r in sc_res:
-            if r.Instances_idInstance in instances or instances == []:
+            if r.Instances_idInstance in instances:
                 s['ys'].append(r.get_property_value(solver_property, db))
                 s['xs'].append(i)
                 i += 1

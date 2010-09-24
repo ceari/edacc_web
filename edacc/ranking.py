@@ -63,4 +63,4 @@ def number_of_solved_instances_ranking(experiment):
         solved.
     """
     return list(reversed(sorted(experiment.solver_configurations,
-                                key=lambda s: len([r for r in experiment.results if r.status == 1]))))
+                                key=lambda s: len([r for r in experiment.results if r.status == 1 and str(r.resultCode).startswith('1')]))))

@@ -10,6 +10,7 @@
     <form method="get" action="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}">
         Solver: {{form.solver_config}}
         <input type="submit" value="Show" />
+        <input type="submit" name="csv" value="CSV"/>
     </form>
     {% if results %}
         <table id="table_results" class="results">
@@ -26,7 +27,7 @@
                             <a href="{{ url_for('frontend.instance_details', database=database, instance_id=result.0.idInstance) }}">{{ result.0.name }}</a>
                         </td>
                         {% for run in result.1 %}
-                            <td style="text-align: center; vertical-align: middle; background-color: {{run.status|job_status_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time() }}</a></td>
+                            <td style="text-align: center; vertical-align: middle; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time() }}</a></td>
                         {% endfor %}
                     </tr>
                 {% endfor %}

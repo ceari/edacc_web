@@ -132,6 +132,12 @@ class EDACCDatabase(object):
                         instances.append(i)
                 return instances
 
+            def get_num_solver_configs(self, db):
+                return db.session.query(db.SolverConfiguration).filter_by(experiment=self).count()
+
+            def get_num_instances(self, db):
+                return db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+
         class ExperimentResult(object):
             """ Maps the ExperimentResult table. Provides a function
                 to obtain a result property of a job.
