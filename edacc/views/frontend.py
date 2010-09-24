@@ -332,7 +332,7 @@ def experiment_progress_ajax(database, experiment_id):
         where_clause += "ExperimentResults.run LIKE %s OR "
         where_clause += "ExperimentResults.resultTime LIKE %s OR "
         where_clause += "ExperimentResults.seed LIKE %s OR "
-        where_clause += "ExperimentResults.status LIKE %s) OR "
+        where_clause += "ExperimentResults.status LIKE %s OR "
         where_clause += "ExperimentResults.resultCode LIKE %s) "
         params += ['%' + request.args.get('sSearch') + '%'] * 7 # 7 conditions
 
@@ -385,6 +385,10 @@ def experiment_progress_ajax(database, experiment_id):
     for job in jobs:
         status = utils.job_status(job[6])
         if job[6] in JOB_RUNNING:
+            try:
+                seconds_running = int(job[8])
+            except:
+                seconds_running = 0
             status += ' (' + str(datetime.timedelta(seconds=job[8])) + ')'
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
                 job[4], job[5], status, utils.result_code(job[7]), str(job[6])])
