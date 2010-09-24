@@ -387,7 +387,7 @@ def experiment_progress_ajax(database, experiment_id):
         if job[6] in JOB_RUNNING:
             status += ' (' + str(datetime.timedelta(seconds=job[8])) + ')'
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
-                job[4], job[5], utils.job_status(job[6]), utils.result_code(job[7])])
+                job[4], job[5], status, utils.result_code(job[7]), str(job[6])])
 
 
     return json.dumps({
@@ -530,7 +530,7 @@ def solver_output_download(database, experiment_id, result_id):
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
-    headers.add('Content-Disposition', 'attachment', filename=result.resultFileName)
+    headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
     return Response(response=result.solverOutput, headers=headers)
 
@@ -548,7 +548,7 @@ def launcher_output_download(database, experiment_id, result_id):
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
-    headers.add('Content-Disposition', 'attachment', filename=result.resultFileName)
+    headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
     return Response(response=result.launcherOutput, headers=headers)
 
@@ -566,7 +566,7 @@ def watcher_output_download(database, experiment_id, result_id):
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
-    headers.add('Content-Disposition', 'attachment', filename=result.resultFileName)
+    headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
     return Response(response=result.watcherOutput, headers=headers)
 
@@ -584,6 +584,6 @@ def verifier_output_download(database, experiment_id, result_id):
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
-    headers.add('Content-Disposition', 'attachment', filename=result.resultFileName)
+    headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
     return Response(response=result.verifierOutput, headers=headers)

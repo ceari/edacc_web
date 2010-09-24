@@ -23,14 +23,14 @@
         }
         $(document).ready(function(){
             var JOB_STATUS_COLOR = {
-                'launcher crash':   'red',
-                'watcher crash':    'red',
-                'solver crash':     'red',
-                'verifier crash':   'red',
-                'not started':      '#4169E1',
-                'running':          'orange',
-                'finished':         '#00CC33',
-                'terminated by ulimit': '#FF6600',
+                '-5':   'red',
+                '-4':    'red',
+                '-3':     'red',
+                '-2':   'red',
+                '-1':      '#4169E1',
+                '0':          'orange',
+                '1':         '#00CC33',
+                '2': '#FF6600',
             };
 
             oTable = $('#table_jobs').dataTable({
@@ -47,10 +47,10 @@
                 "sAjaxSource": "{{url_for('experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}",
 		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
                     $('td:eq(0)', nRow).html('<a style="color: black;" href="/{{database}}/experiment/{{experiment.idExperiment}}/result/'+aData[0]+'">'+aData[0]+'</a>');
-                    $(nRow).attr("bgcolor", JOB_STATUS_COLOR[$('td:eq(6)', nRow).html()]);
+                    $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[8]]);
                     return nRow;
 		},
-                "aoColumns": [null, null, null, null, null, null, null, null]
+                "aoColumns": [null, null, null, null, null, null, null, null, {"bVisible": false}]
             });
 
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
@@ -126,6 +126,7 @@
                 <th>Seed</th>
                 <th>Status</th>
                 <th>Result</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>

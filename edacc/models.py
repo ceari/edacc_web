@@ -124,8 +124,9 @@ class EDACCDatabase(object):
 
             def get_solved_instances(self, db):
                 """ Returns the instances of the experiment that all solvers solved in every run """
-                num_jobs_per_instance = db.session.query(db.ExperimentResult).filter_by(experiment=self).count() / \
-                                        db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                numInstances = db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                if numInstances == 0: return 0
+                num_jobs_per_instance = db.session.query(db.ExperimentResult).filter_by(experiment=self).count() / numInstances
                 instances = []
                 for i in self.instances:
                     if db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')).filter_by(experiment=self, instance=i, status=1).count() == num_jobs_per_instance:
