@@ -31,7 +31,7 @@ Dependencies
 - SQLAlchemy 0.6.4 (SQL Toolkit and Object Relational Mapper)
 - mysql-python 1.2.3c1 (Python MySQL adapter)
 - Flask 0.6 (Micro Webframework)
-- Flask-WTF 0.2.3 (Flask extension for WTForms)
+- Flask-WTF 0.3.3 (Flask extension for WTForms)
 - Werkzeug 0.6.2 (Webframework, Flask dependency)
 - Jinja2 2.5 (Template Engine)
 - PyLZMA 0.4.2 (Python LZMA SDK bindings)

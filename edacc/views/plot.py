@@ -13,16 +13,15 @@
 """
 
 import os
-import json
 import numpy
 import StringIO
 import csv
 
 from flask import Module, render_template as render
-from flask import Response, abort, request, g, url_for
+from flask import Response, abort, request, g
 from werkzeug import Headers
 
-from edacc import plots, config, models, statistics
+from edacc import plots, config, models
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
 
@@ -67,6 +66,7 @@ def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, solver_proper
             ))
 
     return points
+
 
 @plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-1property/')
 @require_phase(phases=(5, 6, 7))
@@ -288,6 +288,7 @@ def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, insta
 
     return points
 
+
 @plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-2properties/')
 @require_phase(phases=(5, 6, 7))
 @require_login
@@ -361,6 +362,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
             response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
+
 
 @plot.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
 @require_phase(phases=(5, 6, 7))
@@ -534,6 +536,7 @@ def kerneldensity(database, experiment_id):
     os.remove(filename)
     return response
 
+
 @plot.route('/<database>/experiment/<int:experiment_id>/box-plots-plot/')
 @require_phase(phases=(6, 7))
 @require_login
@@ -556,44 +559,3 @@ def box_plots(database, experiment_id):
     response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
     os.remove(filename)
     return response
-
-
-#@plot.route('/<database>/experiment/<int:experiment_id>/box-plot/')
-#@require_phase(phases=(6, 7))
-#@require_login
-#def box_plot(database, experiment_id):
-#    db = models.get_database(database) or abort(404)
-#    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-#
-#    results = {}
-#    for sc in exp.solver_configurations:
-#        results[str(sc)] = [res.get_time() for res in db.session.query(db.ExperimentResult)
-#                                    .filter_by(experiment=exp,
-#                                               solver_configuration=sc).all()]
-#
-#    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
-#    plots.box_plot(results, filename, 'png')
-#    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-#    os.remove(filename)
-#    return response
-#
-#
-#@plot.route('/<database>/experiment/<int:experiment_id>/histogram/<int:solver_configuration_id>/<int:instance_id>/')
-#@require_phase(phases=(6, 7))
-#@require_login
-#def histogram(database, experiment_id, solver_configuration_id, instance_id):
-#    db = models.get_database(database) or abort(404)
-#    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-#    sc = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
-#    instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
-#
-#    results = [r.get_time() for r in db.session.query(db.ExperimentResult)
-#                                    .filter_by(experiment=exp,
-#                                               solver_configuration=sc,
-#                                               instance=instance).all()]
-#
-#    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'hist.png'
-#    plots.hist(results, filename, 'png')
-#    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-#    os.remove(filename)
-#    return response

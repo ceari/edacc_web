@@ -41,6 +41,7 @@ def render(*args, **kwargs):
     doc, errs = tidy_document(res)
     return doc
 
+
 @analysis.route('/<database>/experiment/<int:experiment_id>/ranking/')
 @require_phase(phases=(6, 7))
 @require_login
@@ -57,7 +58,8 @@ def solver_ranking(database, experiment_id):
     return render('/analysis/ranking.html', database=database, db=db,
                   experiment=experiment, ranked_solvers=ranked_solvers)
 
-@analysis.route('/<database>/experiment/<int:experiment_id>/evaluation-solved-instances/')
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/cactus/')
 @require_phase(phases=(5, 6, 7))
 @require_login
 def cactus_plot(database, experiment_id):
@@ -81,6 +83,7 @@ def cactus_plot(database, experiment_id):
 
     return render('/analysis/solved_instances.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
+
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/rtd-comparison/')
 @require_phase(phases=(5, 6, 7))
@@ -211,7 +214,7 @@ def scatter_2solver_1property(database, experiment_id):
                   pearson_r=pearson_r, pearson_p_value=pearson_p_value)
 
 
-@analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-instance-vs-result/')
+@analysis.route('/<database>/experiment/<int:experiment_id>/scatter-instance-vs-result/')
 @require_phase(phases=(5, 6, 7))
 @require_login
 def scatter_1solver_instance_vs_result_property(database, experiment_id):
@@ -264,7 +267,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
                   pearson_r=pearson_r, pearson_p_value=pearson_p_value)
 
 
-@analysis.route('/<database>/experiment/<int:experiment_id>/scatter-one-solver-result-vs-result/')
+@analysis.route('/<database>/experiment/<int:experiment_id>/scatter-result-vs-result/')
 @require_phase(phases=(5, 6, 7))
 @require_login
 def scatter_1solver_result_vs_result_property(database, experiment_id):
@@ -359,7 +362,7 @@ def probabilistic_domination(database, experiment_id):
         sc2_dom_sc1 = set()
         no_dom = set()
 
-        for instance in experiment.get_solved_instances(db):
+        for instance in experiment.instances:
             res1 = [r.get_time() for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc1).all()]
             res2 = [r.get_time() for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc2).all()]
             d = statistics.prob_domination(res1, res2)
