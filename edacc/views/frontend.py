@@ -407,7 +407,7 @@ def experiment_progress_ajax(database, experiment_id):
                 seconds_running = int(job[8])
             except:
                 seconds_running = 0
-            status += ' (' + str(datetime.timedelta(seconds_running)) + ')'
+            status += ' (' + str(datetime.timedelta(seconds=seconds_running)) + ')'
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
                 job[4], job[5], status, utils.result_code(job[7]), str(job[6])])
 
