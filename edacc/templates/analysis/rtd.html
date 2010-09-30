@@ -101,13 +101,13 @@
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
             {% autoescape false %}
             <img alt="graph" src="{{url_for('plot.rtd', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-            Download as <a href="{{url_for('plot.rtd', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a>
+            Download as <a href="{{url_for('plot.rtd', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.rtd', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
             {% endautoescape %}
         </div>
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px;">
             {% autoescape false %}
             <img alt="graph" src="{{url_for('plot.kerneldensity', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-            Download as <a href="{{url_for('plot.kerneldensity', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a>
+            Download as <a href="{{url_for('plot.kerneldensity', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.kerneldensity', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
             {% endautoescape %}
         </div>
     </div>

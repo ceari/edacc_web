@@ -100,7 +100,7 @@
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
             {% autoescape false %}
             <img alt="graph" src="{{url_for('plot.rtds_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-            Download as <a href="{{url_for('plot.rtds_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a>
+            Download as <a href="{{url_for('plot.rtds_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.rtds_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
             {% endautoescape %}
         </div>
     {% endif %}

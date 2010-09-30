@@ -409,6 +409,20 @@ def cactus_plot(database, experiment_id):
         ylabel = solver_prop.name
         title = 'Number of solved instances within a given amount of ' + solver_prop.name
 
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        for s in solvers:
+            csv_writer.writerow([s['name']])
+            csv_writer.writerow(['number of solved instances'] + map(str, s['xs']))
+            csv_writer.writerow(['CPU Time (s)'] + map(str, s['ys']))
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
+
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.pdf'
         plots.cactus(solvers, max_x, max_y, ylabel, title, filename, format='pdf')
@@ -446,6 +460,20 @@ def rtd_comparison_plot(database, experiment_id):
                                                solver_configuration=s2,
                                                instance=instance).all()]
 
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(['Runtimes of the two solver configurations on ' + str(instance)])
+        csv_writer.writerow([str(s1), str(s2)])
+        for i in xrange(min(len(results1), len(results2))):
+            csv_writer.writerow(map(str, [results1[i], results2[i]]))
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
+
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
         plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, format='pdf', dim=dim)
@@ -479,6 +507,19 @@ def rtds_plot(database, experiment_id):
                                    solver_configuration=sc).all()
         results.append((sc, [j.get_time() for j in sc_results]))
 
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(['Runtimes of the listed solver configurations on ' + str(instance)])
+        for res in results:
+            csv_writer.writerow([str(res[0])] + map(str, res[1]))
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
+
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
         plots.rtds(results, filename, 'pdf')
@@ -509,6 +550,18 @@ def rtd(database, experiment_id):
                                                solver_configuration=sc,
                                                instance=instance).all()]
 
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(['Runtimes of ' + str(sc) + ' on ' + str(instance)])
+        writer.writerow(map(str, results))
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
+
     filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.png'
     plots.rtd(results, filename, 'png')
     response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
@@ -529,6 +582,18 @@ def kerneldensity(database, experiment_id):
                                     .filter_by(experiment=exp,
                                                solver_configuration=sc,
                                                instance=instance).all()]
+
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(['Runtimes of ' + str(sc) + ' on ' + str(instance)])
+        writer.writerow(map(str, results))
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
 
     filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.png'
     plots.kerneldensity(results, filename, 'png')
@@ -553,6 +618,18 @@ def box_plots(database, experiment_id):
         for instance in instances:
             points += [res.get_time() for res in db.session.query(db.ExperimentResult).filter_by(experiment=exp, instance=instance, solver_configuration=sc).all()]
         results[str(sc)] = points
+
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        for k, v in results.iteritems():
+            csv_writer.writerow([k] + map(str, v))
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename="data.csv")
+        return Response(response=csv_response.read(), headers=headers)
 
     filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
     plots.box_plot(results, filename, 'png')
