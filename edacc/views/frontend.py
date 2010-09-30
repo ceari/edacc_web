@@ -23,7 +23,7 @@ from werkzeug import Headers
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload
-from edacc.constants import JOB_FINISHED, JOB_ERROR, JOB_RUNNING
+from edacc.constants import JOB_FINISHED, JOB_ERROR, JOB_RUNNING, JOB_STATUS, JOB_RESULT_CODE
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
 from edacc import forms
@@ -346,8 +346,16 @@ def experiment_progress_ajax(database, experiment_id):
         where_clause += "ExperimentResults.resultTime LIKE %s OR "
         where_clause += "ExperimentResults.seed LIKE %s OR "
         where_clause += "ExperimentResults.status LIKE %s OR "
-        where_clause += "ExperimentResults.resultCode LIKE %s) "
-        params += ['%' + request.args.get('sSearch') + '%'] * 7 # 7 conditions
+        where_clause += "ExperimentResults.resultCode LIKE %s OR "
+        where_clause += """
+                    CASE ExperimentResults.status
+                        """ + '\n'.join(["WHEN %d THEN '%s'" % (k, v) for k, v in JOB_STATUS.iteritems()]) + """
+                    END LIKE %s
+                    OR
+                    CASE ExperimentResults.resultCode
+                        """ + '\n'.join(["WHEN %d THEN '%s'" % (k, v) for k, v in JOB_RESULT_CODE.iteritems()]) + """
+                    END LIKE %s) """
+        params += ['%' + request.args.get('sSearch') + '%'] * 9 # 9 conditions
 
     if where_clause != "": where_clause += " AND "
     where_clause += "ExperimentResults.Experiment_idExperiment = %s "
