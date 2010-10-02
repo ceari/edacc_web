@@ -26,7 +26,7 @@
                 {% for run in range(experiment.get_num_runs(db)) %}
                     {% set rowloop = loop %}
                     <tr>
-                        <td>
+                        <td class="{{'even' if rowloop.index0 % 2 == 0 else 'odd'}}">
                             #{{loop.index0}}
                         </td>
                         {% for result in results %}
