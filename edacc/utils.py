@@ -82,7 +82,7 @@ def competition_phase(value):
 
 app.jinja_env.filters['download_size'] = download_size
 app.jinja_env.filters['job_status'] = job_status
-app.jinja_env.filters['result_code'] = job_status
+app.jinja_env.filters['result_code'] = result_code
 app.jinja_env.filters['job_status_color'] = job_status_color
 app.jinja_env.filters['job_result_code_color'] = job_result_code_color
 app.jinja_env.filters['launch_command'] = launch_command

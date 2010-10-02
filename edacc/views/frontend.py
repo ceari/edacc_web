@@ -23,10 +23,11 @@ from werkzeug import Headers
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload
-from edacc.constants import JOB_FINISHED, JOB_ERROR, JOB_RUNNING, JOB_STATUS, JOB_RESULT_CODE
+from edacc.constants import JOB_FINISHED, JOB_ERROR, JOB_RUNNING, JOB_STATUS, JOB_RESULT_CODE, JOB_STATUS_COLOR
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
 from edacc import forms
+from edacc.forms import EmptyQuery
 
 frontend = Module(__name__)
 
@@ -48,7 +49,7 @@ def index():
 
 @frontend.route('/<database>/index')
 @frontend.route('/<database>/experiments/')
-@require_phase(phases=(2, 3, 4, 5, 6, 7))
+@require_phase(phases=(1, 2, 3, 4, 5, 6, 7))
 def experiments_index(database):
     """ Show a list of all experiments in the database """
     db = models.get_database(database) or abort(404)
@@ -231,7 +232,7 @@ def experiment_results_by_solver(database, experiment_id):
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
     form = forms.ResultBySolverForm(request.args)
-    form.solver_config.query = solver_configs
+    form.solver_config.query = solver_configs or EmptyQuery()
 
     results = []
     if form.solver_config.data:
@@ -317,8 +318,11 @@ def experiment_progress(database, experiment_id):
     """ Show a live information table of the experiment's progress """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    JS_colors = ','.join(["'%d': '%s'" % (k, v) for k, v in JOB_STATUS_COLOR.iteritems()])
+
     return render('experiment_progress.html', experiment=experiment,
-                  database=database, db=db)
+                  database=database, db=db, JS_colors=JS_colors)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress-ajax')
@@ -449,19 +453,24 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
                     .all()
 
     completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
+    correct = len(filter(lambda j: j.status in JOB_FINISHED and str(j.resultCode).startswith('1'), jobs))
 
     return render('solver_config_results.html', experiment=experiment,
                   solver_configuration=solver_configuration, instance=instance,
-                  results=jobs, completed=completed, database=database, db=db)
+                  correct=correct, results=jobs, completed=completed,
+                  database=database, db=db)
 
 
 @frontend.route('/<database>/instance/<int:instance_id>')
-@require_phase(phases=(6, 7))
 @require_login
 def instance_details(database, instance_id):
     """ Show instance details """
     db = models.get_database(database) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
+
+    if db.is_competition() and db.competition_phase() not in (6, 7):
+        if instance.source_class.user != g.User:
+            abort(403)
 
     instance_blob = instance.instance
     if len(instance_blob) > 1024:
@@ -478,12 +487,15 @@ def instance_details(database, instance_id):
 
 
 @frontend.route('/<database>/instance/<int:instance_id>/download')
-@require_phase(phases=(6, 7))
 @require_login
 def instance_download(database, instance_id):
     """ Return HTTP-Response containing the instance blob """
     db = models.get_database(database) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
+
+    if db.is_competition() and db.competition_phase() not in (6, 7):
+        if instance.source_class.user != g.User:
+            abort(403)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')

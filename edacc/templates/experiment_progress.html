@@ -21,17 +21,8 @@
             });
             return aData;
         }
-        $(document).ready(function(){
-            var JOB_STATUS_COLOR = {
-                '-5':   'red',
-                '-4':    'red',
-                '-3':     'red',
-                '-2':   'red',
-                '-1':      '#4169E1',
-                '0':          'orange',
-                '1':         '#00CC33',
-                '2': '#FF6600',
-            };
+        $(document).ready(function() {
+            var JOB_STATUS_COLOR = { {% autoescape false %}{{JS_colors|safe}}{% endautoescape %} };
 
             oTable = $('#table_jobs').dataTable({
                 "bPaginate": true,

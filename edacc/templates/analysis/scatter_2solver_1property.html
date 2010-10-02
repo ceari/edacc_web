@@ -94,7 +94,8 @@
         <h2>Compare the results of two solvers</h2>
         <div style="margin-bottom: 5px;">
         Choose two solvers to plot their result properties on the instances of<br/>
-        the experiment against each other in a scatter plot.
+        the experiment against each other in a scatter plot.<br/>
+        Incorrect results are treated as having used the maximum allowed CPU time of the experiment.
         </div>
         <form method="get" action="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">
             <table>

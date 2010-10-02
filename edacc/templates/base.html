@@ -37,7 +37,7 @@
             |<a href="{{url_for('accounts.manage', database=database)}}">Manage</a>
         {% endif %}
         <span id="admin_login">
-            {% if db.is_competition() and not session.logged_in %}
+            {% if db.is_competition() and not session.logged_in and not db.competition_phase() == 1 %}
             <a href="{{url_for('accounts.login', database=database)}}">Login</a>
             {% endif %}
             {% if session.logged_in %}Logged in as {{session.email}} (<a href="{{url_for('accounts.logout', database=session.database)}}">Logout</a>) {% endif %}

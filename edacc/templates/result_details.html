@@ -9,7 +9,9 @@
     <h2>Result of <a href="{{url_for('solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">{{solver_config.get_name()}}</a> on <a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a>, Run #{{result.run}}</h2>
 
     <div style="font-weight: bold">
-    Status: {{result.status|job_status}}
+    Status: {{result.status|job_status}}<br/>
+    Result: {{result.resultCode|result_code}}<br/>
+    CPU Time: {{result.get_time()|round(2)}}
     </div>
 
     <h3>Solver output:</h3>

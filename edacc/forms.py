@@ -17,6 +17,20 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
 
 ERROR_REQUIRED = 'This field is required.'
 
+class EmptyQuery(list):
+    """ Helper class that extends the builtin list class to always evaluate to
+        True.
+        WTForms tries to iterate over field.query or field.query_factory(). But
+        when field.query an empty list and evaluates to False, field.query_factory
+        returns None and causes an exception. """
+    def __nonzero__(self):
+        """ for Python 2.x """
+        return True
+    def __bool__(self):
+        """ for Python 3.x """
+        return True
+
+
 class RegistrationForm(Form):
     lastname = TextField('Last Name',
                          [Required(ERROR_REQUIRED),

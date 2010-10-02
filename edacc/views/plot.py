@@ -554,7 +554,7 @@ def rtd(database, experiment_id):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
         csv_writer.writerow(['Runtimes of ' + str(sc) + ' on ' + str(instance)])
-        writer.writerow(map(str, results))
+        csv_writer.writerow(map(str, results))
         csv_response.seek(0)
 
         headers = Headers()
@@ -587,7 +587,7 @@ def kerneldensity(database, experiment_id):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
         csv_writer.writerow(['Runtimes of ' + str(sc) + ' on ' + str(instance)])
-        writer.writerow(map(str, results))
+        csv_writer.writerow(map(str, results))
         csv_response.seek(0)
 
         headers = Headers()

@@ -8,7 +8,7 @@
     <h1>{{experiment.name}}</h1>
     <div>Date: {{experiment.date|datetimeformat('%d.%m.%Y')}}</div>
     <div>Description: {{experiment.description if experiment.description else "no description"}}</div>
-    {% if not session.admin and db.is_competition() and db.competition_phase() != 4 %}
+    {% if not session.admin and db.is_competition() and db.competition_phase() not in (6, 7) %}
     <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While the competition isn't finished, you are only able to see your own solvers.</div>
     {% endif %}
 
@@ -25,6 +25,7 @@
     <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment) }}">By solver configuration</a><br/>
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a>
 
+    {% if not db.is_competition() or db.competition_phase() in (6,7,) %}
     <h2>Analysis</h2>
     <a href="{{url_for('analysis.box_plots', database=database, experiment_id=experiment.idExperiment)}}">Box plot - Box plots of the runtimes of solvers on instances</a><br/>
     <a href="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - One result property of two solvers (e.g. CPU time vs. CPU time)</a><br/>
@@ -38,5 +39,6 @@
 
     <h2>Ranking</h2>
     <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Point Biserial Correlation based ranking</a><br/>
+    {% endif %}
 
 {% endblock %}

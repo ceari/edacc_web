@@ -8,8 +8,8 @@
         <table width="800px">
             {{ render_field(form.instance) }}
             {{ render_field(form.name, size=40, maxlength=255, explanation='Name of the instance. If left blank the filename will be used.') }}
-            {{ render_field(form.benchmark_type) }}
-            {{ render_field(form.source_class) }}
+            {{ render_field(form.benchmark_type, explanation='The general type of the benchmark. For example "Application - CNF encoded MD5 attack"') }}
+            {{ render_field(form.source_class, explanation='Used to specify the origin of the benchmark.') }}
             <tr>
                 <td colspan="2"></td>
             </tr>

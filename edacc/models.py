@@ -148,7 +148,11 @@ class EDACCDatabase(object):
                     experiment's timeOut value if the status is
                     not correct (certified SAT/UNSAT answer).
                 """
-                return self.resultTime if (self.resultCode in (10, 11) and self.resultTime is not None) else self.experiment.CPUTimeLimit
+                if self.resultTime is None or self.resultCode not in (10, 11):
+                    return self.experiment.CPUTimeLimit
+                else:
+                    return self.resultTime
+
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name.

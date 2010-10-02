@@ -80,6 +80,11 @@
 
     <div style="margin-left: 5px;">
         <h2>Runtime Distribution and Kernel Density Estimation</h2>
+        <div>
+            Incorrect results are treated as having used the maximum allowed CPU time of the experiment.<br/>
+            (right-censored data). If right-censored data is present, the runtime distribution function<br/>
+            is truncated at the experiment's CPU timeout value.
+        </div>
         <form method="get" action="{{url_for('analysis.rtd', database=database, experiment_id=experiment.idExperiment)}}">
             <table>
                 {{ render_field(form.solver_config) }}

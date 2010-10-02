@@ -300,14 +300,13 @@ def submit_solver(database, id=None):
             try:
                 db.session.commit()
             except Exception as e:
-                print e
                 db.session.rollback()
-                flash("Couldn't save solver to the database")
+                flash("Couldn't save solver to the database. Please contact an administrator for support.")
                 return render('/accounts/submit_solver.html', database=database,
                               error=error, db=db, id=id, form=form)
 
             flash('Solver submitted successfully')
-            return redirect(url_for('frontend.experiments_index',
+            return redirect(url_for('accounts.list_solvers',
                                     database=database))
 
     return render('/accounts/submit_solver.html', database=database, error=error,
@@ -337,7 +336,7 @@ def list_benchmarks(database):
     """
     db = models.get_database(database) or abort(404)
     user_source_classes = db.session.query(db.InstanceClass).filter_by(user=g.User).all()
-    instances = itertools.chain(*[sc.source_instances for sc in user_source_classes])
+    instances = list(itertools.chain(*[sc.source_instances for sc in user_source_classes]))
 
     return render('/accounts/list_benchmarks.html', database=database,
                   db=db, instances=instances)

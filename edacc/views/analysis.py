@@ -18,22 +18,9 @@ from flask import abort, request
 from edacc import models, forms, ranking, statistics
 from edacc.views.helpers import require_phase, require_login
 from edacc.views import plot
+from edacc.forms import EmptyQuery
 
 analysis = Module(__name__)
-
-class EmptyQuery(list):
-    """ Helper class that extends the builtin list class to always evaluate to
-        True.
-        WTForms tries to iterate over field.query or field.query_factory(). But
-        when field.query an empty list and evaluates to False, field.query_factory
-        returns None and causes an exception. """
-    def __nonzero__(self):
-        """ for Python 2.x """
-        return True
-    def __bool__(self):
-        """ for Python 3.x """
-        return True
-
 
 def render(*args, **kwargs):
     from tidylib import tidy_document
