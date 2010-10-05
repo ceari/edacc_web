@@ -528,6 +528,7 @@ class EDACCClient(threading.Thread):
                 else:
                     job.status = 1
                 print "  CPU time:", runtime, "s", "Memory used:", memory, "kB"
+                job.computeQueue = self.experiment.grid_queue[0].idgridQueue
                 db.session.commit()
             else:
                 if db.session.query(db.ExperimentResult) \

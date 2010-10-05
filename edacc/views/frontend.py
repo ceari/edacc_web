@@ -346,7 +346,7 @@ def experiment_progress_ajax(database, experiment_id):
               ["`"+prop.name+"_value`.value" for prop in db.get_result_properties()]
 
     # build the query part for the result properties that should be included
-    prop_columns = ','.join(["`"+prop.name+"_value`.value" for prop in db.get_result_properties()])
+    prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+prop.name+"_value`.value END" for prop in db.get_result_properties()])
     prop_joins = ""
     for prop in db.get_result_properties():
         prop_joins += """LEFT JOIN ExperimentResult_has_SolverProperty as `%s_hasP` ON
@@ -431,7 +431,6 @@ def experiment_progress_ajax(database, experiment_id):
 
     aaData = []
     for job in jobs:
-
         status = utils.job_status(job[6])
         if job[6] in JOB_RUNNING:
             try:
