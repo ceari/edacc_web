@@ -41,7 +41,7 @@
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[8]]);
                     return nRow;
 		},
-                "aoColumns": [null, null, null, null, null, null, null, null, {"bVisible": false}]
+                "aoColumns": [null, null, null, null, null, null, null, null, {"bVisible": false}, {% for prop in db.get_result_properties() %}null, {%endfor%}]
             });
 
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
@@ -118,6 +118,9 @@
                 <th>Status</th>
                 <th>Result</th>
                 <th>Status</th>
+                {% for prop in db.get_result_properties() %}
+                <th>{{prop.name}}</th>
+                {% endfor %}
             </tr>
         </thead>
         <tbody>

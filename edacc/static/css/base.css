@@ -240,6 +240,22 @@ table.results tr.even {
     background-color: #eee;
 }
 
+table.details td.odd {
+    background-color: #ddd;
+}
+
+table.details td.even {
+    background-color: #eee;
+}
+
+table.details tr.odd {
+    background-color: #ddd;
+}
+
+table.details tr.even {
+    background-color: #eee;
+}
+
 
 div.navigation {
     font-size: 14px;

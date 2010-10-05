@@ -325,7 +325,7 @@ def experiment_progress(database, experiment_id):
                   database=database, db=db, JS_colors=JS_colors)
 
 
-@frontend.route('/<database>/experiment/<int:experiment_id>/progress-ajax')
+@frontend.route('/<database>/experiment/<int:experiment_id>/progress-ajax/')
 @require_phase(phases=(3, 4, 5, 6, 7))
 @require_login
 def experiment_progress_ajax(database, experiment_id):
@@ -339,7 +339,19 @@ def experiment_progress_ajax(database, experiment_id):
 
     columns = ["ExperimentResults.idJob", "SolverConfig.idSolverConfig", "Instances.name",
                "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
-               "ExperimentResults.status", "ExperimentResults.resultCode"]
+               "ExperimentResults.status", "ExperimentResults.resultCode", ""] \
+              + ["`"+prop.name+"_value`.value" for prop in db.get_result_properties()]
+
+    prop_columns = ','.join(["`"+prop.name+"_value`.value" for prop in db.get_result_properties()])
+    prop_joins = ""
+    for prop in db.get_result_properties():
+        prop_joins += """LEFT JOIN ExperimentResult_has_SolverProperty as `%s_hasP` ON
+                         `%s_hasP`.ExperimentResults_idJob = idJob AND
+                         `%s_hasP`.SolverProperty_idSolverProperty = %d
+                      """ % (prop.name, prop.name, prop.name, prop.idSolverProperty)
+        prop_joins += """LEFT JOIN SolverPropertyValue as `%s_value` ON
+                        `%s_value`.ExperimentResult_has_SolverProperty_idER_h_SP = `%s_hasP`.idER_h_SP
+                      """ % (prop.name, prop.name, prop.name)
 
     params = []
     where_clause = ""
@@ -388,9 +400,11 @@ def experiment_progress_ajax(database, experiment_id):
                        ExperimentResults.seed, ExperimentResults.status,
                        ExperimentResults.resultCode,
                        TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW()) AS runningTime
+                       """ + (',' if prop_columns else '') + prop_columns + """
                  FROM ExperimentResults
                     LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
                     LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
+                    """+prop_joins+"""
                  WHERE """ + where_clause + " " + order + " " + limit, tuple(params))
 
     jobs = res.fetchall()
@@ -413,6 +427,7 @@ def experiment_progress_ajax(database, experiment_id):
 
     aaData = []
     for job in jobs:
+
         status = utils.job_status(job[6])
         if job[6] in JOB_RUNNING:
             try:
@@ -421,7 +436,9 @@ def experiment_progress_ajax(database, experiment_id):
                 seconds_running = 0
             status += ' (' + str(datetime.timedelta(seconds=seconds_running)) + ')'
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
-                job[4], job[5], status, utils.result_code(job[7]), str(job[6])])
+                job[4], job[5], status, utils.result_code(job[7]), str(job[6])] \
+                + [job[i] for i in xrange(9, 9+len(db.get_result_properties()))]
+            )
 
 
     return json.dumps({
@@ -481,9 +498,12 @@ def instance_details(database, instance_id):
     else:
         instance_text = instance_blob
 
+    instance_properties = db.get_instance_properties()
+
     return render('instance_details.html', instance=instance,
                   instance_text=instance_text, blob_size=len(instance.instance),
-                  database=database, db=db)
+                  database=database, db=db,
+                  instance_properties=instance_properties)
 
 
 @frontend.route('/<database>/instance/<int:instance_id>/download')

@@ -27,6 +27,9 @@
                 <tr>
                     <th>Name</th>
                     <th>MD5</th>
+                    {% for prop in db.get_instance_properties() %}
+                    <th>{{prop.name}}</th>
+                    {% endfor %}
                     <th></th>
                 </tr>
             </thead>
@@ -35,6 +38,9 @@
                 <tr>
                     <td><a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a></td>
                     <td>{{instance.md5}}</td>
+                    {% for prop in db.get_instance_properties() %}
+                    <td>{{instance.get_property_value(prop.name, db)}}</td>
+                    {% endfor %}
                     <td><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{instance.idInstance}}">Results</a></td>
                 </tr>
             {% endfor %}
