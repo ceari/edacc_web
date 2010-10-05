@@ -337,11 +337,15 @@ def experiment_progress_ajax(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+    # list of columns of the SQL query
+    # dummy column ("") in the middle for correct indexing in the ORDER part since
+    # that column is hidden in the jquery table
     columns = ["ExperimentResults.idJob", "SolverConfig.idSolverConfig", "Instances.name",
                "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
-               "ExperimentResults.status", "ExperimentResults.resultCode", ""] \
-              + ["`"+prop.name+"_value`.value" for prop in db.get_result_properties()]
+               "ExperimentResults.status", "ExperimentResults.resultCode", ""] + \
+              ["`"+prop.name+"_value`.value" for prop in db.get_result_properties()]
 
+    # build the query part for the result properties that should be included
     prop_columns = ','.join(["`"+prop.name+"_value`.value" for prop in db.get_result_properties()])
     prop_joins = ""
     for prop in db.get_result_properties():
