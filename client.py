@@ -20,35 +20,227 @@ TMP                 = '/tmp' # used for temporary files
 PACKAGE_DIR         = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 
 DATABASE_DRIVER     = 'mysql'
-DATABASE_HOST       = 'edacc.informatik.uni-ulm.de'
+DATABASE_HOST       = 'localhost'
 DATABASE_PORT       = 3306
 DATABASE_NAME       = 'EDACC'
 DATABASE_USER       = 'edacc'
 DATABASE_PASSWORD   = 'edaccteam'
 
 # Experiment this client should run, case-sensitive
-EXPERIMENT_NAME     = 'censored data test'
+EXPERIMENT_NAME     = 'Simons Experiment :-)'
 
 class EDACCDatabase(object):
-    """ Encapsulates a single EDACC database connection """
+    """ Encapsulates a single EDACC database connection. """
     def __init__(self):
+        self.database = DATABASE_NAME
+        self.username = DATABASE_USER
+        self.password = DATABASE_PASSWORD
+        self.label = DATABASE_NAME
+
         url = URL(drivername=DATABASE_DRIVER, username=DATABASE_USER,
                   password=DATABASE_PASSWORD, host=DATABASE_HOST,
-                  port=DATABASE_PORT, database=DATABASE_NAME)
-        self.engine = create_engine(url)
+                  port=DATABASE_PORT, database=DATABASE_NAME,
+                  query={'charset': 'utf8', 'use_unicode': 0})
+        self.engine = create_engine(url, convert_unicode=True)
         self.metadata = metadata = MetaData(bind=self.engine)
 
-        class Solver(object): pass
-        class SolverConfiguration(object): pass
-        class Parameter(object): pass
-        class ParameterInstance(object): pass
-        class Instance(object): pass
-        class Experiment(object): pass
-        class ExperimentResult(object): pass
-        class InstanceClass(object): pass
+        class Solver(object):
+            """ Maps the Solver table """
+            pass
+
+        class SolverConfiguration(object):
+            """ Solver configuration mapping the SolverConfig table.
+                A solver configuration consists of a solver and a set of
+                parameters and their values.
+            """
+            def get_number(self):
+                """ Returns an integer i if `self` is the i-th of the solver configurations of the same solver
+                    in the experiment `self` is in. If there's only one solver configuration of the solver this
+                    function returns 0.
+                """
+                same_solvers = [sc for sc in self.experiment.solver_configurations if sc.solver == self.solver]
+                if len(same_solvers) == 1:
+                    return 0
+                else:
+                    return same_solvers.index(self) + 1
+
+            def get_name(self):
+                """ Returns the name of the solver configuration. """
+                n = self.get_number()
+                if n == 0:
+                    return self.solver.name
+                else:
+                    return "%s (%s)" % (self.solver.name, str(n))
+
+            def __str__(self):
+                return self.get_name()
+
+        class Parameter(object):
+            """ Maps the Parameters table. """
+            pass
+
+        class ParameterInstance(object):
+            """ Maps the n:m association table SolverConfig_has_Parameters,
+                which for a parameter specifies its value in the corresponding
+                solver configuration.
+            """
+            pass
+
+        class Instance(object):
+            """ Maps the Instances table. """
+            def __str__(self):
+                return self.name
+
+            def get_property_value(self, property, db):
+                """ Returns the value of the property with the given name. """
+                try:
+                    property = db.session.query(db.InstanceProperty).get(property)
+                    pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
+                    return pv.get_value()
+                except:
+                    return None
+
+            def get_instance(self):
+                """ Decompresses the instance blob and returns it as string """
+                return pylzma.decompress(self.instance)
+
+            def set_instance(self, uncompressed_instance):
+                """ Compresses the instance and sets the instance blob attribute """
+                self.instance = pylzma.compress(uncompressed_instance)
+
+
+        class Experiment(object):
+            """ Maps the Experiment table. """
+            def is_finished(self):
+                """ Returns whether this experiment is finished (true if there are any jobs and all of them are terminated) """
+                if len(self.experiment_results) == 0: return False
+                return all(j.status in constants.JOB_FINISHED or j.status in constants.JOB_ERROR
+                           for j in self.experiment_results)
+
+            def is_running(self):
+                """ Returns true if there are any running jobs """
+                return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
+
+            def get_num_runs(self, db):
+                """ Returns the number of runs of the experiment """
+                num_results = db.session.query(db.ExperimentResult).filter_by(experiment=self).count()
+                num_solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=self).count()
+                num_instances = db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                if num_solver_configs == 0 or num_instances == 0:
+                    return 0
+                return num_results / num_solver_configs / num_instances
+
+            def get_solved_instances(self, db):
+                """ Returns the instances of the experiment that all solvers solved in every run """
+                numInstances = db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                if numInstances == 0: return 0
+                num_jobs_per_instance = db.session.query(db.ExperimentResult).filter_by(experiment=self).count() / numInstances
+                instances = []
+                for i in self.instances:
+                    if db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')).filter_by(experiment=self, instance=i, status=1).count() == num_jobs_per_instance:
+                        instances.append(i)
+                return instances
+
+            def get_num_solver_configs(self, db):
+                return db.session.query(db.SolverConfiguration).filter_by(experiment=self).count()
+
+            def get_num_instances(self, db):
+                return db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+
+        class ExperimentResult(object):
+            """ Maps the ExperimentResult table. Provides a function
+                to obtain a result property of a job.
+            """
+            def get_time(self):
+                """ Returns the CPU time needed for this result or the
+                    experiment's timeOut value if the status is
+                    not correct (certified SAT/UNSAT answer).
+                """
+                if self.resultTime is None or self.resultCode not in (10, 11):
+                    return self.experiment.CPUTimeLimit
+                else:
+                    return self.resultTime
+
+
+            def get_property_value(self, property, db):
+                """ Returns the value of the property with the given name.
+                    If the property is 'cputime' it returns the time.
+                    If the property is an integer, it returns the value of the
+                    associated SolverProperty with this id.
+                """
+                if property == 'cputime':
+                    return self.get_time()
+                else:
+                    try:
+                        property = db.session.query(db.SolverProperty).get(int(property))
+                        pv = db.session.query(db.ExperimentResultSolverProperty).filter_by(solver_property=property, experiment_result=self).first()
+                        return pv.get_value()
+                    except:
+                        # if the property or property value doesn't exist return None
+                        return None
+
+        class InstanceClass(object):
+            def __str__(self):
+                return self.name
+
         class GridQueue(object): pass
+
         class User(object): pass
+
         class DBConfiguration(object): pass
+
+        class CompetitionCategory(object):
+            def __str__(self):
+                return self.name
+
+        class BenchmarkType(object):
+            def __str__(self):
+                return self.name
+
+        class InstanceProperty(object):
+            def is_simple(self):
+                """ Returns whether the property is a simple property which is
+                    stored in a way that's directly castable to a Python object
+                """
+                return self.valueType.lower() in ('float', 'double', 'int', 'integer')
+
+        class InstanceProperties(object):
+            def get_value(self):
+                valueType = self.property.valueType.lower()
+                try:
+                    if valueType in ('float', 'double',):
+                        return float(self.value)
+                    elif valueType in ('int', 'integer'):
+                        return int(self.value)
+                    else:
+                        return None
+                except ValueError:
+                    return None
+
+        class PropertyValueType(object): pass
+
+        class SolverProperty(object):
+            def is_simple(self):
+                """ Returns whether the property is a simple property which is
+                    stored in a way that's directly castable to a Python object
+                """
+                return self.multiple == False and self.PropertyValueType_name.lower() in ('float', 'double', 'int', 'integer')
+
+        class ExperimentResultSolverProperty(object):
+            def get_value(self):
+                valueType = self.solver_property.PropertyValueType_name.lower()
+                try:
+                    if valueType in ('float', 'double',):
+                        return float(self.values[0].value)
+                    elif valueType in ('int', 'integer'):
+                        return int(self.values[0].value)
+                    else:
+                        return None
+                except ValueError:
+                    return None
+
+        class SolverPropertyValue(object): pass
+
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
         self.Parameter = Parameter
@@ -60,6 +252,14 @@ class EDACCDatabase(object):
         self.GridQueue = GridQueue
         self.User = User
         self.DBConfiguration = DBConfiguration
+        self.CompetitionCategory = CompetitionCategory
+        self.BenchmarkType = BenchmarkType
+        self.InstanceProperty = InstanceProperty
+        self.PropertyValueType = PropertyValueType
+        self.SolverProperty = SolverProperty
+        self.ExperimentResultSolverProperty = ExperimentResultSolverProperty
+        self.SolverPropertyValue = SolverPropertyValue
+        self.InstanceProperties = InstanceProperties
 
         metadata.reflect()
 
@@ -70,15 +270,20 @@ class EDACCDatabase(object):
         mapper(Instance, metadata.tables['Instances'],
             properties = {
                 'instance': deferred(metadata.tables['Instances'].c.instance),
-                'instance_classes': relationship(InstanceClass, secondary=metadata.tables['Instances_has_instanceClass']),
-                'source_class': relation(InstanceClass)
+                'instance_classes': relationship(InstanceClass, secondary=metadata.tables['Instances_has_instanceClass'], backref='instances'),
+                'source_class': relation(InstanceClass, backref='source_instances'),
+                'properties': relation(InstanceProperties, backref='instance'),
             }
         )
         mapper(Solver, metadata.tables['Solver'],
             properties = {
                 'binary': deferred(metadata.tables['Solver'].c.binary),
                 'code': deferred(metadata.tables['Solver'].c.code),
-                'parameters': relation(Parameter, backref='solver')
+                'parameters': relation(Parameter, backref='solver'),
+                'competition_categories': relationship(
+                    CompetitionCategory,
+                    backref='solvers',
+                    secondary=metadata.tables['Solver_has_CompetitionCategory'])
             }
         )
         mapper(ParameterInstance, metadata.tables['SolverConfig_has_Parameters'],
@@ -95,28 +300,104 @@ class EDACCDatabase(object):
         )
         mapper(Experiment, metadata.tables['Experiment'],
             properties = {
-                'instances': relationship(Instance, secondary=metadata.tables['Experiment_has_Instances']),
+                'instances': relationship(Instance, secondary=metadata.tables['Experiment_has_Instances'], backref='experiments'),
                 'solver_configurations': relation(SolverConfiguration),
                 'grid_queue': relationship(GridQueue, secondary=metadata.tables['Experiment_has_gridQueue']),
+                'results': relation(ExperimentResult)
+            }
+        )
+        mapper(SolverProperty, metadata.tables['SolverProperty'],
+            properties = {
+                'value_type': relation(PropertyValueType)
             }
         )
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
                 'solverOutput': deferred(metadata.tables['ExperimentResults'].c.solverOutput),
-                #'solverOutput': deferred(metadata.tables['ExperimentResults'].c.clientOutput),
+                'launcherOutput': deferred(metadata.tables['ExperimentResults'].c.launcherOutput),
+                'watcherOutput': deferred(metadata.tables['ExperimentResults'].c.watcherOutput),
+                'verifierOutput': deferred(metadata.tables['ExperimentResults'].c.verifierOutput),
+                'solverOutputFN': deferred(metadata.tables['ExperimentResults'].c.solverOutputFN),
+                'launcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.launcherOutputFN),
+                'watcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.watcherOutputFN),
+                'verifierOutputFN': deferred(metadata.tables['ExperimentResults'].c.verifierOutputFN),
                 'solver_configuration': relation(SolverConfiguration),
+                'solver_properties': relationship(ExperimentResultSolverProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),
                 'instance': relation(Instance),
             }
         )
+        mapper(ExperimentResultSolverProperty, metadata.tables['ExperimentResult_has_SolverProperty'],
+            properties = {
+                'solver_property': relationship(SolverProperty, backref='experiment_results'),
+                'values': relation(SolverPropertyValue)
+            }
+        )
+        mapper(InstanceProperties, metadata.tables['Instance_has_InstanceProperty'],
+            properties = {
+                'property': relation(InstanceProperty),
+                'value': deferred(metadata.tables['Instance_has_InstanceProperty'].c.value)
+            }
+        )
         mapper(User, metadata.tables['User'],
             properties = {
-                'solvers': relation(Solver, backref='user')
+                'solvers': relation(Solver, backref='user'),
+                'source_classes': relation(InstanceClass, backref='user'),
+                'benchmark_types': relation(BenchmarkType, backref='user')
             }
         )
         mapper(DBConfiguration, metadata.tables['DBConfiguration'])
+        mapper(CompetitionCategory, metadata.tables['CompetitionCategory'])
+        mapper(BenchmarkType, metadata.tables['BenchmarkType'],
+            properties = {
+                'instances': relation(Instance, backref='benchmark_type')
+            }
+        )
+        mapper(PropertyValueType, metadata.tables['PropertyValueType'])
+        mapper(SolverPropertyValue, metadata.tables['SolverPropertyValue'])
+        mapper(InstanceProperty, metadata.tables['InstanceProperty'])
 
         self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False, autoflush=False))
+
+        # initialize DBConfiguration table if not already done
+        if self.session.query(DBConfiguration).get(0) is None:
+            dbConfig = DBConfiguration()
+            dbConfig.id = 0
+            dbConfig.competition = False
+            dbConfig.competitionPhase = None
+            self.session.add(dbConfig)
+            self.session.commit()
+
+    def get_result_properties(self):
+        """ Returns a list of the result properties in the database that are
+            suited for Python use.
+        """
+        return [p for p in self.session.query(self.SolverProperty).all() if p.is_simple()]
+
+    def get_instance_properties(self):
+        """ Returns a list of the instance properties in the database that are
+            suited for Python use.
+        """
+        return [p for p in self.session.query(self.InstanceProperty).all() if p.is_simple()]
+
+    def is_competition(self):
+        """ returns whether this database is a competition database (user management etc. necessary) or not """
+        return self.session.query(self.DBConfiguration).get(0).competition
+
+    def set_competition(self, b):
+        self.session.query(self.DBConfiguration).get(0).competition = b
+
+    def competition_phase(self):
+        """ returns the competition phase this database is in (or None, if is_competition() == False) as integer"""
+        if not self.is_competition(): return None
+        return self.session.query(self.DBConfiguration).get(0).competitionPhase
+
+    def set_competition_phase(self, phase):
+        if phase is not None and phase not in (1,2,3,4,5,6,7): return
+        self.session.query(self.DBConfiguration).get(0).competitionPhase = phase
+
+    def __str__(self):
+        return self.label
 
 def parameter_string(solver_config):
     """ Returns a string of the solver configuration parameters """
@@ -188,7 +469,7 @@ class EDACCClient(threading.Thread):
                 job.startTime = func.now()
                 db.session.commit()
 
-                client_line = '/usr/bin/time -f ";%U;" '
+                client_line = '/usr/bin/time -f ";time=%U;mem=%M;" '
                 client_line += os.path.join(PACKAGE_DIR, 'solvers', launch_command(job.solver_configuration)[2:])
                 client_line += os.path.join(PACKAGE_DIR, 'instances', str(job.instance.idInstance) + '_' + job.instance.name) + ' ' + str(job.seed)
 
@@ -196,18 +477,19 @@ class EDACCClient(threading.Thread):
                 stdout = open(os.path.join(TMP, str(job.idJob) + 'stdout~'), 'w')
                 stderr = open(os.path.join(TMP, str(job.idJob) + 'stderr~'), 'w')
                 start = time.time()
-                p = subprocess.Popen(shlex.split(client_line), preexec_fn=setlimits(experiment.CPUTimeLimit), stdout = stdout, stderr = stderr)
-                p.wait()
+
+                p = subprocess.Popen(shlex.split(str(client_line)), preexec_fn=setlimits(self.experiment.CPUTimeLimit), stdout = stdout, stderr = stderr)
+
+                returncode = p.wait()
                 print "Job", job.idJob, "done .. Realtime:", str(time.time() - start), "s"
                 stdout.close()
                 stderr.close()
 
                 stdout = open(os.path.join(TMP, str(job.idJob) + 'stdout~'), 'r')
                 stderr = open(os.path.join(TMP, str(job.idJob) + 'stderr~'), 'r')
-                time_output = stderr.read()
-                tstart = time_output.find(";")
-                tend = time_output.find(";", tstart+1)
-                runtime = float(time_output[tstart+1:tend])
+                time_output = stderr.read().split(';')
+                runtime = float([d.split('=')[1] for d in time_output if d.startswith('time=')][0])
+                memory = int([d.split('=')[1] for d in time_output if d.startswith('mem=')][0])
 
                 job.solverOutput = stdout.read()
                 stdout.close()
@@ -217,17 +499,35 @@ class EDACCClient(threading.Thread):
 
                 job.resultTime = runtime
 
+                memory_used_prop = None
+                for prop in db.get_result_properties():
+                    if prop.name == 'Memory used':
+                        memory_used_prop = prop
+                        break
+
+                if memory_used_prop is not None:
+                    ersp = db.ExperimentResultSolverProperty()
+                    ersp.solver_property = memory_used_prop
+                    val = db.SolverPropertyValue()
+                    ersp.values.append(val)
+                    val.order = 0
+                    val.value = str(memory)
+                    ersp.experiment_result = job
+
+                    db.session.add(ersp)
+                    db.session.add(val)
+
                 #cpuinfo = open('/proc/cpuinfo')
                 #job.solverOutput = cpuinfo.read()
                 #cpuinfo.close()
 
-                print "retcode", p.returncode
+                print "  retcode", returncode
 
-                if p.returncode == 24: # CPU Time limit exceeded exit code
+                if returncode != 10 and returncode != 0: # CPU Time limit exceeded exit code guess
                     job.status = 2
                 else:
                     job.status = 1
-                print "             CPU time:", runtime, "s"
+                print "  CPU time:", runtime, "s", "Memory used:", memory, "kB"
                 db.session.commit()
             else:
                 if db.session.query(db.ExperimentResult) \
