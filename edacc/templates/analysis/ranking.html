@@ -8,8 +8,28 @@
     </div>
     <h2>Ranking</h2>
 
-    <h3>Ranking by the number of correctly solved instances</h3>
-    {% for sc in ranked_solvers %}
-        {{ loop.index }} - {{ sc }}<br/>
-    {% endfor %}
+    <h3>Ranking by the number of successful runs</h3>
+    <table class="results">
+        <thead>
+            <tr>
+                <th>Solver</th>
+                <th>Number of successful runs</th>
+                <th>% of all runs</th>
+                <th>cumulated CPU time</th>
+                <th>average CPU time per successful run</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for sc in data %}
+            <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">
+                <td>{{sc.0}}</td>
+                <td>{{sc.1}}</td>
+                <td>{{(sc.2 * 100.0)|round(2)}} %</td>
+                <td>{{sc.3|round(2)}}</td>
+                <td>{{sc.4|round(2)}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
 {% endblock %}

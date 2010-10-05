@@ -232,6 +232,15 @@ table.results td.even {
     background-color: #eee;
 }
 
+table.results tr.odd {
+    background-color: #ddd;
+}
+
+table.results tr.even {
+    background-color: #eee;
+}
+
+
 div.navigation {
     font-size: 14px;
     margin-top: 5px;

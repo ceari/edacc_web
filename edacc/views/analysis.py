@@ -10,6 +10,7 @@
 """
 
 import math
+import numpy
 
 from flask import Module
 from flask import render_template
@@ -39,10 +40,30 @@ def solver_ranking(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+    num_runs_per_solver = experiment.get_num_runs(db) * len(experiment.instances)
+
     ranked_solvers = ranking.number_of_solved_instances_ranking(experiment)
+    data = [('Virtual Best Solver (VBS)',   # name of the solver
+             len(experiment.instances) * experiment.get_num_runs(db),     # number of successful runs
+             1.0,                           # % of all runs
+             0,                             # cumulated CPU time
+             0,                             # average CPU time per successful run
+             )]
+    for solver in ranked_solvers:
+        successful_runs = db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')) \
+                                    .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
+        num_successful_runs = len(successful_runs)
+        data.append((
+            solver.get_name(),
+            num_successful_runs,
+            num_successful_runs / float(num_runs_per_solver),
+            sum(j.get_time() for j in successful_runs),
+            numpy.average([j.get_time() for j in successful_runs])
+        ))
 
     return render('/analysis/ranking.html', database=database, db=db,
-                  experiment=experiment, ranked_solvers=ranked_solvers)
+                  experiment=experiment, ranked_solvers=ranked_solvers,
+                  data=data)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus/')
