@@ -524,6 +524,7 @@ def solver_details(database, solver_id):
 def solver_configuration_details(database, experiment_id, solver_configuration_id):
     """ Show solver configuration details """
     db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id)
     solver_config = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
     solver = solver_config.solver
 
@@ -534,7 +535,8 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     parameters.sort(key=lambda p: p.parameter.order)
 
     return render('solver_configuration_details.html', solver_config=solver_config,
-                  solver=solver, parameters=parameters, database=database, db=db)
+                  solver=solver, parameters=parameters, database=database, db=db,
+                  experiment=experiment)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>')

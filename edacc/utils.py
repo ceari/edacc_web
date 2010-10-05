@@ -53,12 +53,12 @@ def parameter_string(solver_config):
     parameters = solver_config.parameter_instances
     args = []
     for p in parameters:
-        args.append(p.parameter.prefix)
+        args.append(p.parameter.prefix or "")
         if p.parameter.hasValue:
             if p.value == "": # if value not set, use default value from parameters table
-                args.append(p.parameter.value)
+                args.append(p.parameter.value or "")
             else:
-                args.append(p.value)
+                args.append(p.value or "")
     return " ".join(args)
 
 def launch_command(solver_config):

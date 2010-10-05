@@ -38,7 +38,7 @@
     <a href="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">Analysis - Probabilistic Domination of solvers on the instances</a>
 
     <h2>Ranking</h2>
-    <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Point Biserial Correlation based ranking</a><br/>
+    <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Ranking by number of correctly solved instances</a><br/>
     {% endif %}
 
 {% endblock %}

@@ -27,7 +27,7 @@ DATABASE_USER       = 'edacc'
 DATABASE_PASSWORD   = 'edaccteam'
 
 # Experiment this client should run, case-sensitive
-EXPERIMENT_NAME     = 'Simons Experiment :-)'
+EXPERIMENT_NAME     = 'censored data test'
 
 class EDACCDatabase(object):
     """ Encapsulates a single EDACC database connection """

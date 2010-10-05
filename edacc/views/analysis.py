@@ -41,7 +41,6 @@ def solver_ranking(database, experiment_id):
 
     ranked_solvers = ranking.number_of_solved_instances_ranking(experiment)
 
-
     return render('/analysis/ranking.html', database=database, db=db,
                   experiment=experiment, ranked_solvers=ranked_solvers)
 

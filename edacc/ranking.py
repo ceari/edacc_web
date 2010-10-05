@@ -59,8 +59,20 @@ def avg_point_biserial_correlation_ranking(experiment):
     return list(reversed(sorted(experiment.solver_configurations, cmp=comp)))
 
 def number_of_solved_instances_ranking(experiment):
-    """ TODO: use result properties to determine if an instance was actually
-        solved.
+    """ Ranking by the number of instances correctly solved.
+        This is determined by an resultCode that starts with '1' and a 'finished' status
+        of a job.
     """
-    return list(reversed(sorted(experiment.solver_configurations,
-                                key=lambda s: len([r for r in experiment.results if r.status == 1 and str(r.resultCode).startswith('1')]))))
+    results = experiment.results
+    def comp(s1, s2):
+        solved_s1 = [res for res in results if res.solver_configuration == s1 and res.status == 1 and str(res.resultCode).startswith('1')]
+        solved_s2 = [res for res in results if res.solver_configuration == s2 and res.status == 1 and str(res.resultCode).startswith('1')]
+        num_solved_s1 = len(solved_s1)
+        num_solved_s2 = len(solved_s2)
+        if num_solved_s1 > num_solved_s2: return 1
+        elif num_solved_s1 < num_solved_s2: return -1
+        else:
+            return sum([res.get_time() for res in solved_s1]) - sum([res.get_time() for res in solved_s2])
+
+
+    return list(reversed(sorted(experiment.solver_configurations,cmp=comp)))
