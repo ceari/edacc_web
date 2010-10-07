@@ -337,18 +337,20 @@ def experiment_progress_ajax(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+    result_properties = db.get_result_properties()
+
     # list of columns of the SQL query
     # dummy column ("") in the middle for correct indexing in the ORDER part since
     # that column is hidden in the jquery table
     columns = ["ExperimentResults.idJob", "SolverConfig.idSolverConfig", "Instances.name",
                "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
                "ExperimentResults.status", "ExperimentResults.resultCode", ""] + \
-              ["`"+prop.name+"_value`.value" for prop in db.get_result_properties()]
+              ["`"+prop.name+"_value`.value" for prop in result_properties]
 
     # build the query part for the result properties that should be included
-    prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+prop.name+"_value`.value END" for prop in db.get_result_properties()])
+    prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+prop.name+"_value`.value END" for prop in result_properties])
     prop_joins = ""
-    for prop in db.get_result_properties():
+    for prop in result_properties:
         prop_joins += """LEFT JOIN ExperimentResult_has_SolverProperty as `%s_hasP` ON
                          `%s_hasP`.ExperimentResults_idJob = idJob AND
                          `%s_hasP`.SolverProperty_idSolverProperty = %d
@@ -440,7 +442,7 @@ def experiment_progress_ajax(database, experiment_id):
             status += ' (' + str(datetime.timedelta(seconds=seconds_running)) + ')'
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
                 job[4], job[5], status, utils.result_code(job[7]), str(job[6])] \
-                + [job[i] for i in xrange(9, 9+len(db.get_result_properties()))]
+                + [job[i] for i in xrange(9, 9+len(result_properties))]
             )
 
 

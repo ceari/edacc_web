@@ -82,7 +82,7 @@ def cactus_plot(database, experiment_id):
 
     form = forms.CactusPlotForm(request.args)
     form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
-    result_properties = db.get_result_properties()
+    result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
 
@@ -184,7 +184,7 @@ def scatter_2solver_1property(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    result_properties = db.get_result_properties()
+    result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
     numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
@@ -234,9 +234,9 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    result_properties = db.get_result_properties()
+    result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
-    instance_properties = db.get_instance_properties()
+    instance_properties = db.get_plotable_instance_properties()
     instance_properties = zip([p.name for p in instance_properties], [p.name for p in instance_properties])
     numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
@@ -286,7 +286,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    result_properties = db.get_result_properties()
+    result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
     numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])

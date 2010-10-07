@@ -194,6 +194,13 @@ class EDACCDatabase(object):
                 """ Returns whether the property is a simple property which is
                     stored in a way that's directly castable to a Python object
                 """
+                return self.valueType.lower() in ('float', 'double', 'int', 'integer', 'string')
+
+            def is_plotable(self):
+                """ Returns whether the property is a simple property which is
+                    stored in a way that's directly castable to a Python object
+                    and is numeric.
+                """
                 return self.valueType.lower() in ('float', 'double', 'int', 'integer')
 
         class InstanceProperties(object):
@@ -204,6 +211,8 @@ class EDACCDatabase(object):
                         return float(self.value)
                     elif valueType in ('int', 'integer'):
                         return int(self.value)
+                    elif valueType in ('string', ):
+                        return str(self.value)
                     else:
                         return None
                 except ValueError:
@@ -215,6 +224,13 @@ class EDACCDatabase(object):
             def is_simple(self):
                 """ Returns whether the property is a simple property which is
                     stored in a way that's directly castable to a Python object
+                """
+                return self.multiple == False and self.PropertyValueType_name.lower() in ('float', 'double', 'int', 'integer', 'string')
+
+            def is_plotable(self):
+                """ Returns whether the property is a simple property which is
+                    stored in a way that's directly castable to a Python object
+                    and is numeric.
                 """
                 return self.multiple == False and self.PropertyValueType_name.lower() in ('float', 'double', 'int', 'integer')
 
@@ -366,11 +382,23 @@ class EDACCDatabase(object):
         """
         return [p for p in self.session.query(self.SolverProperty).all() if p.is_simple()]
 
+    def get_plotable_result_properties(self):
+        """ Returns a list of the result properties in the database that are
+            suited for plotting.
+        """
+        return [p for p in self.session.query(self.SolverProperty).all() if p.is_plotable()]
+
     def get_instance_properties(self):
         """ Returns a list of the instance properties in the database that are
             suited for Python use.
         """
         return [p for p in self.session.query(self.InstanceProperty).all() if p.is_simple()]
+
+    def get_plotable_instance_properties(self):
+        """ Returns a list of the instance properties in the database that are
+            suited for plotting.
+        """
+        return [p for p in self.session.query(self.InstanceProperty).all() if p.is_plotable()]
 
     def is_competition(self):
         """ returns whether this database is a competition database (user management etc. necessary) or not """

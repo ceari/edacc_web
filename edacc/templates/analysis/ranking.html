@@ -12,6 +12,7 @@
     <table class="results">
         <thead>
             <tr>
+                <th>#</th>
                 <th>Solver</th>
                 <th>Number of successful runs</th>
                 <th>% of all runs</th>
@@ -22,6 +23,7 @@
         <tbody>
         {% for sc in data %}
             <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">
+                <td>{% if loop.index0 > 0 %}{{loop.index0}}{% endif %}</td>
                 <td>{{sc.0}}</td>
                 <td>{{sc.1}}</td>
                 <td>{{(sc.2 * 100.0)|round(2)}} %</td>
