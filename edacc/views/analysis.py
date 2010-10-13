@@ -66,66 +66,66 @@ def solver_ranking(database, experiment_id):
                   data=data)
 
 
-@analysis.route('/<database>/experiment/<int:experiment_id>/compare-results/')
-@require_phase(phases=(6, 7))
-@require_login
-def result_statistical_comparison(database, experiment_id):
-    db = models.get_database(database) or abort(404)
-    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-
-    form = forms.ResultStatisticalComparisonForm(request.args)
-    form.instance.query = sorted(experiment.instances, key=lambda i: i.name)
-    form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
-    form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
-    result_properties = db.get_plotable_result_properties()
-    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
-    form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
-    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
-
-    if form.solver_config1.data and form.solver_config2.data:
-        instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
-        s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
-        s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
-
-        result_property = request.args.get('solver_property')
-        if result_property != 'cputime':
-            result_property = db.session.query(db.SolverProperty).get(int(result_property)).idSolverProperty
-
-        results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
-                                        .filter_by(experiment=experiment,
-                                                   solver_configuration=s1,
-                                                   instance=instance).all()]
-        results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
-                                        .filter_by(experiment=experiment,
-                                                   solver_configuration=s2,
-                                                   instance=instance).all()]
-        print results1, results2
-        results1 = filter(lambda r: r is not None, results1)
-        results2 = filter(lambda r: r is not None, results2)
-
-        median1 = numpy.median(results1)
-        median2 = numpy.median(results2)
-        sample_size1 = len(results1)
-        sample_size2 = len(results2)
-
-        try:
-            wx_statistic, wx_p_value = statistics.wilcox_test(results1, results2)
-            wx_error = None
-        except Exception as e:
-            wx_statistic, wx_p_value = None, None
-            wx_error = str(e)
-
-        return render('/analysis/result_statistical_comparison.html', database=database,
-              experiment=experiment, db=db, form=form, GET_data=GET_data,
-              median1=median1, median2=median2, sample_size1=sample_size1,
-              sample_size2=sample_size2, wx_statistic=wx_statistic,
-              wx_p_value=wx_p_value,
-              wx_error=wx_error, results1=results1, results2=results2,
-              s1=s1, s2=s2)
-
-
-    return render('/analysis/result_statistical_comparison.html', database=database,
-                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+#@analysis.route('/<database>/experiment/<int:experiment_id>/compare-results/')
+#@require_phase(phases=(6, 7))
+#@require_login
+#def result_statistical_comparison(database, experiment_id):
+#    db = models.get_database(database) or abort(404)
+#    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+#
+#    form = forms.ResultStatisticalComparisonForm(request.args)
+#    form.instance.query = sorted(experiment.instances, key=lambda i: i.name)
+#    form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
+#    form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
+#    result_properties = db.get_plotable_result_properties()
+#    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+#    form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
+#    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+#
+#    if form.solver_config1.data and form.solver_config2.data:
+#        instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
+#        s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
+#        s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
+#
+#        result_property = request.args.get('solver_property')
+#        if result_property != 'cputime':
+#            result_property = db.session.query(db.SolverProperty).get(int(result_property)).idSolverProperty
+#
+#        results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
+#                                        .filter_by(experiment=experiment,
+#                                                   solver_configuration=s1,
+#                                                   instance=instance).all()]
+#        results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
+#                                        .filter_by(experiment=experiment,
+#                                                   solver_configuration=s2,
+#                                                   instance=instance).all()]
+#
+#        results1 = filter(lambda r: r is not None, results1)
+#        results2 = filter(lambda r: r is not None, results2)
+#
+#        median1 = numpy.median(results1)
+#        median2 = numpy.median(results2)
+#        sample_size1 = len(results1)
+#        sample_size2 = len(results2)
+#
+#        try:
+#            wx_statistic, wx_p_value = statistics.wilcox_test(results1, results2)
+#            wx_error = None
+#        except Exception as e:
+#            wx_statistic, wx_p_value = None, None
+#            wx_error = str(e)
+#
+#        return render('/analysis/result_statistical_comparison.html', database=database,
+#              experiment=experiment, db=db, form=form, GET_data=GET_data,
+#              median1=median1, median2=median2, sample_size1=sample_size1,
+#              sample_size2=sample_size2, wx_statistic=wx_statistic,
+#              wx_p_value=wx_p_value,
+#              wx_error=wx_error, results1=results1, results2=results2,
+#              s1=s1, s2=s2)
+#
+#
+#    return render('/analysis/result_statistical_comparison.html', database=database,
+#                  experiment=experiment, db=db, form=form, GET_data=GET_data)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus/')
@@ -157,18 +157,18 @@ def cactus_plot(database, experiment_id):
 @analysis.route('/<database>/experiment/<int:experiment_id>/rtd-comparison/')
 @require_phase(phases=(6, 7))
 @require_login
-def rtd_comparison(database, experiment_id):
+def result_property_comparison(database, experiment_id):
     """
-        Displays a page allowing the user to compare the runtime distributions
+        Displays a page allowing the user to compare the result property distributions
         of two solvers on an instance. The solvers and instance can be selected
         in a form.
-        The page then displays a plot with the two runtime distributions
-        aswell as statistical tests of hypothesis such as "The RTD of solver A
-        is significantly different to that of solver B".
+        The page then displays a plot with the two distributions
+        aswell as statistical tests of hypothesis such as "The distribution of solver A
+        is significantly different to the one of solver B".
 
         Statistical tests implemented:
-        - Kolmogorow-Smirnow two-sample test (RTD1 = RTD2)
-        - Mann-Whitney-U-test (RTD1 = RTD2)
+        - Kolmogorow-Smirnow two-sample test (Distribution1 = Distribution2)
+        - Mann-Whitney-U-test (Distribution1 = Distribution2 or Median1 = Median2)
     """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
@@ -177,6 +177,9 @@ def rtd_comparison(database, experiment_id):
     form.instance.query = experiment.instances or EmptyQuery()
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
+    result_properties = db.get_plotable_result_properties()
+    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     if form.solver_config1.data and form.solver_config2.data and form.instance.data:
@@ -184,32 +187,50 @@ def rtd_comparison(database, experiment_id):
         s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
         s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
 
-        results1 = [r.get_time() for r in db.session.query(db.ExperimentResult)
+        result_property = request.args.get('solver_property')
+        if result_property != 'cputime':
+            result_property = db.session.query(db.SolverProperty).get(int(result_property)).idSolverProperty
+
+        results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                         .filter_by(experiment=experiment,
                                                    solver_configuration=s1,
                                                    instance=instance).all()]
-        results2 = [r.get_time() for r in db.session.query(db.ExperimentResult)
+        results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                         .filter_by(experiment=experiment,
                                                    solver_configuration=s2,
                                                    instance=instance).all()]
 
-        ks_statistic, ks_p_value = statistics.kolmogorow_smirnow_2sample_test(results1, results2)
+        results1 = filter(lambda r: r is not None, results1)
+        results2 = filter(lambda r: r is not None, results2)
+
+        median1 = numpy.median(results1)
+        median2 = numpy.median(results2)
+        sample_size1 = len(results1)
+        sample_size2 = len(results2)
+
+        try:
+            ks_statistic, ks_p_value = statistics.kolmogorow_smirnow_2sample_test(results1, results2)
+            ks_error = None
+        except Exception as e:
+            ks_statistic, ks_p_value = None, None
+            ks_error = str(e)
+
         try:
             wx_statistic, wx_p_value = statistics.wilcox_test(results1, results2)
             wx_error = None
-        except ValueError as e:
+        except Exception as e:
             wx_statistic, wx_p_value = None, None
             wx_error = str(e)
 
 
-        return render('/analysis/rtd_comparison.html', database=database,
+        return render('/analysis/result_property_comparison.html', database=database,
               experiment=experiment, db=db, form=form, GET_data=GET_data,
               ks_statistic=ks_statistic, ks_p_value=ks_p_value,
               wx_statistic=wx_statistic, wx_p_value=wx_p_value,
-              wx_error=wx_error)
+              wx_error=wx_error, ks_error=ks_error)
 
 
-    return render('/analysis/rtd_comparison.html', database=database,
+    return render('/analysis/result_property_comparison.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
 
 

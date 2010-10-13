@@ -151,6 +151,7 @@ class CactusPlotForm(Form):
 class RTDComparisonForm(Form):
     solver_config1 = QuerySelectField('First Solver Configuration')
     solver_config2 = QuerySelectField('Second Solver Configuration')
+    solver_property = SelectField('Property')
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 

@@ -162,7 +162,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     grdevices.dev_off()
 
 
-def rtd_comparison(results1, results2, solver1, solver2, filename, format='png', dim=700):
+def result_property_comparison(results1, results2, solver1, solver2, result_property_name, filename, format='png', dim=700):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
         #               height=600, bg="white", pointsize=14)
@@ -197,11 +197,11 @@ def rtd_comparison(results1, results2, solver1, solver2, filename, format='png',
                     xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
 
     # plot labels and axes
-    robjects.r.mtext('CPU Time (s)', side=1,
+    robjects.r.mtext(result_property_name, side=1,
                      line=3, cex=1.2) # bottom axis label
-    robjects.r.mtext('P(solve within x seconds)', side=2, padj=0,
+    robjects.r.mtext('P(finish before x)', side=2, padj=0,
                      line=3, cex=1.2) # left axis label
-    robjects.r.mtext('RTD Comparison',
+    robjects.r.mtext('Result property distribution comparison',
                      padj=1, side=3, line=3, cex=1.7) # plot title
 
     # plot legend

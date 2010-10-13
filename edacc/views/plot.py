@@ -474,7 +474,7 @@ def cactus_plot(database, experiment_id):
 @plot.route('/<database>/experiment/<int:experiment_id>/rtd-comparison-plot/')
 @require_phase(phases=(5, 6, 7))
 @require_login
-def rtd_comparison_plot(database, experiment_id):
+def result_property_comparison_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -483,11 +483,18 @@ def rtd_comparison_plot(database, experiment_id):
     s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
     dim = int(request.args.get('dim', 700))
 
-    results1 = [r.get_time() for r in db.session.query(db.ExperimentResult)
+    result_property = request.args.get('solver_property')
+    if result_property != 'cputime':
+        result_property = db.session.query(db.SolverProperty).get(int(result_property)).idSolverProperty
+        result_property_name = db.session.query(db.SolverProperty).get(int(result_property)).name
+    else:
+        result_property_name = 'CPU time (s)'
+
+    results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                     .filter_by(experiment=exp,
                                                solver_configuration=s1,
                                                instance=instance).all()]
-    results2 = [r.get_time() for r in db.session.query(db.ExperimentResult)
+    results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                     .filter_by(experiment=exp,
                                                solver_configuration=s2,
                                                instance=instance).all()]
@@ -495,7 +502,7 @@ def rtd_comparison_plot(database, experiment_id):
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow(['Runtimes of the two solver configurations on ' + str(instance)])
+        csv_writer.writerow([result_property_name + ' results of the two solver configurations on ' + str(instance)])
         csv_writer.writerow([str(s1), str(s2)])
         for i in xrange(min(len(results1), len(results2))):
             csv_writer.writerow(map(str, [results1[i], results2[i]]))
@@ -508,7 +515,7 @@ def rtd_comparison_plot(database, experiment_id):
 
     if request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
-        plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, format='pdf', dim=dim)
+        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, filename, format='pdf', dim=dim)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename='rtdcomp.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -516,7 +523,7 @@ def rtd_comparison_plot(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
-        plots.rtd_comparison(results1, results2, str(s1), str(s2), filename, 'png', dim=dim)
+        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, filename, 'png', dim=dim)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
