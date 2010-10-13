@@ -199,7 +199,7 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
     # plot labels and axes
     robjects.r.mtext(result_property_name, side=1,
                      line=3, cex=1.2) # bottom axis label
-    robjects.r.mtext('P(finish before x)', side=2, padj=0,
+    robjects.r.mtext('P(X <= x)', side=2, padj=0,
                      line=3, cex=1.2) # left axis label
     robjects.r.mtext('Result property distribution comparison',
                      padj=1, side=3, line=3, cex=1.7) # plot title
