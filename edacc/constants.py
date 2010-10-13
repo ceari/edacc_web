@@ -23,6 +23,7 @@ JOB_STATUS = {
     0:  'running',
     1:  'finished',
     2:  'terminated by ulimit',
+    21: 'terminated by ulimit',
 }
 
 JOB_RESULT_CODE = {
@@ -58,4 +59,5 @@ JOB_STATUS_COLOR = {
     0:  'orange',
     1:  '#00CC33',
     2:  '#FF6600',
+    21: '#FF6600',
 }
