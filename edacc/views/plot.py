@@ -177,15 +177,17 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
             prop_value = instance.get_property_value(instance_property, db)
             res = [j.get_property_value(solver_property, db) for j in results.filter_by(instance=instance).all()]
             res = filter(lambda r: r is not None, res)
-            s_avg = numpy.average(res)
-            points.append((prop_value, s_avg, instance))
+            if res != [] and prop_value is not None:
+                s_avg = numpy.average(res)
+                points.append((prop_value, s_avg, instance))
     elif run == 'median':
         for instance in instances:
             prop_value = instance.get_property_value(instance_property, db)
             res = [j.get_property_value(solver_property, db) for j in results.filter_by(instance=instance).all()]
             res = filter(lambda r: r is not None, res)
-            y = numpy.median(res)
-            points.append((prop_value, y, instance))
+            if res != [] and prop_value is not None:
+                y = numpy.median(res)
+                points.append((prop_value, y, instance))
     elif run == 'all':
         for instance in instances:
             prop_value = instance.get_property_value(instance_property, db)
@@ -203,7 +205,7 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
                     res.get_property_value(solver_property, db),
                     instance
                 ))
-
+    print points
     return points
 
 

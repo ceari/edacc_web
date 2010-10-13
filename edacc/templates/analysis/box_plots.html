@@ -7,21 +7,23 @@
     <script src="/static/js/jquery.tooltip.min.js" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
+            {% autoescape false %}
             var instances = new Array();
             {% for instance in form.instances.query %}
             instances[{{loop.index0}}] = new Object();
             instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
             instances[{{loop.index0}}]["name"] = "{{instance.name}}";
                 {% for prop in db.get_instance_properties() %}
-                    instances[{{loop.index0}}]["{{prop.name}}"] = {{instance.get_property_value(prop.name, db)}};
+                    instances[{{loop.index0}}]["{{prop.name}}"] = {{instance.get_property_value(prop.name, db) or "''"}};
                 {% endfor %}
             {% endfor %}
+            {% endautoescape %}
             var selected_instances = new Array();
             {% for instance in request.args.getlist('instances') %}selected_instances.push({{instance}});{% endfor %}
 
             function match(instance, filter) {
                 if (filter == '') return true;
-                fields = [{% for prop in db.get_instance_properties() %}"prop.name", {% endfor %}]
+                fields = [{% for prop in db.get_instance_properties() %}"{{prop.name}}", {% endfor %}]
                 for (f in fields) {
                     var re = new RegExp(fields[f], 'g');
                     if (typeof instance[fields[f]] == 'string') {
