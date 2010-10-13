@@ -119,8 +119,8 @@
                 H0: RTD1 = RTD2<br/>
                 H1: RTD1 != RTD2<br/>
                 Statistic: {{wx_statistic|round(2)}}<br/>
-                <i>p</i>-value: {{(wx_p_value*2.0)}} (two-sided)<br/>
-                {% if wx_p_value*2 <= 0.05 %}
+                <i>p</i>-value: {{(wx_p_value)}} (two-sided)<br/>
+                {% if wx_p_value <= 0.05 %}
                 The Null-Hypothesis should be <strong>rejected</strong> at significance level 0.05.
                 {% else %}
                 The Null-Hypothesis <strong>cannot be rejected</strong> at significance level 0.05.
