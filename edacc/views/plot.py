@@ -161,6 +161,14 @@ def scatter_2solver_1property(database, experiment_id):
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
+    elif request.args.has_key('rscript'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.txt'
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='rscript', xscale=xscale, yscale=yscale, diagonal_line=True)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.txt')
+        response = Response(response=open(filename, 'rb').read(), mimetype='text/plain', headers=headers)
+        os.remove(filename)
+        return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.png'
         pts = plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, xscale=xscale, yscale=yscale, diagonal_line=True)
@@ -280,6 +288,14 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=exp.name + "_scatter_" + str(solver_config) + "_" + ylabel + "_vs_" + xlabel + '.eps')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
+        os.remove(filename)
+        return response
+    elif request.args.has_key('rscript'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.txt'
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='rscript', xscale=xscale, yscale=yscale, diagonal_line=True)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=exp.name + "_scatter_" + str(solver_config) + "_" + ylabel + "_vs_" + xlabel + '.txt')
+        response = Response(response=open(filename, 'rb').read(), mimetype='text/plain', headers=headers)
         os.remove(filename)
         return response
     else:
@@ -403,6 +419,14 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=exp.name + "_scatter_" + str(solver_config) + "_" + ylabel + "_vs_" + xlabel + '.eps')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
+        os.remove(filename)
+        return response
+    elif request.args.has_key('rscript'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.txt'
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='rscript', xscale=xscale, yscale=yscale, diagonal_line=True)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=exp.name + "_scatter_" + str(solver_config) + "_" + ylabel + "_vs_" + xlabel + '.txt')
+        response = Response(response=open(filename, 'rb').read(), mimetype='text/plain', headers=headers)
         os.remove(filename)
         return response
     else:

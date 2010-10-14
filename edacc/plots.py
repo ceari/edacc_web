@@ -36,9 +36,13 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
         grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+    elif format == 'rscript':
+        file = open(filename, 'w')
 
     # set margins to fit in labels on the right and top
     robjects.r.par(mar=robjects.FloatVector([4,4,6,6]))
+    if format == 'rscript':
+        file.write('par(mar=c(4,4,6,6))\n')
 
     if ((xscale == 'log' and yscale == 'log') or (xscale == '' and yscale == '')) and diagonal_line:
         # plot dashed line from (0,0) to (max_x,max_y)
@@ -52,10 +56,19 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         # to be able to plot in the same graph again
         robjects.r.par(new=1)
 
+        if format == 'rscript':
+            file.write(('plot(c(0, %f), c(0, %f), type="l", col="black", lty=2,' + \
+                       'xlim=c(0, %f), ylim=c(0, %f), xaxs="i", yaxs="i", xaxt="n",' + \
+                       'yaxt="n", xlab="", ylab="")\n') % (max_x, max_y, max_x, max_y))
+            file.write('par(new=1)\n')
+
+
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
 
     robjects.r.options(scipen=10)
+    if format == 'rscript':
+        file.write('options(scipen=10)\n')
 
     min_x = 0
     min_y = 0
@@ -89,6 +102,19 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     robjects.r.mtext(ylabel, side=4, line=3, cex=1.2) # right axis label
     robjects.r.mtext(xlabel, side=3, padj=0, line=3, cex=1.2) # top axis label
     robjects.r.mtext(title, padj=-1.7, side=3, line=3, cex=1.7) # plot title
+    if format == 'rscript':
+        file.write(('plot(c(%s), c(%s), type="p", col="red", las=1,' + \
+                   'xlim=c(%f, %f), ylim=c(%f, %f),' + \
+                   'xaxs="i", yaxs="i", log="%s",' + \
+                   'xlab="", ylab="", pch=3, tck=0.015,' + \
+                   'cex.axis=1.2, cex.main=1.5)\n') % (','.join(map(str, xs)), ','.join(map(str, ys)),
+                                                     min_v, max_x, min_v, max_y, log))
+        file.write('axis(side=4, tck=0.015, las=1, cex.axis=1.2, cex.main=1.5)\n')
+        file.write('axis(side=3, tck=0.015, las=1, cex.axis=1.2, cex.main=1.5)\n')
+        file.write('mtext("%s", side=4, line=3, cex=1.2)\n' % (ylabel,))
+        file.write('mtext("%s", side=3, padj=0, line=3, cex=1.2)\n' % (xlabel,))
+        file.write('mtext("%s", padj=-1.7, side=3, line=3, cex=1.7)\n' % (title,))
+        file.close()
 
     pts = zip(robjects.r.grconvertX(robjects.FloatVector(xs), "user", "device"),
               robjects.r.grconvertY(robjects.FloatVector(ys), "user", "device"))
@@ -288,7 +314,7 @@ def box_plot(data, filename, format='png'):
     for key in data:
         data[key] = robjects.FloatVector(data[key])
 
-    robjects.r.boxplot(robjects.DataFrame(data), main="Boxplot", horizontal=True)
+    robjects.r.boxplot(robjects.DataFrame(data), main="", horizontal=True)
 
     robjects.r.mtext('CPU Time (s)', side=1,
                      line=3, cex=1.2) # bottom axis label
