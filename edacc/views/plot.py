@@ -145,12 +145,19 @@ def scatter_2solver_1property(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
         plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', xscale=xscale, yscale=yscale, diagonal_line=True)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.eps'
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='eps', xscale=xscale, yscale=yscale, diagonal_line=True)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.eps')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
         os.remove(filename)
         return response

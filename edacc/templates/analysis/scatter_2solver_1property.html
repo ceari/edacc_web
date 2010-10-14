@@ -134,7 +134,7 @@
         {% autoescape false %}
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
             <img usemap="#map_instances" alt="Generating image..." style="margin: 10px;" src="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-            Download as <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
+            Download as <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> |<a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
             <map id="map_instances" name="map_instances"/>
         </div>
         {% endautoescape %}

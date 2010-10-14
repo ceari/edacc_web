@@ -33,6 +33,8 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
                       height=dim, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     # set margins to fit in labels on the right and top
     robjects.r.par(mar=robjects.FloatVector([4,4,6,6]))
