@@ -256,7 +256,7 @@ def experiment_results_by_solver(database, experiment_id):
             headers = Headers()
             headers.add('Content-Type', 'text/csv')
             headers.add('Content-Disposition', 'attachment',
-                        filename=("results_%s.csv" % (str(solver_config),)))
+                        filename=(experiment.name + "_results_by_solver_%s.csv" % (str(solver_config),)))
             return Response(response=csv_response.read(), headers=headers)
 
     return render('experiment_results_by_solver.html', db=db, database=database,
@@ -302,7 +302,7 @@ def experiment_results_by_instance(database, experiment_id):
             headers = Headers()
             headers.add('Content-Type', 'text/csv')
             headers.add('Content-Disposition', 'attachment',
-                        filename=("results_%s.csv" % (str(instance),)))
+                        filename=(experiment.name + "_results_by_instance_%s.csv" % (str(instance),)))
             return Response(response=csv_response.read(), headers=headers)
 
 
