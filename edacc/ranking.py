@@ -73,6 +73,6 @@ def number_of_solved_instances_ranking(experiment):
         elif num_solved_s1 < num_solved_s2: return -1
         else:
             # break ties by cumulative CPU time over all solved instances
-            return sum([res.get_time() for res in solved_s1]) - sum([res.get_time() for res in solved_s2])
+            return int(sum([res.get_time() for res in solved_s1]) - sum([res.get_time() for res in solved_s2]))
 
     return list(reversed(sorted(experiment.solver_configurations,cmp=comp)))
