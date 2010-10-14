@@ -158,7 +158,7 @@ def scatter_2solver_1property(database, experiment_id):
         plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='eps', xscale=xscale, yscale=yscale, diagonal_line=True)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=sc1.solver.name + '_vs_' + sc2.solver.name + '.eps')
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
     else:
@@ -266,13 +266,20 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
         plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', xscale=xscale, yscale=yscale)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.eps'
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='eps', xscale=xscale, yscale=yscale)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
     else:
@@ -382,13 +389,20 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
         plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', xscale=xscale, yscale=yscale)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.eps'
+        plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='eps', xscale=xscale, yscale=yscale)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=str(solver_config) + '.eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
     else:
@@ -461,13 +475,20 @@ def cactus_plot(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
-    if request.args.has_key('pdf'):
+    elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.pdf'
         plots.cactus(solvers, max_x, max_y, ylabel, title, filename, format='pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename='instances_solved.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.eps'
+        plots.cactus(solvers, max_x, max_y, ylabel, title, filename, format='eps')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename='instances_solved.eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
     else:
@@ -519,13 +540,20 @@ def result_property_comparison_plot(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
-    if request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
+    elif request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.pdf'
         plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, filename, format='pdf', dim=dim)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename='rtdcomp.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.eps'
+        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, filename, format='eps', dim=dim)
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename='rtdcomp.eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
     else:
@@ -565,13 +593,20 @@ def rtds_plot(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
-    if request.args.has_key('pdf'):
+    elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
         plots.rtds(results, filename, 'pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename='rtds.pdf')
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.eps'
+        plots.rtds(results, filename, 'eps')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename='rtds.eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
     else:
@@ -607,12 +642,24 @@ def rtd(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
-    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.png'
-    plots.rtd(results, filename, 'png')
-    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-    os.remove(filename)
-    return response
+    elif request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.pdf'
+        plots.rtd(results, filename, 'pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf')
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.eps'
+        plots.rtd(results, filename, 'eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps')
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.png'
+        plots.rtd(results, filename, 'png')
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/kerneldensity-plot/')
@@ -640,12 +687,24 @@ def kerneldensity(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
-    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.png'
-    plots.kerneldensity(results, filename, 'png')
-    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-    os.remove(filename)
-    return response
+    elif request.arg.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.pdf'
+        plots.kerneldensity(results, filename, 'pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf')
+        os.remove(filename)
+        return response
+    elif request.arg.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.eps'
+        plots.kerneldensity(results, filename, 'eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps')
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.png'
+        plots.kerneldensity(results, filename, 'png')
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/box-plots-plot/')
@@ -676,9 +735,21 @@ def box_plots(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename="data.csv")
         return Response(response=csv_response.read(), headers=headers)
-
-    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
-    plots.box_plot(results, filename, 'png')
-    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-    os.remove(filename)
-    return response
+    elif request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.pdf'
+        plots.box_plot(results, filename, 'pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf')
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.eps'
+        plots.box_plot(results, filename, 'eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps')
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
+        plots.box_plot(results, filename, 'png')
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response

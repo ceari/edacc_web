@@ -14,6 +14,7 @@ from rpy2.robjects.packages import importr
 grdevices = importr('grDevices') # plotting target devices
 np = importr('np') # non-parametric kernel smoothing methods
 stats = importr('stats')
+robjects.r.setEPS()
 
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",
@@ -107,6 +108,8 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     # list of colors used in the defined order for the different solvers
     colors = [
@@ -172,6 +175,8 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
                       height=dim, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     max_x = max([max(results1), max(results2)])
 
@@ -222,6 +227,8 @@ def rtds(results, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     max_x = max([max(r[1]) for r in results])
 
@@ -275,6 +282,8 @@ def box_plot(data, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     for key in data:
         data[key] = robjects.FloatVector(data[key])
@@ -295,6 +304,8 @@ def rtd(results, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     max_x = max(results or [0])
 
@@ -330,6 +341,8 @@ def kerneldensity(data, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     robjects.r.plot(np.npudens(robjects.FloatVector(data)),
                     main='', xaxt='n', yaxt='n',
