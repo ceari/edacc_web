@@ -351,12 +351,12 @@ def experiment_progress_ajax(database, experiment_id):
     prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+prop.name+"_value`.value END" for prop in result_properties])
     prop_joins = ""
     for prop in result_properties:
-        prop_joins += """LEFT JOIN ExperimentResult_has_SolverProperty as `%s_hasP` ON
+        prop_joins += """LEFT JOIN ExperimentResult_has_Property as `%s_hasP` ON
                          `%s_hasP`.ExperimentResults_idJob = idJob AND
-                         `%s_hasP`.SolverProperty_idSolverProperty = %d
-                      """ % (prop.name, prop.name, prop.name, prop.idSolverProperty)
-        prop_joins += """LEFT JOIN SolverPropertyValue as `%s_value` ON
-                        `%s_value`.ExperimentResult_has_SolverProperty_idER_h_SP = `%s_hasP`.idER_h_SP
+                         `%s_hasP`.idProperty = %d
+                      """ % (prop.name, prop.name, prop.name, prop.idProperty)
+        prop_joins += """LEFT JOIN ExperimentResult_has_PropertyValue as `%s_value` ON
+                        `%s_value`.idExperimentResult_has_Property = `%s_hasP`.idExperimentResult_has_Property
                       """ % (prop.name, prop.name, prop.name)
 
     params = []

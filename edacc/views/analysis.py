@@ -66,68 +66,6 @@ def solver_ranking(database, experiment_id):
                   data=data)
 
 
-#@analysis.route('/<database>/experiment/<int:experiment_id>/compare-results/')
-#@require_phase(phases=(6, 7))
-#@require_login
-#def result_statistical_comparison(database, experiment_id):
-#    db = models.get_database(database) or abort(404)
-#    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-#
-#    form = forms.ResultStatisticalComparisonForm(request.args)
-#    form.instance.query = sorted(experiment.instances, key=lambda i: i.name)
-#    form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
-#    form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
-#    result_properties = db.get_plotable_result_properties()
-#    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
-#    form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
-#    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
-#
-#    if form.solver_config1.data and form.solver_config2.data:
-#        instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
-#        s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
-#        s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
-#
-#        result_property = request.args.get('solver_property')
-#        if result_property != 'cputime':
-#            result_property = db.session.query(db.SolverProperty).get(int(result_property)).idSolverProperty
-#
-#        results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
-#                                        .filter_by(experiment=experiment,
-#                                                   solver_configuration=s1,
-#                                                   instance=instance).all()]
-#        results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
-#                                        .filter_by(experiment=experiment,
-#                                                   solver_configuration=s2,
-#                                                   instance=instance).all()]
-#
-#        results1 = filter(lambda r: r is not None, results1)
-#        results2 = filter(lambda r: r is not None, results2)
-#
-#        median1 = numpy.median(results1)
-#        median2 = numpy.median(results2)
-#        sample_size1 = len(results1)
-#        sample_size2 = len(results2)
-#
-#        try:
-#            wx_statistic, wx_p_value = statistics.wilcox_test(results1, results2)
-#            wx_error = None
-#        except Exception as e:
-#            wx_statistic, wx_p_value = None, None
-#            wx_error = str(e)
-#
-#        return render('/analysis/result_statistical_comparison.html', database=database,
-#              experiment=experiment, db=db, form=form, GET_data=GET_data,
-#              median1=median1, median2=median2, sample_size1=sample_size1,
-#              sample_size2=sample_size2, wx_statistic=wx_statistic,
-#              wx_p_value=wx_p_value,
-#              wx_error=wx_error, results1=results1, results2=results2,
-#              s1=s1, s2=s2)
-#
-#
-#    return render('/analysis/result_statistical_comparison.html', database=database,
-#                  experiment=experiment, db=db, form=form, GET_data=GET_data)
-
-
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus/')
 @require_phase(phases=(6, 7))
 @require_login
@@ -145,7 +83,7 @@ def cactus_plot(database, experiment_id):
     form = forms.CactusPlotForm(request.args)
     form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
     result_properties = db.get_plotable_result_properties()
-    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
@@ -178,7 +116,7 @@ def result_property_comparison(database, experiment_id):
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
-    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
@@ -189,7 +127,7 @@ def result_property_comparison(database, experiment_id):
 
         result_property = request.args.get('solver_property')
         if result_property != 'cputime':
-            result_property = db.session.query(db.SolverProperty).get(int(result_property)).idSolverProperty
+            result_property = db.session.query(db.Property).get(int(result_property)).idProperty
 
         results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                         .filter_by(experiment=experiment,
@@ -268,7 +206,7 @@ def scatter_2solver_1property(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     result_properties = db.get_plotable_result_properties()
-    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 
@@ -318,9 +256,9 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     result_properties = db.get_plotable_result_properties()
-    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     instance_properties = db.get_plotable_instance_properties()
-    instance_properties = zip([p.name for p in instance_properties], [p.name for p in instance_properties])
+    instance_properties = zip([p.idProperty for p in instance_properties], [p.name for p in instance_properties])
     numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 
@@ -370,7 +308,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     result_properties = db.get_plotable_result_properties()
-    result_properties = zip([p.idSolverProperty for p in result_properties], [p.name for p in result_properties])
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     numRuns = experiment.get_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 

@@ -38,12 +38,12 @@ def filter_results(l1, l2):
 def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, solver_property, run):
     results1 = db.session.query(db.ExperimentResult)
     results1.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
-    results1.options(joinedload(db.ExperimentResult.solver_properties), joinedload(db.ExperimentResult.instance))
+    results1.options(joinedload(db.ExperimentResult.properties), joinedload(db.ExperimentResult.instance))
     results1 = results1.filter_by(experiment=exp, solver_configuration=sc1).order_by(db.ExperimentResult.run)
 
     results2 = db.session.query(db.ExperimentResult)
     results2.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
-    results2.options(joinedload(db.ExperimentResult.solver_properties), joinedload(db.ExperimentResult.instance))
+    results2.options(joinedload(db.ExperimentResult.properties), joinedload(db.ExperimentResult.instance))
     results2 = results2.filter_by(experiment=exp, solver_configuration=sc2).order_by(db.ExperimentResult.run)
 
     points = []
@@ -100,7 +100,7 @@ def scatter_2solver_1property(database, experiment_id):
                 If the value is 'average' or 'median', these values will be calculated
                 across multiple runs of one solver on an instance.
                 If the value is an integer, the data of this specific run is used.
-        solver_property: id of a solver property (SolverProperty table) or the special case
+        solver_property: id of a result property (Property table) or the special case
                          'cputime' for the time column of the ExperimentResult table.
     """
     db = models.get_database(database) or abort(404)
@@ -114,7 +114,7 @@ def scatter_2solver_1property(database, experiment_id):
     yscale = request.args['yscale']
     solver_property = request.args['solver_property']
     if solver_property != 'cputime':
-        solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
+        solver_prop = db.session.query(db.Property).get(int(solver_property))
 
     sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
     sc2 = db.session.query(db.SolverConfiguration).get(s2) or abort(404)
@@ -199,7 +199,7 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
     else:
         for instance in instances:
             res = results.filter_by(instance=instance, run=int(run)).first()
-            if instance.get_property_value(instance_property, db) is not None:
+            if instance.get_property_value(instance_property, db) is not None and res.get_property_value(solver_property, db) is not None:
                 points.append((
                     instance.get_property_value(instance_property, db),
                     res.get_property_value(solver_property, db),
@@ -227,13 +227,13 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
 
     if solver_property != 'cputime':
-        solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
+        solver_prop = db.session.query(db.Property).get(int(solver_property))
 
-    instance_prop = db.session.query(db.InstanceProperty).get(instance_property)
+    instance_prop = db.session.query(db.Property).get(int(instance_property))
 
     solver_config = db.session.query(db.SolverConfiguration).get(solver_config) or abort(404)
 
-    points = scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, instances, instance_property, solver_property, run)
+    points = scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, instances, int(instance_property), solver_property, run)
 
     xlabel = instance_prop.name
 
@@ -339,10 +339,10 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
 
     if solver_property1 != 'cputime':
-        solver_prop1 = db.session.query(db.SolverProperty).get(int(solver_property1))
+        solver_prop1 = db.session.query(db.Property).get(int(solver_property1))
 
     if solver_property2 != 'cputime':
-        solver_prop2 = db.session.query(db.SolverProperty).get(int(solver_property2))
+        solver_prop2 = db.session.query(db.Property).get(int(solver_property2))
 
     solver_config = db.session.query(db.SolverConfiguration).get(solver_config) or abort(404)
 
@@ -415,7 +415,7 @@ def cactus_plot(database, experiment_id):
     instances = [int(id) for id in request.args.getlist('instances')]
     solver_property = request.args.get('solver_property') or 'cputime'
     if solver_property != 'cputime':
-        solver_prop = db.session.query(db.SolverProperty).get(int(solver_property))
+        solver_prop = db.session.query(db.Property).get(int(solver_property))
 
     solvers = []
 
@@ -485,8 +485,8 @@ def result_property_comparison_plot(database, experiment_id):
 
     result_property = request.args.get('solver_property')
     if result_property != 'cputime':
-        result_property = db.session.query(db.SolverProperty).get(int(result_property)).idSolverProperty
-        result_property_name = db.session.query(db.SolverProperty).get(int(result_property)).name
+        result_property = db.session.query(db.Property).get(int(result_property)).idProperty
+        result_property_name = db.session.query(db.Property).get(int(result_property)).name
     else:
         result_property_name = 'CPU time (s)'
 

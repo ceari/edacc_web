@@ -7,6 +7,10 @@
     application.
 """
 
+# enum of possible property value types (propertyValue column in the Property table)
+INSTANCE_PROPERTY_TYPE = 0
+RESULT_PROPERTY_TYPE = 1
+
 # tuples since there are 3 codes that mean 'finished'
 JOB_ERROR = (-2,)
 JOB_WAITING = (-1,)
