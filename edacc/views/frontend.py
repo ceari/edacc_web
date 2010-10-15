@@ -191,6 +191,7 @@ def experiment_results(database, experiment_id):
                         'var_coeff': numpy.std(runtimes) / numpy.average(runtimes),
                         'completed': completed,
                         'total': len(jobs),
+                        'first_job': jobs[0], # needed for alternative presentation if there's only 1 run
                         'solver_config': solver_config
                         })
         results.append({'instance': instance, 'times': row})

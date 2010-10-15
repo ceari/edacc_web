@@ -17,9 +17,11 @@ stats = importr('stats')
 robjects.r.setEPS()
 
 from threading import Lock, currentThread
+global_lock = Lock()
+
 class synchronized(object):
     def __init__(self, *args):
-        self.lock = Lock()
+        self.lock = global_lock
     def __call__(self, f):
         def lockedfunc(*args, **kwargs):
             try:
