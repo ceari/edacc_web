@@ -24,6 +24,7 @@ from werkzeug import Headers
 from edacc import plots, config, models
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
+from edacc.constants import ANALYSIS1, ANALYSIS2
 
 plot = Module(__name__)
 
@@ -84,7 +85,7 @@ def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, solver_proper
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-1property/')
-@require_phase(phases=(5, 6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_2solver_1property(database, experiment_id):
     """ Returns an image with a scatter plot of the result property of two
@@ -225,7 +226,7 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-instance-vs-result/')
-@require_phase(phases=(5, 6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_1solver_instance_vs_result_property(database, experiment_id):
     """ description """
@@ -352,7 +353,7 @@ def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, insta
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/scatter-plot-2properties/')
-@require_phase(phases=(5, 6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_1solver_result_vs_result_property(database, experiment_id):
     """ description """
@@ -442,7 +443,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/cactus-plot/')
-@require_phase(phases=(5, 6, 7))
+@require_phase(phases=ANALYSIS1)
 @require_login
 def cactus_plot(database, experiment_id):
     """ Renders a cactus plot of the instances solved within a given "amount" of
@@ -524,7 +525,7 @@ def cactus_plot(database, experiment_id):
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/rtd-comparison-plot/')
-@require_phase(phases=(5, 6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def result_property_comparison_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
@@ -589,7 +590,7 @@ def result_property_comparison_plot(database, experiment_id):
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/rtds-plot/')
-@require_phase(phases=(5, 6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def rtds_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
@@ -642,7 +643,7 @@ def rtds_plot(database, experiment_id):
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/rtd-plot/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def rtd(database, experiment_id):
     db = models.get_database(database) or abort(404)
@@ -691,7 +692,7 @@ def rtd(database, experiment_id):
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/kerneldensity-plot/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def kerneldensity(database, experiment_id):
     db = models.get_database(database) or abort(404)
@@ -740,7 +741,7 @@ def kerneldensity(database, experiment_id):
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/box-plots-plot/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def box_plots(database, experiment_id):
     db = models.get_database(database) or abort(404)

@@ -24,6 +24,7 @@ from werkzeug import Headers
 from edacc import utils, models
 from sqlalchemy.orm import joinedload
 from edacc.constants import JOB_FINISHED, JOB_ERROR, JOB_RUNNING, JOB_STATUS, JOB_RESULT_CODE, JOB_STATUS_COLOR
+from edacc.constants import OWN_RESULTS, ALL_RESULTS, INSTANCE_DETAILS, ANALYSIS1, ANALYSIS2, RANKING
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
 from edacc import forms
@@ -112,31 +113,12 @@ def experiment(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     return render('experiment.html', experiment=experiment, database=database,
-                  db=db)
-
-
-@frontend.route('/<database>/experiment/<int:experiment_id>/solvers')
-@require_phase(phases=(3, 4, 5, 6, 7))
-@require_login
-def experiment_solvers(database, experiment_id):
-    """ Show a list of all solvers used in the experiment """
-    db = models.get_database(database) or abort(404)
-    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-
-    # remove duplicates introduced by a solver being used with more than one configuration
-    solvers = list(set(sc.solver for sc in experiment.solver_configurations))
-    solvers.sort(key=lambda s: s.name)
-
-    # if competition db, show only own solvers unless phase is 6 or 7
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
-        solvers = filter(lambda s: s.user == g.User, solvers)
-
-    return render('experiment_solvers.html', solvers=solvers,
-                  experiment=experiment, database=database, db=db)
+                  db=db, OWN_RESULTS=OWN_RESULTS, ALL_RESULTS=ALL_RESULTS,
+                  ANALYSIS1=ANALYSIS1, ANALYSIS2=ANALYSIS2, RANKING=RANKING)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/solver-configurations')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def experiment_solver_configurations(database, experiment_id):
     """ List all solver configurations (solver + parameter set) used in the experiment """
@@ -146,8 +128,8 @@ def experiment_solver_configurations(database, experiment_id):
     solver_configurations = experiment.solver_configurations
     solver_configurations.sort(key=lambda sc: sc.solver.name.lower())
 
-    # if competition db, show only own solvers unless phase is 6 or 7
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
+    # if competition db, show only own solvers if the phase is in OWN_RESULTS
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configurations = filter(lambda sc: sc.solver.user == g.User, solver_configurations)
 
     return render('experiment_solver_configurations.html', experiment=experiment,
@@ -171,7 +153,7 @@ def experiment_instances(database, experiment_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results/')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def experiment_results(database, experiment_id):
     """ Show a table with the solver configurations and their results on the instances of the experiment """
@@ -182,7 +164,7 @@ def experiment_results(database, experiment_id):
     solver_configs = experiment.solver_configurations
 
     # if competition db, show only own solvers unless phase is 6 or 7
-    if not is_admin() and db.is_competition() and db.competition_phase() not in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
     results = []
@@ -219,7 +201,7 @@ def experiment_results(database, experiment_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def experiment_results_by_solver(database, experiment_id):
     """ Show the results of the experiment by solver configuration """
@@ -228,7 +210,7 @@ def experiment_results_by_solver(database, experiment_id):
 
     solver_configs = experiment.solver_configurations
 
-    if not is_admin() and db.is_competition() and db.competition_phase() not in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
     form = forms.ResultBySolverForm(request.args)
@@ -265,7 +247,7 @@ def experiment_results_by_solver(database, experiment_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-instance')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def experiment_results_by_instance(database, experiment_id):
     """ Show the results of the experiment by instance """
@@ -275,7 +257,7 @@ def experiment_results_by_instance(database, experiment_id):
     instances = experiment.instances
     solver_configs = experiment.solver_configurations
 
-    if not is_admin() and db.is_competition() and db.competition_phase() not in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
     form = forms.ResultByInstanceForm(request.args)
@@ -312,7 +294,7 @@ def experiment_results_by_instance(database, experiment_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress/')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def experiment_progress(database, experiment_id):
     """ Show a live information table of the experiment's progress """
@@ -326,7 +308,7 @@ def experiment_progress(database, experiment_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress-ajax/')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def experiment_progress_ajax(database, experiment_id):
     """ Returns JSON-serialized data of the experiment results.
@@ -423,7 +405,7 @@ def experiment_progress_ajax(database, experiment_id):
     numTotal = res.fetchone()[0]
 
     # if competition db, show only own solvers unless phase is 6 or 7
-    if not is_admin() and db.is_competition() and db.competition_phase() not in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         jobs = filter(lambda j: db.session.query(db.SolverConfiguration).get(j[1]).solver.user == g.User, jobs)
 
     # cache solver configuration names in a dictionary
@@ -454,7 +436,7 @@ def experiment_progress_ajax(database, experiment_id):
     })
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:solver_configuration_id>/<int:instance_id>')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def solver_config_results(database, experiment_id, solver_configuration_id, instance_id):
     """ Displays list of results (all jobs) of a solver configuration on an instance """
@@ -465,7 +447,7 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     if solver_configuration not in experiment.solver_configurations: abort(404)
     if instance not in experiment.instances: abort(404)
 
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if not solver_configuration.solver.user == g.User: abort(401)
 
     jobs = db.session.query(db.ExperimentResult) \
@@ -490,7 +472,7 @@ def instance_details(database, instance_id):
     db = models.get_database(database) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
 
-    if db.is_competition() and db.competition_phase() not in (6, 7):
+    if db.is_competition() and db.competition_phase() not in INSTANCE_DETAILS:
         if instance.source_class.user != g.User:
             abort(403)
 
@@ -518,7 +500,7 @@ def instance_download(database, instance_id):
     db = models.get_database(database) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
 
-    if db.is_competition() and db.competition_phase() not in (6, 7):
+    if db.is_competition() and db.competition_phase() not in INSTANCE_DETAILS:
         if instance.source_class.user != g.User:
             abort(403)
 
@@ -529,22 +511,8 @@ def instance_download(database, instance_id):
     return Response(response=instance.instance, headers=headers)
 
 
-@frontend.route('/<database>/solver/<int:solver_id>')
-@require_phase(phases=(2, 3, 4, 5, 6, 7))
-@require_login
-def solver_details(database, solver_id):
-    """ Show solver details """
-    db = models.get_database(database) or abort(404)
-    solver = db.session.query(db.Solver).get(solver_id) or abort(404)
-
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
-        if solver.user != g.User and not is_admin(): abort(401)
-
-    return render('solver_details.html', solver=solver, database=database, db=db)
-
-
 @frontend.route('/<database>/experiment/<int:experiment_id>/solver-configurations/<int:solver_configuration_id>')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def solver_configuration_details(database, experiment_id, solver_configuration_id):
     """ Show solver configuration details """
@@ -553,7 +521,7 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     solver_config = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
     solver = solver_config.solver
 
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if solver.user != g.User: abort(401)
 
     parameters = solver_config.parameter_instances
@@ -565,7 +533,7 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def experiment_result(database, experiment_id, result_id):
     """ Displays information about a single result (job) """
@@ -573,7 +541,7 @@ def experiment_result(database, experiment_id, result_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if result.solver_configuration.solver.user != g.User: abort(401)
 
     solverOutput = result.solverOutput
@@ -593,14 +561,14 @@ def experiment_result(database, experiment_id, result_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-solver-output')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def solver_output_download(database, experiment_id, result_id):
     """ Returns the specified job client output file as HTTP response """
     db = models.get_database(database) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if result.solver_configuration.solver.user != g.User: abort(401)
 
     headers = Headers()
@@ -611,14 +579,14 @@ def solver_output_download(database, experiment_id, result_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-launcher-output')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def launcher_output_download(database, experiment_id, result_id):
     """ Returns the specified job client output file as HTTP response """
     db = models.get_database(database) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if result.solver_configuration.solver.user != g.User: abort(401)
 
     headers = Headers()
@@ -629,14 +597,14 @@ def launcher_output_download(database, experiment_id, result_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-watcher-output')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def watcher_output_download(database, experiment_id, result_id):
     """ Returns the specified job client output file as HTTP response """
     db = models.get_database(database) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if result.solver_configuration.solver.user != g.User: abort(401)
 
     headers = Headers()
@@ -647,14 +615,14 @@ def watcher_output_download(database, experiment_id, result_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-verifier-output')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def verifier_output_download(database, experiment_id, result_id):
     """ Returns the specified job client output file as HTTP response """
     db = models.get_database(database) or abort(404)
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
-    if not is_admin() and db.is_competition() and not db.competition_phase() in (6, 7):
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if result.solver_configuration.solver.user != g.User: abort(401)
 
     headers = Headers()
