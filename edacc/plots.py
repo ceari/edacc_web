@@ -16,12 +16,29 @@ np = importr('np') # non-parametric kernel smoothing methods
 stats = importr('stats')
 robjects.r.setEPS()
 
+from threading import Lock, currentThread
+class synchronized(object):
+    def __init__(self, *args):
+        self.lock = Lock()
+    def __call__(self, f):
+        def lockedfunc(*args, **kwargs):
+            try:
+                self.lock.acquire()
+                try:
+                    return f(*args, **kwargs)
+                except Exception, e:
+                    raise
+            finally:
+                self.lock.release()
+        return lockedfunc
+
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",
 #                 bold="Bitstream Vera Sans:style=Bold",
 #                 italic="Bitstream Vera Sans:style=Italic",
 #                 symbol="Symbol")
 
+@synchronized()
 def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False, dim=700):
     """ Scatter plot of the points given in the list :points:
         Each element of :points: should be a tuple (x, y).
@@ -121,6 +138,8 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     grdevices.dev_off()
     return pts
 
+
+@synchronized()
 def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     """ Cactus plot of the passed solvers configurations. `solvers` has to be
         a list of dictionaries with the keys `xs`, `ys` and `name`. For each
@@ -193,6 +212,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     grdevices.dev_off()
 
 
+@synchronized()
 def result_property_comparison(results1, results2, solver1, solver2, result_property_name, filename, format='png', dim=700):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -245,6 +265,8 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
     grdevices.dev_off()
 
+
+@synchronized()
 def rtds(results, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -300,6 +322,8 @@ def rtds(results, filename, format='png'):
 
     grdevices.dev_off()
 
+
+@synchronized()
 def box_plot(data, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -322,6 +346,7 @@ def box_plot(data, filename, format='png'):
     grdevices.dev_off()
 
 
+@synchronized()
 def rtd(results, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -359,6 +384,7 @@ def rtd(results, filename, format='png'):
     grdevices.dev_off()
 
 
+@synchronized()
 def kerneldensity(data, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
