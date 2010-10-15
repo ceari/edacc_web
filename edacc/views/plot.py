@@ -716,7 +716,7 @@ def kerneldensity(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename=exp.name + "_" + str(sc) + "_kerneldensity.csv")
         return Response(response=csv_response.read(), headers=headers)
-    elif request.arg.has_key('pdf'):
+    elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.pdf'
         plots.kerneldensity(results, filename, 'pdf')
         headers = Headers()
@@ -724,7 +724,7 @@ def kerneldensity(database, experiment_id):
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
         os.remove(filename)
         return response
-    elif request.arg.has_key('eps'):
+    elif request.args.has_key('eps'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.eps'
         plots.kerneldensity(results, filename, 'eps')
         headers = Headers()
