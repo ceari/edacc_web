@@ -8,35 +8,44 @@
     <h1>{{experiment.name}}</h1>
     <div>Date: {{experiment.date|datetimeformat('%d.%m.%Y')}}</div>
     <div>Description: {{experiment.description if experiment.description else "no description"}}</div>
-    {% if not session.admin and db.is_competition() and db.competition_phase() not in (6, 7) %}
+    {% if not session.admin and db.is_competition() and db.competition_phase() in OWN_RESULTS %}
     <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While the competition isn't finished, you are only able to see your own solvers.</div>
     {% endif %}
 
+    {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}
     <h2>Progress</h2>
     <a href="{{url_for('frontend.experiment_progress', database=database, experiment_id=experiment.idExperiment)}}">Live information about experiment progress</a><br/>
+    {% endif %}
 
     <h2>Information about solvers and instances</h2>
-    <!-- <a href="{{url_for('frontend.experiment_solvers', database=database, experiment_id=experiment.idExperiment)}}">List of solvers used</a><br/> -->
+    {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}
     <a href="{{url_for('frontend.experiment_solver_configurations', database=database, experiment_id=experiment.idExperiment)}}">List of solver configurations used</a><br/>
+    {% endif %}
     <a href="{{url_for('frontend.experiment_instances', database=database, experiment_id=experiment.idExperiment)}}">List of instances used</a><br/>
 
+    {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}
     <h2>Results</h2>
     <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">By solver configuration and instance</a> (runs accumulated)<br/>
     <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment) }}">By solver configuration</a><br/>
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a>
+    {% endif %}
 
-    {% if not db.is_competition() or db.competition_phase() in (6,7,) %}
     <h2>Analysis</h2>
+    {% if not db.is_competition() or db.competition_phase() in ANALYSIS2 %}
     <a href="{{url_for('analysis.box_plots', database=database, experiment_id=experiment.idExperiment)}}">Box plot - Box plots of the runtimes of solvers on instances</a><br/>
     <a href="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - One result property of two solvers (e.g. CPU time vs. CPU time)</a><br/>
     <a href="{{url_for('analysis.scatter_1solver_result_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Two result properties of a solver (e.g. CPU time vs. Memory)</a><br/>
     <a href="{{url_for('analysis.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Result property against instance property (e.g. CPU Time against Number of Atoms)</a><br/>
-    <a href="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">Cactus plot - Number of solved instances within a given amount of a resource (time, memory, ...)</a><br/>
     <a href="{{url_for('analysis.rtd', database=database, experiment_id=experiment.idExperiment)}}">RTD plot - RTD and Kernel Density Estimation</a><br/>
     <a href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}">Result property distribution plot and Analysis - Comparison of two solvers on an instance</a><br/>
     <a href="{{url_for('analysis.rtds', database=database, experiment_id=experiment.idExperiment)}}">RTD plot - Runtime distributions of several solvers on an instance</a><br/>
     <a href="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">Analysis - Probabilistic Domination of solvers on the instances</a><br/>
+    {% endif %}
+    {% if not db.is_competition() or db.competition_phase() in ANALYSIS1 %}
+    <a href="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">Cactus plot - Number of solved instances within a given amount of a resource (time, memory, ...)</a><br/>
+    {% endif %}
 
+    {% if not db.is_competition() or db.competition_phase() in RANKING %}
     <h2>Ranking</h2>
     <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Ranking by number of successful runs</a><br/>
     {% endif %}

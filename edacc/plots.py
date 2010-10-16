@@ -14,6 +14,25 @@ from rpy2.robjects.packages import importr
 grdevices = importr('grDevices') # plotting target devices
 np = importr('np') # non-parametric kernel smoothing methods
 stats = importr('stats')
+robjects.r.setEPS()
+
+from threading import Lock, currentThread
+global_lock = Lock()
+
+class synchronized(object):
+    def __init__(self, *args):
+        self.lock = global_lock
+    def __call__(self, f):
+        def lockedfunc(*args, **kwargs):
+            try:
+                self.lock.acquire()
+                try:
+                    return f(*args, **kwargs)
+                except Exception, e:
+                    raise
+            finally:
+                self.lock.release()
+        return lockedfunc
 
 #cairo = importr('Cairo')
 #cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",
@@ -21,6 +40,7 @@ stats = importr('stats')
 #                 italic="Bitstream Vera Sans:style=Italic",
 #                 symbol="Symbol")
 
+@synchronized()
 def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False, dim=700):
     """ Scatter plot of the points given in the list :points:
         Each element of :points: should be a tuple (x, y).
@@ -33,9 +53,15 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
                       height=dim, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+    elif format == 'rscript':
+        file = open(filename, 'w')
 
     # set margins to fit in labels on the right and top
     robjects.r.par(mar=robjects.FloatVector([4,4,6,6]))
+    if format == 'rscript':
+        file.write('par(mar=c(4,4,6,6))\n')
 
     if ((xscale == 'log' and yscale == 'log') or (xscale == '' and yscale == '')) and diagonal_line:
         # plot dashed line from (0,0) to (max_x,max_y)
@@ -49,10 +75,19 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         # to be able to plot in the same graph again
         robjects.r.par(new=1)
 
+        if format == 'rscript':
+            file.write(('plot(c(0, %f), c(0, %f), type="l", col="black", lty=2,' + \
+                       'xlim=c(0, %f), ylim=c(0, %f), xaxs="i", yaxs="i", xaxt="n",' + \
+                       'yaxt="n", xlab="", ylab="")\n') % (max_x, max_y, max_x, max_y))
+            file.write('par(new=1)\n')
+
+
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
 
     robjects.r.options(scipen=10)
+    if format == 'rscript':
+        file.write('options(scipen=10)\n')
 
     min_x = 0
     min_y = 0
@@ -86,12 +121,27 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     robjects.r.mtext(ylabel, side=4, line=3, cex=1.2) # right axis label
     robjects.r.mtext(xlabel, side=3, padj=0, line=3, cex=1.2) # top axis label
     robjects.r.mtext(title, padj=-1.7, side=3, line=3, cex=1.7) # plot title
+    if format == 'rscript':
+        file.write(('plot(c(%s), c(%s), type="p", col="red", las=1,' + \
+                   'xlim=c(%f, %f), ylim=c(%f, %f),' + \
+                   'xaxs="i", yaxs="i", log="%s",' + \
+                   'xlab="", ylab="", pch=3, tck=0.015,' + \
+                   'cex.axis=1.2, cex.main=1.5)\n') % (','.join(map(str, xs)), ','.join(map(str, ys)),
+                                                     min_v, max_x, min_v, max_y, log))
+        file.write('axis(side=4, tck=0.015, las=1, cex.axis=1.2, cex.main=1.5)\n')
+        file.write('axis(side=3, tck=0.015, las=1, cex.axis=1.2, cex.main=1.5)\n')
+        file.write('mtext("%s", side=4, line=3, cex=1.2)\n' % (ylabel,))
+        file.write('mtext("%s", side=3, padj=0, line=3, cex=1.2)\n' % (xlabel,))
+        file.write('mtext("%s", padj=-1.7, side=3, line=3, cex=1.7)\n' % (title,))
+        file.close()
 
     pts = zip(robjects.r.grconvertX(robjects.FloatVector(xs), "user", "device"),
               robjects.r.grconvertY(robjects.FloatVector(ys), "user", "device"))
     grdevices.dev_off()
     return pts
 
+
+@synchronized()
 def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     """ Cactus plot of the passed solvers configurations. `solvers` has to be
         a list of dictionaries with the keys `xs`, `ys` and `name`. For each
@@ -105,6 +155,8 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     # list of colors used in the defined order for the different solvers
     colors = [
@@ -162,6 +214,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     grdevices.dev_off()
 
 
+@synchronized()
 def result_property_comparison(results1, results2, solver1, solver2, result_property_name, filename, format='png', dim=700):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -170,6 +223,8 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
                       height=dim, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     max_x = max([max(results1), max(results2)])
 
@@ -212,6 +267,8 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
     grdevices.dev_off()
 
+
+@synchronized()
 def rtds(results, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -220,6 +277,8 @@ def rtds(results, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     max_x = max([max(r[1]) for r in results])
 
@@ -265,6 +324,8 @@ def rtds(results, filename, format='png'):
 
     grdevices.dev_off()
 
+
+@synchronized()
 def box_plot(data, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -273,11 +334,13 @@ def box_plot(data, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     for key in data:
         data[key] = robjects.FloatVector(data[key])
 
-    robjects.r.boxplot(robjects.DataFrame(data), main="Boxplot", horizontal=True)
+    robjects.r.boxplot(robjects.DataFrame(data), main="", horizontal=True)
 
     robjects.r.mtext('CPU Time (s)', side=1,
                      line=3, cex=1.2) # bottom axis label
@@ -285,6 +348,7 @@ def box_plot(data, filename, format='png'):
     grdevices.dev_off()
 
 
+@synchronized()
 def rtd(results, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -293,6 +357,8 @@ def rtd(results, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     max_x = max(results or [0])
 
@@ -320,6 +386,7 @@ def rtd(results, filename, format='png'):
     grdevices.dev_off()
 
 
+@synchronized()
 def kerneldensity(data, filename, format='png'):
     if format == 'png':
         #cairo.CairoPNG(file=filename, units="px", width=600,
@@ -328,6 +395,8 @@ def kerneldensity(data, filename, format='png'):
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
 
     robjects.r.plot(np.npudens(robjects.FloatVector(data)),
                     main='', xaxt='n', yaxt='n',

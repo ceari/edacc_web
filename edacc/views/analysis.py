@@ -18,6 +18,7 @@ from flask import abort, request
 
 from edacc import models, forms, ranking, statistics
 from edacc.views.helpers import require_phase, require_login
+from edacc.constants import RANKING, ANALYSIS1, ANALYSIS2
 from edacc.views import plot
 from edacc.forms import EmptyQuery
 
@@ -31,7 +32,7 @@ def render(*args, **kwargs):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/ranking/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=RANKING)
 @require_login
 def solver_ranking(database, experiment_id):
     """ Display a page with the ranking of the solvers of
@@ -67,7 +68,7 @@ def solver_ranking(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS1)
 @require_login
 def cactus_plot(database, experiment_id):
     """ Displays a page where the user can select a set of instances and a
@@ -93,7 +94,7 @@ def cactus_plot(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/rtd-comparison/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def result_property_comparison(database, experiment_id):
     """
@@ -173,7 +174,7 @@ def result_property_comparison(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/rtds/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def rtds(database, experiment_id):
     """
@@ -195,7 +196,7 @@ def rtds(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-two-solvers/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_2solver_1property(database, experiment_id):
     """
@@ -243,7 +244,7 @@ def scatter_2solver_1property(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-instance-vs-result/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_1solver_instance_vs_result_property(database, experiment_id):
     """
@@ -296,7 +297,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-result-vs-result/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_1solver_result_vs_result_property(database, experiment_id):
     """
@@ -345,7 +346,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/rtd/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def rtd(database, experiment_id):
     """
@@ -365,7 +366,7 @@ def rtd(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/probabilistic-domination/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def probabilistic_domination(database, experiment_id):
     """
@@ -411,7 +412,7 @@ def probabilistic_domination(database, experiment_id):
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/box-plots/')
-@require_phase(phases=(6, 7))
+@require_phase(phases=ANALYSIS2)
 @require_login
 def box_plots(database, experiment_id):
     """ Displays a page allowing the user to plot box plots with the results of all runs

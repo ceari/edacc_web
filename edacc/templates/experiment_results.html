@@ -22,7 +22,9 @@
     </div>
     <h2>Results by solver configuration and instance</h2>
     <div>
+        {% if experiment.get_num_runs(db) > 1 %}
         In this table multiple runs of a solver on an instance are grouped in one cell and the <strong>median, minimum, maximum and average</strong> CPU time over all runs are calculated. Click on Show to access a list of the individual runs.
+        {% endif %}
     </div>
     <table id="results" class="tablesorter" style="width: auto;">
         <thead>
@@ -38,20 +40,34 @@
             </tr>
         </thead>
         <tbody>
-            {% for row in results %}
-                <tr>
-                    <td><a href="{{url_for('instance_details', database=database, instance_id=row.instance.idInstance)}}">{{row.instance.name}}</a></td>
-                    {% for jobs in row.times %}
-                        <td>
-                            {{jobs.time_median|round(2)}} / {{jobs.time_min|round(2)}} / {{jobs.time_max|round(2)}} / {{jobs.time_avg|round(2)}} sec<br/>
-                            stddev: {{jobs.time_stddev|round(2)}}, variation coeff.: {{jobs.var_coeff|round(2)}}<br/>
-                            completed: {{jobs.completed}}/{{jobs.total}} runs<br/>
-                            <a href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
-                            solver_configuration_id=jobs.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">Show</a>
-                        </td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
+            {% if experiment.get_num_runs(db) > 1 %}
+                {% for row in results %}
+                    <tr>
+                        <td><a href="{{url_for('instance_details', database=database, instance_id=row.instance.idInstance)}}">{{row.instance.name}}</a></td>
+                        {% for jobs in row.times %}
+                            <td>
+                                {{jobs.time_median|round(2)}} / {{jobs.time_min|round(2)}} / {{jobs.time_max|round(2)}} / {{jobs.time_avg|round(2)}} sec<br/>
+                                stddev: {{jobs.time_stddev|round(2)}}, variation coeff.: {{jobs.var_coeff|round(2)}}<br/>
+                                completed: {{jobs.completed}}/{{jobs.total}} runs<br/>
+                                <a href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
+                                solver_configuration_id=jobs.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">Show</a>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            {% else %}
+                {% for row in results %}
+                    <tr>
+                        <td><a href="{{url_for('instance_details', database=database, instance_id=row.instance.idInstance)}}">{{row.instance.name}}</a></td>
+                        {% for jobs in row.times %}
+                            <td style="text-align: center; background-color: {{jobs.first_job.resultCode|job_result_code_color}};">
+                                <a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=jobs.first_job.idJob) }}">{{jobs.first_job.get_time()}}</a><br/>
+                                {{jobs.first_job.resultCode|result_code}}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            {% endif %}
         </tbody>
     </table>
 {% endblock %}
