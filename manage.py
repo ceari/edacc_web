@@ -88,6 +88,13 @@ def calculate_result_properties(app):
         for p in props:
             pat = re.compile(p.regExp)
             for result in db.session.query(db.ExperimentResult).filter_by(experiment=exp).all():
+                for pv in result.properties:
+                    if pv.property == p:
+                        for pvv in pv.values:
+                            db.session.delete(pvv)
+                        db.session.commit()
+                        db.session.delete(pv)
+                        db.session.commit()
 
                 if p.propertySource == 2:
                     output = result.launcherOutput
@@ -98,9 +105,10 @@ def calculate_result_properties(app):
                 elif p.propertySource == 6:
                     output = result.watcherOutput
 
-                m = re.match(pat, output)
+                m = re.search(pat, output)
+
                 if m is not None:
-                    val = m.groups()[0]
+                    val = m.groups()[-1]
                     pv = db.ExperimentResultProperty()
                     pv.property = p
                     pv.experiment_result = result

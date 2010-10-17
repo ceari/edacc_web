@@ -335,7 +335,7 @@ def experiment_progress_ajax(database, experiment_id):
     prop_joins = ""
     for prop in result_properties:
         prop_joins += """LEFT JOIN ExperimentResult_has_Property as `%s_hasP` ON
-                         `%s_hasP`.ExperimentResults_idJob = idJob AND
+                         `%s_hasP`.idExperimentResults= idJob AND
                          `%s_hasP`.idProperty = %d
                       """ % (prop.name, prop.name, prop.name, prop.idProperty)
         prop_joins += """LEFT JOIN ExperimentResult_has_PropertyValue as `%s_value` ON
