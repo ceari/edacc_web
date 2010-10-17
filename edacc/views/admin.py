@@ -29,9 +29,6 @@ def render(*args, **kwargs):
 @admin.route('/admin/<database>/phase', methods=['GET', 'POST'])
 @require_admin
 def phase(database):
-    competition = models.get_database(database).is_competition()
-    competition_phase = models.get_database(database).competition_phase()
-
     if request.method == 'POST':
         competition = request.form['competition']
         competition_phase = int(request.form['competition_phase'])
@@ -39,6 +36,9 @@ def phase(database):
         models.get_database(database).set_competition(1 if competition == 'on' else 0)
         models.get_database(database).set_competition_phase(competition_phase)
         models.get_database(database).session.commit()
+
+    competition = models.get_database(database).is_competition()
+    competition_phase = models.get_database(database).competition_phase()
 
     return render('/admin/phase.html', database=database, phases=range(1, 8),
                   competition=competition, competition_phase=competition_phase)
