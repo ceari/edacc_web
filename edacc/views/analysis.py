@@ -229,6 +229,7 @@ def scatter_2solver_1property(database, experiment_id):
                         form.solver_config1.data, form.solver_config2.data,
                         form.instances.data, form.solver_property.data, form.run.data)
 
+        # log transform data if axis scaling is enabled, only affects pearson's coeff.
         if form.xscale.data == 'log':
             points = map(lambda p: (math.log(p[0]), p[1]), points)
         if form.yscale.data == 'log':
@@ -282,6 +283,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
                         form.instance_property.data, form.solver_property.data,
                         form.run.data)
 
+        # log transform data if axis scaling is enabled, only affects pearson's coeff.
         if form.xscale.data == 'log':
             points = map(lambda p: (math.log(p[0]), p[1]), points)
         if form.yscale.data == 'log':
@@ -331,6 +333,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
                     form.solver_config.data, form.instances.data,
                     form.solver_property1.data, form.solver_property2.data, form.run.data)
 
+        # log transform data if axis scaling is enabled, only affects pearson's coeff.
         if form.xscale.data == 'log':
             points = map(lambda p: (math.log(p[0]), p[1]), points)
         if form.yscale.data == 'log':

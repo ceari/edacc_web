@@ -30,7 +30,9 @@ plot = Module(__name__)
 
 
 def filter_results(l1, l2):
-    """ Filter the lists l1 and l2 pairwise for None elements in either of them. """
+    """ Filter the lists l1 and l2 pairwise for None elements in either
+    pair compontent. Only elements i with l1[i] == l2[i] != None remain.
+    """
     r1 = [l1[i] for i in xrange(len(l1)) if l1[i] is not None and l2[i] is not None]
     r2 = [l2[i] for i in xrange(len(l2)) if l2[i] is not None and l1[i] is not None]
     return r1, r2
@@ -229,7 +231,9 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
 @require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_1solver_instance_vs_result_property(database, experiment_id):
-    """ description """
+    """ Returns an image with the result property values of one solver
+    against the instance property values, e.g. CPU time vs memory used.
+    """
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -356,7 +360,9 @@ def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, insta
 @require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_1solver_result_vs_result_property(database, experiment_id):
-    """ description """
+    """ Returns an image with the result property values against
+    other result property values.
+    """
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 

@@ -11,15 +11,21 @@
 
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
+
 grdevices = importr('grDevices') # plotting target devices
 np = importr('np') # non-parametric kernel smoothing methods
-stats = importr('stats')
-robjects.r.setEPS()
+stats = importr('stats') # statistical methods
 
-from threading import Lock, currentThread
+robjects.r.setEPS() # set some default options for postscript in EPS format
+
+from threading import Lock
 global_lock = Lock()
 
 class synchronized(object):
+    """ Thread synchronization decorator using a global Lock object.
+        Allows only one thread to execute the decorated function at any point
+        in time.
+    """
     def __init__(self, *args):
         self.lock = global_lock
     def __call__(self, f):
@@ -34,27 +40,19 @@ class synchronized(object):
                 self.lock.release()
         return lockedfunc
 
-#cairo = importr('Cairo')
-#cairo.CairoFonts(regular="Bitstream Vera Sans:style=Regular",
-#                 bold="Bitstream Vera Sans:style=Bold",
-#                 italic="Bitstream Vera Sans:style=Italic",
-#                 symbol="Symbol")
-
 @synchronized()
 def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False, dim=700):
     """ Scatter plot of the points given in the list :points:
-        Each element of :points: should be a tuple (x, y).
-        Returns a list with the points in device coordinates.
+        Each element of points should be a tuple (x, y).
+        Returns a list with the points in device (pixel) coordinates.
     """
     if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=dim,
-        #               height=dim, bg="white", pointsize=14)
         grdevices.png(file=filename, units="px", width=dim,
                       height=dim, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
-        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+        grdevices.postscript(file=filename)
     elif format == 'rscript':
         file = open(filename, 'w')
 
@@ -149,14 +147,12 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
         instances solved within y seconds.
     """
     if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=600,
-        #               height=600, bg="white", pointsize=14)
         grdevices.png(file=filename, units="px", width=600,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
-        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+        grdevices.postscript(file=filename)
 
     # list of colors used in the defined order for the different solvers
     colors = [
@@ -216,21 +212,19 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
 
 @synchronized()
 def result_property_comparison(results1, results2, solver1, solver2, result_property_name, filename, format='png', dim=700):
+    """Result property distribution comparison.
+    Plots an cumulative empirical distribution function for the result vectors
+    results1 and results2 in the same diagram with 2 different colors.
+    """
     if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=600,
-        #               height=600, bg="white", pointsize=14)
         grdevices.png(file=filename, units="px", width=dim,
                       height=dim, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
-        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+        grdevices.postscript(file=filename)
 
     max_x = max([max(results1), max(results2)])
-
-    #quantile1 = robjects.r.quantile(robjects.FloatVector(results1))[0]
-    #quantile2 = robjects.r.quantile(robjects.FloatVector(results2))[0]
-    #min_x = min([quantile1, quantile2])
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
@@ -270,15 +264,17 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
 @synchronized()
 def rtds(results, filename, format='png'):
+    """Runtime distribution plots for multiple result vectors.
+    results is expected to be a list of tuples (sc, data)
+    where data is the result vector of the solver configuration sc.
+    """
     if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=600,
-        #               height=600, bg="white", pointsize=14)
         grdevices.png(file=filename, units="px", width=600,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
-        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+        grdevices.postscript(file=filename)
 
     max_x = max([max(r[1]) for r in results])
 
@@ -295,7 +291,6 @@ def rtds(results, filename, format='png'):
         'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
         'darkorchid', 'deeppink', 'darkgreen', 'blue4'
     ]
-
 
     # plot the distributions
     point_style = 0
@@ -327,15 +322,18 @@ def rtds(results, filename, format='png'):
 
 @synchronized()
 def box_plot(data, filename, format='png'):
+    """Box plot for multiple result vectors.
+
+    :param data: data dictionary with one entry for each result vector, the
+                 key is used as label for each box.
+    """
     if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=600,
-        #               height=600, bg="white", pointsize=14)
         grdevices.png(file=filename, units="px", width=600,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
-        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+        grdevices.postscript(file=filename)
 
     for key in data:
         data[key] = robjects.FloatVector(data[key])
@@ -350,15 +348,17 @@ def box_plot(data, filename, format='png'):
 
 @synchronized()
 def rtd(results, filename, format='png'):
+    """Plot of a single runtime distribution.
+
+    :param results: result vector
+    """
     if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=600,
-        #               height=600, bg="white", pointsize=14)
         grdevices.png(file=filename, units="px", width=600,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
-        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+        grdevices.postscript(file=filename)
 
     max_x = max(results or [0])
 
@@ -388,15 +388,17 @@ def rtd(results, filename, format='png'):
 
 @synchronized()
 def kerneldensity(data, filename, format='png'):
+    """Non-parametric kernel density estimation plot of a result vector.
+
+    :param data: result vector
+    """
     if format == 'png':
-        #cairo.CairoPNG(file=filename, units="px", width=600,
-        #               height=600, bg="white", pointsize=14)
         grdevices.png(file=filename, units="px", width=600,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
-        grdevices.postscript(file=filename, horizontal=False, onefile=False, paper="special")
+        grdevices.postscript(file=filename)
 
     robjects.r.plot(np.npudens(robjects.FloatVector(data)),
                     main='', xaxt='n', yaxt='n',
