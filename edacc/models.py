@@ -349,7 +349,7 @@ class EDACCDatabase(object):
         mapper(ExperimentResultProperty, metadata.tables['ExperimentResult_has_Property'],
             properties = {
                 'property': relationship(Property, backref='experiment_results'),
-                'values': relation(ResultPropertyValue)
+                'values': relation(ResultPropertyValue, backref='experiment_result_property')
             }
         )
         mapper(ResultPropertyValue, metadata.tables['ExperimentResult_has_PropertyValue'])

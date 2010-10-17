@@ -27,7 +27,7 @@ DATABASE_USER       = 'edacc'
 DATABASE_PASSWORD   = 'edaccteam'
 
 # Experiment this client should run, case-sensitive
-EXPERIMENT_NAME     = 'Simons Experiment :-)'
+EXPERIMENT_NAME     = 'Hier könnte ihre Werbung stehen'
 
 class EDACCDatabase(object):
     """ Encapsulates a single EDACC database connection. """
@@ -94,7 +94,7 @@ class EDACCDatabase(object):
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name. """
                 try:
-                    property = db.session.query(db.InstanceProperty).get(property)
+                    property = db.session.query(db.Property).get(property)
                     pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
                     return pv.get_value()
                 except:
@@ -166,14 +166,14 @@ class EDACCDatabase(object):
                 """ Returns the value of the property with the given name.
                     If the property is 'cputime' it returns the time.
                     If the property is an integer, it returns the value of the
-                    associated SolverProperty with this id.
+                    associated Property with this id.
                 """
                 if property == 'cputime':
                     return self.get_time()
                 else:
                     try:
-                        property = db.session.query(db.SolverProperty).get(int(property))
-                        pv = db.session.query(db.ExperimentResultSolverProperty).filter_by(solver_property=property, experiment_result=self).first()
+                        property = db.session.query(db.Property).get(int(property))
+                        pv = db.session.query(db.ExperimentResultResultProperty).filter_by(property=property, experiment_result=self).first()
                         return pv.get_value()
                     except:
                         # if the property or property value doesn't exist return None
@@ -184,6 +184,8 @@ class EDACCDatabase(object):
                 return self.name
 
         class GridQueue(object): pass
+
+        # competition tables
 
         class User(object): pass
 
@@ -197,12 +199,44 @@ class EDACCDatabase(object):
             def __str__(self):
                 return self.name
 
-        class InstanceProperty(object):
+        # result and instance properties
+
+        class Property(object):
+            def is_result_property(self):
+                return self.propertyType == constants.RESULT_PROPERTY_TYPE
+
+            def is_instance_property(self):
+                return self.propertyType == constants.INSTANCE_PROPERTY_TYPE
+
             def is_simple(self):
                 """ Returns whether the property is a simple property which is
                     stored in a way that's directly castable to a Python object
                 """
-                return self.valueType.lower() in ('float', 'double', 'int', 'integer')
+                return self.propertyValueType.lower() in ('float', 'double', 'int', 'integer', 'string')
+
+            def is_plotable(self):
+                """ Returns whether the property is a simple property which is
+                    stored in a way that's directly castable to a Python object
+                    and is numeric.
+                """
+                return self.propertyValueType.lower() in ('float', 'double', 'int', 'integer')
+
+        class PropertyValueType(object): pass
+
+        class ExperimentResultProperty(object):
+            def get_value(self):
+                valueType = self.property.propertyValueType.lower()
+                try:
+                    if valueType in ('float', 'double'):
+                        return float(self.values[0].value)
+                    elif valueType in ('int', 'integer'):
+                        return int(self.values[0].value)
+                    else:
+                        return None
+                except Exception:
+                    return None
+
+        class ResultPropertyValue(object): pass
 
         class InstanceProperties(object):
             def get_value(self):
@@ -212,34 +246,13 @@ class EDACCDatabase(object):
                         return float(self.value)
                     elif valueType in ('int', 'integer'):
                         return int(self.value)
+                    elif valueType in ('string', ):
+                        return str(self.value)
                     else:
                         return None
                 except ValueError:
                     return None
 
-        class PropertyValueType(object): pass
-
-        class SolverProperty(object):
-            def is_simple(self):
-                """ Returns whether the property is a simple property which is
-                    stored in a way that's directly castable to a Python object
-                """
-                return self.multiple == False and self.PropertyValueType_name.lower() in ('float', 'double', 'int', 'integer')
-
-        class ExperimentResultSolverProperty(object):
-            def get_value(self):
-                valueType = self.solver_property.PropertyValueType_name.lower()
-                try:
-                    if valueType in ('float', 'double',):
-                        return float(self.values[0].value)
-                    elif valueType in ('int', 'integer'):
-                        return int(self.values[0].value)
-                    else:
-                        return None
-                except ValueError:
-                    return None
-
-        class SolverPropertyValue(object): pass
 
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
@@ -250,15 +263,16 @@ class EDACCDatabase(object):
         self.ExperimentResult = ExperimentResult
         self.InstanceClass = InstanceClass
         self.GridQueue = GridQueue
+
         self.User = User
         self.DBConfiguration = DBConfiguration
         self.CompetitionCategory = CompetitionCategory
         self.BenchmarkType = BenchmarkType
-        self.InstanceProperty = InstanceProperty
+
+        self.Property = Property
         self.PropertyValueType = PropertyValueType
-        self.SolverProperty = SolverProperty
-        self.ExperimentResultSolverProperty = ExperimentResultSolverProperty
-        self.SolverPropertyValue = SolverPropertyValue
+        self.ExperimentResultProperty = ExperimentResultProperty
+        self.ResultPropertyValue = ResultPropertyValue
         self.InstanceProperties = InstanceProperties
 
         metadata.reflect()
@@ -306,11 +320,6 @@ class EDACCDatabase(object):
                 'results': relation(ExperimentResult)
             }
         )
-        mapper(SolverProperty, metadata.tables['SolverProperty'],
-            properties = {
-                'value_type': relation(PropertyValueType)
-            }
-        )
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
                 'solverOutput': deferred(metadata.tables['ExperimentResults'].c.solverOutput),
@@ -322,23 +331,12 @@ class EDACCDatabase(object):
                 'watcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.watcherOutputFN),
                 'verifierOutputFN': deferred(metadata.tables['ExperimentResults'].c.verifierOutputFN),
                 'solver_configuration': relation(SolverConfiguration),
-                'solver_properties': relationship(ExperimentResultSolverProperty, backref='experiment_result'),
+                'properties': relationship(ExperimentResultProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),
                 'instance': relation(Instance),
             }
         )
-        mapper(ExperimentResultSolverProperty, metadata.tables['ExperimentResult_has_SolverProperty'],
-            properties = {
-                'solver_property': relationship(SolverProperty, backref='experiment_results'),
-                'values': relation(SolverPropertyValue)
-            }
-        )
-        mapper(InstanceProperties, metadata.tables['Instance_has_InstanceProperty'],
-            properties = {
-                'property': relation(InstanceProperty),
-                'value': deferred(metadata.tables['Instance_has_InstanceProperty'].c.value)
-            }
-        )
+
         mapper(User, metadata.tables['User'],
             properties = {
                 'solvers': relation(Solver, backref='user'),
@@ -353,9 +351,21 @@ class EDACCDatabase(object):
                 'instances': relation(Instance, backref='benchmark_type')
             }
         )
+
+        mapper(Property, metadata.tables['Property'])
         mapper(PropertyValueType, metadata.tables['PropertyValueType'])
-        mapper(SolverPropertyValue, metadata.tables['SolverPropertyValue'])
-        mapper(InstanceProperty, metadata.tables['InstanceProperty'])
+        mapper(ExperimentResultProperty, metadata.tables['ExperimentResult_has_Property'],
+            properties = {
+                'property': relationship(Property, backref='experiment_results'),
+                'values': relation(ResultPropertyValue)
+            }
+        )
+        mapper(ResultPropertyValue, metadata.tables['ExperimentResult_has_PropertyValue'])
+        mapper(InstanceProperties, metadata.tables['Instance_has_Property'],
+            properties = {
+                'property': relationship(Property, backref='instances')
+            }
+        )
 
         self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False, autoflush=False))
 
@@ -367,18 +377,6 @@ class EDACCDatabase(object):
             dbConfig.competitionPhase = None
             self.session.add(dbConfig)
             self.session.commit()
-
-    def get_result_properties(self):
-        """ Returns a list of the result properties in the database that are
-            suited for Python use.
-        """
-        return [p for p in self.session.query(self.SolverProperty).all() if p.is_simple()]
-
-    def get_instance_properties(self):
-        """ Returns a list of the instance properties in the database that are
-            suited for Python use.
-        """
-        return [p for p in self.session.query(self.InstanceProperty).all() if p.is_simple()]
 
     def is_competition(self):
         """ returns whether this database is a competition database (user management etc. necessary) or not """
@@ -499,23 +497,6 @@ class EDACCClient(threading.Thread):
 
                 job.resultTime = runtime
 
-                memory_used_prop = None
-                for prop in db.get_result_properties():
-                    if prop.name == 'Memory used':
-                        memory_used_prop = prop
-                        break
-
-                if memory_used_prop is not None:
-                    ersp = db.ExperimentResultSolverProperty()
-                    ersp.solver_property = memory_used_prop
-                    val = db.SolverPropertyValue()
-                    ersp.values.append(val)
-                    val.order = 0
-                    val.value = str(memory)
-                    ersp.experiment_result = job
-
-                    db.session.add(ersp)
-                    db.session.add(val)
 
                 #cpuinfo = open('/proc/cpuinfo')
                 #job.solverOutput = cpuinfo.read()

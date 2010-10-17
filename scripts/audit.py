@@ -5,8 +5,10 @@ except ImportError:
     print "Missing dependency: PyFlakes"
     sys.exit(-1)
 
+print 
+
 warnings = 0
-for dir, subdirs, files in os.walk(os.path.abspath('../edacc')):
+for dir, subdirs, files in os.walk(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../edacc')):
     for filename in files:
         if filename.endswith('.py'):
             warnings += flakes.checkPath(os.path.join(dir, filename))
