@@ -6,7 +6,7 @@ except ImportError:
     sys.exit(-1)
 
 warnings = 0
-for dir, subdirs, files in os.walk(os.path.abspath('edacc')):
+for dir, subdirs, files in os.walk(os.path.abspath('../edacc')):
     for filename in files:
         if filename.endswith('.py'):
             warnings += flakes.checkPath(os.path.join(dir, filename))

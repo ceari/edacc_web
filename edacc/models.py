@@ -195,10 +195,10 @@ class EDACCDatabase(object):
 
         class Property(object):
             def is_result_property(self):
-                return self.propertyType == config.RESULT_PROPERTY_TYPE
+                return self.propertyType == constants.RESULT_PROPERTY_TYPE
 
             def is_instance_property(self):
-                return self.propertyType == config.INSTANCE_PROPERTY_TYPE
+                return self.propertyType == constants.INSTANCE_PROPERTY_TYPE
 
             def is_simple(self):
                 """ Returns whether the property is a simple property which is
