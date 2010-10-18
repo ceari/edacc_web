@@ -19,7 +19,7 @@ import datetime
 from flask import Module
 from flask import render_template
 from flask import Response, abort, g, request
-from werkzeug import Headers
+from werkzeug import Headers, secure_filename
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload
@@ -428,6 +428,17 @@ def experiment_progress_ajax(database, experiment_id):
                 + [job[i] for i in xrange(9, 9+len(result_properties))]
             )
 
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'Status', 'Result'] + [p.name for p in result_properties])
+        for d in aaData:
+            csv_writer.writerow(d[0:8] + d[9:])
+        csv_response.seek(0)
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(experiment.name) + "_data.csv")
+        return Response(response=csv_response.read(), headers=headers)
 
     return json.dumps({
         'aaData': aaData,

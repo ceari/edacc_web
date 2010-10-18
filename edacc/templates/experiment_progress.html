@@ -8,19 +8,6 @@
     <script src="/static/js/jquery.dataTables.ajaxReloadPlugin.js" type="text/javascript"></script>
     <script type="text/javascript">
         /* <![CDATA[ */
-        $.fn.dataTableExt.afnSortData['job-status'] = function  ( oSettings, iColumn )
-        {
-            var aData = [];
-            $('td:eq('+iColumn+')', oSettings.oApi._fnGetTrNodes(oSettings)).each(function() {
-                var v = $(this).html()
-                if (v == 'error') aData.push("Aerror");
-                else if (v == 'not started') aData.push("Bnot started");
-                else if (v == 'running') aData.push("Crunning");
-                else if (v == 'finished') aData.push("Dfinished");
-                else if (v == 'terminated by ulimit') aData.push("Eterminated by ulimit");
-            });
-            return aData;
-        }
         $(document).ready(function() {
             var JOB_STATUS_COLOR = { {% autoescape false %}{{JS_colors|safe}}{% endautoescape %} };
 
@@ -54,6 +41,53 @@
 
             $('#refresh').click(function() {
                 oTable.fnReloadAjax();
+                return false;
+            });
+
+            getDataTableVars = function(oSettings){
+                var iColumns = oSettings.aoColumns.length;
+                var aoData = [];
+                var i;
+
+                /* General */
+                aoData.push( { "name": "iColumns",       "value": iColumns } );
+
+                /* Filtering */
+                if ( oSettings.oFeatures.bFilter !== false )
+                {
+                    aoData.push( { "name": "sSearch", "value": oSettings.oPreviousSearch.sSearch } );
+                    for ( i=0 ; i<iColumns ; i++ )
+                    {
+                        aoData.push( { "name": "sSearch_"+i,     "value": oSettings.aoPreSearchCols[i].sSearch } );
+                    }
+                }
+
+                /* Sorting */
+                if ( oSettings.oFeatures.bSort !== false )
+                {
+                        var iFixed = oSettings.aaSortingFixed !== null ? oSettings.aaSortingFixed.length : 0;
+                        var iUser = oSettings.aaSorting.length;
+                        aoData.push( { "name": "iSortingCols",   "value": iFixed+iUser } );
+                        for ( i=0 ; i<iFixed ; i++ )
+                        {
+                            aoData.push( { "name": "iSortCol_"+i,  "value": oSettings.aaSortingFixed[i][0] } );
+                            aoData.push( { "name": "sSortDir_"+i,  "value": oSettings.aaSortingFixed[i][1] } );
+                        }
+
+                        for ( i=0 ; i<iUser ; i++ )
+                        {
+                            aoData.push( { "name": "iSortCol_"+(i+iFixed),  "value": oSettings.aaSorting[i][0] } );
+                            aoData.push( { "name": "sSortDir_"+(i+iFixed),  "value": oSettings.aaSorting[i][1] } );
+                        }
+                }
+
+                return aoData;
+            }
+
+            $('#get_csv').click(function() {
+                var aoData = getDataTableVars(oTable.fnSettings());
+                var varStr = jQuery.param(aoData);
+                document.location.href = '{{url_for('experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}?'+varStr+'&csv';
                 return false;
             });
 
@@ -103,8 +137,8 @@
     </div>
     -->
 
-    <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
-    <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>
+    <a id="get_csv" href="#">Download as CSV</a> | <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
+    <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select><br/>
     <div style="max-width: 98%">
     <table id="table_jobs" class="display">
         <thead>
