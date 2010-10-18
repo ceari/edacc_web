@@ -49,17 +49,26 @@
                 var aoData = [];
                 var i;
 
-                /* General */
+                /* Paging and general */
+                oSettings.iServerDraw++;
+                aoData.push( { "name": "sEcho",          "value": oSettings.iServerDraw } );
                 aoData.push( { "name": "iColumns",       "value": iColumns } );
+                aoData.push( { "name": "sColumns",       "value": oTable.oApi._fnColumnOrdering(oSettings) } );
+                aoData.push( { "name": "iDisplayStart",  "value": oSettings._iDisplayStart } );
+                aoData.push( { "name": "iDisplayLength", "value": oSettings.oFeatures.bPaginate !== false ?
+                        oSettings._iDisplayLength : -1 } );
 
                 /* Filtering */
                 if ( oSettings.oFeatures.bFilter !== false )
                 {
-                    aoData.push( { "name": "sSearch", "value": oSettings.oPreviousSearch.sSearch } );
-                    for ( i=0 ; i<iColumns ; i++ )
-                    {
-                        aoData.push( { "name": "sSearch_"+i,     "value": oSettings.aoPreSearchCols[i].sSearch } );
-                    }
+                        aoData.push( { "name": "sSearch",        "value": oSettings.oPreviousSearch.sSearch } );
+                        aoData.push( { "name": "bEscapeRegex",   "value": oSettings.oPreviousSearch.bEscapeRegex } );
+                        for ( i=0 ; i<iColumns ; i++ )
+                        {
+                                aoData.push( { "name": "sSearch_"+i,      "value": oSettings.aoPreSearchCols[i].sSearch } );
+                                aoData.push( { "name": "bEscapeRegex_"+i, "value": oSettings.aoPreSearchCols[i].bEscapeRegex } );
+                                aoData.push( { "name": "bSearchable_"+i,  "value": oSettings.aoColumns[i].bSearchable } );
+                        }
                 }
 
                 /* Sorting */
@@ -70,14 +79,19 @@
                         aoData.push( { "name": "iSortingCols",   "value": iFixed+iUser } );
                         for ( i=0 ; i<iFixed ; i++ )
                         {
-                            aoData.push( { "name": "iSortCol_"+i,  "value": oSettings.aaSortingFixed[i][0] } );
-                            aoData.push( { "name": "sSortDir_"+i,  "value": oSettings.aaSortingFixed[i][1] } );
+                                aoData.push( { "name": "iSortCol_"+i,  "value": oSettings.aaSortingFixed[i][0] } );
+                                aoData.push( { "name": "sSortDir_"+i,  "value": oSettings.aaSortingFixed[i][1] } );
                         }
 
                         for ( i=0 ; i<iUser ; i++ )
                         {
-                            aoData.push( { "name": "iSortCol_"+(i+iFixed),  "value": oSettings.aaSorting[i][0] } );
-                            aoData.push( { "name": "sSortDir_"+(i+iFixed),  "value": oSettings.aaSorting[i][1] } );
+                                aoData.push( { "name": "iSortCol_"+(i+iFixed),  "value": oSettings.aaSorting[i][0] } );
+                                aoData.push( { "name": "sSortDir_"+(i+iFixed),  "value": oSettings.aaSorting[i][1] } );
+                        }
+
+                        for ( i=0 ; i<iColumns ; i++ )
+                        {
+                                aoData.push( { "name": "bSortable_"+i,  "value": oSettings.aoColumns[i].bSortable } );
                         }
                 }
 
