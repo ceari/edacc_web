@@ -8,11 +8,25 @@
     </div>
     <h2>Result of <a href="{{url_for('solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">{{solver_config.get_name()}}</a> on <a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a>, Run #{{result.run}}</h2>
 
-    <div style="font-weight: bold">
-    Status: {{result.status|job_status}}<br/>
-    Result: {{result.resultCode|result_code}}<br/>
-    CPU Time: {{result.get_time()|round(2)}}
-    </div>
+    <table class="details">
+        <tr class="odd">
+            <td>Status:</td>
+            <td>{{result.status|job_status}}</td>
+        </tr>
+        <tr class="even">
+            <td>Result:</td>
+            <td>{{result.resultCode|result_code}}</td>
+        </tr>
+        <tr class="odd">
+            <td>CPU Time</td>
+            <td>{{result.get_time()|round(2)}}</td>
+        </tr>
+        {% for prop in db.get_result_properties() %}
+        <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">
+            <td>{{prop.name}}:</td><td>{% if result.get_property_value(prop.idProperty, db) == None %}not yet calculated{% else %}{{result.get_property_value(prop.idProperty, db)}}{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
     <h3>Solver output:</h3>
     (<a href="{{url_for('solver_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
