@@ -165,7 +165,7 @@ class EDACCDatabase(object):
                 else:
                     try:
                         property = db.session.query(db.Property).get(int(property))
-                        pv = db.session.query(db.ExperimentResultResultProperty).filter_by(property=property, experiment_result=self).first()
+                        pv = db.session.query(db.ExperimentResultProperty).filter_by(property=property, experiment_result=self).first()
                         return pv.get_value()
                     except:
                         # if the property or property value doesn't exist return None
