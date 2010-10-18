@@ -123,7 +123,7 @@ def calculate_result_properties(app):
         props = db.session.query(db.Property).filter_by(propertyType=1)
         for p in props:
             pat = re.compile(p.regExpression)
-            for result in db.session.query(db.ExperimentResult).filter_by(experiment=exp).all():
+            for result in db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')).filter_by(experiment=exp).all():
                 for pv in result.properties:
                     if pv.property == p:
                         for pvv in pv.values:
