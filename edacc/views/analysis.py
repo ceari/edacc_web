@@ -245,9 +245,9 @@ def scatter_2solver_1property(database, experiment_id):
 
         # log transform data if axis scaling is enabled, only affects pearson's coeff.
         if form.xscale.data == 'log':
-            points = map(lambda p: (math.log(p[0]), p[1]), points)
+            points = map(lambda p: (math.log(p[0]) if p[0] != 0 else 0, p[1]), points)
         if form.yscale.data == 'log':
-            points = map(lambda p: (p[0], math.log(p[1])), points)
+            points = map(lambda p: (p[0], math.log(p[1]) if p[1] != 0 else 0), points)
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
@@ -299,9 +299,9 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
         # log transform data if axis scaling is enabled, only affects pearson's coeff.
         if form.xscale.data == 'log':
-            points = map(lambda p: (math.log(p[0]), p[1]), points)
+            points = map(lambda p: (math.log(p[0]) if p[0] != 0 else 0, p[1]), points)
         if form.yscale.data == 'log':
-            points = map(lambda p: (p[0], math.log(p[1])), points)
+            points = map(lambda p: (p[0], math.log(p[1]) if p[1] != 0 else 0), points)
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
@@ -349,9 +349,9 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
         # log transform data if axis scaling is enabled, only affects pearson's coeff.
         if form.xscale.data == 'log':
-            points = map(lambda p: (math.log(p[0]), p[1]), points)
+            points = map(lambda p: (math.log(p[0]) if p[0] != 0 else 0, p[1]), points)
         if form.yscale.data == 'log':
-            points = map(lambda p: (p[0], math.log(p[1])), points)
+            points = map(lambda p: (p[0], math.log(p[1]) if p[1] != 0 else 0), points)
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
