@@ -15,7 +15,7 @@
     {% for prop in instance_properties %}
     <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">
         <td>{{prop.name}}</td>
-        <td>{{instance.get_property_value(prop.name, db)}}</td>
+        <td>{{instance.get_property_value(prop.idProperty, db)}}</td>
     </tr>
     {% endfor %}
 </table>

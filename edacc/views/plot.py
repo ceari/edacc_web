@@ -223,7 +223,7 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
                     res.get_property_value(solver_property, db),
                     instance
                 ))
-    print points
+
     return points
 
 

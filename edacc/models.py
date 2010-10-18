@@ -85,12 +85,10 @@ class EDACCDatabase(object):
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name. """
-                try:
-                    property = db.session.query(db.Property).filter_by(name=property).first()
-                    pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
-                    return pv.get_value()
-                except:
-                    return None
+                property = db.session.query(db.Property).get(int(property))
+                pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
+                return pv.get_value()
+
 
             def get_instance(self):
                 """ Decompresses the instance blob and returns it as string """
@@ -163,13 +161,11 @@ class EDACCDatabase(object):
                 if property == 'cputime':
                     return self.get_time()
                 else:
-                    try:
-                        property = db.session.query(db.Property).get(int(property))
-                        pv = db.session.query(db.ExperimentResultProperty).filter_by(property=property, experiment_result=self).first()
-                        return pv.get_value()
-                    except:
-                        # if the property or property value doesn't exist return None
-                        return None
+
+                    property = db.session.query(db.Property).get(int(property))
+                    pv = db.session.query(db.ExperimentResultProperty).filter_by(property=property, experiment_result=self).first()
+                    return pv.get_value()
+
 
         class InstanceClass(object):
             def __str__(self):
