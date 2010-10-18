@@ -462,7 +462,7 @@ def cactus_plot(database, experiment_id):
 
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
-    results.options(joinedload(db.ExperimentResult.solver_properties))
+    results.options(joinedload(db.ExperimentResult.properties))
     results = results.filter_by(experiment=exp)
     instances = [int(id) for id in request.args.getlist('instances')]
     solver_property = request.args.get('solver_property') or 'cputime'
