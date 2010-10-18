@@ -32,7 +32,7 @@ def add_property(app):
         p.propertySource = int(propertySource)
         p.name = name
         p.description = description
-        p.regExp = regExp
+        p.regExpression = regExp
         p.propertyValueType = value_type
         p.isDefault = True
         p.multipleOccourence = int(multiple)
@@ -81,7 +81,7 @@ def calculate_instance_properties(app):
         instances = db.session.query(db.Instance).all()
 
         for p in db.session.query(db.Property).filter_by(propertyType=0):
-            pat = re.compile(p.regExp)
+            pat = re.compile(p.regExpression)
             for instance in instances:
                 for pv in instance.properties:
                     if pv.property == p:
@@ -122,7 +122,7 @@ def calculate_result_properties(app):
 
         props = db.session.query(db.Property).filter_by(propertyType=1)
         for p in props:
-            pat = re.compile(p.regExp)
+            pat = re.compile(p.regExpression)
             for result in db.session.query(db.ExperimentResult).filter_by(experiment=exp).all():
                 for pv in result.properties:
                     if pv.property == p:
