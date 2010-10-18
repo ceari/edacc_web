@@ -400,7 +400,9 @@ def kerneldensity(data, filename, format='png'):
     elif format == 'eps':
         grdevices.postscript(file=filename)
 
-    robjects.r.plot(np.npudens(robjects.FloatVector(data)),
+    # add some pseudo value to data because R crashes when the data is constant
+    # and takes python with it ...
+    robjects.r.plot(np.npudens(robjects.FloatVector(data + [max(data) + 0.00001])),
                     main='', xaxt='n', yaxt='n',
                     xlab='', ylab='', xaxs='i', yaxs='i', las=1)
 

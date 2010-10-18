@@ -75,6 +75,42 @@ def add_value_type(app):
             db.session.rollback()
     return action
 
+def calculate_instance_properties(app):
+    def action(db_name=('db','EDACC')):
+        db = models.get_database(db_name)
+        instances = db.session.query(db.Instance).all()
+
+        for p in db.session.query(db.Property).filter_by(propertyType=0):
+            pat = re.compile(p.regExp)
+            for instance in instances:
+                for pv in instance.properties:
+                    if pv.property == p:
+                        db.session.delete(pv)
+                        db.session.commit()
+                        break
+
+                if p.propertySource == 0:
+                    text = instance.instance
+                elif p.propertySource == 1:
+                    text = instance.name
+
+                m = re.search(pat, text)
+                if m is not None:
+                    val = m.groups()[-1]
+                    pv = db.InstanceProperties()
+                    pv.property = p
+                    pv.instance = instance
+                    pv.value = val
+                    db.session.add(pv)
+
+        try:
+            db.session.commit()
+            print "Instance property values calculated."
+        except Exception as e:
+            print "Error while saving instance property values", e
+            db.session.rollback()
+    return action
+
 def calculate_result_properties(app):
     def action(db_name=('db','EDACC'), experiment=('experiment', '')):
         """Calculate result properties for the jobs of the experiment with the name passed in."""
@@ -131,6 +167,7 @@ def calculate_result_properties(app):
 manager.add_action('add_property', add_property)
 manager.add_action('add_value_type', add_value_type)
 manager.add_action('calculate_result_properties', calculate_result_properties)
+manager.add_action('calculate_instance_properties', calculate_instance_properties)
 
 
 if __name__ == "__main__":

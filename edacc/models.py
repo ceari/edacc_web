@@ -86,7 +86,7 @@ class EDACCDatabase(object):
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name. """
                 try:
-                    property = db.session.query(db.Property).get(property)
+                    property = db.session.query(db.Property).filter_by(name=property).first()
                     pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
                     return pv.get_value()
                 except:
@@ -232,7 +232,7 @@ class EDACCDatabase(object):
 
         class InstanceProperties(object):
             def get_value(self):
-                valueType = self.property.valueType.lower()
+                valueType = self.property.propertyValueType.lower()
                 try:
                     if valueType in ('float', 'double',):
                         return float(self.value)
