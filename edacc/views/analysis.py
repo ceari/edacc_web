@@ -41,14 +41,27 @@ def solver_ranking(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    num_runs_per_solver = experiment.get_num_runs(db) * len(experiment.instances)
+    num_runs = experiment.get_num_runs(db)
+    num_runs_per_solver = num_runs * len(experiment.instances)
+
+    vbs_num_solved = 0
+    vbs_cumulated_cpu = 0
+    for i in experiment.instances:
+        best_solver_run = db.session.query(db.ExperimentResult).filter_by(experiment=experiment)\
+                                    .filter(db.ExperimentResult.resultCode.like('1%')) \
+                                    .filter_by(instance=i).order_by(db.ExperimentResult.resultTime) \
+                                    .first()
+        if best_solver_run:
+            vbs_num_solved += num_runs
+            vbs_cumulated_cpu += best_solver_run.resultTime * num_runs
 
     ranked_solvers = ranking.number_of_solved_instances_ranking(experiment)
-    data = [('Virtual Best Solver (VBS)',   # name of the solver
-             len(experiment.instances) * experiment.get_num_runs(db),     # number of successful runs
-             1.0,                           # % of all runs
-             0,                             # cumulated CPU time
-             0,                             # average CPU time per successful run
+    data = [('Virtual Best Solver (VBS)',           # name of the solver
+             vbs_num_solved,                        # number of successful runs
+             vbs_num_solved / num_runs_per_solver,  # % of all runs
+             1.0,                                   # % of vbs runs
+             vbs_cumulated_cpu,                     # cumulated CPU time
+             (0.0 if vbs_num_solved == 0 else vbs_cumulated_cpu / vbs_num_solved),    # average CPU time per successful run
              )]
     for solver in ranked_solvers:
         successful_runs = db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')) \
@@ -57,9 +70,10 @@ def solver_ranking(database, experiment_id):
         data.append((
             solver.get_name(),
             num_successful_runs,
-            num_successful_runs / float(num_runs_per_solver),
+            0 if num_runs_per_solver == 0 else num_successful_runs / float(num_runs_per_solver),
+            0 if vbs_num_solved == 0 else num_successful_runs / float(vbs_num_solved),
             sum(j.get_time() for j in successful_runs),
-            numpy.average([j.get_time() for j in successful_runs])
+            numpy.average([j.get_time() for j in successful_runs] or 0)
         ))
 
     return render('/analysis/ranking.html', database=database, db=db,

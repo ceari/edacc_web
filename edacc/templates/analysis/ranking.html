@@ -7,7 +7,11 @@
         Ranking
     </div>
     <h2>Ranking</h2>
-
+    <div>
+        The virtual best solver (VBS) solves an instance if any of the experiment's solvers are<br/>
+        sucessful on that instance in any of their <i>numRuns</i> runs. In this case the VBS gets<br/>
+        <i>numRuns</i> successful runs on that instance and for each run the run time of the best solver.
+    </div>
     <h3>Ranking by the number of successful runs</h3>
     <table class="results">
         <thead>
@@ -16,6 +20,7 @@
                 <th>Solver</th>
                 <th>Number of successful runs</th>
                 <th>% of all runs</th>
+                <th>% of VBS runs</th>
                 <th>cumulated CPU time</th>
                 <th>average CPU time per successful run</th>
             </tr>
@@ -27,8 +32,9 @@
                 <td>{{sc.0}}</td>
                 <td>{{sc.1}}</td>
                 <td>{{(sc.2 * 100.0)|round(2)}} %</td>
-                <td>{{sc.3|round(2)}}</td>
+                <td>{{(sc.3 * 100.0)|round(2)}} %</td>
                 <td>{{sc.4|round(2)}}</td>
+                <td>{{sc.5|round(2)}}</td>
             </tr>
         {% endfor %}
         </tbody>
