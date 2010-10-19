@@ -30,7 +30,7 @@ plot = Module(__name__)
 
 def filter_results(l1, l2):
     """Filter the lists l1 and l2 pairwise for None elements in either
-    pair compontent. Only elements i with l1[i] == l2[i] != None remain.
+    pair component. Only elements i with l1[i] == l2[i] != None remain.
     """
     r1 = [l1[i] for i in xrange(len(l1)) if l1[i] is not None and l2[i] is not None]
     r2 = [l2[i] for i in xrange(len(l2)) if l2[i] is not None and l1[i] is not None]

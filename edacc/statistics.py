@@ -20,8 +20,10 @@ def prob_domination(v1, v2):
         the empirical CDF obtained from v2 (return 1), or the other way around
         (return -1), or if there are crossovers (return 0).
         Algorithm A probabilistically dominates algorithm B, iff.
-        1) \forall t: P(RT_A <= t) >= P(RT_B <= t)
-        2) \exists t: P(RT_A <= t) > P(RT_B <= t)
+        
+        1) :math:`\\forall t: P(RT_A \le t) \ge P(RT_B \le t)`
+
+        2) :math:`\exists t: P(RT_A \le t) > P(RT_B \le t)`
     """
 
     ecdf1 = robjects.r.ecdf(robjects.FloatVector(v1))
