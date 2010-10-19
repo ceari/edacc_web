@@ -180,7 +180,7 @@ def result_property_comparison(database, experiment_id):
               experiment=experiment, db=db, form=form, GET_data=GET_data,
               ks_statistic=ks_statistic, ks_p_value=ks_p_value,
               wx_statistic=wx_statistic, wx_p_value=wx_p_value,
-              wx_error=wx_error, ks_error=ks_error)
+              wx_error=wx_error, ks_error=ks_error, median1=median1, median2=median2)
 
 
     return render('/analysis/result_property_comparison.html', database=database,
