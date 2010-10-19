@@ -10,7 +10,7 @@
 """
 
 from flask import Module
-from flask import render_template
+from flask import render_template as render
 from flask import request, session, url_for, redirect
 
 from edacc import config, models
@@ -19,11 +19,11 @@ from edacc.views.helpers import require_admin
 admin = Module(__name__)
 
 
-def render(*args, **kwargs):
-    from tidylib import tidy_document
-    res = render_template(*args, **kwargs)
-    doc, errs = tidy_document(res)
-    return doc
+#def render(*args, **kwargs):
+#    from tidylib import tidy_document
+#    res = render_template(*args, **kwargs)
+#    doc, errs = tidy_document(res)
+#    return doc
 
 
 @admin.route('/admin/<database>/phase', methods=['GET', 'POST'])

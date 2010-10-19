@@ -17,7 +17,7 @@ import numpy
 import datetime
 
 from flask import Module
-from flask import render_template
+from flask import render_template as render
 from flask import Response, abort, g, request
 from werkzeug import Headers, secure_filename
 
@@ -33,13 +33,6 @@ from edacc.forms import EmptyQuery
 frontend = Module(__name__)
 
 
-def render(*args, **kwargs):
-    from tidylib import tidy_document
-    res = render_template(*args, **kwargs)
-    doc, errs = tidy_document(res)
-    return doc
-
-
 @frontend.route('/')
 def index():
     """ Show a list of all served databases """
@@ -52,7 +45,7 @@ def index():
 @frontend.route('/<database>/experiments/')
 @require_phase(phases=(1, 2, 3, 4, 5, 6, 7))
 def experiments_index(database):
-    """ Show a list of all experiments in the database """
+    """Show a list of all experiments in the database."""
     db = models.get_database(database) or abort(404)
 
     if db.is_competition() and db.competition_phase() not in (3, 4, 5, 6, 7):
@@ -68,12 +61,18 @@ def experiments_index(database):
 @frontend.route('/<database>/categories')
 @require_competition
 def categories(database):
-    return 'categories'
+    """Displays a static categories page."""
+
+    try:
+        return render('/competitions/%s/categories.html' % (database,), db=db, database=database)
+    except:
+        abort(404)
 
 
 @frontend.route('/<database>/overview/')
 @require_competition
 def competition_overview(database):
+    """Displays a static overview page."""
     db = models.get_database(database) or abort(404)
 
     try:
@@ -85,6 +84,7 @@ def competition_overview(database):
 @frontend.route('/<database>/schedule/')
 @require_competition
 def competition_schedule(database):
+    """Displays a static schedule page."""
     db = models.get_database(database) or abort(404)
 
     try:
@@ -96,6 +96,7 @@ def competition_schedule(database):
 @frontend.route('/<database>/rules/')
 @require_competition
 def competition_rules(database):
+    """Displays a static rules page."""
     db = models.get_database(database) or abort(404)
 
     try:
@@ -146,7 +147,6 @@ def experiment_instances(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     instances = experiment.instances
-    instances.sort(key=lambda i: i.name)
 
     return render('experiment_instances.html', instances=instances,
                   experiment=experiment, database=database, db=db)
@@ -167,18 +167,16 @@ def experiment_results(database, experiment_id):
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
+    query = db.session.query(db.ExperimentResult).filter_by(experiment=experiment)
+
     results = []
     for instance in instances:
         row = []
         for solver_config in solver_configs:
-            query = db.session.query(db.ExperimentResult)
-            query.enable_eagerloads(True)
-            query.options(joinedload(db.ExperimentResult.instance,
-                                     db.ExperimentResult.solver_configuration))
-            jobs = query.filter_by(experiment=experiment) \
-                        .filter_by(solver_configuration=solver_config) \
+            jobs = query.filter_by(solver_configuration=solver_config) \
                         .filter_by(instance=instance) \
                         .all()
+
             completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
             runtimes = [j.get_time() for j in jobs]
             time_max = max(runtimes)
@@ -199,7 +197,6 @@ def experiment_results(database, experiment_id):
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     results=results, database=database, db=db)
-
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
@@ -314,7 +311,7 @@ def experiment_progress(database, experiment_id):
 def experiment_progress_ajax(database, experiment_id):
     """ Returns JSON-serialized data of the experiment results.
         Used by the jQuery datatable as ajax data source with server side processing.
-        Parses the GET parameters and constructs an apropriate SQL query to fetch
+        Parses the GET parameters and constructs an appropriate SQL query to fetch
         the data.
     """
     db = models.get_database(database) or abort(404)

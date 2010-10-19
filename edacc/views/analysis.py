@@ -13,7 +13,7 @@ import math
 import numpy
 
 from flask import Module
-from flask import render_template
+from flask import render_template as render
 from flask import abort, request
 
 from edacc import models, forms, ranking, statistics
@@ -24,11 +24,11 @@ from edacc.forms import EmptyQuery
 
 analysis = Module(__name__)
 
-def render(*args, **kwargs):
-    from tidylib import tidy_document
-    res = render_template(*args, **kwargs)
-    doc, errs = tidy_document(res)
-    return doc
+#def render(*args, **kwargs):
+#    from tidylib import tidy_document
+#    res = render_template(*args, **kwargs)
+#    doc, errs = tidy_document(res)
+#    return doc
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/ranking/')

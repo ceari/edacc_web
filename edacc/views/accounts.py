@@ -15,7 +15,7 @@ import random
 import hashlib
 
 from flask import Module
-from flask import render_template, g
+from flask import render_template as render, g
 from flask import Response, abort, request, session, url_for, redirect, flash
 from werkzeug import Headers, secure_filename
 
@@ -26,11 +26,11 @@ from edacc.views.helpers import require_phase, require_competition, \
 accounts = Module(__name__)
 
 
-def render(*args, **kwargs):
-    from tidylib import tidy_document
-    res = render_template(*args, **kwargs)
-    doc, errs = tidy_document(res)
-    return doc
+#def render(*args, **kwargs):
+#    from tidylib import tidy_document
+#    res = render_template(*args, **kwargs)
+#    doc, errs = tidy_document(res)
+#    return doc
 
 
 @accounts.route('/<database>/register/', methods=['GET', 'POST'])

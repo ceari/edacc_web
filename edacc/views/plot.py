@@ -4,7 +4,6 @@
     ----------------
 
     Plot view functions.
-
     The handlers defined in this module return the plotted images as
     HTTP responses.
 
@@ -30,7 +29,7 @@ plot = Module(__name__)
 
 
 def filter_results(l1, l2):
-    """ Filter the lists l1 and l2 pairwise for None elements in either
+    """Filter the lists l1 and l2 pairwise for None elements in either
     pair compontent. Only elements i with l1[i] == l2[i] != None remain.
     """
     r1 = [l1[i] for i in xrange(len(l1)) if l1[i] is not None and l2[i] is not None]
@@ -90,21 +89,21 @@ def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, solver_proper
 @require_phase(phases=ANALYSIS2)
 @require_login
 def scatter_2solver_1property(database, experiment_id):
-    """ Returns an image with a scatter plot of the result property of two
-        solver configurations' results on instances as HTTP response.
+    """Returns an image with a scatter plot of the result property of two
+    solver configurations' results on instances as HTTP response.
 
-        The data to be plotted has to be specified as GET parameters:
+    The data to be plotted has to be specified as GET parameters:
 
-        solver_config1: id of the first solver configuration
-        solver_config2: id of the second solver configuratio
-        instances: id of an instance, multiple occurences allowed.
-        run: 'average', 'median', 'all', or an integer of the run.
-                If the value is 'all', all runs of the solvers will be plotted.
-                If the value is 'average' or 'median', these values will be calculated
-                across multiple runs of one solver on an instance.
-                If the value is an integer, the data of this specific run is used.
-        solver_property: id of a result property (Property table) or the special case
-                         'cputime' for the time column of the ExperimentResult table.
+    solver_config1: id of the first solver configuration
+    solver_config2: id of the second solver configuratio
+    instances: id of an instance, multiple occurences allowed.
+    run: 'average', 'median', 'all', or an integer of the run.
+            If the value is 'all', all runs of the solvers will be plotted.
+            If the value is 'average' or 'median', these values will be calculated
+            across multiple runs of one solver on an instance.
+            If the value is an integer, the data of this specific run is used.
+    solver_property: id of a result property (Property table) or the special case
+                     'cputime' for the time column of the ExperimentResult table.
     """
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)

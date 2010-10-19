@@ -8,7 +8,7 @@
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
-
+from functools import wraps
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 
@@ -21,26 +21,23 @@ robjects.r.setEPS() # set some default options for postscript in EPS format
 from threading import Lock
 global_lock = Lock()
 
-class synchronized(object):
-    """ Thread synchronization decorator using a global Lock object.
-        Allows only one thread to execute the decorated function at any point
-        in time.
+def synchronized(f):
+    """Thread synchronization decorator. Only allows exactly one thread
+    to enter the wrapped function at any given point in time.
     """
-    def __init__(self, *args):
-        self.lock = global_lock
-    def __call__(self, f):
-        def lockedfunc(*args, **kwargs):
+    @wraps(f)
+    def lockedfunc(*args, **kwargs):
+        try:
+            global_lock.acquire()
             try:
-                self.lock.acquire()
-                try:
-                    return f(*args, **kwargs)
-                except Exception, e:
-                    raise
-            finally:
-                self.lock.release()
-        return lockedfunc
+                return f(*args, **kwargs)
+            except Exception, e:
+                raise
+        finally:
+            global_lock.release()
+    return lockedfunc
 
-@synchronized()
+@synchronized
 def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False, dim=700):
     """ Scatter plot of the points given in the list :points:
         Each element of points should be a tuple (x, y).
@@ -139,7 +136,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     return pts
 
 
-@synchronized()
+@synchronized
 def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     """ Cactus plot of the passed solvers configurations. `solvers` has to be
         a list of dictionaries with the keys `xs`, `ys` and `name`. For each
@@ -210,7 +207,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     grdevices.dev_off()
 
 
-@synchronized()
+@synchronized
 def result_property_comparison(results1, results2, solver1, solver2, result_property_name, filename, format='png', dim=700):
     """Result property distribution comparison.
     Plots an cumulative empirical distribution function for the result vectors
@@ -262,7 +259,7 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
     grdevices.dev_off()
 
 
-@synchronized()
+@synchronized
 def rtds(results, filename, format='png'):
     """Runtime distribution plots for multiple result vectors.
     results is expected to be a list of tuples (sc, data)
@@ -320,7 +317,7 @@ def rtds(results, filename, format='png'):
     grdevices.dev_off()
 
 
-@synchronized()
+@synchronized
 def box_plot(data, filename, format='png'):
     """Box plot for multiple result vectors.
 
@@ -346,7 +343,7 @@ def box_plot(data, filename, format='png'):
     grdevices.dev_off()
 
 
-@synchronized()
+@synchronized
 def rtd(results, filename, format='png'):
     """Plot of a single runtime distribution.
 
@@ -386,7 +383,7 @@ def rtd(results, filename, format='png'):
     grdevices.dev_off()
 
 
-@synchronized()
+@synchronized
 def kerneldensity(data, filename, format='png'):
     """Non-parametric kernel density estimation plot of a result vector.
 
