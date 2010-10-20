@@ -96,7 +96,7 @@ def cactus_plot(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.CactusPlotForm(request.args)
-    form.instances.query = sorted(experiment.instances, key=lambda i: i.name)
+    form.instances.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.solver_property.choices = [('cputime', 'CPU Time')] + result_properties
