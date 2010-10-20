@@ -7,71 +7,8 @@
     <script src="/static/js/jquery.tooltip.min.js" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-            {% autoescape false %}
-            var instances = new Array();
-            {% for instance in form.instances.query %}
-            instances[{{loop.index0}}] = new Object();
-            instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
-            instances[{{loop.index0}}]["name"] = "{{instance.name}}";
-            {% set outer_loop = loop %}
-                {% for prop in db.get_instance_properties() %}
-                    instances[{{outer_loop.index0}}]["{{prop.name}}"] = {{instance.get_property_value(prop.name, db) or "''"}};
-                {% endfor %}
-            {% endfor %}
-            {% endautoescape %}
-            var selected_instances = new Array();
-            {% for instance in request.args.getlist('instances') %}selected_instances.push({{instance}});{% endfor %}
-
-            function match(instance, filter) {
-                if (filter == '') return true;
-                fields = [{% for prop in db.get_instance_properties() %}"{{prop.name}}", {% endfor %}]
-                for (f in fields) {
-                    var re = new RegExp(fields[f], 'g');
-                    if (typeof instance[fields[f]] == 'string') {
-                        filter = filter.replace(re, '"' + instance[fields[f]] + '"');
-                    }
-                    else {
-                        filter = filter.replace(re, instance[fields[f]]);
-                    }
-                }
-                return eval(filter);
-            }
-
-            $('#instance_filter_apply').click(function() {
-                var filter = $('#instance_filter').val();
-                $('#instances > option').remove();
-                for (instance in instances) {
-                    if (match(instances[instance], filter)) {
-                        opt = $('<option></option>').val(instances[instance]["idInstance"]).html(instances[instance]["name"]);
-                        for (si in selected_instances) {
-                            if (selected_instances[si] == instances[instance]["idInstance"]) {
-                                opt.attr('selected', 'selected');
-                                break;
-                            }
-                        }
-
-                        $('#instances').append(opt);
-                    }
-                }
-            });
-
-            $('#instance_filter_clear').click(function() {
-                $('#instance_filter').val('');
-                $('#instance_filter_apply').click();
-            });
-
-            $('#instance_filter').keypress(function(e) {
-                // override enter key to supress form submission while in the filter field
-                if (e.which == 13) {
-                    $('#instance_filter_apply').click();
-                    return false;
-                }
-            });
-
-            $('#instance_filter_apply').click();
-
+            {% include '/analysis/multiple_instances_filter_js.html' %}
           });
-
     </script>
 {% endblock %}
 {% block content %}
@@ -90,6 +27,7 @@
             <table>
             {{ render_field(form.solver_configs, size=10) }}
             {{ render_field(form.instances, explanation='Hold Ctrl to select multiple instances.', size=10) }}
+            {{ render_field(form.result_property) }}
             <tr>
                 <td style="vertical-align: middle;">Filter instances</td>
                 <td>{{form.instance_filter}}<img id="instance_filter_apply" src="/static/img/search.png"/><img id="instance_filter_clear" src="/static/img/clear.png"/><br/>

@@ -1,0 +1,63 @@
+{% autoescape false %}
+var instances = new Array();
+{% for instance in form.instance.query %}
+instances[{{loop.index0}}] = new Object();
+instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
+instances[{{loop.index0}}]["name"] = "{{instance.name}}";
+{% set outer_loop = loop %}
+    {% for prop in db.get_instance_properties() %}
+        instances[{{outer_loop.index0}}]["{{prop.name}}"] = {{instance.get_property_value(prop.idProperty, db) or "''"}};
+    {% endfor %}
+{% endfor %}
+{% endautoescape %}
+
+{% if form.instance.data %}
+var selected_instance = {{form.instance.data.idInstance}};
+{% else %}
+var selected_instance = null;
+{% endif %}
+
+function match(instance, filter) {
+    if (filter == '') return true;
+    fields = [{% for prop in db.get_instance_properties() %}"{{prop.name}}", {% endfor %}];
+    for (f in fields) {
+        var re = new RegExp(fields[f], 'g');
+        if (typeof instance[fields[f]] == 'string') {
+            filter = filter.replace(re, '"' + instance[fields[f]] + '"');
+        }
+        else {
+            filter = filter.replace(re, instance[fields[f]]);
+        }
+    }
+    return eval(filter);
+}
+
+$('#instance_filter_apply').click(function() {
+    var filter = $('#instance_filter').val();
+    $('#instance > option').remove();
+    for (instance in instances) {
+        if (match(instances[instance], filter)) {
+            opt = $('<option></option>').val(instances[instance]["idInstance"]).html(instances[instance]["name"]);
+            if (selected_instance == instances[instance]["idInstance"]) {
+                opt.attr('selected', 'selected');
+            }
+
+            $('#instance').append(opt);
+        }
+    }
+});
+
+$('#instance_filter_clear').click(function() {
+    $('#instance_filter').val('');
+    $('#instance_filter_apply').click();
+});
+
+$('#instance_filter').keypress(function(e) {
+    // override enter key to supress form submission while in the filter field
+    if (e.which == 13) {
+        $('#instance_filter_apply').click();
+        return false;
+    }
+});
+
+$('#instance_filter_apply').click();

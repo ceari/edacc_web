@@ -117,7 +117,7 @@ class TwoSolversOnePropertyScatterPlotForm(Form):
     solver_config1 = QuerySelectField('First Solver Configuration')
     solver_config2 = QuerySelectField('Second Solver Configuration')
     instance_filter = TextField('Filter Instances')
-    solver_property = SelectField('Property')
+    result_property = SelectField('Property')
     instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
     xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
     yscale = RadioField('Y-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
@@ -125,8 +125,8 @@ class TwoSolversOnePropertyScatterPlotForm(Form):
 
 class OneSolverTwoResultPropertiesPlotForm(Form):
     solver_config = QuerySelectField('Solver Configuration')
-    solver_property1 = SelectField('First Result Property')
-    solver_property2 = SelectField('Second Result Property')
+    result_property1 = SelectField('First Result Property')
+    result_property2 = SelectField('Second Result Property')
     instance_filter = TextField('Filter Instances')
     instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
     xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
@@ -135,7 +135,7 @@ class OneSolverTwoResultPropertiesPlotForm(Form):
 
 class OneSolverInstanceAgainstResultPropertyPlotForm(Form):
     solver_config = QuerySelectField('Solver Configuration')
-    solver_property = SelectField('Result Property')
+    result_property = SelectField('Result Property')
     instance_property = SelectField('Instance Property')
     instance_filter = TextField('Filter Instances')
     instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
@@ -144,24 +144,26 @@ class OneSolverInstanceAgainstResultPropertyPlotForm(Form):
     run = SelectField('Plot for run')
 
 class CactusPlotForm(Form):
-    solver_property = SelectField('Property')
+    result_property = SelectField('Property')
     instance_filter = TextField('Filter Instances')
     instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
 
 class RTDComparisonForm(Form):
     solver_config1 = QuerySelectField('First Solver Configuration')
     solver_config2 = QuerySelectField('Second Solver Configuration')
-    solver_property = SelectField('Property')
+    result_property = SelectField('Property')
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
 class RTDPlotsForm(Form):
     sc = QuerySelectMultipleField('Solver Configurations')
+    result_property = SelectField('Property')
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
 class RTDPlotForm(Form):
     solver_config = QuerySelectField('Solver Configuration')
+    result_property = SelectField('Property')
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
@@ -171,13 +173,7 @@ class ProbabilisticDominationForm(Form):
 
 class BoxPlotForm(Form):
     solver_configs = QuerySelectMultipleField('Solver Configurations')
+    result_property = SelectField('Property')
     instances = QuerySelectMultipleField('Instances')
     instance_filter = TextField('Filter Instances')
     instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
-
-class ResultStatisticalComparisonForm(Form):
-    solver_config1 = QuerySelectField('First Solver Configuration')
-    solver_config2 = QuerySelectField('Second Solver Configuration')
-    instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
-    instance_filter = TextField('Filter Instances')
-    solver_property = SelectField('Property')
