@@ -259,7 +259,7 @@ def experiment_results_by_instance(database, experiment_id):
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
     form = forms.ResultByInstanceForm(request.args)
-    form.instance.query = instances
+    form.instance.query = instances or EmptyQuery()
 
     results = []
     if form.instance.data:
