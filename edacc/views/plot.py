@@ -54,23 +54,26 @@ def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, solver_proper
             r1 = [j.get_property_value(solver_property, db) for j in results1.filter_by(instance=instance).all()]
             r2 = [j.get_property_value(solver_property, db) for j in results2.filter_by(instance=instance).all()]
             r1, r2 = filter_results(r1, r2)
-            s1_avg = numpy.average(r1)
-            s2_avg = numpy.average(r2)
-            points.append((s1_avg, s2_avg, instance))
+            if len(r1) > 0 and len(r2) > 0:
+                s1_avg = numpy.average(r1)
+                s2_avg = numpy.average(r2)
+                points.append((s1_avg, s2_avg, instance))
     elif run == 'median':
         for instance in instances:
             r1 = [j.get_property_value(solver_property, db) for j in results1.filter_by(instance=instance).all()]
             r2 = [j.get_property_value(solver_property, db) for j in results2.filter_by(instance=instance).all()]
             r1, r2 = filter_results(r1, r2)
-            x = numpy.median(r1)
-            y = numpy.median(r2)
-            points.append((x, y, instance))
+            if len(r1) > 0 and len(r2) > 0:
+                x = numpy.median(r1)
+                y = numpy.median(r2)
+                points.append((x, y, instance))
     elif run == 'all':
         for instance in instances:
             xs = [j.get_property_value(solver_property, db) for j in results1.filter_by(instance=instance).all()]
             ys = [j.get_property_value(solver_property, db) for j in results2.filter_by(instance=instance).all()]
             xs, ys = filter_results(xs, ys)
-            points += zip(xs, ys, [instance] * len(xs))
+            if len(xs) > 0 and len(ys) > 0:
+                points += zip(xs, ys, [instance] * len(xs))
     else:
         for instance in instances:
             r1 = results1.filter_by(instance=instance, run=int(run)).first()
@@ -325,23 +328,26 @@ def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, insta
             r1 = [j.get_property_value(solver_property1, db) for j in results.filter_by(instance=instance).all()]
             r2 = [j.get_property_value(solver_property2, db) for j in results.filter_by(instance=instance).all()]
             r1, r2 = filter_results(r1, r2)
-            s1_avg = numpy.average(r1)
-            s2_avg = numpy.average(r2)
-            points.append((s1_avg, s2_avg, instance))
+            if len(r1) > 0 and len(r2) > 0:
+                s1_avg = numpy.average(r1)
+                s2_avg = numpy.average(r2)
+                points.append((s1_avg, s2_avg, instance))
     elif run == 'median':
         for instance in instances:
             r1 = [j.get_property_value(solver_property1, db) for j in results.filter_by(instance=instance).all()]
             r2 = [j.get_property_value(solver_property2, db) for j in results.filter_by(instance=instance).all()]
             r1, r2 = filter_results(r1, r2)
-            x = numpy.median(r1)
-            y = numpy.median(r2)
-            points.append((x, y, instance))
+            if len(r1) > 0 and len(r2) > 0:
+                x = numpy.median(r1)
+                y = numpy.median(r2)
+                points.append((x, y, instance))
     elif run == 'all':
         for instance in instances:
             xs = [j.get_property_value(solver_property1, db) for j in results.filter_by(instance=instance).all()]
             ys = [j.get_property_value(solver_property2, db) for j in results.filter_by(instance=instance).all()]
             xs, ys = filter_results(xs, ys)
-            points += zip(xs, ys, [instance] * len(xs))
+            if len(xs) > 0 and len(ys) > 0:
+                points += zip(xs, ys, [instance] * len(xs))
     else:
         for instance in instances:
             res = results.filter_by(instance=instance, run=int(run)).first()
