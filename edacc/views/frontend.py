@@ -62,7 +62,8 @@ def experiments_index(database):
 @require_competition
 def categories(database):
     """Displays a static categories page."""
-
+    db = models.get_database(database) or abort(404)
+    
     try:
         return render('/competitions/%s/categories.html' % (database,), db=db, database=database)
     except:
