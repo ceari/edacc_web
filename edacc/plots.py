@@ -266,7 +266,7 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
 
 @synchronized
-def rtds(results, filename, property_name, format='png'):
+def property_distributions(results, filename, property_name, format='png'):
     """Runtime distribution plots for multiple result vectors.
     results is expected to be a list of tuples (sc, data)
     where data is the result vector of the solver configuration sc.
@@ -359,7 +359,7 @@ def box_plot(data, filename, property_label, format='png'):
 
 
 @synchronized
-def rtd(results, filename, property_name, format='png'):
+def property_distribution(results, filename, property_name, format='png'):
     """Plot of a single property distribution.
 
     :param results: result vector

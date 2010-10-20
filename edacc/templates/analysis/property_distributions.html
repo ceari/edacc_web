@@ -19,7 +19,7 @@
 
     <div style="margin-left: 5px; float: left;">
         <h2>Runtime Distributions</h2>
-        <form method="get" action="{{url_for('analysis.rtds', database=database, experiment_id=experiment.idExperiment)}}">
+        <form method="get" action="{{url_for('analysis.property_distributions', database=database, experiment_id=experiment.idExperiment)}}">
             <table>
                 {{ render_field(form.sc) }}
                 {{ render_field(form.instance) }}
@@ -39,8 +39,8 @@
     {% if form.sc.data and form.instance.data %}
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
             {% autoescape false %}
-            <img alt="graph" src="{{url_for('plot.rtds_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-            Download as <a href="{{url_for('plot.rtds_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.rtds_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> | <a href="{{url_for('plot.rtds_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
+            <img alt="graph" src="{{url_for('plot.property_distributions_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
+            Download as <a href="{{url_for('plot.property_distributions_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.property_distributions_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> | <a href="{{url_for('plot.property_distributions_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
             {% endautoescape %}
         </div>
     {% endif %}

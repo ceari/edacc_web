@@ -187,10 +187,10 @@ def result_property_comparison(database, experiment_id):
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
 
 
-@analysis.route('/<database>/experiment/<int:experiment_id>/rtds/')
+@analysis.route('/<database>/experiment/<int:experiment_id>/property-distributions/')
 @require_phase(phases=ANALYSIS2)
 @require_login
-def rtds(database, experiment_id):
+def property_distributions(database, experiment_id):
     """
         Displays a page allowing the user to choose several solver configurations
         and an instance and displays a plot with the runtime distributions (as
@@ -209,7 +209,7 @@ def rtds(database, experiment_id):
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
-    return render('/analysis/rtds.html', database=database,
+    return render('/analysis/property_distributions.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data)
 
 
@@ -366,10 +366,10 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
                   pearson_r=pearson_r, pearson_p_value=pearson_p_value)
 
 
-@analysis.route('/<database>/experiment/<int:experiment_id>/rtd/')
+@analysis.route('/<database>/experiment/<int:experiment_id>/property-distribution/')
 @require_phase(phases=ANALYSIS2)
 @require_login
-def rtd(database, experiment_id):
+def property_distribution(database, experiment_id):
     """
         Displays a page with plots of the runtime distribution (as CDF) and
         the kernel density estimation of a chosen solver on a chosen instance.
@@ -385,7 +385,7 @@ def rtd(database, experiment_id):
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
-    return render('/analysis/rtd.html', database=database, experiment=experiment,
+    return render('/analysis/property_distribution.html', database=database, experiment=experiment,
                   db=db, form=form, GET_data=GET_data)
 
 

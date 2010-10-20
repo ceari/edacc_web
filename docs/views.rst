@@ -22,16 +22,16 @@ URLs are mapped to python functions that handle requests and return HTTP respons
     .. autofunction:: solver_ranking(database, experiment_id)
     .. autofunction:: cactus_plot(database, experiment_id)
     .. autofunction:: result_property_comparison(database, experiment_id)
-    .. autofunction:: rtds(database, experiment_id)
+    .. autofunction:: property_distributions(database, experiment_id)
     .. autofunction:: scatter_2solver_1property(database, experiment_id)
     .. autofunction:: scatter_1solver_instance_vs_result_property(database, experiment_id)
     .. autofunction:: scatter_1solver_result_vs_result_property(database, experiment_id)
-    .. autofunction:: rtd(database, experiment_id)
+    .. autofunction:: property_distribution(database, experiment_id)
     .. autofunction:: probabilistic_domination(database, experiment_id)
     .. autofunction:: box_plots(database, experiment_id)
 
 .. automodule:: edacc.views.frontend
-   
+
     .. autofunction:: index()
     .. autofunction:: experiments_index(database)
     .. autofunction:: categories(database)
@@ -66,7 +66,7 @@ URLs are mapped to python functions that handle requests and return HTTP respons
     .. autofunction:: scatter_1solver_result_vs_result_property(database, experiment_id)
     .. autofunction:: cactus_plot(database, experiment_id)
     .. autofunction:: result_property_comparison_plot(database, experiment_id)
-    .. autofunction:: rtds_plot(database, experiment_id)
-    .. autofunction:: rtd(database, experiment_id)
+    .. autofunction:: property_distributions_plot(database, experiment_id)
+    .. autofunction:: property_distribution(database, experiment_id)
     .. autofunction:: kerneldensity(database, experiment_id)
     .. autofunction:: box_plots(database, experiment_id)

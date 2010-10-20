@@ -24,7 +24,7 @@
             (right-censored data). If right-censored data is present, the runtime distribution function<br/>
             is truncated at the experiment's CPU timeout value.
         </div>
-        <form method="get" action="{{url_for('analysis.rtd', database=database, experiment_id=experiment.idExperiment)}}">
+        <form method="get" action="{{url_for('analysis.property_distribution', database=database, experiment_id=experiment.idExperiment)}}">
             <table>
                 {{ render_field(form.solver_config) }}
                 {{ render_field(form.instance) }}
@@ -45,8 +45,8 @@
     <div>
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
             {% autoescape false %}
-            <img alt="graph" src="{{url_for('plot.rtd', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-            Download as <a href="{{url_for('plot.rtd', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.rtd', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
+            <img alt="graph" src="{{url_for('plot.property_distribution', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
+            Download as <a href="{{url_for('plot.property_distribution', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.property_distribution', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
             {% endautoescape %}
         </div>
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px;">

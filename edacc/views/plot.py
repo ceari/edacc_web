@@ -535,7 +535,7 @@ def cactus_plot(database, experiment_id):
         return response
 
 
-@plot.route('/<database>/experiment/<int:experiment_id>/rtd-comparison-plot/')
+@plot.route('/<database>/experiment/<int:experiment_id>/rp-comparison-plot/')
 @require_phase(phases=ANALYSIS2)
 @require_login
 def result_property_comparison_plot(database, experiment_id):
@@ -603,10 +603,10 @@ def result_property_comparison_plot(database, experiment_id):
         return response
 
 
-@plot.route('/<database>/experiment/<int:experiment_id>/rtds-plot/')
+@plot.route('/<database>/experiment/<int:experiment_id>/rps-plot/')
 @require_phase(phases=ANALYSIS2)
 @require_login
-def rtds_plot(database, experiment_id):
+def property_distributions_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
@@ -663,10 +663,10 @@ def rtds_plot(database, experiment_id):
         return response
 
 
-@plot.route('/<database>/experiment/<int:experiment_id>/rtd-plot/')
+@plot.route('/<database>/experiment/<int:experiment_id>/rp-plot/')
 @require_phase(phases=ANALYSIS2)
 @require_login
-def rtd(database, experiment_id):
+def property_distribution(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
