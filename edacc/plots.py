@@ -341,11 +341,13 @@ def box_plot(data, filename, property_label, format='png'):
 
     any_data = False
     for key in data:
-        if len(data[key]) > 0: any_data = True
+        if len(data[key]) > 0:
+            any_data = True
         data[key] = robjects.FloatVector(data[key])
 
     if any_data:
-        robjects.r.boxplot(robjects.DataFrame(data), main="", horizontal=True)
+        robjects.r.boxplot(robjects.Vector([data[k] for k in data]), main="",
+                           names=robjects.StrVector([key for key in data]), horizontal=True)
         robjects.r.mtext(property_label, side=1,
                          line=3, cex=1.2) # bottom axis label
     else:
