@@ -641,7 +641,7 @@ def property_distributions_plot(database, experiment_id):
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
-        plots.rtds(results, filename, result_property_name, 'pdf')
+        plots.property_distributions(results, filename, result_property_name, 'pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_rtds.pdf"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -649,7 +649,7 @@ def property_distributions_plot(database, experiment_id):
         return response
     elif request.args.has_key('eps'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.eps'
-        plots.rtds(results, filename, result_property_name, 'eps')
+        plots.property_distributions(results, filename, result_property_name, 'eps')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_rtds.eps"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
@@ -657,7 +657,7 @@ def property_distributions_plot(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
-        plots.rtds(results, filename, result_property_name, 'png')
+        plots.property_distributions(results, filename, result_property_name, 'png')
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
@@ -699,7 +699,7 @@ def property_distribution(database, experiment_id):
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.pdf'
-        plots.rtd(results, filename, result_property_name, 'pdf')
+        plots.property_distribution(results, filename, result_property_name, 'pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.pdf"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -707,7 +707,7 @@ def property_distribution(database, experiment_id):
         return response
     elif request.args.has_key('eps'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.eps'
-        plots.rtd(results, filename, result_property_name, 'eps')
+        plots.property_distribution(results, filename, result_property_name, 'eps')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.eps"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
@@ -715,7 +715,7 @@ def property_distribution(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.png'
-        plots.rtd(results, filename, result_property_name, 'png')
+        plots.property_distribution(results, filename, result_property_name, 'png')
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
