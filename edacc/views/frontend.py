@@ -23,8 +23,7 @@ from werkzeug import Headers, secure_filename
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload
-from edacc.constants import JOB_FINISHED, JOB_ERROR, JOB_RUNNING, JOB_STATUS, JOB_RESULT_CODE, JOB_STATUS_COLOR
-from edacc.constants import OWN_RESULTS, ALL_RESULTS, INSTANCE_DETAILS, ANALYSIS1, ANALYSIS2, RANKING
+from edacc.constants import *
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
 from edacc import forms
@@ -178,7 +177,7 @@ def experiment_results(database, experiment_id):
                         .filter_by(instance=instance) \
                         .all()
 
-            completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
+            completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
             runtimes = [j.get_time() for j in jobs]
             runtimes = filter(lambda r: r is not None, runtimes)
             runtimes = runtimes or [0]
@@ -417,7 +416,7 @@ def experiment_progress_ajax(database, experiment_id):
     aaData = []
     for job in jobs:
         status = utils.job_status(job[6])
-        if job[6] in JOB_RUNNING:
+        if job[6] == STATUS_RUNNING:
             try:
                 seconds_running = int(job[8])
             except:
@@ -468,8 +467,8 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
                     .filter_by(instance=instance) \
                     .all()
 
-    completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
-    correct = len(filter(lambda j: j.status in JOB_FINISHED and str(j.resultCode).startswith('1'), jobs))
+    completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
+    correct = len(filter(lambda j: j.status == STATUS_FINISHED and str(j.resultCode).startswith('1'), jobs))
 
     return render('solver_config_results.html', experiment=experiment,
                   solver_configuration=solver_configuration, instance=instance,

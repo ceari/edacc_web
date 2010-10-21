@@ -11,11 +11,26 @@
 INSTANCE_PROPERTY_TYPE = 0
 RESULT_PROPERTY_TYPE = 1
 
-# tuples since there are 3 codes that mean 'finished'
-JOB_ERROR = (-2,)
-JOB_WAITING = (-1,)
-JOB_RUNNING = (0,)
-JOB_FINISHED = (1,2,3)
+STATUS_LAUNCHER_CRASH = -5
+STATUS_WATCHER_CRASH = -4
+STATUS_SOLVER_CRASH = -3
+STATUS_VERIFIER_CRASH = -2
+STATUS_NOT_STARTED = -1
+STATUS_RUNNING = 0
+STATUS_FINISHED = 1
+
+STATUS_ERRORS = (STATUS_LAUNCHER_CRASH,
+                 STATUS_WATCHER_CRASH,
+                 STATUS_SOLVER_CRASH,
+                 STATUS_VERIFIER_CRASH)
+
+STATUS_PROCESSING = (
+    STATUS_NOT_STARTED,
+    STATUS_RUNNING)
+
+STATUS_EXCEEDED_LIMITS = (
+    21,22,23,24,25
+)
 
 # status id to string map
 JOB_STATUS = {
@@ -26,8 +41,11 @@ JOB_STATUS = {
     -1: 'not started',
     0:  'running',
     1:  'finished',
-    2:  'terminated by ulimit',
     21: 'terminated by ulimit',
+    22: 'terminated by ulimit',
+    23: 'terminated by ulimit',
+    24: 'terminated by ulimit',
+    25: 'terminated by ulimit',
 }
 
 JOB_RESULT_CODE = {
@@ -35,7 +53,6 @@ JOB_RESULT_CODE = {
     10: 'UNSAT',
     0: 'UNKNOWN',
     -1: 'wrong answer',
-    #-2: 'limit exceeded',
     -21: 'cpu time limit exceeded',
     -22: 'wall clock time limit exceeded',
     -23: 'memory limit exceeded',

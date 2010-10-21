@@ -111,16 +111,6 @@ class EDACCDatabase(object):
 
         class Experiment(object):
             """ Maps the Experiment table. """
-            def is_finished(self):
-                """ Returns whether this experiment is finished (true if there are any jobs and all of them are terminated) """
-                if len(self.experiment_results) == 0: return False
-                return all(j.status in constants.JOB_FINISHED or j.status in constants.JOB_ERROR
-                           for j in self.experiment_results)
-
-            def is_running(self):
-                """ Returns true if there are any running jobs """
-                return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
-
             def get_num_runs(self, db):
                 """ Returns the number of runs of the experiment """
                 num_results = db.session.query(db.ExperimentResult).filter_by(experiment=self).count()
@@ -505,7 +495,7 @@ class EDACCClient(threading.Thread):
                 print "  retcode", returncode
 
                 if returncode != 10 and returncode != 0: # CPU Time limit exceeded exit code guess
-                    job.status = 2
+                    job.status = 21
                 else:
                     job.status = 1
                 print "  CPU time:", runtime, "s", "Memory used:", memory, "kB"

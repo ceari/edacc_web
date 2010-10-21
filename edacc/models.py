@@ -18,7 +18,8 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
 from sqlalchemy.orm import relation, relationship
 
-from edacc import config, constants
+from edacc import config
+from edacc.constants import *
 
 
 class EDACCDatabase(object):
@@ -104,16 +105,6 @@ class EDACCDatabase(object):
 
         class Experiment(object):
             """ Maps the Experiment table. """
-            def is_finished(self):
-                """ Returns whether this experiment is finished (true if there are any jobs and all of them are terminated) """
-                if len(self.experiment_results) == 0: return False
-                return all(j.status in constants.JOB_FINISHED or j.status in constants.JOB_ERROR
-                           for j in self.experiment_results)
-
-            def is_running(self):
-                """ Returns true if there are any running jobs """
-                return any(j.status in constants.JOB_RUNNING for j in self.experiment_results)
-
             def get_num_runs(self, db):
                 """ Returns the number of runs of the experiment """
                 num_results = db.session.query(db.ExperimentResult).filter_by(experiment=self).count()
@@ -149,13 +140,19 @@ class EDACCDatabase(object):
                     experiment's timeOut value if the status is
                     not correct (certified SAT/UNSAT answer).
                 """
-                if self.status in constants.JOB_FINISHED:
+
+                # if the job is being processed or the CC had a crash return None
+                if self.status in (STATUS_LAUNCHER_CRASH, STATUS_WATCHER_CRASH, STATUS_VERIFIER_CRASH) or self.status in STATUS_PROCESSING:
+                    return None
+
+
+                if self.status == STATUS_FINISHED or self.status in STATUS_EXCEEDED_LIMITS :
                     if not str(self.resultCode).startswith('1'):
                         return self.experiment.CPUTimeLimit
                     else:
                         return self.resultTime
-                else:
-                    return None
+
+                return None
 
 
             def get_property_value(self, property, db):
@@ -198,10 +195,10 @@ class EDACCDatabase(object):
 
         class Property(object):
             def is_result_property(self):
-                return self.propertyType == constants.RESULT_PROPERTY_TYPE
+                return self.propertyType == RESULT_PROPERTY_TYPE
 
             def is_instance_property(self):
-                return self.propertyType == constants.INSTANCE_PROPERTY_TYPE
+                return self.propertyType == INSTANCE_PROPERTY_TYPE
 
             def is_simple(self):
                 """ Returns whether the property is a simple property which is
