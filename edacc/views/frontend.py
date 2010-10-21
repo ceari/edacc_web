@@ -181,6 +181,7 @@ def experiment_results(database, experiment_id):
             completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
             runtimes = [j.get_time() for j in jobs]
             runtimes = filter(lambda r: r is not None, runtimes)
+            runtimes = runtimes or [0]
             time_max = max(runtimes)
             time_min = min(runtimes)
             row.append({'time_avg': numpy.average(runtimes),
