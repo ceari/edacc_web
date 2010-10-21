@@ -25,7 +25,7 @@
                     <tr bgcolor="{{result.resultCode|job_result_code_color}}">
                         <td><a style="color: black;" href="{{url_for('experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">{{result.idJob}}</a></td>
                         <td>{{result.status|job_status}}</td>
-                        <td>{{result.get_time()}}</td>
+                        <td>{{result.get_time()|result_time}}</td>
                         <td>{{result.resultCode|result_code}}</td>
                     </tr>
                 {% endfor %}

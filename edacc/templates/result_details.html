@@ -19,7 +19,7 @@
         </tr>
         <tr class="odd">
             <td>CPU Time</td>
-            <td>{{result.get_time()|round(2)}}</td>
+            <td>{{result.get_time()|result_time}}</td>
         </tr>
         {% for prop in db.get_result_properties() %}
         <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">

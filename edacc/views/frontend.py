@@ -63,7 +63,7 @@ def experiments_index(database):
 def categories(database):
     """Displays a static categories page."""
     db = models.get_database(database) or abort(404)
-    
+
     try:
         return render('/competitions/%s/categories.html' % (database,), db=db, database=database)
     except:
@@ -180,6 +180,7 @@ def experiment_results(database, experiment_id):
 
             completed = len(filter(lambda j: j.status in JOB_FINISHED or j.status in JOB_ERROR, jobs))
             runtimes = [j.get_time() for j in jobs]
+            runtimes = filter(lambda r: r is not None, runtimes)
             time_max = max(runtimes)
             time_min = min(runtimes)
             row.append({'time_avg': numpy.average(runtimes),

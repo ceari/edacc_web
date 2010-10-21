@@ -61,6 +61,12 @@ def parameter_string(solver_config):
                 args.append(p.value or "")
     return " ".join(args)
 
+def result_time(time):
+    if time is None:
+        return '-'
+    else:
+        return time
+
 def launch_command(solver_config):
     """ Returns a string of what the solver launch command looks like given the solver configuration """
     return "./" + solver_config.solver.binaryName + " " + parameter_string(solver_config)
@@ -88,6 +94,7 @@ app.jinja_env.filters['job_result_code_color'] = job_result_code_color
 app.jinja_env.filters['launch_command'] = launch_command
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 app.jinja_env.filters['competition_phase'] = competition_phase
+app.jinja_env.filters['result_time'] = result_time
 
 def parse_parameters(parameters):
     """ Parse parameters from the solver submission form, returns a list

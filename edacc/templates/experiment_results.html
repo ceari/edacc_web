@@ -61,7 +61,7 @@
                         <td><a href="{{url_for('instance_details', database=database, instance_id=row.instance.idInstance)}}">{{row.instance.name}}</a></td>
                         {% for jobs in row.times %}
                             <td style="text-align: center; background-color: {{jobs.first_job.resultCode|job_result_code_color}};">
-                                <a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=jobs.first_job.idJob) }}">{{jobs.first_job.get_time()}}</a><br/>
+                                <a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=jobs.first_job.idJob) }}">{{jobs.first_job.get_time()|result_time}}</a><br/>
                                 {{jobs.first_job.resultCode|result_code}}
                             </td>
                         {% endfor %}

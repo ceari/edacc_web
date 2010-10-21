@@ -30,7 +30,7 @@
                             #{{loop.index0}}
                         </td>
                         {% for result in results %}
-                            <td style="background-color: {{result[1][rowloop.index0].resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result[1][rowloop.index0].idJob) }}">{{ result[1][rowloop.index0].get_time() }}</a></td>
+                            <td style="background-color: {{result[1][rowloop.index0].resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result[1][rowloop.index0].idJob) }}">{{ result[1][rowloop.index0].get_time()|result_time}}</a></td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
