@@ -498,6 +498,8 @@ class EDACCClient(threading.Thread):
                     job.status = 21
                 else:
                     job.status = 1
+                    if 's SATISFIABLE' in job.solverOutput:
+                        job.resultCode = 11
                 print "  CPU time:", runtime, "s", "Memory used:", memory, "kB"
                 job.computeQueue = self.experiment.grid_queue[0].idgridQueue
                 db.session.commit()
