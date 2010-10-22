@@ -423,7 +423,7 @@ def probabilistic_domination(database, experiment_id):
             res2 = [r.get_property_value(form.result_property.data, db) for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc2).all()]
             res1 = filter(lambda r: r is not None, res1)
             res2 = filter(lambda r: r is not None, res2)
-            if len(res1) > 0 and len(res2) > 0
+            if len(res1) > 0 and len(res2) > 0:
                 d = statistics.prob_domination(res1, res2)
                 if d == 1:
                     sc1_dom_sc2.add(instance)
