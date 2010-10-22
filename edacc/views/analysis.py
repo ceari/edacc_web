@@ -407,6 +407,9 @@ def probabilistic_domination(database, experiment_id):
     form = forms.ProbabilisticDominationForm(request.args)
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
+    result_properties = db.get_plotable_result_properties() # plotable = numeric
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
+    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
     if form.solver_config1.data and form.solver_config2.data:
         sc1 = form.solver_config1.data
         sc2 = form.solver_config2.data
@@ -416,8 +419,10 @@ def probabilistic_domination(database, experiment_id):
         no_dom = set()
 
         for instance in experiment.instances:
-            res1 = [r.get_time() for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc1).all()]
-            res2 = [r.get_time() for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc2).all()]
+            res1 = [r.get_property_value(form.result_property.data, db) for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc1).all()]
+            res2 = [r.get_property_value(form.result_property.data, db) for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc2).all()]
+            res1 = filter(lambda r: r is not None, res1)
+            res2 = filter(lambda r: r is not None, res2)
             d = statistics.prob_domination(res1, res2)
             if d == 1:
                 sc1_dom_sc2.add(instance)
