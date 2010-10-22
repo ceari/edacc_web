@@ -571,6 +571,24 @@ def experiment_result(database, experiment_id, result_id):
                   verifierOutput_text=verifierOutput_text, database=database, db=db)
 
 
+@frontend.route('/<database>/experiment/<int:experiment_id>/unsolved-instances/')
+@require_phase(phases=[5,6,7])
+@require_login
+def unsolved_instances(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    unsolved_instances = []
+    for instance in experiment.instances:
+        if db.session.query(db.ExperimentResult).filter_by(experiment=experiment,
+                                                           instance=instance) \
+                        .filter(db.ExperimentResult.resultCode.like('1%')).count() == 0:
+            unsolved_instances.append(instance)
+
+    return render('unsolved_instances.html', database=database, db=db, experiment=experiment,
+                  unsolved_instances=unsolved_instances)
+
+
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-solver-output')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
