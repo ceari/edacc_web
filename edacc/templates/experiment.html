@@ -6,8 +6,15 @@
         {{experiment.name}}
     </div>
     <h1>{{experiment.name}}</h1>
-    <div>Date: {{experiment.date|datetimeformat('%d.%m.%Y')}}</div>
-    <div>Description: {{experiment.description if experiment.description else "no description"}}</div>
+    <table border="0">
+        <tr><td>Date:</td><td style="padding-left: 5px">{{experiment.date|datetimeformat('%d %B %Y')}}</td></tr>
+        <tr><td>Description:</td><td style="padding-left: 5px">{{experiment.description if experiment.description else "no description"}}</td></tr>
+        <tr><td>Timeout (sec):</td><td style="padding-left: 5px">{{experiment.CPUTimeLimit if experiment.CPUTimeLimit != -1 else '-'}}</td></tr>
+        <tr><td>Max memory (MB):</td><td style="padding-left: 5px">{{experiment.memoryLimit if experiment.memoryLimit != -1 else '-'}}</td></tr>
+        <tr><td>Wall clock time limit (sec):</td><td style="padding-left: 5px">{{experiment.wallClockTimeLimit if experiment.wallClockTimeLimit != -1 else '-'}}</td></tr>
+        <tr><td>Stack size limit (MB):</td><td style="padding-left: 5px">{{experiment.stackSizeLimit if experiment.stackSizeLimit != -1 else '-'}}</td></tr>
+        <tr><td>Output size limit (MB):</td><td style="padding-left: 5px">{{experiment.outputSizeLimit if experiment.outputSizeLimit != -1 else '-'}}</td></tr>
+    </table>
     {% if not session.admin and db.is_competition() and db.competition_phase() in OWN_RESULTS %}
     <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While the competition isn't finished, you are only able to see your own solvers.</div>
     {% endif %}
