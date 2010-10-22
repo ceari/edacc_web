@@ -20,14 +20,14 @@ TMP                 = '/tmp' # used for temporary files
 PACKAGE_DIR         = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 
 DATABASE_DRIVER     = 'mysql'
-DATABASE_HOST       = 'localhost'
+DATABASE_HOST       = 'edacc.informatik.uni-ulm.de'
 DATABASE_PORT       = 3306
-DATABASE_NAME       = 'EDACC'
+DATABASE_NAME       = 'EDACC5'
 DATABASE_USER       = 'edacc'
 DATABASE_PASSWORD   = 'edaccteam'
 
 # Experiment this client should run, case-sensitive
-EXPERIMENT_NAME     = 'Hier könnte ihre Werbung stehen'
+EXPERIMENT_NAME     = 'echo `satisfiable` > /dev/null'
 
 class EDACCDatabase(object):
     """ Encapsulates a single EDACC database connection. """
@@ -387,12 +387,17 @@ class EDACCDatabase(object):
     def __str__(self):
         return self.label
 
-def parameter_string(solver_config):
+def parameter_string(solver_config, instance_filename, seed):
     """ Returns a string of the solver configuration parameters """
-    parameters = solver_config.parameter_instances
+    parameters = sorted(solver_config.parameter_instances, key=lambda p: p.parameter.order)
     args = []
     for p in parameters:
-        args.append(p.parameter.prefix)
+        if p.parameter.name == "instance":
+            p.value = instance_filename
+        elif p.parameter.name == "seed":
+            p.value = seed
+        if p.parameter.prefix != None:
+            args.append(p.parameter.prefix)
         if p.parameter.hasValue:
             if p.value == "": # if value not set, use default value from parameters table
                 args.append(p.parameter.value)
@@ -400,9 +405,9 @@ def parameter_string(solver_config):
                 args.append(p.value)
     return " ".join(args)
 
-def launch_command(solver_config):
+def launch_command(solver_config, instance_filename, seed):
     """ Returns a string of what the solver launch command looks like given the solver configuration """
-    return "./" + solver_config.solver.binaryName + " " + parameter_string(solver_config)
+    return "./" + solver_config.solver.binaryName + " " + parameter_string(solver_config, instance_filename, seed)
 
 def setlimits(cputime):
     resource.setrlimit(resource.RLIMIT_CPU, (cputime, cputime + 10))
@@ -458,8 +463,8 @@ class EDACCClient(threading.Thread):
                 db.session.commit()
 
                 client_line = '/usr/bin/time -f ";time=%U;mem=%M;" '
-                client_line += os.path.join(PACKAGE_DIR, 'solvers', launch_command(job.solver_configuration)[2:])
-                client_line += os.path.join(PACKAGE_DIR, 'instances', str(job.instance.idInstance) + '_' + job.instance.name) + ' ' + str(job.seed)
+                client_line += os.path.join(PACKAGE_DIR, 'solvers', launch_command(job.solver_configuration, os.path.join(PACKAGE_DIR, 'instances', str(job.instance.idInstance)+ '_' + job.instance.name), str(job.seed))[2:])
+
 
                 print "running job", job.idJob, client_line
                 stdout = open(os.path.join(TMP, str(job.idJob) + 'stdout~'), 'w')
