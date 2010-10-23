@@ -35,6 +35,7 @@
     <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">By solver configuration and instance</a> (runs accumulated)<br/>
     <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment) }}">By solver configuration</a><br/>
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a>
+    <a href="{{ url_for('frontend.unsolved_instances', database=database, experiment_id=experiment.idExperiment) }}">Unsolved instances</a>
     {% endif %}
 
     <h2>Analysis</h2>
