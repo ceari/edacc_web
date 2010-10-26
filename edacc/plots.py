@@ -15,6 +15,7 @@ from rpy2.robjects.packages import importr
 grdevices = importr('grDevices') # plotting target devices
 np = importr('np') # non-parametric kernel smoothing methods
 stats = importr('stats') # statistical methods
+robjects.r("library('np')")
 
 robjects.r.setEPS() # set some default options for postscript in EPS format
 
@@ -402,7 +403,7 @@ def property_distribution(results, filename, property_name, format='png'):
 
 
 @synchronized
-def kerneldensity(data, filename, format='png'):
+def kerneldensity(data, filename, property_name, format='png'):
     """Non-parametric kernel density estimation plot of a result vector.
 
     :param data: result vector
@@ -416,11 +417,11 @@ def kerneldensity(data, filename, format='png'):
         grdevices.postscript(file=filename)
 
     if len(data) > 0:
+        robjects.r('d <- npudens(c(' + ",".join(map(str, data + [max(data or [0]) + 0.00001])) + '))')
+        robjects.r("d$bws$xnames = '"+property_name+"'")
         # add some pseudo value to data because R crashes when the data is constant
         # and takes python down with it ...
-        robjects.r.plot(np.npudens(robjects.FloatVector(data + [max(data or [0]) + 0.00001])),
-                        main='', xaxt='n', yaxt='n',
-                        xlab='', ylab='', xaxs='i', yaxs='i', las=1)
+        robjects.r("plot(d, main='', xaxt='n', yaxt='n', xlab='', ylab='', xaxs='i', yaxs='i', las=1)")
         # plot labels and axes
         robjects.r.mtext('Nonparametric kernel density estimation',
                          padj=1, side=3, line=3, cex=1.7) # plot title

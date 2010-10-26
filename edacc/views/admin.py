@@ -91,7 +91,7 @@ def databases_remove(database):
 def admin_login():
     """ Admin login form """
     if session.get('admin'):
-        return redirect(url_for('frontend.databases'))
+        return redirect(url_for('admin.databases'))
 
     error = None
     if request.method == 'POST':

@@ -56,7 +56,7 @@ app.register_module(plot)
 @app.before_request
 def make_unique_id():
     """ Attach an unique ID to the request """
-    g.unique_id = uuid.uuid1().hex
+    g.unique_id = uuid.uuid4().hex
 
 
 @app.after_request
