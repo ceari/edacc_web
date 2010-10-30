@@ -23,6 +23,10 @@ if config.LOGGING:
     from logging.handlers import RotatingFileHandler
     file_handler = RotatingFileHandler(config.LOG_FILE)
     file_handler.setLevel(logging.WARNING)
+    formatter = logging.Formatter("---------------------------\n" + \
+                                  "%(asctime)s - %(name)s - " + \
+                                  "%(levelname)s\n%(message)s")
+    file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
 
 for username, password, database, label in config.DEFAULT_DATABASES:
