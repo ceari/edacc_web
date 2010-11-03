@@ -39,7 +39,8 @@ def synchronized(f):
     return lockedfunc
 
 @synchronized
-def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False, dim=700):
+def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
+            xscale='', yscale='', diagonal_line=False, dim=700):
     """ Scatter plot of the points given in the list :points:
         Each element of points should be a tuple (x, y).
         Returns a list with the points in device (pixel) coordinates.
@@ -209,7 +210,8 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
 
 
 @synchronized
-def result_property_comparison(results1, results2, solver1, solver2, result_property_name, filename, format='png', dim=700):
+def result_property_comparison(results1, results2, solver1, solver2, result_property_name,
+                               filename, format='png', dim=700):
     """Result property distribution comparison.
     Plots an cumulative empirical distribution function for the result vectors
     results1 and results2 in the same diagram with 2 different colors.

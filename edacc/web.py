@@ -19,6 +19,7 @@ from edacc import config, models
 app.Debug = config.DEBUG
 
 if config.LOGGING:
+    # set up logging if configured
     import logging
     from logging.handlers import RotatingFileHandler
     file_handler = RotatingFileHandler(config.LOG_FILE)
@@ -29,13 +30,14 @@ if config.LOGGING:
     file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
 
+# initialize configured database connections
 for username, password, database, label in config.DEFAULT_DATABASES:
     models.add_database(username, password, database, label)
 
 
 class LimitedRequest(Request):
-    """ extending Flask's request class to limit form uploads to 16 MB """
-    max_form_memory_size = 16 * 1024 * 1024
+    """ extending Flask's request class to limit form uploads to 100 MB """
+    max_form_memory_size = 100 * 1024 * 1024
 
 app.request_class = LimitedRequest
 app.config.update(
@@ -65,8 +67,8 @@ def make_unique_id():
 
 @app.after_request
 def shutdown_session(response):
-    """ remove session from thread - might not even be needed for non-declarative
-        SQLAlchemy usage.
+    """ remove SQLAlchemy session from thread after requests - might not even be needed for
+    non-declarative SQLAlchemy usage according to the SQLAlchemy documentation.
     """
     for db in models.get_databases().itervalues():
         db.session.remove()

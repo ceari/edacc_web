@@ -2,7 +2,7 @@ Overview & Installation
 =======================
 
 Experiment Design and Administration for Computer Clusters for SAT Solvers.
-See http://sourceforge.net/projects/edacc/ for the EDACC project.
+See `EDACC at Sourceforge <http://sourceforge.net/projects/edacc/>`_ for the EDACC project.
 
 Description
 -----------
@@ -27,9 +27,9 @@ WSGI-compatible, which means it can be deployed on any web server supporting Pyt
 Dependencies
 ------------
 
-- Python 2.6.5 http://www.python.org
-- SQLAlchemy 0.6.4 (SQL Toolkit and Object Relational Mapper)
-- mysql-python 1.2.3c1 (Python MySQL adapter)
+- Python 2.6.5/2.7 (http://www.python.org)
+- SQLAlchemy 0.6.5 (SQL Toolkit and Object Relational Mapper)
+- mysql-python 1.2.3 (Python MySQL adapter)
 - Flask 0.6 (Micro Webframework)
 - Flask-WTF 0.3.3 (Flask extension for WTForms)
 - Flask-Actions 0.5.2 (Flask extension)
@@ -46,8 +46,8 @@ Installation
 
 The required libraries can most likely be installed using the
 package management tool of your favorite Linux distribution.
-However, they are also available in the Python Package Index "PyPi" http://pypi.python.org/pypi
-and can be installed using easy_install or pip. (http://pypi.python.org/pypi/setuptools  http://pypi.python.org/pypi/pip)
+However, they are also available in the Python Package Index `PyPi <http://pypi.python.org/pypi>`_
+and can be installed using `easy_install <http://pypi.python.org/pypi/setuptools>`_ or `pip <http://pypi.python.org/pypi/pip>`_.
 
 It is recommended not to install these libraries system-wide but in a virtual
 python environment to prevent any conflicts and ensure that the correct versions are
@@ -57,7 +57,8 @@ To get rpy2 working the GNU linker (ld) has to be able to find libR.so. Add the 
 libR.so (usually /usr/lib/R/lib) to the ld config: Create a file called R.conf containing the
 path in the folder /etc/ld.so.conf.d/ and run ldconfig without parameters as root to update.
 
-For further information see http://flask.pocoo.org/docs/installation/ and http://flask.pocoo.org/docs/deploying/
+For further information see `Installation <http://flask.pocoo.org/docs/installation/>`_ 
+and `Deploying <http://flask.pocoo.org/docs/deploying/>`_ in the Flask documentation.
 
 Quick Installation Guide
 ------------------------

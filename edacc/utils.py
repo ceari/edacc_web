@@ -68,14 +68,19 @@ def result_time(time):
         return time
 
 def launch_command(solver_config):
-    """ Returns a string of what the solver launch command looks like given the solver configuration """
+    """ Returns a string of what the solver launch command looks like
+    given the solver configuration
+    """
     return "./" + solver_config.solver.binaryName + " " + parameter_string(solver_config)
 
 def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
+    """ Returns the passed datetime value as formatted string according to the formatting string
+    :format:
+    """
     return value.strftime(format)
 
 def competition_phase(value):
-    """ returns a textual label of a competiton phase given by an integer value """
+    """ Returns a textual label of a competiton phase given by an integer value """
     if value == 1: return "Category Definition Phase"
     elif value == 2: return "Registration and Submission Phase"
     elif value == 3: return "Solver Testing Phase"
@@ -98,7 +103,8 @@ app.jinja_env.filters['result_time'] = result_time
 
 def parse_parameters(parameters):
     """ Parse parameters from the solver submission form, returns a list
-        of tuples (name, prefix, default_value, boolean, order) """
+        of tuples (name, prefix, default_value, boolean, order)
+    """
     parameters = parameters.strip().split()
     params = []
     i = 0
