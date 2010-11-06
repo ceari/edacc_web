@@ -6,7 +6,7 @@
     Web interface configuration.
 """
 
-# Enable or disable printing of debug messages
+# Enable or disable printing of debug messages, disable in production use!
 DEBUG = True
 
 # Enable or disable memcached usage to cache expensive calculation results
