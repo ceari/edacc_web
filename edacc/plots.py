@@ -149,9 +149,9 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
         grdevices.png(file=filename, units="px", width=800,
                       height=600, type="cairo")
     elif format == 'pdf':
-        grdevices.bitmap(file=filename, type="pdfwrite")
+        grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
     elif format == 'eps':
-        grdevices.postscript(file=filename)
+        grdevices.postscript(file=filename, height=7, width=9)
 
     # list of colors used in the defined order for the different solvers
     colors = [
