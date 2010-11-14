@@ -157,7 +157,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     colors = [
         'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
         'darkorchid', 'deeppink', 'darkgreen', 'blue4'
-    ]
+    ] * 10
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
@@ -296,7 +296,7 @@ def property_distributions(results, filename, property_name, format='png'):
     colors = [
         'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
         'darkorchid', 'deeppink', 'darkgreen', 'blue4'
-    ]
+    ] * 10
 
     # plot the distributions
     point_style = 0
