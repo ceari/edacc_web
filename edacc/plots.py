@@ -146,7 +146,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
         instances solved within y seconds.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=600,
+        grdevices.png(file=filename, units="px", width=800,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
@@ -158,6 +158,8 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
         'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
         'darkorchid', 'deeppink', 'darkgreen', 'blue4'
     ] * 10
+
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
@@ -200,8 +202,9 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     robjects.r.mtext(title,
                      padj=1, side=3, line=3, cex=1.7) # plot title
 
+    robjects.r.par(xpd=True)
     # plot legend
-    robjects.r.legend("topleft", inset=0.01,
+    robjects.r.legend("right", inset=-0.35,
                       legend=robjects.StrVector([s['name'] for s in solvers]),
                       col=robjects.StrVector(colors[:len(solvers)]),
                       pch=robjects.IntVector(range(len(solvers))), lty=1)
