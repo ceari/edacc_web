@@ -42,8 +42,19 @@
                 }
             });
 
+	    function updateExperimentStats() {
+		$.ajax({
+		    url: "{{url_for('frontend.experiment_stats_ajax', database=database, experiment_id=experiment.idExperiment)}}",
+		    dataType: 'json',
+		    success: function(data) {
+			$('#stats').html('finished: ' + data['num_jobs_finished'] + '/' + data['num_jobs'] + ', running: ' + data['num_jobs_running'] + ' crashed: ' + data['num_jobs_error']);
+		    }
+		});
+	    }
+
             $('#refresh').click(function() {
                 oTable.fnReloadAjax();
+		updateExperimentStats();
                 return false;
             });
 
@@ -117,6 +128,7 @@
                         oTable.fnReloadAjax(null, function() {
                             $("body").css("cursor", "auto");
                         });
+			updateExperimentStats();
                     });
                 }
             });
@@ -129,9 +141,12 @@
                     oTable.fnReloadAjax(null, function() {
                         $("body").css("cursor", "auto");
                     });
+		    updateExperimentStats();
                     return false;
                 }
             });
+
+	    updateExperimentStats();
         });
         /* ]]> */
     </script>
@@ -153,7 +168,7 @@
         Notice that the F5 key was overriden on this page to use Ajax to refresh the table data without having to reload the whole page. You can also use the following link or set a periodic refresh interval:
     </div>
     -->
-
+    <div>Progress: <span id="stats"></stats></div>
     <a id="get_csv" href="#">Download as CSV</a> | <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
     <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select><br/>
     <div style="max-width: 98%">

@@ -307,6 +307,35 @@ def experiment_progress(database, experiment_id):
                   database=database, db=db, JS_colors=JS_colors)
 
 
+@frontend.route('/<database>/experiment/<int:experiment_id>/experiment-stats-ajax/')
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
+@require_login
+def experiment_stats_ajax(database, experiment_id):
+    """ Returns JSON-serialized stats about the experiment's progress
+    such as number of jobs, number of running jobs, ...
+    """
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    num_jobs = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
+    num_jobs_not_started = db.session.query(db.ExperimentResult) \
+            .filter_by(experiment=experiment, status=STATUS_NOT_STARTED).count()
+    num_jobs_running = db.session.query(db.ExperimentResult) \
+            .filter_by(experiment=experiment, status=STATUS_RUNNING).count()
+    num_jobs_finished = db.session.query(db.ExperimentResult) \
+            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_([STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))).count()
+    num_jobs_error = db.session.query(db.ExperimentResult) \
+            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_(list(STATUS_ERRORS))).count()
+
+    return json.dumps({
+        'num_jobs': num_jobs,
+        'num_jobs_not_started': num_jobs_not_started,
+        'num_jobs_running': num_jobs_running,
+        'num_jobs_finished': num_jobs_finished,
+        'num_jobs_error': num_jobs_error,
+    })
+
+
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress-ajax/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
