@@ -23,6 +23,11 @@ TEMP_DIR = '/tmp/'
 LOGGING = False
 LOG_FILE = '/srv/edacc_web/error.log'
 
+# Enable use of piwik web analytics tool
+PIWIK = True
+# URL of the piwik installation to use (omit http://). Trailing slash is important!
+PIWIK_URL = 'localhost/piwik/'
+
 # Key used for signing cookies and salting crytpographic hashes. This has to
 # be kept secret. It is impossible to authenticate stored passwords if this
 # key differs from the one used to create the password hashes.

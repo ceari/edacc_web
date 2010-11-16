@@ -59,6 +59,13 @@ app.register_module(analysis)
 app.register_module(plot)
 
 
+if config.PIWIK:
+    @app.before_request
+    def register_piwik():
+        """ Attach piwik URL to g """
+        g.PIWIK_URL = config.PIWIK_URL
+
+
 @app.before_request
 def make_unique_id():
     """ Attach an unique ID to the request """
