@@ -26,12 +26,12 @@ admin = Module(__name__)
 #    return doc
 
 
-@admin.route('/admin/<database>/phase', methods=['GET', 'POST'])
+@admin.route('/admin/<database>/phase/', methods=['GET', 'POST'])
 @require_admin
 def phase(database):
     if request.method == 'POST':
-        competition = request.form['competition']
-        competition_phase = int(request.form['competition_phase'])
+        competition = request.form.get('competition', None)
+        competition_phase = int(request.form.get('competition_phase', 0))
 
         models.get_database(database).set_competition(1 if competition == 'on' else 0)
         models.get_database(database).set_competition_phase(competition_phase)

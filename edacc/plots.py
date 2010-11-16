@@ -39,7 +39,8 @@ def synchronized(f):
     return lockedfunc
 
 @synchronized
-def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png', xscale='', yscale='', diagonal_line=False, dim=700):
+def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
+            xscale='', yscale='', diagonal_line=False, dim=700):
     """ Scatter plot of the points given in the list :points:
         Each element of points should be a tuple (x, y).
         Returns a list with the points in device (pixel) coordinates.
@@ -145,18 +146,20 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
         instances solved within y seconds.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=600,
+        grdevices.png(file=filename, units="px", width=800,
                       height=600, type="cairo")
     elif format == 'pdf':
-        grdevices.bitmap(file=filename, type="pdfwrite")
+        grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
     elif format == 'eps':
-        grdevices.postscript(file=filename)
+        grdevices.postscript(file=filename, height=7, width=9)
 
     # list of colors used in the defined order for the different solvers
     colors = [
         'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
         'darkorchid', 'deeppink', 'darkgreen', 'blue4'
-    ]
+    ] * 10
+
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
@@ -199,8 +202,9 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     robjects.r.mtext(title,
                      padj=1, side=3, line=3, cex=1.7) # plot title
 
+    robjects.r.par(xpd=True)
     # plot legend
-    robjects.r.legend("topleft", inset=0.01,
+    robjects.r.legend("right", inset=-0.35,
                       legend=robjects.StrVector([s['name'] for s in solvers]),
                       col=robjects.StrVector(colors[:len(solvers)]),
                       pch=robjects.IntVector(range(len(solvers))), lty=1)
@@ -209,7 +213,8 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
 
 
 @synchronized
-def result_property_comparison(results1, results2, solver1, solver2, result_property_name, filename, format='png', dim=700):
+def result_property_comparison(results1, results2, solver1, solver2, result_property_name,
+                               filename, format='png', dim=700):
     """Result property distribution comparison.
     Plots an cumulative empirical distribution function for the result vectors
     results1 and results2 in the same diagram with 2 different colors.
@@ -294,7 +299,7 @@ def property_distributions(results, filename, property_name, format='png'):
     colors = [
         'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
         'darkorchid', 'deeppink', 'darkgreen', 'blue4'
-    ]
+    ] * 10
 
     # plot the distributions
     point_style = 0

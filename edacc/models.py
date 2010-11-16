@@ -47,11 +47,13 @@ class EDACCDatabase(object):
                 parameters and their values.
             """
             def get_number(self):
-                """ Returns an integer i if `self` is the i-th of the solver configurations of the same solver
-                    in the experiment `self` is in. If there's only one solver configuration of the solver this
-                    function returns 0.
+                """ Returns an integer i if `self` is the i-th of the solver
+                configurations of the same solver in the experiment `self` is
+                in. If there's only one solver configuration of the solver this
+                function returns 0.
                 """
-                same_solvers = [sc for sc in self.experiment.solver_configurations if sc.solver == self.solver]
+                same_solvers = [sc for sc in self.experiment.solver_configurations
+                                 if sc.solver == self.solver]
                 if len(same_solvers) == 1:
                     return 0
                 else:
@@ -88,7 +90,8 @@ class EDACCDatabase(object):
                 """ Returns the value of the property with the given name. """
                 try:
                     property = db.session.query(db.Property).get(int(property))
-                    pv = db.session.query(db.InstanceProperties).filter_by(property=property, instance=self).first()
+                    pv = db.session.query(db.InstanceProperties) \
+                            .filter_by(property=property, instance=self).first()
                     return pv.get_value()
                 except:
                     return None
@@ -107,29 +110,42 @@ class EDACCDatabase(object):
             """ Maps the Experiment table. """
             def get_num_runs(self, db):
                 """ Returns the number of runs of the experiment """
-                num_results = db.session.query(db.ExperimentResult).filter_by(experiment=self).count()
-                num_solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=self).count()
-                num_instances = db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                num_results = db.session.query(db.ExperimentResult) \
+                                    .filter_by(experiment=self).count()
+                num_solver_configs = db.session.query(db.SolverConfiguration) \
+                                        .filter_by(experiment=self).count()
+                num_instances = db.session.query(db.Instance) \
+                                            .filter(db.Instance.experiments \
+                                                    .contains(self)).count()
                 if num_solver_configs == 0 or num_instances == 0:
                     return 0
                 return num_results / num_solver_configs / num_instances
 
             def get_solved_instances(self, db):
-                """ Returns the instances of the experiment that all solvers solved in every run """
-                numInstances = db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                """ Returns the instances of the experiment that all solvers
+                solved in every run
+                """
+                numInstances = db.session.query(db.Instance) \
+                        .filter(db.Instance.experiments.contains(self)).count()
                 if numInstances == 0: return 0
-                num_jobs_per_instance = db.session.query(db.ExperimentResult).filter_by(experiment=self).count() / numInstances
+                num_jobs_per_instance = db.session.query(db.ExperimentResult) \
+                        .filter_by(experiment=self).count() / numInstances
                 instances = []
                 for i in self.instances:
-                    if db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')).filter_by(experiment=self, instance=i, status=1).count() == num_jobs_per_instance:
+                    if db.session.query(db.ExperimentResult) \
+                            .filter(db.ExperimentResult.resultCode.like('1%')) \
+                            .filter_by(experiment=self, instance=i, status=1) \
+                            .count() == num_jobs_per_instance:
                         instances.append(i)
                 return instances
 
             def get_num_solver_configs(self, db):
-                return db.session.query(db.SolverConfiguration).filter_by(experiment=self).count()
+                return db.session.query(db.SolverConfiguration) \
+                        .filter_by(experiment=self).count()
 
             def get_num_instances(self, db):
-                return db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).count()
+                return db.session.query(db.Instance) \
+                        .filter(db.Instance.experiments.contains(self)).count()
 
         class ExperimentResult(object):
             """ Maps the ExperimentResult table. Provides a function
@@ -140,13 +156,13 @@ class EDACCDatabase(object):
                     experiment's timeOut value if the status is
                     not correct (certified SAT/UNSAT answer).
                 """
-
                 # if the job is being processed or the CC had a crash return None
-                if self.status in (STATUS_LAUNCHER_CRASH, STATUS_WATCHER_CRASH, STATUS_VERIFIER_CRASH) or self.status in STATUS_PROCESSING:
+                if self.status in (STATUS_LAUNCHER_CRASH, STATUS_WATCHER_CRASH,
+                        STATUS_VERIFIER_CRASH) or self.status in STATUS_PROCESSING:
                     return None
 
-
-                if self.status == STATUS_FINISHED or self.status in STATUS_EXCEEDED_LIMITS :
+                if self.status == STATUS_FINISHED \
+                        or self.status in STATUS_EXCEEDED_LIMITS :
                     if not str(self.resultCode).startswith('1'):
                         return self.experiment.CPUTimeLimit
                     else:
@@ -166,7 +182,9 @@ class EDACCDatabase(object):
                 else:
                     try:
                         property = db.session.query(db.Property).get(int(property))
-                        pv = db.session.query(db.ExperimentResultProperty).filter_by(property=property, experiment_result=self).first()
+                        pv = db.session.query(db.ExperimentResultProperty) \
+                                .filter_by(property=property,
+                                           experiment_result=self).first()
                         return pv.get_value()
                     except:
                         return None
@@ -204,14 +222,17 @@ class EDACCDatabase(object):
                 """ Returns whether the property is a simple property which is
                     stored in a way that's directly castable to a Python object
                 """
-                return self.propertyValueType.lower() in ('float', 'double', 'int', 'integer', 'string')
+                return self.propertyValueType.lower() in ('float', 'double',
+                                                          'int', 'integer',
+                                                          'string')
 
             def is_plotable(self):
                 """ Returns whether the property is a simple property which is
                     stored in a way that's directly castable to a Python object
                     and is numeric.
                 """
-                return self.propertyValueType.lower() in ('float', 'double', 'int', 'integer')
+                return self.propertyValueType.lower() in ('float', 'double',
+                                                          'int', 'integer')
 
         class PropertyValueType(object): pass
 
@@ -276,7 +297,8 @@ class EDACCDatabase(object):
         mapper(Instance, metadata.tables['Instances'],
             properties = {
                 'instance': deferred(metadata.tables['Instances'].c.instance),
-                'instance_classes': relationship(InstanceClass, secondary=metadata.tables['Instances_has_instanceClass'], backref='instances'),
+                'instance_classes': relationship(InstanceClass,
+                    secondary=metadata.tables['Instances_has_instanceClass'], backref='instances'),
                 'source_class': relation(InstanceClass, backref='source_instances'),
                 'properties': relation(InstanceProperties, backref='instance'),
             }
@@ -306,9 +328,11 @@ class EDACCDatabase(object):
         )
         mapper(Experiment, metadata.tables['Experiment'],
             properties = {
-                'instances': relationship(Instance, secondary=metadata.tables['Experiment_has_Instances'], backref='experiments'),
+                'instances': relationship(Instance,
+                    secondary=metadata.tables['Experiment_has_Instances'], backref='experiments'),
                 'solver_configurations': relation(SolverConfiguration),
-                'grid_queue': relationship(GridQueue, secondary=metadata.tables['Experiment_has_gridQueue']),
+                'grid_queue': relationship(GridQueue,
+                    secondary=metadata.tables['Experiment_has_gridQueue']),
                 'results': relation(ExperimentResult)
             }
         )
@@ -359,7 +383,8 @@ class EDACCDatabase(object):
             }
         )
 
-        self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False, autoflush=False))
+        self.session = scoped_session(sessionmaker(bind=self.engine, autocommit=False,
+                                                   autoflush=False))
 
         # initialize DBConfiguration table if not already done
         if self.session.query(DBConfiguration).get(0) is None:
@@ -374,35 +399,43 @@ class EDACCDatabase(object):
         """ Returns a list of the result properties in the database that are
             suited for Python use.
         """
-        return [p for p in self.session.query(self.Property).all() if p.is_simple() and p.is_result_property()]
+        return [p for p in self.session.query(self.Property).all() \
+                if p.is_simple() and p.is_result_property()]
 
     def get_plotable_result_properties(self):
         """ Returns a list of the result properties in the database that are
             suited for plotting.
         """
-        return [p for p in self.session.query(self.Property).all() if p.is_plotable() and p.is_result_property()]
+        return [p for p in self.session.query(self.Property).all() \
+                if p.is_plotable() and p.is_result_property()]
 
     def get_instance_properties(self):
         """ Returns a list of the instance properties in the database that are
             suited for Python use.
         """
-        return [p for p in self.session.query(self.Property).all() if p.is_simple() and p.is_instance_property()]
+        return [p for p in self.session.query(self.Property).all() \
+                if p.is_simple() and p.is_instance_property()]
 
     def get_plotable_instance_properties(self):
         """ Returns a list of the instance properties in the database that are
             suited for plotting.
         """
-        return [p for p in self.session.query(self.Property).all() if p.is_plotable() and p.is_instance_property()]
+        return [p for p in self.session.query(self.Property).all() \
+                if p.is_plotable() and p.is_instance_property()]
 
     def is_competition(self):
-        """ returns whether this database is a competition database (user management etc. necessary) or not """
+        """ returns whether this database is a competition database (user management etc.
+        necessary) or not
+        """
         return self.session.query(self.DBConfiguration).get(0).competition
 
     def set_competition(self, b):
         self.session.query(self.DBConfiguration).get(0).competition = b
 
     def competition_phase(self):
-        """ returns the competition phase this database is in (or None, if is_competition() == False) as integer"""
+        """ returns the competition phase this database is in (or None,
+        if is_competition() == False) as integer
+        """
         if not self.is_competition(): return None
         return self.session.query(self.DBConfiguration).get(0).competitionPhase
 
