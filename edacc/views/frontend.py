@@ -10,11 +10,11 @@
     :license: MIT, see LICENSE for details.
 """
 
-import json
 import csv
-import StringIO
-import numpy
 import datetime
+import json
+import numpy
+import StringIO
 
 from flask import Module
 from flask import render_template as render
