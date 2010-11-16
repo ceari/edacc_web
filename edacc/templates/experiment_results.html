@@ -32,7 +32,7 @@
                 <th>Instance</th>
                 {% for solver_config in solver_configs  %}
                     <th>
-                        <a href="{{url_for('solver_configuration_details', database=database, experiment_id=experiment.idExperiment,solver_configuration_id=solver_config.idSolverConfig)}}">
+                        <a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{solver_config.idSolverConfig}}">
                         {{solver_config.get_name()}}
                         </a>
                     </th>
@@ -43,7 +43,7 @@
             {% if experiment.get_num_runs(db) > 1 %}
                 {% for row in results %}
                     <tr>
-                        <td><a href="{{url_for('instance_details', database=database, instance_id=row.instance.idInstance)}}">{{row.instance.name}}</a></td>
+                        <td><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{row.instance.idInstance}}">{{row.instance.name}}</a></td>
                         {% for jobs in row.times %}
                             <td>
                                 {{jobs.time_median|round(2)}} / {{jobs.time_min|round(2)}} / {{jobs.time_max|round(2)}} / {{jobs.time_avg|round(2)}} sec<br/>
@@ -58,7 +58,7 @@
             {% else %}
                 {% for row in results %}
                     <tr>
-                        <td><a href="{{url_for('instance_details', database=database, instance_id=row.instance.idInstance)}}">{{row.instance.name}}</a></td>
+                        <td><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{row.instance.idInstance}}">{{row.instance.name}}</a></td>
                         {% for jobs in row.times %}
                             <td style="text-align: center; background-color: {{jobs.first_job.resultCode|job_result_code_color}};">
                                 <a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=jobs.first_job.idJob) }}">{{jobs.first_job.get_time()|result_time}}</a><br/>
