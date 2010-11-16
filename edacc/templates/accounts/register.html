@@ -6,7 +6,7 @@
 
     <a href="/">Back</a>
 
-    <div><img src="/static/img/info.png"/> To submit solvers and access information about an experiment's progress and results create an account on this website.<br/>
+    <div><img src="{{url_for('static', filename='img/info.png')}}"/> To submit solvers and access information about an experiment's progress and results create an account on this website.<br/>
     None of the information submitted here is publicly accessible.</div>
 
     <form action="{{url_for('register', database=database)}}" method="post">

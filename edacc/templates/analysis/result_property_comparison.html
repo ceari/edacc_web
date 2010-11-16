@@ -3,7 +3,7 @@
 {% block title %}RTD Comparison{% endblock %}
 {% block head %}
     {{ super() }}
-    <script src="/static/js/jquery.tablesorter.js" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.tablesorter.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
             {% include '/analysis/single_instance_filter_js.html' %}
@@ -27,7 +27,7 @@
                 {{ render_field(form.instance) }}
                 <tr>
                     <td style="vertical-align: middle;">Filter instances</td>
-                    <td>{{form.instance_filter}}<img id="instance_filter_apply" src="/static/img/search.png"/><img id="instance_filter_clear" src="/static/img/clear.png"/><br/>
+                    <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
                         JS expression filter. Valid variables are {% for prop in db.get_instance_properties() %}{{prop.name}}, {% endfor %} <br/>
                     </td>
                 </tr>

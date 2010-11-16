@@ -16,7 +16,7 @@
         <tr><td>Output size limit (MB):</td><td style="padding-left: 5px">{{experiment.outputSizeLimit if experiment.outputSizeLimit != -1 else '-'}}</td></tr>
     </table>
     {% if not session.admin and db.is_competition() and db.competition_phase() in OWN_RESULTS %}
-    <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="/static/img/info.png" /> While the competition isn't finished, you are only able to see your own solvers.</div>
+    <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" /> While the competition isn't finished, you are only able to see your own solvers.</div>
     {% endif %}
 
     {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}

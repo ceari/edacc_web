@@ -5,7 +5,7 @@
     <h2>Submit Solver</h2>
     {% if id %}
     <div>
-        <img alt="Info" title="Info" src="/static/img/info.png" />
+        <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
         You are about to submit a new version of a solver you previously submitted. The old version will be replaced by the new one.
     </div>
     {% endif %}

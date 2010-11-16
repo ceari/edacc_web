@@ -6,6 +6,6 @@
     <h3>The Web Frontend is connected to the following databases:</h3>
     <ul>
     {% for db in databases %}
-        <li>{{db}} ({{db.username}}@{{db.database}})<a href="{{url_for('databases_remove', database=db.database)}}"><img style="margin-left: 5px;" title="Remove" src="/static/img/remove.png"/></a><a href="{{url_for('phase', database=db.database)}}">Competition Settings</a></li>
+        <li>{{db}} ({{db.username}}@{{db.database}})<a href="{{url_for('databases_remove', database=db.database)}}"><img style="margin-left: 5px;" title="Remove" src="{{url_for('static', filename='img/remove.png')}}"/></a><a href="{{url_for('phase', database=db.database)}}">Competition Settings</a></li>
     {% endfor %}
     </ul>

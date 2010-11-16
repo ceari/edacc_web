@@ -2,12 +2,12 @@
 {% block title %}{{experiment.name}} Experiment{% endblock %}
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="/static/css/datatable.css" type="text/css" />
-    <link rel="stylesheet" href="/static/css/ColVis.css" type="text/css" />
-    <script src="/static/js/jquery.dataTables.min.js" type="text/javascript"></script>
-    <script src="/static/js/jquery.timers-1.2.js" type="text/javascript"></script>
-    <script src="/static/js/jquery.dataTables.ajaxReloadPlugin.js" type="text/javascript"></script>
-    <script src="/static/js/ColVis.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/datatable.css')}}" type="text/css" />
+    <link rel="stylesheet" href="{{url_for('static', filename='css/ColVis.css')}}" type="text/css" />
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.timers-1.2.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.dataTables.ajaxReloadPlugin.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/ColVis.min.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         /* <![CDATA[ */
         $(document).ready(function() {
@@ -34,7 +34,7 @@
                 "aoColumns": [null, null, null, null, null, null, null, null, {"bVisible": false}, {% for prop in db.get_result_properties() %}null, {%endfor%}]
             });
 
-            $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="/static/img/clear.png" title="Clear"/>');
+            $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="{{url_for('static', filename='img/clear.png')}}" title="Clear"/>');
 
             $('#img_clear').click(function() {
                 if ($('#table_jobs_filter input').val() != "") {
