@@ -18,7 +18,7 @@
                 <tr>
                     <th>Run</th>
                     {% for result in results %}
-                    <th nowrap="nowrap"><a href="{{ url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=result.0.idSolverConfig) }}">{{ result.0}}</a></th>
+                    <th nowrap="nowrap"><a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{result.0.idSolverConfig}}">{{ result.0}}</a></th>
                     {% endfor %}
                 </tr>
             </thead>
