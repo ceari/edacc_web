@@ -488,8 +488,8 @@ def cactus_plot(database, experiment_id):
                 i += 1
         solvers.append(s)
 
-    max_x = max([max(s['xs'] or [0]) for s in solvers]) + 10
-    max_y = max([max(s['ys'] or [0]) for s in solvers]) * 1.1
+    max_x = max([max(s['xs'] or [0]) for s in solvers] or [0]) + 10
+    max_y = max([max(s['ys'] or [0]) for s in solvers] or [0]) * 1.1
 
     if result_property == 'cputime':
         ylabel = 'CPU Time (s)'
