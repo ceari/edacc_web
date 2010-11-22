@@ -348,6 +348,10 @@ def experiment_progress_ajax(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+    if not request.args.has_key('csv') and not request.args.has_key('iDisplayStart'):
+        # catch malformed datatable updates (jquery datatables sends 2 requests for some reason per refresh)
+        return json.dumps({'aaData': []})
+
     result_properties = db.get_result_properties()
 
     # list of columns of the SQL query
