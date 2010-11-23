@@ -145,6 +145,7 @@ class OneSolverInstanceAgainstResultPropertyPlotForm(Form):
 
 class CactusPlotForm(Form):
     result_property = SelectField('Property')
+    sc = QuerySelectMultipleField('Solver Configurations')
     instance_filter = TextField('Filter Instances')
     instances = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
 

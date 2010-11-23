@@ -100,6 +100,7 @@ def cactus_plot(database, experiment_id):
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.sc.query = experiment.solver_configurations or EmptyQuery()
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 

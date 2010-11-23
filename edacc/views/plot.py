@@ -474,9 +474,11 @@ def cactus_plot(database, experiment_id):
     if result_property != 'cputime':
         solver_prop = db.session.query(db.Property).get(int(result_property))
 
+    solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('sc')]
+
     solvers = []
 
-    for sc in exp.solver_configurations:
+    for sc in solver_configs:
         s = {'xs': [], 'ys': [], 'name': sc.get_name()}
         sc_res = results.filter_by(solver_configuration=sc, status=1).filter(db.ExperimentResult.resultCode.like('1%')).all()
         sc_res = sorted(sc_res, key=lambda r: r.get_property_value(result_property, db))

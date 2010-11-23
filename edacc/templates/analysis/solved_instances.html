@@ -8,6 +8,9 @@
     <script type="text/javascript">
         $(document).ready(function(){
             {% include '/analysis/multiple_instances_filter_js.html' %}
+            {% if not form.sc.data %}
+            $('#sc option').attr("selected", "selected");
+            {% endif %}
           });
     </script>
 {% endblock %}
@@ -23,6 +26,7 @@
         <form method="get" action="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">
             <table>
                 {{ render_field(form.result_property) }}
+                {{ render_field(form.sc) }}
                 {{ render_field(form.instances, explanation='Hold Ctrl to select multiple instances.', size=10) }}
                 <tr>
                     <td style="vertical-align: middle;">Filter instances</td>
