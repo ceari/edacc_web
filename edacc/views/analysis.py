@@ -46,14 +46,13 @@ def solver_ranking(database, experiment_id):
 
     vbs_num_solved = 0
     vbs_cumulated_cpu = 0
-    for i in experiment.instances:
-        best_solver_run = db.session.query(db.ExperimentResult).filter_by(experiment=experiment)\
-                                    .filter(db.ExperimentResult.resultCode.like('1%')) \
-                                    .filter_by(instance=i).order_by(db.ExperimentResult.resultTime) \
-                                    .first()
-        if best_solver_run:
-            vbs_num_solved += num_runs
-            vbs_cumulated_cpu += best_solver_run.resultTime * num_runs
+    from sqlalchemy import func
+    best_instance_runtimes = db.session.query(func.min(db.ExperimentResult.resultTime)).filter_by(experiment=experiment) \
+        .filter(db.ExperimentResult.resultCode.like('1%')) \
+        .group_by(db.ExperimentResult.Instances_idInstance).all()
+
+    vbs_num_solved = len(best_instance_runtimes) * num_runs
+    vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes) * num_runs
 
     ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment)
 

@@ -483,7 +483,7 @@ def get_database(database):
     else:
         return None
 
-import logging
-logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-logging.getLogger('sqlalchemy.orm.unitofwork').setLevel(logging.DEBUG)
+#import logging
+#logging.basicConfig()
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+#logging.getLogger('sqlalchemy.orm.unitofwork').setLevel(logging.DEBUG)
