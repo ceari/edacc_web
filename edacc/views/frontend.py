@@ -146,10 +146,11 @@ def experiment_instances(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    instances = experiment.instances
+    instances = db.session.query(db.Instance).options(joinedload('properties.property')).all()
 
     return render('experiment_instances.html', instances=instances,
-                  experiment=experiment, database=database, db=db)
+                  experiment=experiment, database=database, db=db,
+                  instance_properties=db.get_instance_properties())
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results/')
@@ -619,7 +620,7 @@ def unsolved_instances(database, experiment_id):
             unsolved_instances.append(instance)
 
     return render('unsolved_instances.html', database=database, db=db, experiment=experiment,
-                  unsolved_instances=unsolved_instances)
+                  unsolved_instances=unsolved_instances, instance_properties=db.get_instance_properties())
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-solver-output')

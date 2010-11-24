@@ -15,7 +15,7 @@ var selected_instances = new Array();
 
 function match(instance, filter) {
     if (filter == '') return true;
-    fields = [{% for prop in db.get_instance_properties() %}"{{prop.name}}", {% endfor %}]
+    fields = [{% for prop in instance_properties %}"{{prop.name}}", {% endfor %}]
     for (f in fields) {
         var re = new RegExp(fields[f], 'g');
         if (typeof instance[fields[f]] == 'string') {

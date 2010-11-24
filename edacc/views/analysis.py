@@ -107,7 +107,8 @@ def cactus_plot(database, experiment_id):
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/solved_instances.html', database=database,
-                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+                  experiment=experiment, db=db, form=form, GET_data=GET_data,
+                  instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/rtd-comparison/')
@@ -187,7 +188,8 @@ def result_property_comparison(database, experiment_id):
 
 
     return render('/analysis/result_property_comparison.html', database=database,
-                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+                  experiment=experiment, db=db, form=form, GET_data=GET_data,
+                  instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/property-distributions/')
@@ -213,7 +215,8 @@ def property_distributions(database, experiment_id):
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/property_distributions.html', database=database,
-                  experiment=experiment, db=db, form=form, GET_data=GET_data)
+                  experiment=experiment, db=db, form=form, GET_data=GET_data,
+                  instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-two-solvers/')
@@ -262,7 +265,8 @@ def scatter_2solver_1property(database, experiment_id):
     return render('/analysis/scatter_2solver_1property.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,
                   spearman_r=spearman_r, spearman_p_value=spearman_p_value,
-                  pearson_r=pearson_r, pearson_p_value=pearson_p_value)
+                  pearson_r=pearson_r, pearson_p_value=pearson_p_value,
+                  instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-instance-vs-result/')
@@ -316,7 +320,8 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     return render('/analysis/scatter_solver_instance_vs_result.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,
                   spearman_r=spearman_r, spearman_p_value=spearman_p_value,
-                  pearson_r=pearson_r, pearson_p_value=pearson_p_value)
+                  pearson_r=pearson_r, pearson_p_value=pearson_p_value,
+                  instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/scatter-result-vs-result/')
@@ -366,7 +371,8 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     return render('/analysis/scatter_solver_result_vs_result.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,
                   spearman_r=spearman_r, spearman_p_value=spearman_p_value,
-                  pearson_r=pearson_r, pearson_p_value=pearson_p_value)
+                  pearson_r=pearson_r, pearson_p_value=pearson_p_value,
+                  instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/property-distribution/')
@@ -389,7 +395,8 @@ def property_distribution(database, experiment_id):
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/property_distribution.html', database=database, experiment=experiment,
-                  db=db, form=form, GET_data=GET_data)
+                  db=db, form=form, GET_data=GET_data,
+                  instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/probabilistic-domination/')
@@ -438,10 +445,10 @@ def probabilistic_domination(database, experiment_id):
         return render('/analysis/probabilistic_domination.html',
                       database=database, db=db, experiment=experiment,
                       form=form, sc1_dom_sc2=sc1_dom_sc2, sc2_dom_sc1=sc2_dom_sc1,
-                      no_dom=no_dom)
+                      no_dom=no_dom, instance_properties=db.get_instance_properties())
 
     return render('/analysis/probabilistic_domination.html', database=database, db=db,
-                  experiment=experiment, form=form)
+                  experiment=experiment, form=form, instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/box-plots/')
@@ -463,4 +470,5 @@ def box_plots(database, experiment_id):
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/box_plots.html', database=database, db=db,
-                  experiment=experiment, form=form, GET_data=GET_data)
+                  experiment=experiment, form=form, GET_data=GET_data,
+                  instance_properties=db.get_instance_properties())
