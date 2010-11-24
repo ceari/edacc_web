@@ -146,7 +146,7 @@ def experiment_instances(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    instances = db.session.query(db.Instance).options(joinedload('properties.property')).all()
+    instances = experiment.get_instances(db)
 
     return render('experiment_instances.html', instances=instances,
                   experiment=experiment, database=database, db=db,
@@ -266,6 +266,7 @@ def experiment_results_by_instance(database, experiment_id):
 
     results = []
     if form.instance.data:
+        print "data"
         instance = form.instance.data
         for sc in solver_configs:
             runs = db.session.query(db.ExperimentResult) \
@@ -612,12 +613,7 @@ def unsolved_instances(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    unsolved_instances = []
-    for instance in experiment.instances:
-        if db.session.query(db.ExperimentResult).filter_by(experiment=experiment,
-                                                           instance=instance) \
-                        .filter(db.ExperimentResult.resultCode.like('1%')).count() == 0:
-            unsolved_instances.append(instance)
+    unsolved_instances = experiment.get_unsolved_instances(db)
 
     return render('unsolved_instances.html', database=database, db=db, experiment=experiment,
                   unsolved_instances=unsolved_instances, instance_properties=db.get_instance_properties())

@@ -47,7 +47,7 @@
             <tr>
                 <td style="vertical-align: middle;">Filter instances</td>
                 <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
-                    JS expression filter. Valid variables are {% for prop in db.get_instance_properties() %}{{prop.name}}, {% endfor %} <br/>
+                    JS expression filter. Valid variables are {% for prop in instance_properties %}{{prop.name}}, {% endfor %} <br/>
                         Example: (numAtoms >= 6000 && numAtoms <= 8000)
                 </td>
             </tr>

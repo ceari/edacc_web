@@ -5,7 +5,7 @@ instances[{{loop.index0}}] = new Object();
 instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
 instances[{{loop.index0}}]["name"] = "{{instance.name}}";
 {% set outer_loop = loop %}
-    {% for prop in db.get_instance_properties() %}
+    {% for prop in instance_properties %}
         instances[{{outer_loop.index0}}]["{{prop.name}}"] = {{instance.get_property_value(prop.idProperty, db) or "''"}};
     {% endfor %}
 {% endfor %}
@@ -19,7 +19,7 @@ var selected_instance = null;
 
 function match(instance, filter) {
     if (filter == '') return true;
-    fields = [{% for prop in db.get_instance_properties() %}"{{prop.name}}", {% endfor %}];
+    fields = [{% for prop in instance_properties %}"{{prop.name}}", {% endfor %}];
     for (f in fields) {
         var re = new RegExp(fields[f], 'g');
         if (typeof instance[fields[f]] == 'string') {
