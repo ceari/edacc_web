@@ -10,6 +10,8 @@
     :license: MIT, see LICENSE for details.
 """
 
+from sqlalchemy.sql import select, and_, functions
+
 def avg_point_biserial_correlation_ranking(experiment):
     """ Ranking through comparison of the RTDs of the solvers on the instances.
         This ranking only makes sense if the there were multiple runs of each
@@ -58,21 +60,36 @@ def avg_point_biserial_correlation_ranking(experiment):
     # List of solvers sorted by their rank. Best solver first.
     return list(reversed(sorted(experiment.solver_configurations, cmp=comp)))
 
-def number_of_solved_instances_ranking(experiment):
+def number_of_solved_instances_ranking(db, experiment):
     """ Ranking by the number of instances correctly solved.
         This is determined by an resultCode that starts with '1' and a 'finished' status
         of a job.
     """
-    results = experiment.results
+
+    table = db.metadata.tables['ExperimentResults']
+    c_solver_config_id = table.c['SolverConfig_idSolverConfig']
+    c_result_time = table.c['resultTime']
+    c_experiment_id = table.c['Experiment_idExperiment']
+    c_result_code = table.c['resultCode']
+    c_status = table.c['status']
+
+    s = select([c_solver_config_id, functions.sum(c_result_time), functions.count()], \
+        and_(c_experiment_id==experiment.idExperiment, c_result_code.like(u'%1'), c_status==1)) \
+        .select_from(table) \
+        .group_by(c_solver_config_id)
+
+    results = {}
+    query_results = db.session.connection().execute(s)
+    for row in query_results:
+        results[row[0]] = (row[1], row[2])
+
     def comp(s1, s2):
-        solved_s1 = [res for res in results if res.solver_configuration == s1 and res.status == 1 and str(res.resultCode).startswith('1')]
-        solved_s2 = [res for res in results if res.solver_configuration == s2 and res.status == 1 and str(res.resultCode).startswith('1')]
-        num_solved_s1 = len(solved_s1)
-        num_solved_s2 = len(solved_s2)
+        num_solved_s1 = results[s1.idSolverConfig][1]
+        num_solved_s2 = results[s2.idSolverConfig][1]
         if num_solved_s1 > num_solved_s2: return 1
         elif num_solved_s1 < num_solved_s2: return -1
         else:
             # break ties by cumulative CPU time over all solved instances
-            return -1 * int(sum([res.get_time() for res in solved_s1]) - sum([res.get_time() for res in solved_s2]))
+            return -1 * int(results[s1.idSolverConfig][0] - results[s2.idSolverConfig][0])
 
     return list(reversed(sorted(experiment.solver_configurations,cmp=comp)))

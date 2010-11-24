@@ -55,7 +55,8 @@ def solver_ranking(database, experiment_id):
             vbs_num_solved += num_runs
             vbs_cumulated_cpu += best_solver_run.resultTime * num_runs
 
-    ranked_solvers = ranking.number_of_solved_instances_ranking(experiment)
+    ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment)
+
     data = [('Virtual Best Solver (VBS)',           # name of the solver
              vbs_num_solved,                        # number of successful runs
              0.0 if num_runs_per_solver == 0 else vbs_num_solved / float(num_runs_per_solver) ,  # % of all runs
@@ -63,6 +64,7 @@ def solver_ranking(database, experiment_id):
              vbs_cumulated_cpu,                     # cumulated CPU time
              (0.0 if vbs_num_solved == 0 else vbs_cumulated_cpu / vbs_num_solved),    # average CPU time per successful run
              )]
+
     for solver in ranked_solvers:
         successful_runs = db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')) \
                                     .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
