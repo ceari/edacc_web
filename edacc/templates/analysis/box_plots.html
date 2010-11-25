@@ -26,7 +26,7 @@
         <form method="get" action="{{url_for('analysis.box_plots', database=database, experiment_id=experiment.idExperiment)}}">
             <table>
             {{ render_field(form.solver_configs, size=10) }}
-            {{ render_field(form.instances, explanation='Hold Ctrl to select multiple instances.', size=10) }}
+            {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
             {{ render_field(form.result_property) }}
             <tr>
                 <td style="vertical-align: middle;">Filter instances</td>
@@ -39,7 +39,7 @@
             </table>
         </form>
     </div>
-    {% if form.solver_configs.data and form.instances.data %}
+    {% if form.solver_configs.data and form.i.data %}
         {% autoescape false %}
         <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
             <img alt="Generating image..." style="margin: 10px;" src="{{url_for('plot.box_plots', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>

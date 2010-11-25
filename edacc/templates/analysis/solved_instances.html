@@ -27,7 +27,7 @@
             <table>
                 {{ render_field(form.result_property) }}
                 {{ render_field(form.sc) }}
-                {{ render_field(form.instances, explanation='Hold Ctrl to select multiple instances.', size=10) }}
+                {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
                 <tr>
                     <td style="vertical-align: middle;">Filter instances</td>
                     <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
@@ -39,7 +39,7 @@
             </table>
         </form>
     </div>
-    {% if form.result_property.data and form.instances.data %}
+    {% if form.result_property.data and form.i.data %}
     <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
         {% autoescape false %}
         <img alt="Generating image..." src="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>

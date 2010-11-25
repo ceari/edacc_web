@@ -42,7 +42,7 @@
             {{ render_field(form.run) }}
             {{ render_field(form.result_property1) }}
             {{ render_field(form.result_property2) }}
-            {{ render_field(form.instances, explanation='Hold Ctrl to select multiple instances.', size=10) }}
+            {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
             <tr>
                 <td style="vertical-align: middle;">Filter instances</td>
                 <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>

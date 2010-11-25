@@ -113,7 +113,7 @@ def scatter_2solver_1property(database, experiment_id):
 
     s1 = int(request.args['solver_config1'])
     s2 = int(request.args['solver_config2'])
-    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i')]
     run = request.args['run']
     xscale = request.args['xscale']
     yscale = request.args['yscale']
@@ -246,7 +246,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     result_property = request.args['result_property']
     instance_property = request.args['instance_property']
 
-    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i')]
 
     if result_property != 'cputime':
         solver_prop = db.session.query(db.Property).get(int(result_property))
@@ -378,7 +378,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     result_property1 = request.args['result_property1']
     result_property2 = request.args['result_property2']
 
-    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('instances')]
+    instances = [db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i')]
 
     if result_property1 != 'cputime':
         solver_prop1 = db.session.query(db.Property).get(int(result_property1))
@@ -469,7 +469,7 @@ def cactus_plot(database, experiment_id):
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results.options(joinedload(db.ExperimentResult.properties))
     results = results.filter_by(experiment=exp)
-    instances = [int(id) for id in request.args.getlist('instances')]
+    instances = [int(id) for id in request.args.getlist('i')]
     result_property = request.args.get('result_property') or 'cputime'
     if result_property != 'cputime':
         solver_prop = db.session.query(db.Property).get(int(result_property))
@@ -788,7 +788,7 @@ def box_plots(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(int(id) for id in request.args.getlist('instances'))).all()
+    instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(int(id) for id in request.args.getlist('i'))).all()
     solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('solver_configs')]
 
     result_property = request.args.get('result_property')

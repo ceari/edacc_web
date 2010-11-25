@@ -1,6 +1,6 @@
 {% autoescape false %}
 var instances = new Array();
-{% for instance in form.instances.query %}
+{% for instance in form.i.query %}
 instances[{{loop.index0}}] = new Object();
 instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
 instances[{{loop.index0}}]["name"] = "{{instance.name}}";
@@ -61,6 +61,6 @@ $('#instance_filter').keypress(function(e) {
 
 $('#instance_filter_apply').click();
 
-{% if not form.instances.data %}
+{% if not form.i.data %}
 $('#instances option').attr("selected", "selected");
 {% endif %}

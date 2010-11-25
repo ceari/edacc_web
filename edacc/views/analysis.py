@@ -97,7 +97,7 @@ def cactus_plot(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.CactusPlotForm(request.args)
-    form.instances.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
@@ -237,7 +237,7 @@ def scatter_2solver_1property(database, experiment_id):
     form = forms.TwoSolversOnePropertyScatterPlotForm(request.args)
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
-    form.instances.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -250,7 +250,7 @@ def scatter_2solver_1property(database, experiment_id):
     if form.solver_config1.data and form.solver_config2.data:
         points = plot.scatter_2solver_1property_points(db, experiment,
                         form.solver_config1.data, form.solver_config2.data,
-                        form.instances.data, form.result_property.data, form.run.data)
+                        form.i.data, form.result_property.data, form.run.data)
 
         # log transform data if axis scaling is enabled, only affects pearson's coeff.
         if form.xscale.data == 'log':
@@ -292,7 +292,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
     form.instance_property.choices = instance_properties
-    form.instances.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -303,7 +303,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     pearson_r, pearson_p_value = None, None
     if form.solver_config.data and form.instance_property.data:
         points = plot.scatter_1solver_instance_vs_result_property_points(db, experiment,
-                        form.solver_config.data, form.instances.data,
+                        form.solver_config.data, form.i.data,
                         form.instance_property.data, form.result_property.data,
                         form.run.data)
 
@@ -344,7 +344,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     form.result_property1.choices = [('cputime', 'CPU Time')] + result_properties
     form.result_property2.choices = [('cputime', 'CPU Time')] + result_properties
-    form.instances.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -355,7 +355,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     pearson_r, pearson_p_value = None, None
     if form.solver_config.data:
         points = plot.scatter_1solver_result_vs_result_property_plot(db, experiment,
-                    form.solver_config.data, form.instances.data,
+                    form.solver_config.data, form.i.data,
                     form.result_property1.data, form.result_property2.data, form.run.data)
 
         # log transform data if axis scaling is enabled, only affects pearson's coeff.
@@ -462,7 +462,7 @@ def box_plots(database, experiment_id):
 
     form = forms.BoxPlotForm(request.args)
     form.solver_configs.query = experiment.solver_configurations or EmptyQuery()
-    form.instances.query = experiment.instances or EmptyQuery()
+    form.i.query = experiment.instances or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
