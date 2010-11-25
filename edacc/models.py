@@ -17,7 +17,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
 from sqlalchemy.orm import relation, relationship, joinedload, joinedload_all
-from sqlalchemy.sql import and_, or_, not_, select, functions
+from sqlalchemy.sql import and_, or_, not_, select, functions, func
 
 from edacc import config
 from edacc.constants import *
@@ -144,10 +144,11 @@ class EDACCDatabase(object):
                 t_results = db.metadata.tables['ExperimentResults']
                 s = select([t_results.c['Instances_idInstance']],
                             and_(t_results.c['Experiment_idExperiment']==self.idExperiment,
-                                 not_(t_results.c['resultCode'].like('1%'))),
+                                 t_results.c['resultCode'].like('1%'),
+                                 t_results.c['status']==1),
                             from_obj=t_results).distinct()
-                ids = db.session.connection().execute(s)
-                return db.session.query(db.Instance).filter(db.Instance.idInstance.in_(list(r[0] for r in ids))).all()
+                ids = db.session.connection().execute(s).fetchall()
+                return db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).filter(not_(db.Instance.idInstance.in_(list(r[0] for r in ids)))).all()
 
             def get_instances(self, db):
                 return db.session.query(db.Instance).options(joinedload_all('properties.property')) \

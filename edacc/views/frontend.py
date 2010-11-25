@@ -22,7 +22,7 @@ from flask import Response, abort, g, request
 from werkzeug import Headers, secure_filename
 
 from edacc import utils, models
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, joinedload_all
 from edacc.constants import *
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
@@ -168,15 +168,26 @@ def experiment_results(database, experiment_id):
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
-    query = db.session.query(db.ExperimentResult).filter_by(experiment=experiment)
+    query = db.session.query(db.ExperimentResult).options(joinedload_all('solver_configuration.solver')).options(joinedload_all('instance')) \
+                        .filter_by(experiment=experiment).all()
+
+    results_by_instance = {}
+    for r in query:
+        if r.instance not in results_by_instance:
+            results_by_instance[r.instance] = {r.solver_configuration: [r]}
+        else:
+            rs = results_by_instance[r.instance]
+            if r.solver_configuration not in rs:
+                rs[r.solver_configuration] = [r]
+            else:
+                rs[r.solver_configuration].append(r)
 
     results = []
     for instance in instances:
         row = []
+        rs = results_by_instance[instance]
         for solver_config in solver_configs:
-            jobs = query.filter_by(solver_configuration=solver_config) \
-                        .filter_by(instance=instance) \
-                        .all()
+            jobs = rs[solver_config]
 
             completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
             runtimes = [j.get_time() for j in jobs]
@@ -220,13 +231,19 @@ def experiment_results_by_solver(database, experiment_id):
     results = []
     if form.solver_config.data:
         solver_config = form.solver_config.data
-        instances = experiment.instances
-        for i in instances:
-            runs = db.session.query(db.ExperimentResult) \
-                        .filter_by(experiment=experiment,
-                                   solver_configuration=solver_config) \
-                        .filter_by(instance=i).all()
-            results.append((i, runs))
+
+        runs_by_instance = {}
+        ers = db.session.query(db.ExperimentResult).options(joinedload('instance')) \
+                                .filter_by(experiment=experiment,
+                                    solver_configuration=solver_config) \
+                                .order_by('Instances_idInstance', 'run').all()
+        for r in ers:
+            if not r.instance in runs_by_instance:
+                runs_by_instance[r.instance] = [r]
+            else:
+                runs_by_instance[r.instance].append(r)
+
+        results = sorted(runs_by_instance.items(), key=lambda i: i[0].idInstance)
 
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
@@ -266,7 +283,6 @@ def experiment_results_by_instance(database, experiment_id):
 
     results = []
     if form.instance.data:
-        print "data"
         instance = form.instance.data
         for sc in solver_configs:
             runs = db.session.query(db.ExperimentResult) \
