@@ -10,6 +10,7 @@
     <form method="get" action="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}">
         Instance: {{form.instance}}
         <input type="submit" value="Show" />
+        <input type="submit" name="details" value="Show instance details" />
         <input type="submit" name="csv" value="CSV"/>
     </form>
     {% if results %}

@@ -10,6 +10,7 @@
     <form method="get" action="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}">
         Solver: {{form.solver_config}}
         <input type="submit" value="Show" />
+        <input type="submit" name="details" value="Show solver details" />
         <input type="submit" name="csv" value="CSV"/>
     </form>
     {% if results %}

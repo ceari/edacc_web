@@ -18,7 +18,7 @@ import StringIO
 
 from flask import Module
 from flask import render_template as render
-from flask import Response, abort, g, request
+from flask import Response, abort, g, request, redirect, url_for
 from werkzeug import Headers, secure_filename
 
 from edacc import utils, models
@@ -231,6 +231,10 @@ def experiment_results_by_solver(database, experiment_id):
     results = []
     if form.solver_config.data:
         solver_config = form.solver_config.data
+        if 'details' in request.args:
+            return redirect(url_for('frontend.solver_configuration_details',
+                                    database=database, experiment_id=experiment.idExperiment,
+                                    solver_configuration_id=solver_config.idSolverConfig))
 
         runs_by_instance = {}
         ers = db.session.query(db.ExperimentResult).options(joinedload('instance')) \
@@ -284,6 +288,10 @@ def experiment_results_by_instance(database, experiment_id):
     results = []
     if form.instance.data:
         instance = form.instance.data
+        if 'details' in request.args:
+            return redirect(url_for('frontend.instance_details',
+                                    database=database, instance_id=instance.idInstance))
+
         for sc in solver_configs:
             runs = db.session.query(db.ExperimentResult) \
                         .filter_by(experiment=experiment,
