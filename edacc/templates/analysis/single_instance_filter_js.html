@@ -19,7 +19,7 @@ var selected_instance = null;
 
 function match(instance, filter) {
     if (filter == '') return true;
-    fields = [{% for prop in instance_properties %}"{{prop.name}}", {% endfor %}];
+    fields = ["name", {% for prop in instance_properties %}"{{prop.name}}", {% endfor %}];
     for (f in fields) {
         var re = new RegExp(fields[f], 'g');
         if (typeof instance[fields[f]] == 'string') {

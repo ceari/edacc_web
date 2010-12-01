@@ -15,7 +15,7 @@ var selected_instances = new Array();
 
 function match(instance, filter) {
     if (filter == '') return true;
-    fields = [{% for prop in instance_properties %}"{{prop.name}}", {% endfor %}]
+    fields = ["name", {% for prop in instance_properties %}"{{prop.name}}", {% endfor %}]
     for (f in fields) {
         var re = new RegExp(fields[f], 'g');
         if (typeof instance[fields[f]] == 'string') {
@@ -30,7 +30,7 @@ function match(instance, filter) {
 
 $('#instance_filter_apply').click(function() {
     var filter = $('#instance_filter').val();
-    $('#instances > option').remove();
+    $('#i > option').remove();
     for (instance in instances) {
         if (match(instances[instance], filter)) {
             opt = $('<option></option>').val(instances[instance]["idInstance"]).html(instances[instance]["name"]);
@@ -41,7 +41,7 @@ $('#instance_filter_apply').click(function() {
                 }
             }
 
-            $('#instances').append(opt);
+            $('#i').append(opt);
         }
     }
 });
@@ -62,5 +62,5 @@ $('#instance_filter').keypress(function(e) {
 $('#instance_filter_apply').click();
 
 {% if not form.i.data %}
-$('#instances option').attr("selected", "selected");
+$('#i option').attr("selected", "selected");
 {% endif %}
