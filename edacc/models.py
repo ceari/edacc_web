@@ -117,7 +117,7 @@ class EDACCDatabase(object):
                                         .filter_by(experiment=self).count()
                 num_instances = db.session.query(db.Instance) \
                                             .filter(db.Instance.experiments \
-                                                    .contains(self)).count()
+                                                    .contains(self)).distinct().count()
                 if num_solver_configs == 0 or num_instances == 0:
                     return 0
                 return num_results / num_solver_configs / num_instances
@@ -127,7 +127,7 @@ class EDACCDatabase(object):
                 solved in every run
                 """
                 numInstances = db.session.query(db.Instance) \
-                        .filter(db.Instance.experiments.contains(self)).count()
+                        .filter(db.Instance.experiments.contains(self)).distinct().count()
                 if numInstances == 0: return 0
                 num_jobs_per_instance = db.session.query(db.ExperimentResult) \
                         .filter_by(experiment=self).count() / numInstances
@@ -152,15 +152,15 @@ class EDACCDatabase(object):
 
             def get_instances(self, db):
                 return db.session.query(db.Instance).options(joinedload_all('properties.property')) \
-                        .filter(db.Instance.experiments.contains(self)).all()
+                        .filter(db.Instance.experiments.contains(self)).distinct().all()
 
             def get_num_solver_configs(self, db):
                 return db.session.query(db.SolverConfiguration) \
-                        .filter_by(experiment=self).count()
+                        .filter_by(experiment=self).distinct().count()
 
             def get_num_instances(self, db):
                 return db.session.query(db.Instance) \
-                        .filter(db.Instance.experiments.contains(self)).count()
+                        .filter(db.Instance.experiments.contains(self)).distinct().count()
 
         class ExperimentResult(object):
             """ Maps the ExperimentResult table. Provides a function
