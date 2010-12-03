@@ -30,10 +30,10 @@
         <thead>
             <tr>
                 <th>Instance</th>
-                {% for solver_config in solver_configs  %}
+                {% for idSolverConfig in solver_configs_dict.iterkeys()  %}
                     <th>
-                        <a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{solver_config.idSolverConfig}}">
-                        {{solver_config.get_name()}}
+                        <a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{idSolverConfig}}">
+                        {{solver_configs_dict[idSolverConfig].get_name()}}
                         </a>
                     </th>
                 {% endfor %}

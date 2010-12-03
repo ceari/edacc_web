@@ -162,32 +162,34 @@ def experiment_results(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     instances = experiment.instances
-    solver_configs = experiment.solver_configurations
+    solver_configs = db.session.query(db.SolverConfiguration).options(joinedload_all('solver')).filter_by(experiment=experiment).all()
 
     # if competition db, show only own solvers unless phase is 6 or 7
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
-    query = db.session.query(db.ExperimentResult).options(joinedload_all('solver_configuration.solver')).options(joinedload_all('instance')) \
-                        .filter_by(experiment=experiment).all()
+    instances_dict = dict((i.idInstance, i) for i in instances)
+    solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
+
+    query = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).all()
 
     results_by_instance = {}
     for r in query:
-        if r.instance not in results_by_instance:
-            results_by_instance[r.instance] = {r.solver_configuration: [r]}
+        if r.Instances_idInstance not in results_by_instance:
+            results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [r]}
         else:
-            rs = results_by_instance[r.instance]
-            if r.solver_configuration not in rs:
-                rs[r.solver_configuration] = [r]
+            rs = results_by_instance[r.Instances_idInstance]
+            if r.SolverConfig_idSolverConfig not in rs:
+                rs[r.SolverConfig_idSolverConfig] = [r]
             else:
-                rs[r.solver_configuration].append(r)
+                rs[r.SolverConfig_idSolverConfig].append(r)
 
     results = []
-    for instance in instances:
+    for idInstance in instances_dict.iterkeys():
         row = []
-        rs = results_by_instance[instance]
-        for solver_config in solver_configs:
-            jobs = rs[solver_config]
+        rs = results_by_instance[idInstance]
+        for idSolverConfig, solver_config in solver_configs_dict.iteritems():
+            jobs = rs[idSolverConfig]
 
             completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
             runtimes = [j.get_time() for j in jobs]
@@ -206,10 +208,12 @@ def experiment_results(database, experiment_id):
                         'first_job': (None if len(jobs) == 0 else jobs[0]), # needed for alternative presentation if there's only 1 run
                         'solver_config': solver_config
                         })
-        results.append({'instance': instance, 'times': row})
+        results.append({'instance': instances_dict[idInstance], 'times': row})
 
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
+                    solver_configs_dict=solver_configs_dict,
+                    instances_dict=instances_dict,
                     results=results, database=database, db=db)
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
