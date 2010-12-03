@@ -11,7 +11,7 @@ instances[{{loop.index0}}]["name"] = "{{instance.name}}";
 {% endfor %}
 {% endautoescape %}
 var selected_instances = new Array();
-{% for instance in request.args.getlist('instances') %}selected_instances.push({{instance}});{% endfor %}
+{% for instance in request.args.getlist('i') %}selected_instances.push({{instance}});{% endfor %}
 
 function match(instance, filter) {
     if (filter == '') return true;
