@@ -65,7 +65,7 @@ def solver_ranking(database, experiment_id):
              )]
 
     for solver in ranked_solvers:
-        successful_runs = db.session.query(db.ExperimentResult).filter(db.ExperimentResult.resultCode.like('1%')) \
+        successful_runs = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
                                     .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
         num_successful_runs = len(successful_runs)
         data.append((
@@ -73,8 +73,8 @@ def solver_ranking(database, experiment_id):
             num_successful_runs,
             0 if num_runs_per_solver == 0 else num_successful_runs / float(num_runs_per_solver),
             0 if vbs_num_solved == 0 else num_successful_runs / float(vbs_num_solved),
-            sum(j.get_time() for j in successful_runs),
-            numpy.average([j.get_time() for j in successful_runs] or 0)
+            sum(j[0] for j in successful_runs),
+            numpy.average([j[0] for j in successful_runs] or 0)
         ))
 
     return render('/analysis/ranking.html', database=database, db=db,
