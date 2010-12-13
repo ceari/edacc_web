@@ -35,19 +35,19 @@
                         {% endfor %}
                     </tr>
                 {% endfor %}
-                <tr>
-                    <td clas="even">Mean<td>
+                <tr class="even">
+                    <td>Mean</td>
                     {% for result in results %}
                     <td>
-                        result[2]
+                        {{result[2]|result_time|round(4)}}
                     </td>
                     {% endfor %}
                 </tr>
-                <tr>
-                    <td class="odd">Median<td>
+                <tr class="odd">
+                    <td>Median</td>
                     {% for result in results %}
                     <td>
-                        result[3]
+                        {{result[3]|result_time|round(4)}}
                     </td>
                     {% endfor %}
                 </tr>

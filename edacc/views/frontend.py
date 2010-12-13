@@ -301,14 +301,21 @@ def experiment_results_by_instance(database, experiment_id):
                         .filter_by(experiment=experiment,
                                    instance=instance,
                                    solver_configuration=sc).all()
-            mean = None if runs is None else numpy.average([j.get_time() for j in runs] or [0])
-            median = None if runs is None else numpy.median([j.get_time() for j in runs] or [0])
+
+            mean, median = None, None
+            if len(runs) > 0:
+                runtimes = [j.get_time() for j in runs]
+                runtimes = filter(lambda t: t is not None, runtimes)
+                mean = numpy.average(runtimes)
+                median = numpy.median(runtimes)
+
             results.append((sc, runs, mean, median))
 
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
-            csv_writer.writerow(['Solver', 'Runs'])
+            num_runs = experiment.get_num_runs(db)
+            csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median'])
             for res in results:
                 csv_writer.writerow([str(res[0])] + [r.get_time() for r in res[1]] + [res[2], res[3]])
             csv_response.seek(0)
