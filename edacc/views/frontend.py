@@ -301,7 +301,7 @@ def experiment_results_by_instance(database, experiment_id):
                         .filter_by(experiment=experiment,
                                    instance=instance,
                                    solver_configuration=sc).all()
-            results.append((sc, runs, numpy.average(j.get_time() for j in runs or [0]), numpy.median(j.get_time() for j in runs or [0])))
+            results.append((sc, runs, numpy.average([j.get_time() for j in runs] or [0]), numpy.median([j.get_time() for j in runs] or [0])))
 
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
