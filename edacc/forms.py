@@ -179,3 +179,7 @@ class BoxPlotForm(Form):
     instances = QuerySelectMultipleField('Instances')
     instance_filter = TextField('Filter Instances')
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
+
+class RankingForm(Form):
+    i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
+    instance_filter = TextField('Filter Instances')

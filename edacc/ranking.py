@@ -60,7 +60,7 @@ def avg_point_biserial_correlation_ranking(experiment):
     # List of solvers sorted by their rank. Best solver first.
     return list(reversed(sorted(experiment.solver_configurations, cmp=comp)))
 
-def number_of_solved_instances_ranking(db, experiment):
+def number_of_solved_instances_ranking(db, experiment, instance_ids):
     """ Ranking by the number of instances correctly solved.
         This is determined by an resultCode that starts with '1' and a 'finished' status
         of a job.
@@ -72,9 +72,11 @@ def number_of_solved_instances_ranking(db, experiment):
     c_experiment_id = table.c['Experiment_idExperiment']
     c_result_code = table.c['resultCode']
     c_status = table.c['status']
+    c_instance_id = table.c['Instances_idInstance']
 
     s = select([c_solver_config_id, functions.sum(c_result_time), functions.count()], \
-        and_(c_experiment_id==experiment.idExperiment, c_result_code.like(u'%1'), c_status==1)) \
+        and_(c_experiment_id==experiment.idExperiment, c_result_code.like(u'%1'), c_status==1,
+             c_instance_id.in_(instance_ids))) \
         .select_from(table) \
         .group_by(c_solver_config_id)
 

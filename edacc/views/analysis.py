@@ -41,45 +41,57 @@ def solver_ranking(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    num_runs = experiment.get_num_runs(db)
-    num_runs_per_solver = num_runs * len(experiment.instances)
+    form = forms.CactusPlotForm(request.args)
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
-    vbs_num_solved = 0
-    vbs_cumulated_cpu = 0
-    from sqlalchemy import func
-    best_instance_runtimes = db.session.query(func.min(db.ExperimentResult.resultTime)).filter_by(experiment=experiment) \
-        .filter(db.ExperimentResult.resultCode.like('1%')) \
-        .group_by(db.ExperimentResult.Instances_idInstance).all()
+    if form.i.data:
+        instance_ids = [i.idInstance for i in form.i.data]
 
-    vbs_num_solved = len(best_instance_runtimes) * num_runs
-    vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes) * num_runs
+        num_runs = experiment.get_num_runs(db)
+        num_runs_per_solver = num_runs * len(instance_ids)
 
-    ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment)
+        vbs_num_solved = 0
+        vbs_cumulated_cpu = 0
+        from sqlalchemy import func
+        best_instance_runtimes = db.session.query(func.min(db.ExperimentResult.resultTime)).filter_by(experiment=experiment) \
+            .filter(db.ExperimentResult.resultCode.like('1%')) \
+            .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+            .group_by(db.ExperimentResult.Instances_idInstance).all()
 
-    data = [('Virtual Best Solver (VBS)',           # name of the solver
-             vbs_num_solved,                        # number of successful runs
-             0.0 if num_runs_per_solver == 0 else vbs_num_solved / float(num_runs_per_solver) ,  # % of all runs
-             1.0,                                   # % of vbs runs
-             vbs_cumulated_cpu,                     # cumulated CPU time
-             (0.0 if vbs_num_solved == 0 else vbs_cumulated_cpu / vbs_num_solved),    # average CPU time per successful run
-             )]
+        vbs_num_solved = len(best_instance_runtimes) * num_runs
+        vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes) * num_runs
 
-    for solver in ranked_solvers:
-        successful_runs = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
-                                    .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
-        num_successful_runs = len(successful_runs)
-        data.append((
-            solver.get_name(),
-            num_successful_runs,
-            0 if num_runs_per_solver == 0 else num_successful_runs / float(num_runs_per_solver),
-            0 if vbs_num_solved == 0 else num_successful_runs / float(vbs_num_solved),
-            sum(j[0] for j in successful_runs),
-            numpy.average([j[0] for j in successful_runs] or 0)
-        ))
+        ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, instance_ids)
+
+        data = [('Virtual Best Solver (VBS)',           # name of the solver
+                 vbs_num_solved,                        # number of successful runs
+                 0.0 if num_runs_per_solver == 0 else vbs_num_solved / float(num_runs_per_solver) ,  # % of all runs
+                 1.0,                                   # % of vbs runs
+                 vbs_cumulated_cpu,                     # cumulated CPU time
+                 (0.0 if vbs_num_solved == 0 else vbs_cumulated_cpu / vbs_num_solved),    # average CPU time per successful run
+                 )]
+
+        for solver in ranked_solvers:
+            successful_runs = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
+                                        .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+                                        .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
+            num_successful_runs = len(successful_runs)
+            data.append((
+                solver.get_name(),
+                num_successful_runs,
+                0 if num_runs_per_solver == 0 else num_successful_runs / float(num_runs_per_solver),
+                0 if vbs_num_solved == 0 else num_successful_runs / float(vbs_num_solved),
+                sum(j[0] for j in successful_runs),
+                numpy.average([j[0] for j in successful_runs] or 0)
+            ))
+
+        return render('/analysis/ranking.html', database=database, db=db,
+                      experiment=experiment, ranked_solvers=ranked_solvers,
+                      data=data, form=form)
 
     return render('/analysis/ranking.html', database=database, db=db,
-                  experiment=experiment, ranked_solvers=ranked_solvers,
-                  data=data)
+              experiment=experiment, form=form)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus/')

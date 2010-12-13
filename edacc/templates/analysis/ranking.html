@@ -1,5 +1,14 @@
+{% from "_formhelpers.html" import render_field, render_radio_field %}
 {% extends "base.html" %}
 {% block title %}Ranking{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            {% include '/analysis/multiple_instances_filter_js.html' %}
+          });
+    </script>
+{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
@@ -7,6 +16,21 @@
         Ranking
     </div>
     <h2>Ranking</h2>
+    <div style="margin-left: 5px;">
+        <form method="get" action="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">
+            <table>
+                {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10, width=29) }}
+                <tr>
+                    <td style="vertical-align: middle;">Filter instances</td>
+                    <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
+                        JS expression filter. Valid variables are name, {% for prop in instance_properties %}{{prop.name}}, {% endfor %} <br/>
+                        Example: (numAtoms >= 6000 && numAtoms <= 8000)
+                    </td>
+                </tr>
+                <tr><td colspan="2"><input type="submit" value="Show" /></td></tr>
+            </table>
+        </form>
+    </div>
     <div>
         The virtual best solver (VBS) solves an instance if any of the experiment's solvers are<br/>
         sucessful on that instance in any of their <i>numRuns</i> runs. In this case the VBS gets<br/>
