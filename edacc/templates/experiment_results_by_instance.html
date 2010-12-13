@@ -35,6 +35,22 @@
                         {% endfor %}
                     </tr>
                 {% endfor %}
+                <tr>
+                    <td clas="even">Mean<td>
+                    {% for result in results %}
+                    <td>
+                        result[2]
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="odd">Median<td>
+                    {% for result in results %}
+                    <td>
+                        result[3]
+                    </td>
+                    {% endfor %}
+                </tr>
             </tbody>
         </table>
     {% else %}
