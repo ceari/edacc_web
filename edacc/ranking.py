@@ -86,12 +86,19 @@ def number_of_solved_instances_ranking(db, experiment, instance_ids):
         results[row[0]] = (row[1], row[2])
 
     def comp(s1, s2):
-        num_solved_s1 = results[s1.idSolverConfig][1]
-        num_solved_s2 = results[s2.idSolverConfig][1]
+        num_solved_s1, num_solved_s2 = 0, 0
+        if results.has_key(s1.idSolverConfig):
+            num_solved_s1 = results[s1.idSolverConfig][1]
+        if results.has_key(s2.idSolverConfig):
+            num_solved_s2 = results[s2.idSolverConfig][1]
+
         if num_solved_s1 > num_solved_s2: return 1
         elif num_solved_s1 < num_solved_s2: return -1
         else:
             # break ties by cumulative CPU time over all solved instances
-            return -1 * int(results[s1.idSolverConfig][0] - results[s2.idSolverConfig][0])
+            if results.has_key(s1.idSolverConfig) and results.has_key(s2.idSolverConfig):
+                return -1 * int(results[s1.idSolverConfig][0] - results[s2.idSolverConfig][0])
+            else:
+                return 0
 
     return list(reversed(sorted(experiment.solver_configurations,cmp=comp)))
