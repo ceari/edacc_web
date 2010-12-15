@@ -15,6 +15,7 @@ import datetime
 import json
 import numpy
 import StringIO
+import datetime
 
 from flask import Module
 from flask import render_template as render
@@ -23,6 +24,7 @@ from werkzeug import Headers, secure_filename
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload, joinedload_all
+from sqlalchemy import func
 from edacc.constants import *
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
@@ -366,12 +368,33 @@ def experiment_stats_ajax(database, experiment_id):
     num_jobs_error = db.session.query(db.ExperimentResult) \
             .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_(list(STATUS_ERRORS))).count()
 
+    if num_jobs != 0:
+        perc = 100.0 * (num_jobs_finished + num_jobs_error) / float(num_jobs)
+    else:
+        perc = 0
+
+    avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)).filter_by(experiment=experiment) \
+                .filter_by(experiment=experiment) \
+                .filter(db.ExperimentResult.status.in_([STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))) \
+                .first()
+    if avg_time is None:
+        avg_time = 0
+    else:
+        avg_time = avg_time[0]
+
+    if num_jobs_running != 0:
+        timeleft = datetime.timedelta(seconds = int((num_jobs_not_started + num_jobs_running) * avg_time / float(num_jobs_running)))
+    else:
+        timeleft = datetime.timedelta(seconds = 0)
+    eta = str(timeleft)
+
     return json.dumps({
         'num_jobs': num_jobs,
         'num_jobs_not_started': num_jobs_not_started,
         'num_jobs_running': num_jobs_running,
         'num_jobs_finished': num_jobs_finished,
         'num_jobs_error': num_jobs_error,
+        'eta': eta,
     })
 
 
