@@ -368,11 +368,6 @@ def experiment_stats_ajax(database, experiment_id):
     num_jobs_error = db.session.query(db.ExperimentResult) \
             .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_(list(STATUS_ERRORS))).count()
 
-    if num_jobs != 0:
-        perc = 100.0 * (num_jobs_finished + num_jobs_error) / float(num_jobs)
-    else:
-        perc = 0
-
     avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)).filter_by(experiment=experiment) \
                 .filter_by(experiment=experiment) \
                 .filter(db.ExperimentResult.status.in_([STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))) \
@@ -382,11 +377,14 @@ def experiment_stats_ajax(database, experiment_id):
     else:
         avg_time = avg_time[0]
 
+    running_jobs_start_times = db.session.query(db.ExperimentResult.startTime) \
+                                 .filter_by(experiment=experiment, status=STATUS_RUNNING).all()
+    running_time_sum = sum([datetime.datetime.now() - j[0] for j in running_jobs_start_times], datetime.timedelta())
+
     if num_jobs_running != 0:
-        timeleft = datetime.timedelta(seconds = int((num_jobs_not_started + num_jobs_running) * avg_time / float(num_jobs_running)))
+        timeleft = datetime.timedelta(seconds = int((num_jobs_not_started + num_jobs_running) * avg_time / float(num_jobs_running) - running_time_sum.seconds / float(num_jobs_running)))
     else:
         timeleft = datetime.timedelta(seconds = 0)
-    eta = str(timeleft)
 
     return json.dumps({
         'num_jobs': num_jobs,
@@ -394,7 +392,7 @@ def experiment_stats_ajax(database, experiment_id):
         'num_jobs_running': num_jobs_running,
         'num_jobs_finished': num_jobs_finished,
         'num_jobs_error': num_jobs_error,
-        'eta': eta,
+        'eta': str(timeleft),
     })
 
 
