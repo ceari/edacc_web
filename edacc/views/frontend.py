@@ -368,21 +368,17 @@ def experiment_stats_ajax(database, experiment_id):
     num_jobs_error = db.session.query(db.ExperimentResult) \
             .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_(list(STATUS_ERRORS))).count()
 
-    avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)).filter_by(experiment=experiment) \
+    avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)) \
                 .filter_by(experiment=experiment) \
-                .filter(db.ExperimentResult.status.in_([STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))) \
+                .filter_by(experiment=experiment) \
+                .filter(db.ExperimentResult.status.in_(
+                        [STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))) \
                 .first()
-    if avg_time is None:
-        avg_time = 0
-    else:
-        avg_time = avg_time[0]
-
-    running_jobs_start_times = db.session.query(db.ExperimentResult.startTime) \
-                                 .filter_by(experiment=experiment, status=STATUS_RUNNING).all()
-    running_time_sum = sum([datetime.datetime.now() - j[0] for j in running_jobs_start_times], datetime.timedelta())
+    if avg_time is None: avg_time = 0
+    else: avg_time = avg_time[0]
 
     if num_jobs_running != 0:
-        timeleft = datetime.timedelta(seconds = int((num_jobs_not_started + num_jobs_running) * avg_time / float(num_jobs_running) - running_time_sum.seconds / float(num_jobs_running)))
+        timeleft = datetime.timedelta(seconds = int((num_jobs_not_started + num_jobs_running) * avg_time / float(num_jobs_running)))
     else:
         timeleft = datetime.timedelta(seconds = 0)
 
