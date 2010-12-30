@@ -3,8 +3,10 @@
 {% block title %}Ranking{% endblock %}
 {% block head %}
     {{ super() }}
+    <script type="text/javascript" src="{{url_for('static', filename='js/jquery.tablesorter.js')}}"></script>
     <script type="text/javascript">
         $(document).ready(function(){
+            $('#results').tablesorter();
             {% include '/analysis/multiple_instances_filter_js.html' %}
           });
     </script>
@@ -37,7 +39,7 @@
         <i>numRuns</i> successful runs on that instance and for each run the run time of the best solver.
     </div>
     <h3>Ranking by the number of successful runs</h3>
-    <table class="results">
+    <table id="results" class="results">
         <thead>
             <tr>
                 <th>#</th>
