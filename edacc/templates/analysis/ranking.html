@@ -48,7 +48,8 @@
                 <th>% of all runs</th>
                 <th>% of VBS runs</th>
                 <th>cumulated CPU time</th>
-                <th>average CPU time per successful run</th>
+                <th>avg. CPU time per successful run</th>
+                <th>avg. deviation of successful runs</th>
             </tr>
         </thead>
         <tbody>
@@ -61,6 +62,7 @@
                 <td>{{(sc.3 * 100.0)|round(2)}} %</td>
                 <td>{{sc.4|round(2)}}</td>
                 <td>{{sc.5|round(2)}}</td>
+                <td>{{sc.6|round(2)}}</td>
             </tr>
         {% endfor %}
         </tbody>

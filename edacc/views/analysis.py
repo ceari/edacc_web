@@ -11,6 +11,7 @@
 
 import math
 import numpy
+import scipy
 
 from flask import Module
 from flask import render_template as render
@@ -70,12 +71,22 @@ def solver_ranking(database, experiment_id):
                  1.0,                                   # % of vbs runs
                  vbs_cumulated_cpu,                     # cumulated CPU time
                  (0.0 if vbs_num_solved == 0 else vbs_cumulated_cpu / vbs_num_solved),    # average CPU time per successful run
+                 0.0
                  )]
 
         for solver in ranked_solvers:
             successful_runs = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
                                         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
                                         .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
+
+            avg_stddev_runtime = 0.0
+            for instance in form.i.data:
+                instance_runtimes = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
+                                            .filter_by(instance=instance) \
+                                            .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
+                avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
+            avg_stddev_runtime /= float(len(form.i.data))
+
             num_successful_runs = len(successful_runs)
             data.append((
                 solver.get_name(),
@@ -83,7 +94,8 @@ def solver_ranking(database, experiment_id):
                 0 if num_runs_per_solver == 0 else num_successful_runs / float(num_runs_per_solver),
                 0 if vbs_num_solved == 0 else num_successful_runs / float(vbs_num_solved),
                 sum(j[0] for j in successful_runs),
-                numpy.average([j[0] for j in successful_runs] or 0)
+                numpy.average([j[0] for j in successful_runs] or 0),
+                avg_stddev_runtime
             ))
 
         return render('/analysis/ranking.html', database=database, db=db,
