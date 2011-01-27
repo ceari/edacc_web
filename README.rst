@@ -56,6 +56,8 @@ available for the web frontend.
 To get rpy2 working the GNU linker (ld) has to be able to find libR.so. Add the folder containing
 libR.so (usually /usr/lib/R/lib) to the ld config: Create a file called R.conf containing the
 path in the folder /etc/ld.so.conf.d/ and run ldconfig without parameters as root to update.
+Additionally, you have to install the R package 'np' which provides non-parametric statistical
+methods. This package can be installed by running "install.packages('np')" within the R interpreter.
 
 For further information see http://flask.pocoo.org/docs/installation/ and http://flask.pocoo.org/docs/deploying/
 
@@ -69,8 +71,8 @@ using e.g. the distribution's package manager)
 2. Install virtualenv: "pip install virtualenv"
 3. Create a virtual python environment in the subdirectory env of the current directory: "virtualenv env"
 4. Activate the virtual environment: "source env/bin/activate" (This will set up some environment variables so
-   Python installs to the virtual environment)
-5. Install the dependencies: "pip install mysql-python sqlalchemy flask rpy2"
+   Python packages are installed to the virtual environment)
+5. Install the dependencies: "pip install mysql-python sqlalchemy flask rpy2 flask-wtf flask-actions mysql-python pylzma numpy" (some of them need to be compiled and require the appropriate libraries. On Windows and some linux distributions you can find binaries)
 6. Change to the folder containing the file server.py that comes with the web frontend
 7. Adjust the configuration in ./edacc/config.py
 8. Run "python server.py" which will start a web server on port 5000 listening on all IPs of the machine (Make sure
