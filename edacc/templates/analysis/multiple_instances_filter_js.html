@@ -13,6 +13,11 @@ instances[{{outer_loop.index0}}]["{{prop.name}}"] = {{instance.get_property_valu
 var selected_instances = new Array();
 {% for instance in request.args.getlist('i') %}selected_instances.push({{instance}});{% endfor %}
 
+$('#i').bind('keydown', 'ctrl+a', function() {
+    $('#i option').attr("selected", "selected");
+    return false;
+});
+
 function match(instance, filter) {
     if (filter == '') return true;
     fields = ["name", {% for prop in instance_properties %}"{{prop.name}}", {% endfor %}]

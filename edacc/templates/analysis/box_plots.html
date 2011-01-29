@@ -5,9 +5,14 @@
     {{ super() }}
     <script src="{{url_for('static', filename='js/jquery.tablesorter.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/jquery.tooltip.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.hotkeys.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
             {% include '/analysis/multiple_instances_filter_js.html' %}
+            $('#solver_configs').bind('keydown', 'ctrl+a', function() {
+                $('#solver_configs option').attr("selected", "selected");
+                return false;
+            });
           });
     </script>
 {% endblock %}

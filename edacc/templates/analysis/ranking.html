@@ -4,10 +4,15 @@
 {% block head %}
     {{ super() }}
     <script type="text/javascript" src="{{url_for('static', filename='js/jquery.tablesorter.js')}}"></script>
+    <script src="{{url_for('static', filename='js/jquery.hotkeys.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
             $('#results').tablesorter();
             {% include '/analysis/multiple_instances_filter_js.html' %}
+            $('#i').bind('keydown', 'ctrl+a', function() {
+                $('#i option').attr("selected", "selected");
+                return false;
+            });
           });
     </script>
 {% endblock %}

@@ -1,12 +1,17 @@
 {% from "_formhelpers.html" import render_field %}
 {% extends "base.html" %}
-{% block title %}RTDs{% endblock %}
+{% block title %}Property Distributions{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{url_for('static', filename='js/jquery.tablesorter.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.hotkeys.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
             {% include '/analysis/single_instance_filter_js.html' %}
+            $('#sc').bind('keydown', 'ctrl+a', function() {
+                $('#sc option').attr("selected", "selected");
+                return false;
+            });
           });
     </script>
 {% endblock %}
@@ -14,11 +19,11 @@
     <div class="navigation">
         » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
         <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
-        Runtime Distributions
+        Property Distributions
     </div>
 
     <div style="margin-left: 5px; float: left;">
-        <h2>Runtime Distributions</h2>
+        <h2>Property Distributions</h2>
         <form method="get" action="{{url_for('analysis.property_distributions', database=database, experiment_id=experiment.idExperiment)}}">
             <table>
                 {{ render_field(form.sc) }}
