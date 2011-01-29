@@ -16,8 +16,8 @@ import pylzma
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
-from sqlalchemy.orm import relation, relationship, joinedload, joinedload_all
-from sqlalchemy.sql import and_, or_, not_, select, functions, func
+from sqlalchemy.orm import relation, relationship, joinedload_all
+from sqlalchemy.sql import and_, not_, select
 
 from edacc import config
 from edacc.constants import *
@@ -483,7 +483,7 @@ def get_database(database):
     else:
         return None
 
-import logging
-logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-logging.getLogger('sqlalchemy.orm.unitofwork').setLevel(logging.DEBUG)
+#import logging
+#logging.basicConfig()
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+#logging.getLogger('sqlalchemy.orm.unitofwork').setLevel(logging.DEBUG)

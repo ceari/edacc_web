@@ -44,7 +44,7 @@ def solver_ranking(database, experiment_id):
 
     form = forms.CactusPlotForm(request.args)
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
-    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+    #GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     if form.i.data:
         instance_ids = [i.idInstance for i in form.i.data]
@@ -185,8 +185,8 @@ def result_property_comparison(database, experiment_id):
 
         median1 = numpy.median(results1)
         median2 = numpy.median(results2)
-        sample_size1 = len(results1)
-        sample_size2 = len(results2)
+        #sample_size1 = len(results1)
+        #sample_size2 = len(results2)
 
         try:
             ks_statistic, ks_p_value = statistics.kolmogorow_smirnow_2sample_test(results1, results2)

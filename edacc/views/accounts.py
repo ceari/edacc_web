@@ -299,7 +299,7 @@ def submit_solver(database, id=None):
                 db.session.add(param)
             try:
                 db.session.commit()
-            except Exception as e:
+            except:
                 db.session.rollback()
                 flash("Couldn't save solver to the database. Please contact an administrator for support.")
                 return render('/accounts/submit_solver.html', database=database,

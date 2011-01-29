@@ -33,7 +33,7 @@ def synchronized(f):
             try:
                 return f(*args, **kwargs)
             except Exception, e:
-                raise
+                raise e
         finally:
             global_lock.release()
     return lockedfunc

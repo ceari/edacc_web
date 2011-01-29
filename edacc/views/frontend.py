@@ -15,7 +15,6 @@ import datetime
 import json
 import numpy
 import StringIO
-import datetime
 
 from flask import Module
 from flask import render_template as render
