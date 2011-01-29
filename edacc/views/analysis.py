@@ -154,7 +154,7 @@ def result_property_comparison(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDComparisonForm(request.args)
-    form.instance.query = experiment.instances or EmptyQuery()
+    form.instance.query = experiment.get_instances(db) or EmptyQuery()
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
@@ -229,7 +229,7 @@ def property_distributions(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDPlotsForm(request.args)
-    form.instance.query = experiment.instances or EmptyQuery()
+    form.instance.query = experiment.get_instances(db) or EmptyQuery()
     form.sc.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
@@ -261,7 +261,7 @@ def scatter_2solver_1property(database, experiment_id):
     form = forms.TwoSolversOnePropertyScatterPlotForm(request.args)
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
-    form.i.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -316,7 +316,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
     form.instance_property.choices = instance_properties
-    form.i.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -368,7 +368,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     form.result_property1.choices = [('cputime', 'CPU Time')] + result_properties
     form.result_property2.choices = [('cputime', 'CPU Time')] + result_properties
-    form.i.query = sorted(experiment.instances, key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -410,7 +410,7 @@ def property_distribution(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDPlotForm(request.args)
-    form.instance.query = experiment.instances or EmptyQuery()
+    form.instance.query = experiment.get_instances(db) or EmptyQuery()
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
@@ -451,7 +451,7 @@ def probabilistic_domination(database, experiment_id):
         sc2_dom_sc1 = set()
         no_dom = set()
 
-        for instance in experiment.instances:
+        for instance in experiment.get_instances(db):
             res1 = [r.get_property_value(form.result_property.data, db) for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc1).all()]
             res2 = [r.get_property_value(form.result_property.data, db) for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc2).all()]
             res1 = filter(lambda r: r is not None, res1)
@@ -486,7 +486,7 @@ def box_plots(database, experiment_id):
 
     form = forms.BoxPlotForm(request.args)
     form.solver_configs.query = experiment.solver_configurations or EmptyQuery()
-    form.i.query = experiment.instances or EmptyQuery()
+    form.i.query = experiment.get_instances(db) or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
