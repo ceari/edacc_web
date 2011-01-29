@@ -11,12 +11,33 @@
     <ul>
         {% for solver_config in solver_configurations %}
             <li>
-                <a href="{{url_for('solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">
+                <a href="#{{solver_config.idSolverConfig}}">
                 {{solver_config.get_name()}}
                 </a> ({{solver_config.parameter_instances|length}} parameter{{'s' if solver_config.parameter_instances|length != 1 else '' }} specified)
             </li>
         {% endfor %}
     </ul>
+
+    <table class="details">
+    {% for solver_config in solver_configurations %}
+        <tr id="{{solver_config.idSolverConfig}}" class="odd">
+            <td style="text-align: center" colspan="2"><strong>{{solver_config.get_name()}}</strong> (<a href="{{url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">Details</a>)</td>
+        </tr>
+        <tr class="even">
+            <td>Specified parameters:</td>
+            <td>
+                {% for parameter in solver_config.parameter_instances %}
+                {{parameter.parameter.name}}: {% if not parameter.parameter.hasValue %}Flag set{% else %}{{parameter.value}}{% endif %}<br/>
+                {% endfor %}
+            </td>
+        </tr>
+        <tr class="even">
+            <td>Launch command</td>
+            <td>{{solver_config|launch_command}}</td>
+        </tr>
+    {% endfor %}
+    </table>
+
     {% else %}
         {% if db.is_competition() %}
             There are either no solver configurations in this experiment, or you haven't submitted any of the solvers used in this experiment.

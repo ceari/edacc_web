@@ -5,9 +5,9 @@ instances[{{loop.index0}}] = new Object();
 instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
 instances[{{loop.index0}}]["name"] = "{{instance.name}}";
 {% set outer_loop = loop %}
-    {% for prop in instance_properties %}
-        instances[{{outer_loop.index0}}]["{{prop.name}}"] = {{instance.get_property_value(prop.idProperty, db) or 0}};
-    {% endfor %}
+{% for prop in instance_properties %}
+instances[{{outer_loop.index0}}]["{{prop.name}}"] = {{instance.get_property_value(prop.idProperty, db) or 0}};
+{% endfor %}
 {% endfor %}
 {% endautoescape %}
 var selected_instances = new Array();
