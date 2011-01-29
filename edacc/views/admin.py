@@ -70,7 +70,7 @@ def databases_add():
         else:
             try:
                 models.add_database(username, password, database, label)
-                return redirect(url_for('frontend.databases'))
+                return redirect(url_for('frontend.index'))
             except Exception as e:
                 error = "Can't add database: " + str(e)
 
