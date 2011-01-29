@@ -89,7 +89,7 @@ def solver_ranking(database, experiment_id):
 
             num_successful_runs = len(successful_runs)
             data.append((
-                solver.get_name(),
+                solver,
                 num_successful_runs,
                 0 if num_runs_per_solver == 0 else num_successful_runs / float(num_runs_per_solver),
                 0 if vbs_num_solved == 0 else num_successful_runs / float(vbs_num_solved),
