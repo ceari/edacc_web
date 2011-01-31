@@ -1,3 +1,7 @@
+{% from "_formhelpers.html" import render_field, render_instance_options %}
+
+var instance_groups_count = 1; // keep track of how many instance selectors there are
+
 {% autoescape false %}
 var instances = new Array();
 {% for instance in form.i.query %}
@@ -30,7 +34,13 @@ function match(instance, filter) {
             filter = filter.replace(re, instance[fields[f]]);
         }
     }
-    return eval(filter);
+    try {
+        matches = eval(filter);
+        return matches;
+    }
+    catch (err) {
+        return false;
+    }
 }
 
 $('#instance_filter_apply').click(function() {
@@ -59,7 +69,10 @@ $('#instance_filter_clear').click(function() {
 $('#instance_filter').keypress(function(e) {
     // override enter key to supress form submission while in the filter field
     if (e.which == 13) {
-        $('#instance_filter_apply').click();
+        try {
+            $('#instance_filter_apply').click();
+        }
+        catch (err) {}
         return false;
     }
 });
@@ -69,3 +82,47 @@ $('#instance_filter_apply').click();
 {% if not form.i.data %}
 $('#i option').attr("selected", "selected");
 {% endif %}
+
+clear_instance_filter = function(group) {
+    $('#instance_filter_'+group).val('');
+    apply_instance_filter(group);
+}
+
+apply_instance_filter = function(group) {
+    var filter = $('#instance_filter_'+group).val();
+    $('#i'+group+' > option').remove();
+    for (instance in instances) {
+        if (match(instances[instance], filter)) {
+            opt = $('<option></option>').val(instances[instance]["idInstance"]).html(instances[instance]["name"]);
+            for (si in selected_instances) {
+                if (selected_instances[si] == instances[instance]["idInstance"]) {
+                    opt.attr('selected', 'selected');
+                    break;
+                }
+            }
+
+            $('#i'+group).append(opt);
+        }
+    }
+}
+
+$('#add_instance_group_selector').click(function() {
+    $('#form_table tr[name="tr_instances_filter"]:last').after(
+        '<tr><td style="vertical-align: middle;">Instances (Group '+instance_groups_count+')</td><td><select id="i'+instance_groups_count+'" multiple="multiple" name="i'+instance_groups_count+'" size="10"></select></td></tr>' +
+        '<tr name="tr_instances_filter"><td style="vertical-align: middle;">Filter instances</td>' +
+        '<td><input type="text" name="instance_filter_'+instance_groups_count+'" id="instance_filter_'+instance_groups_count+'" value=""></input>' +
+        '<img onClick="apply_instance_filter('+instance_groups_count+');" id="instance_filter_apply_'+instance_groups_count+'" src="{{url_for("static", filename="img/search.png")}}"/><img onClick="clear_instance_filter('+instance_groups_count+')" id="instance_filter_clear_'+instance_groups_count+'" src="{{url_for("static", filename="img/clear.png")}}"/>' +
+        '</td></tr>'
+    );
+    $('#i'+instance_groups_count).html('{{render_instance_options(form.i.query)}}');
+    $('#instance_filter_'+instance_groups_count).keypress(function(e) {
+        // override enter key to supress form submission while in the filter field
+        if (e.which == 13) {
+            // TODO: call appropriate apply filter function
+            return false;
+        }
+    });
+    instance_groups_count++; // just added another instance group selector
+    $('#instance_groups_count').val(instance_groups_count);
+    return false;
+});

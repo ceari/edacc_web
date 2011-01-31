@@ -1,4 +1,4 @@
-{% from "_formhelpers.html" import render_field %}
+{% from "_formhelpers.html" import render_field, render_instance_options %}
 {% extends "base.html" %}
 {% block title %}Number of instances solved{% endblock %}
 {% block head %}
@@ -9,6 +9,7 @@
     <script type="text/javascript">
         $(document).ready(function(){
             {% include '/analysis/multiple_instances_filter_js.html' %}
+
             {% if not form.sc.data %}
             $('#sc option').attr("selected", "selected");
             {% endif %}
@@ -16,7 +17,14 @@
                 $('#sc option').attr("selected", "selected");
                 return false;
             });
-          });
+
+            show_plot = function() {
+                data = $('#plot_form').serialize();
+                $('#div_plot').html('<img alt="Generating image..." src="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?'+data+'"/>');
+                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&pdf">PDF</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&eps">EPS</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&csv">Raw Data (CSV)</a>');
+                return false;
+            }
+        });
     </script>
 {% endblock %}
 {% block content %}
@@ -28,28 +36,29 @@
 
     <div style="margin-left: 5px; float: left;">
         <h2>Number of instances solved</h2>
-        <form method="get" action="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">
-            <table>
+        <form id='plot_form' method="get" action="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">
+            <table id="form_table">
                 {{ render_field(form.result_property) }}
                 {{ render_field(form.sc) }}
                 {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
-                <tr>
+                <tr name="tr_instances_filter">
                     <td style="vertical-align: middle;">Filter instances</td>
                     <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
                         JS expression filter. Valid variables are {% for prop in instance_properties %}{{prop.name}}, {% endfor %} <br/>
                         Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
                     </td>
                 </tr>
-                <tr><td colspan="2"><input type="submit" value="Show" /></td></tr>
+                <tr><td colspan="2"><span id="add_instance_group_selector"><a href="#">Add another instance selector</a></span></td></tr>
+                <tr><td colspan="2"><input id="instance_groups_count" name="instance_groups_count" type="hidden" value="1"/><input type="submit" value="Show" onclick="show_plot(); return false;" /></td></tr>
             </table>
         </form>
     </div>
+    <div id="div_plot" style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
     {% if form.result_property.data and form.i.data %}
-    <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
         {% autoescape false %}
         <img alt="Generating image..." src="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
         Download as <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> | <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
         {% endautoescape %}
-    </div>
     {% endif %}
+    </div>
 {% endblock %}

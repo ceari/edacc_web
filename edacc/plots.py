@@ -169,14 +169,25 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
 
+    legend_strs = []
+    legend_colors = []
+    legend_point_styles = []
+    solver_point_styles = {}
+
     point_style = 0
+    for s in solvers:
+        if not s['name'] in solver_point_styles:
+            solver_point_styles[s['name']] = point_style
+            point_style += 1
+
     for s in solvers:
         xs = s['xs']
         ys = s['ys']
 
         # plot points
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-                        type='p', col=colors[point_style], pch=point_style,
+                        type='p', col=colors[s['instance_group']],
+                        pch=solver_point_styles[s['name']],
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
@@ -185,14 +196,16 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
 
         # plot lines
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-                        type='l', col=colors[point_style],lty=1,
+                        type='l', col=colors[s['instance_group']],lty=1,
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
         robjects.r.par(new=1)
 
-        point_style += 1
+        legend_strs.append('%s (G%d)' % (s['name'], s['instance_group']))
+        legend_colors.append(colors[s['instance_group']])
+        legend_point_styles.append(solver_point_styles[s['name']])
 
     # plot labels and axes
     robjects.r.mtext('number of solved instances', side=1,
@@ -205,9 +218,9 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     robjects.r.par(xpd=True)
     # plot legend
     robjects.r.legend("right", inset=-0.35,
-                      legend=robjects.StrVector([s['name'] for s in solvers]),
-                      col=robjects.StrVector(colors[:len(solvers)]),
-                      pch=robjects.IntVector(range(len(solvers))), lty=1)
+                      legend=robjects.StrVector(legend_strs),
+                      col=robjects.StrVector(legend_colors),
+                      pch=robjects.IntVector(legend_point_styles), lty=1)
 
     grdevices.dev_off()
 

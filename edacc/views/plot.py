@@ -464,12 +464,16 @@ def cactus_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+    instance_groups_count = int(request.args.get('instance_groups_count', 0))
 
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results.options(joinedload(db.ExperimentResult.properties))
     results = results.filter_by(experiment=exp)
-    instances = [int(id) for id in request.args.getlist('i')]
+    instances = [[int(id) for id in request.args.getlist('i')]]
+    for i in xrange(1, instance_groups_count):
+        instances.append([int(id) for id in request.args.getlist('i'+str(i))])
+
     result_property = request.args.get('result_property') or 'cputime'
     if result_property != 'cputime':
         solver_prop = db.session.query(db.Property).get(int(result_property))
@@ -478,17 +482,18 @@ def cactus_plot(database, experiment_id):
 
     solvers = []
 
-    for sc in solver_configs:
-        s = {'xs': [], 'ys': [], 'name': sc.get_name()}
-        sc_res = results.filter_by(solver_configuration=sc, status=1).filter(db.ExperimentResult.resultCode.like('1%')).all()
-        sc_res = sorted(sc_res, key=lambda r: r.get_property_value(result_property, db))
-        i = 1
-        for r in sc_res:
-            if r.Instances_idInstance in instances:
-                s['ys'].append(r.get_property_value(result_property, db))
-                s['xs'].append(i)
-                i += 1
-        solvers.append(s)
+    for instance_group in xrange(instance_groups_count):
+        for sc in solver_configs:
+            s = {'xs': [], 'ys': [], 'name': sc.get_name(), 'instance_group': instance_group}
+            sc_res = results.filter_by(solver_configuration=sc, status=1).filter(db.ExperimentResult.resultCode.like('1%')).all()
+            sc_res = sorted(sc_res, key=lambda r: r.get_property_value(result_property, db))
+            i = 1
+            for r in sc_res:
+                if r.Instances_idInstance in instances[instance_group]:
+                    s['ys'].append(r.get_property_value(result_property, db))
+                    s['xs'].append(i)
+                    i += 1
+            solvers.append(s)
 
     max_x = max([max(s['xs'] or [0]) for s in solvers] or [0]) + 10
     max_y = max([max(s['ys'] or [0]) for s in solvers] or [0]) * 1.1
@@ -504,7 +509,7 @@ def cactus_plot(database, experiment_id):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
         for s in solvers:
-            csv_writer.writerow([s['name']])
+            csv_writer.writerow(['%s (G%d)' % (s['name'], s['instance_group'])])
             csv_writer.writerow(['number of solved instances'] + map(str, s['xs']))
             csv_writer.writerow(['CPU Time (s)'] + map(str, s['ys']))
         csv_response.seek(0)

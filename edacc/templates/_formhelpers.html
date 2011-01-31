@@ -38,3 +38,5 @@
   </td>
 </tr>
 {% endmacro %}
+
+{% macro render_instance_options(instances) %}{% autoescape false %}{% for instance in instances %}<option value="{{instance.idInstance}}">{{instance}}</option>{% endfor %}{% endautoescape %}{% endmacro %}
