@@ -139,7 +139,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
 
 
 @synchronized
-def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
+def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, ylabel, title, filename, format='png'):
     """ Cactus plot of the passed solvers configurations. `solvers` has to be
         a list of dictionaries with the keys `xs`, `ys` and `name`. For each
         y in `ys` the corresponding x in `xs` should be the number of
@@ -172,22 +172,38 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
     legend_strs = []
     legend_colors = []
     legend_point_styles = []
-    solver_point_styles = {}
 
-    point_style = 0
-    for s in solvers:
-        if not s['name'] in solver_point_styles:
-            solver_point_styles[s['name']] = point_style
-            point_style += 1
+    if colored_instance_groups:
+        point_styles = {}
+        color_styles = dict((i, colors[i]) for i in xrange(instance_groups_count))
+        point_style = 0
+        for s in solvers:
+            if not s['name'] in point_styles:
+                point_styles[s['name']] = point_style
+                point_style += 1
+    else:
+        point_styles = dict((i, i) for i in xrange(instance_groups_count))
+        color_styles = {}
+        i = 0
+        for s in solvers:
+            if not s['name'] in color_styles:
+                color_styles[s['name']] = colors[i]
+                i += 1
 
     for s in solvers:
         xs = s['xs']
         ys = s['ys']
 
         # plot points
+        if colored_instance_groups:
+            col = color_styles[s['instance_group']]
+            pch = point_styles[s['name']]
+        else:
+            col = color_styles[s['name']]
+            pch = point_styles[s['instance_group']]
+
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-                        type='p', col=colors[s['instance_group']],
-                        pch=solver_point_styles[s['name']],
+                        type='p', col=col, pch=pch,
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
@@ -196,7 +212,7 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
 
         # plot lines
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-                        type='l', col=colors[s['instance_group']],lty=1,
+                        type='l', col=col,lty=1,
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
@@ -204,8 +220,8 @@ def cactus(solvers, max_x, max_y, ylabel, title, filename, format='png'):
         robjects.r.par(new=1)
 
         legend_strs.append('%s (G%d)' % (s['name'], s['instance_group']))
-        legend_colors.append(colors[s['instance_group']])
-        legend_point_styles.append(solver_point_styles[s['name']])
+        legend_colors.append(col)
+        legend_point_styles.append(pch)
 
     # plot labels and axes
     robjects.r.mtext('number of solved instances', side=1,

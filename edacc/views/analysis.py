@@ -42,7 +42,7 @@ def solver_ranking(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    form = forms.CactusPlotForm(request.args)
+    form = forms.RankingForm(request.args)
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
     #GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 

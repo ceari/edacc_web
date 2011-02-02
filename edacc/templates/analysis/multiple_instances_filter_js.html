@@ -106,6 +106,18 @@ apply_instance_filter = function(group) {
     }
 }
 
+$('#remove_instance_group_selector').click(function() {
+    if (instance_groups_count > 1) {
+        $('#i'+(instance_groups_count-1)).parent().parent().remove();
+        $('#form_table tr[name="tr_instances_filter"]:last').remove();
+        instance_groups_count--;
+        if (instance_groups_count == 1) {
+            $('#use_colors_for').parent().parent().remove();
+        }
+    }
+    return false;
+});
+
 $('#add_instance_group_selector').click(function() {
     $('#form_table tr[name="tr_instances_filter"]:last').after(
         '<tr><td style="vertical-align: middle;">Instances (Group '+instance_groups_count+')</td><td><select id="i'+instance_groups_count+'" multiple="multiple" name="i'+instance_groups_count+'" size="10"></select></td></tr>' +
@@ -114,6 +126,11 @@ $('#add_instance_group_selector').click(function() {
         '<img onClick="apply_instance_filter('+instance_groups_count+');" id="instance_filter_apply_'+instance_groups_count+'" src="{{url_for("static", filename="img/search.png")}}"/><img onClick="clear_instance_filter('+instance_groups_count+')" id="instance_filter_clear_'+instance_groups_count+'" src="{{url_for("static", filename="img/clear.png")}}"/>' +
         '</td></tr>'
     );
+    if (instance_groups_count == 1) { // add the coloring option
+        $('#form_table tr[name="tr_instances_filter"]:last').after(
+            '<tr><td style="vertical-align: middle;">Use colors for</td><td><select id="use_colors_for" name="use_colors_for"><option value="instance_groups">Instance groups</option><option value="solvers">Solver Configurations</option></select></td></tr>'
+        );
+    }
     $('#i'+instance_groups_count).html('{{render_instance_options(form.i.query)}}');
     $('#instance_filter_'+instance_groups_count).keypress(function(e) {
         // override enter key to supress form submission while in the filter field
