@@ -106,6 +106,13 @@ apply_instance_filter = function(group) {
     }
 }
 
+handle_enter_key = function(event, group) {
+    if (event.keyCode == 13) {
+        apply_instance_filter(group);
+        return false;
+    }
+}
+
 $('#remove_instance_group_selector').click(function() {
     if (instance_groups_count > 1) {
         $('#i'+(instance_groups_count-1)).parent().parent().remove();
@@ -122,7 +129,7 @@ $('#add_instance_group_selector').click(function() {
     $('#form_table tr[name="tr_instances_filter"]:last').after(
         '<tr><td style="vertical-align: middle;">Instances (Group '+instance_groups_count+')</td><td><select id="i'+instance_groups_count+'" multiple="multiple" name="i'+instance_groups_count+'" size="10"></select></td></tr>' +
         '<tr name="tr_instances_filter"><td style="vertical-align: middle;">Filter instances</td>' +
-        '<td><input type="text" name="instance_filter_'+instance_groups_count+'" id="instance_filter_'+instance_groups_count+'" value=""></input>' +
+        '<td><input type="text" name="instance_filter_'+instance_groups_count+'" id="instance_filter_'+instance_groups_count+'" onkeypress="return handle_enter_key(event, '+instance_groups_count+');" value=""></input>' +
         '<img onClick="apply_instance_filter('+instance_groups_count+');" id="instance_filter_apply_'+instance_groups_count+'" src="{{url_for("static", filename="img/search.png")}}"/><img onClick="clear_instance_filter('+instance_groups_count+')" id="instance_filter_clear_'+instance_groups_count+'" src="{{url_for("static", filename="img/clear.png")}}"/>' +
         '</td></tr>'
     );
@@ -132,13 +139,7 @@ $('#add_instance_group_selector').click(function() {
         );
     }
     $('#i'+instance_groups_count).html('{{render_instance_options(form.i.query)}}');
-    $('#instance_filter_'+instance_groups_count).keypress(function(e) {
-        // override enter key to supress form submission while in the filter field
-        if (e.which == 13) {
-            // TODO: call appropriate apply filter function
-            return false;
-        }
-    });
+
     instance_groups_count++; // just added another instance group selector
     $('#instance_groups_count').val(instance_groups_count);
     return false;
