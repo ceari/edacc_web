@@ -12,11 +12,18 @@
 
 import uuid, datetime
 
+import jinja2
+from werkzeug import ImmutableDict
 from flask import Flask, Request, g
-app = Flask(__name__)
-
 from edacc import config, models
+
+Flask.jinja_options = ImmutableDict({
+                            'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
+                            'bytecode_cache': jinja2.FileSystemBytecodeCache(config.TEMP_DIR)
+})
+app = Flask(__name__)
 app.Debug = config.DEBUG
+
 
 if config.LOGGING:
     # set up logging if configured
