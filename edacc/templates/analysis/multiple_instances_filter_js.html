@@ -121,6 +121,7 @@ $('#remove_instance_group_selector').click(function() {
         if (instance_groups_count == 1) {
             $('#use_colors_for').parent().parent().remove();
         }
+        $('#instance_groups_count').val(instance_groups_count);
     }
     return false;
 });

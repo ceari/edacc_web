@@ -15,7 +15,7 @@ import scipy
 
 from flask import Module
 from flask import render_template as render
-from flask import abort, request
+from flask import abort, request, jsonify
 
 from edacc import models, forms, ranking, statistics
 from edacc.views.helpers import require_phase, require_login
@@ -269,6 +269,7 @@ def scatter_2solver_1property(database, experiment_id):
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
     spearman_r, spearman_p_value = None, None
     pearson_r, pearson_p_value = None, None
     if form.solver_config1.data and form.solver_config2.data:
@@ -284,6 +285,11 @@ def scatter_2solver_1property(database, experiment_id):
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
+        
+        if request.args.has_key('ajax_correlation'):
+            # this request was an ajax call from the form, return correlation data in JSON
+            return jsonify({'spearman_r': spearman_r, 'spearman_p_value': spearman_p_value,
+                            'pearson_r': pearson_r, 'pearson_p_value': pearson_p_value})
 
     return render('/analysis/scatter_2solver_1property.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,
@@ -339,6 +345,11 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
+        
+        if request.args.has_key('ajax_correlation'):
+            # this request was an ajax call from the form, return correlation data in JSON
+            return jsonify({'spearman_r': spearman_r, 'spearman_p_value': spearman_p_value,
+                            'pearson_r': pearson_r, 'pearson_p_value': pearson_p_value})
 
     return render('/analysis/scatter_solver_instance_vs_result.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,
@@ -390,6 +401,11 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
+        
+        if request.args.has_key('ajax_correlation'):
+            # this request was an ajax call from the form, return correlation data in JSON
+            return jsonify({'spearman_r': spearman_r, 'spearman_p_value': spearman_p_value,
+                            'pearson_r': pearson_r, 'pearson_p_value': pearson_p_value})
 
     return render('/analysis/scatter_solver_result_vs_result.html', database=database,
                   experiment=experiment, db=db, form=form, GET_data=GET_data,

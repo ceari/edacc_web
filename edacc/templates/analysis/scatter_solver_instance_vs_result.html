@@ -22,6 +22,34 @@
             {% endif %}
 
             {% include '/analysis/multiple_instances_filter_js.html' %}
+            
+            show_plot = function() {
+                data = $('#plot_form').serialize();
+                $('#div_plot').html('<img usemap="#map_instances" alt="Generating image..." src="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'"/>');
+                $('#div_plot').append('<map id="map_instances" name="map_instances"/>');
+                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&pdf">PDF</a> | <a href="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&eps">EPS</a> | <a href="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&csv">Raw Data (CSV)</a> | <a href="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&rscript">R script</a>');
+                $.ajax({
+                    url: "{{url_for('plot.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?"+data+"&imagemap",
+                    dataType: 'html',
+                    success: function(data) {
+                      $('#map_instances').html(data);
+                      $("map *").tooltip({positionLeft: true, showURL: false});
+                    }
+                });
+                $.ajax({
+                    url: "{{url_for('analysis.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?"+data+"&ajax_correlation",
+                    dataType: 'json',
+                    success: function(data) {
+                      $('#correlation_data').html('<h3>Spearman Rank correlation coefficient</h3>' +
+                      		'Correlation Coefficient: '+data['spearman_r']+'<br/>' +
+                      		'<i>p</i>-value: '+data['spearman_p_value']+' (not exact in case there are ties in the data)' +
+                      		'<h3>Pearson product-moment correlation coefficient</h3>' +
+                      		'Correlation Coefficient: '+data['pearson_r']+'<br/>' +
+                      		'<i>p</i>-value: '+data['pearson_p_value']+'');
+                    }
+                });
+                return false;
+            }
           });
     </script>
 {% endblock %}
@@ -38,25 +66,27 @@
         plot the result against the instance property in scatter plot.<br/>
         Incorrect results are treated as having used the maximum allowed CPU time of the experiment.
         </div>
-        <form method="get" action="{{url_for('analysis.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">
-            <table>
+        <form id="plot_form" method="get" action="{{url_for('analysis.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">
+            <table id="form_table">
             {{ render_field(form.solver_config) }}
             {{ render_field(form.run) }}
             {{ render_field(form.result_property) }}
             {{ render_field(form.instance_property) }}
             {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
-            <tr>
-                <td style="vertical-align: middle;">Filter instances</td>
-                <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
-                    JS expression filter. Valid variables are name, {% for prop in instance_properties %}{{prop.name}}, {% endfor %} <br/>
-                        Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
-                </td>
-            </tr>
+			<tr name="tr_instances_filter">
+			    <td style="vertical-align: middle;">Filter instances</td>
+			    <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
+			        JS expression filter. Valid variables are {% for prop in instance_properties %}{{prop.name}}, {% endfor %} <br/>
+			        Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
+			    </td>
+			</tr>
             {{ render_radio_field(form.xscale) }}
             {{ render_radio_field(form.yscale) }}
-            <tr><td><input type="submit" value="Show" /></td></tr>
+            <tr><td colspan="2"><span id="add_instance_group_selector"><a href="#">Add another instance selector</a></span> | <span id="remove_instance_group_selector"><a href="#">Remove the last instance selector</a></span></td></tr>
+            <tr><td colspan="2"><input id="instance_groups_count" name="instance_groups_count" type="hidden" value="1"/><input type="submit" value="Show" onclick="show_plot(); return false;" /></td></tr>
             </table>
         </form>
+        <div id="correlation_data">
         {% if form.solver_config.data %}
             <h3>Spearman Rank Correlation Coefficient</h3>
             Correlation Coefficient: {{spearman_r|round(4)}}<br/>
@@ -65,14 +95,15 @@
             Correlation Coefficient: {{pearson_r|round(4)}}<br/>
             <i>p</i>-value: {{pearson_p_value}}
         {% endif %}
+        </div>
     </div>
+    <div id="div_plot" style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
     {% if form.solver_config.data %}
         {% autoescape false %}
-        <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
             <img usemap="#map_instances" alt="Generating image..." style="margin: 10px;" src="{{url_for('plot.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
             Download as <a href="{{url_for('plot.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> | <a href="{{url_for('plot.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a> | <a href="{{url_for('plot.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&rscript">R script</a>
             <map id="map_instances" name="map_instances"/>
-        </div>
         {% endautoescape %}
     {% endif %}
+    </div>
 {% endblock %}
