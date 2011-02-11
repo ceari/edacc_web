@@ -113,10 +113,10 @@ def scatter_2solver_1property(database, experiment_id):
     s1 = int(request.args['solver_config1'])
     s2 = int(request.args['solver_config2'])
     
-    instances = [[db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i')]]
+    instances = [db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i')))).all()]
     instance_groups_count = int(request.args.get('instance_groups_count', 1))
     for i in xrange(1, instance_groups_count):
-        instances.append([db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i'+str(i))])
+        instances.append(db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i'+str(i))))).all())
         
     run = request.args['run']
     xscale = request.args['xscale']
@@ -255,10 +255,10 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     result_property = request.args['result_property']
     instance_property = request.args['instance_property']
 
-    instances = [[db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i')]]
+    instances = [db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i')))).all()]
     instance_groups_count = int(request.args.get('instance_groups_count', 1))
     for i in xrange(1, instance_groups_count):
-        instances.append([db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i'+str(i))])
+        instances.append(db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i'+str(i))))).all())
 
     if result_property != 'cputime':
         solver_prop = db.session.query(db.Property).get(int(result_property))
@@ -394,10 +394,10 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     result_property1 = request.args['result_property1']
     result_property2 = request.args['result_property2']
 
-    instances = [[db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i')]]
+    instances = [db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i')))).all()]
     instance_groups_count = int(request.args.get('instance_groups_count', 1))
     for i in xrange(1, instance_groups_count):
-        instances.append([db.session.query(db.Instance).filter_by(idInstance=int(id)).first() for id in request.args.getlist('i'+str(i))])
+        instances.append(db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i'+str(i))))).all())
 
     if result_property1 != 'cputime':
         solver_prop1 = db.session.query(db.Property).get(int(result_property1))
