@@ -47,11 +47,29 @@ class EDACCDatabase(object):
                 A solver configuration consists of a solver and a set of
                 parameters and their values.
             """
-
+            def get_number(self):
+                """ Returns an integer i if `self` is the i-th of the solver
+                configurations of the same solver in the experiment `self` is
+                in. If there's only one solver configuration of the solver this
+                function returns 0.
+                """
+                same_solvers = [sc for sc in self.experiment.solver_configurations
+                                 if sc.solver == self.solver]
+                if len(same_solvers) == 1:
+                    return 0
+                else:
+                    return same_solvers.index(self) + 1
+            
             def get_name(self):
                 """ Returns the name of the solver configuration. """
-                return self.name
-
+                if hasattr(self, 'name'):
+                    return self.name
+                else:
+                    n = self.get_number()
+                    if n == 0:
+                        return self.solver.name
+                    else:
+                        return "%s (%s)" % (self.solver.name, str(n))
 
             def __str__(self):
                 return self.get_name()
@@ -80,7 +98,6 @@ class EDACCDatabase(object):
                             return p.get_value()
                 except:
                     return None
-
 
             def get_instance(self):
                 """ Decompresses the instance blob and returns it as string """
