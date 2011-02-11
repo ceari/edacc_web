@@ -128,7 +128,7 @@ def experiment_solver_configurations(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     solver_configurations = experiment.solver_configurations
-    solver_configurations.sort(key=lambda sc: sc.solver.name.lower())
+    solver_configurations.sort(key=lambda sc: sc.get_name().lower())
 
     # if competition db, show only own solvers if the phase is in OWN_RESULTS
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:

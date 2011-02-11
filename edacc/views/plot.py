@@ -136,13 +136,13 @@ def scatter_2solver_1property(database, experiment_id):
     max_y = max([max([p[1] for p in ig] or [0]) for ig in points] or [0])
     max_x = max_y = max(max_x, max_y) * 1.1
 
-    title = sc1.solver.name + ' vs. ' + sc2.solver.name
+    title = sc1.get_name() + ' vs. ' + sc2.get_name()
     if result_property == 'cputime':
-        xlabel = sc1.solver.name + ' CPU Time'
-        ylabel = sc2.solver.name + ' CPU Time'
+        xlabel = sc1.get_name() + ' CPU Time'
+        ylabel = sc2.get_name() + ' CPU Time'
     else:
-        xlabel = sc1.solver.name + ' ' + solver_prop.name
-        ylabel = sc2.solver.name + ' ' + solver_prop.name
+        xlabel = sc1.get_name() + ' ' + solver_prop.name
+        ylabel = sc2.get_name() + ' ' + solver_prop.name
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
@@ -155,13 +155,13 @@ def scatter_2solver_1property(database, experiment_id):
 
         headers = Headers()
         headers.add('Content-Type', 'text/csv')
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_scatter_" + sc1.solver.name + '_vs_' + sc2.solver.name + ".csv"))
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_scatter_" + sc1.get_name() + '_vs_' + sc2.get_name() + ".csv"))
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.pdf'
         plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='pdf', xscale=xscale, yscale=yscale, diagonal_line=True)
         headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(sc1.solver.name + '_vs_' + sc2.solver.name + '.pdf'))
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(sc1.get_name() + '_vs_' + sc2.get_name() + '.pdf'))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
         os.remove(filename)
         return response
@@ -169,7 +169,7 @@ def scatter_2solver_1property(database, experiment_id):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.eps'
         plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='eps', xscale=xscale, yscale=yscale, diagonal_line=True)
         headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(sc1.solver.name + '_vs_' + sc2.solver.name + '.eps'))
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(sc1.get_name() + '_vs_' + sc2.get_name() + '.eps'))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
@@ -177,7 +177,7 @@ def scatter_2solver_1property(database, experiment_id):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.txt'
         plots.scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='rscript', xscale=xscale, yscale=yscale, diagonal_line=True)
         headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(sc1.solver.name + '_vs_' + sc2.solver.name + '.txt'))
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(sc1.get_name() + '_vs_' + sc2.get_name() + '.txt'))
         response = Response(response=open(filename, 'rb').read(), mimetype='text/plain', headers=headers)
         os.remove(filename)
         return response
