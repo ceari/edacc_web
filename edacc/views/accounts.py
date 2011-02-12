@@ -67,7 +67,7 @@ def register(database):
             db.session.add(user)
             try:
                 db.session.commit()
-            except:
+            except Exception,e :
                 db.session.rollback()
                 errors.append('Error when trying to save the account. Please \
                               contact an administrator.')

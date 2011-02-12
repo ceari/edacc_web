@@ -75,7 +75,7 @@ def number_of_solved_instances_ranking(db, experiment, instance_ids):
     c_instance_id = table.c['Instances_idInstance']
 
     s = select([c_solver_config_id, functions.sum(c_result_time), functions.count()], \
-        and_(c_experiment_id==experiment.idExperiment, c_result_code.like(u'%1'), c_status==1,
+        and_(c_experiment_id==experiment.idExperiment, c_result_code.like(u'1%'), c_status==1,
              c_instance_id.in_(instance_ids))) \
         .select_from(table) \
         .group_by(c_solver_config_id)

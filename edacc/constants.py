@@ -58,6 +58,7 @@ JOB_RESULT_CODE = {
     -23: 'memory limit exceeded',
     -24: 'stack size limit exceeded',
     -25: 'output size limit exceeded',
+    -309: 'SIGNAL',
 }
 
 JOB_RESULT_CODE_COLOR = {
@@ -81,6 +82,10 @@ JOB_STATUS_COLOR = {
     1:  '#00CC33',
     2:  '#FF6600',
     21: '#FF6600',
+    22: '#FF6600',
+    23: '#FF6600',
+    24: '#FF6600',
+    25: '#FF6600',
 }
 
 OWN_RESULTS = set([3, 4, 5])        # phases where own results are shown
