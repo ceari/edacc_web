@@ -22,11 +22,15 @@ $('#i').bind('keydown', 'ctrl+a', function() {
     return false;
 });
 
+function reEscape(str) {
+    return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
+
 function match(instance, filter) {
     if (filter == '') return true;
     fields = ["name", {% for prop in instance_properties %}"{{prop.name}}", {% endfor %}]
     for (f in fields) {
-        var re = new RegExp(fields[f], 'g');
+        var re = new RegExp(reEscape(fields[f]), 'g');
         if (typeof instance[fields[f]] == 'string') {
             filter = filter.replace(re, '"' + instance[fields[f]] + '"');
         }

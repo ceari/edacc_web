@@ -17,11 +17,15 @@ var selected_instance = {{form.instance.data.idInstance}};
 var selected_instance = null;
 {% endif %}
 
+function reEscape(str) {
+    return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
+
 function match(instance, filter) {
     if (filter == '') return true;
     fields = ["name", {% for prop in instance_properties %}"{{prop.name}}", {% endfor %}];
     for (f in fields) {
-        var re = new RegExp(fields[f], 'g');
+        var re = new RegExp(re.Escape(fields[f]), 'g');
         if (typeof instance[fields[f]] == 'string') {
             filter = filter.replace(re, '"' + instance[fields[f]] + '"');
         }
