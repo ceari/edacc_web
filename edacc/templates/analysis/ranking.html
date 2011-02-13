@@ -34,6 +34,7 @@
                         Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
                     </td>
                 </tr>
+                {{ render_field(form.calculate_average_dev)}}
                 <tr><td colspan="2"><input type="submit" value="Show" /></td></tr>
             </table>
         </form>
@@ -54,7 +55,9 @@
                 <th>% of VBS runs</th>
                 <th>cumulated CPU time</th>
                 <th>avg. CPU time per successful run</th>
+                {% if form.calculate_average_dev %}
                 <th>avg. deviation of successful runs</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -67,7 +70,9 @@
                 <td>{{(sc.3 * 100.0)|round(2)}} %</td>
                 <td>{{sc.4|round(2)}}</td>
                 <td>{{sc.5|round(2)}}</td>
+                {% if form.calculate_average_dev %}
                 <td>{{sc.6|round(2)}}</td>
+                {% endif %}
             </tr>
         {% endfor %}
         </tbody>

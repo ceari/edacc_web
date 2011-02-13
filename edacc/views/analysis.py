@@ -80,12 +80,13 @@ def solver_ranking(database, experiment_id):
                                         .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
 
             avg_stddev_runtime = 0.0
-            for instance in form.i.data:
-                instance_runtimes = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
-                                            .filter_by(instance=instance) \
-                                            .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
-                avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
-            avg_stddev_runtime /= float(len(form.i.data))
+            if form.calculate_average_dev.data == True:
+                for instance in form.i.data:
+                    instance_runtimes = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
+                                                .filter_by(instance=instance) \
+                                                .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
+                    avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
+                avg_stddev_runtime /= float(len(form.i.data))
 
             num_successful_runs = len(successful_runs)
             data.append((

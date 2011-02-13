@@ -11,7 +11,7 @@
 
 from flaskext.wtf import Form, TextField, PasswordField, TextAreaField, RadioField
 from flaskext.wtf import FileField, Required, Length, Email, EqualTo, SelectField
-from flaskext.wtf import ValidationError
+from flaskext.wtf import ValidationError, BooleanField
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
                                             QuerySelectField
 
@@ -182,4 +182,5 @@ class BoxPlotForm(Form):
 
 class RankingForm(Form):
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
+    calculate_average_dev = BooleanField('Calculate avg. deviation (slow)')
     instance_filter = TextField('Filter Instances')
