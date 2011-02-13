@@ -55,7 +55,7 @@
                 <th>% of VBS runs</th>
                 <th>cumulated CPU time</th>
                 <th>avg. CPU time per successful run</th>
-                {% if form.calculate_average_dev %}
+                {% if form.calculate_average_dev.data %}
                 <th>avg. deviation of successful runs</th>
                 {% endif %}
             </tr>
@@ -70,7 +70,7 @@
                 <td>{{(sc.3 * 100.0)|round(2)}} %</td>
                 <td>{{sc.4|round(2)}}</td>
                 <td>{{sc.5|round(2)}}</td>
-                {% if form.calculate_average_dev %}
+                {% if form.calculate_average_dev.data %}
                 <td>{{sc.6|round(2)}}</td>
                 {% endif %}
             </tr>
