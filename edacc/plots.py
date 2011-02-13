@@ -52,19 +52,19 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         Returns a list with the points in device (pixel) coordinates.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=dim,
-                      height=dim, type="cairo")
+        grdevices.png(file=filename, units="px", width=800,
+                      height=600, type="cairo")
     elif format == 'pdf':
-        grdevices.bitmap(file=filename, type="pdfwrite")
+        grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
     elif format == 'eps':
-        grdevices.postscript(file=filename)
+        grdevices.postscript(file=filename, height=7, width=9)
     elif format == 'rscript':
         file = open(filename, 'w')
 
     # set margins to fit in labels on the right and top
-    robjects.r.par(mar=robjects.FloatVector([4,4,6,6]))
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
     if format == 'rscript':
-        file.write('par(mar=c(4,4,6,6))\n')
+        file.write('par(mar=c(5,4,4,15))\n')
 
     if ((xscale == 'log' and yscale == 'log') or (xscale == '' and yscale == '')) and diagonal_line:
         # plot dashed line from (0,0) to (max_x,max_y)
@@ -129,7 +129,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         robjects.r.par(new=1)
         legend_colors.append(colors[col])
         legend_point_styles.append(pch)
-        legend_strs.append('G%d' % (col))
+        legend_strs.append('Group %d' % (col))
         col += 1
         pch += 1
 
@@ -138,15 +138,15 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
                     **{'cex.axis': 1.2, 'cex.main': 1.5}) # plot right axis
     robjects.r.axis(side=3, tck=0.015, las=1,
                     **{'cex.axis': 1.2, 'cex.main': 1.5}) # plot top axis
-    robjects.r.mtext(ylabel, side=4, line=3, cex=1.2) # right axis label
+    robjects.r.mtext(ylabel, side=4, line=4, cex=1.2) # right axis label
     robjects.r.mtext(xlabel, side=3, padj=0, line=3, cex=1.2) # top axis label
     robjects.r.mtext(title, padj=-1.7, side=3, line=3, cex=1.7) # plot title
     
-#    robjects.r.par(xpd=True)
-#    robjects.r.legend("right", inset=-0.35,
-#                      legend=robjects.StrVector(legend_strs),
-#                      col=robjects.StrVector(legend_colors),
-#                      pch=robjects.IntVector(legend_point_styles), lty=1)
+    robjects.r.par(xpd=True)
+    robjects.r.legend("right", inset=-0.35,
+                      legend=robjects.StrVector(legend_strs),
+                      col=robjects.StrVector(legend_colors),
+                      pch=robjects.IntVector(legend_point_styles))
     
     if format == 'rscript':
         file.write(('plot(c(%s), c(%s), type="p", col="red", las=1,' + \
