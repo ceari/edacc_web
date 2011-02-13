@@ -63,6 +63,7 @@ def solver_ranking(database, experiment_id):
         vbs_num_solved = len(best_instance_runtimes) * num_runs
         vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes) * num_runs
 
+        #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, instance_ids)
         ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, instance_ids)
 
         data = [('Virtual Best Solver (VBS)',           # name of the solver
