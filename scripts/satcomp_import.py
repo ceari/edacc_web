@@ -52,6 +52,7 @@ def parse_phase_txt(filepath, phase):
         
     db.session.commit()
     
+    print "First pass over results"
     i = 0
     solver_configs = {}
     instances = {}
@@ -77,27 +78,27 @@ def parse_phase_txt(filepath, phase):
                     print "Instance " + instance_name + " hasn't been found in the database! aborting ..."
                     sys.exit(1)
                 
-            solver_ident = (category, solver_name, solver_version)
+            solver_ident = (solver_name, solver_version)
             if solver_ident not in solver_configs: # new solver config
-                ex_solver = db.session.query(db.Solver).filter_by(name=category + " " + solver_name, version=solver_version).first()
+                ex_solver = db.session.query(db.Solver).filter_by(name=solver_name, version=solver_version).first()
                 if ex_solver:
                     # ... of an existing solver
                     solver = ex_solver
                 else:
                     # ... of a new solver
                     solver = db.Solver()
-                    solver.name = category + " " + solver_name
+                    solver.name = solver_name
                     solver.version = solver_version
                     solver.binaryName = solver_name
                     solver.binary = "dummy"
-                    solver.md5 = category + solver_name + solver_version
+                    solver.md5 = solver_name + solver_version
                     solver.authors = "-"
                     solver.description = "-"
                 
                 # create solver config and add it to the experiment
                 solver_config = db.SolverConfiguration()
                 solver_config.solver = solver
-                solver_config.name = category + " " + solver_name + " " + solver_version
+                solver_config.name = solver_name
                 solver_config.idx = 0
                 solver_config.seed_group = 0
                 solver_config.experiment = experiments[category]
@@ -108,6 +109,7 @@ def parse_phase_txt(filepath, phase):
     print "Writing solver configurations"
     db.session.commit()
     
+    print "Second pass over results"
     i = 0
     # second pass, add the results
     with open(filepath) as fh:
@@ -122,7 +124,7 @@ def parse_phase_txt(filepath, phase):
                                                 data[5], data[6]
             
             experiment = experiments[category]
-            solver_config = solver_configs[(category, solver_name, solver_version)]
+            solver_config = solver_configs[(solver_name, solver_version)]
             instance = instances[instance_path.split('/')[-1]]
             
             er = db.ExperimentResult()
