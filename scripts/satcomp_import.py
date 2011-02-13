@@ -54,6 +54,7 @@ def parse_phase_txt(filepath, phase):
     
     print "First pass over results"
     i = 0
+    solvers = {}
     solver_configs = {}
     instances = {}
     # first pass over the file to create solver configs and cache instances
@@ -79,13 +80,11 @@ def parse_phase_txt(filepath, phase):
                     sys.exit(1)
                 
             solver_ident = (solver_name, solver_version)
-            if solver_ident not in solver_configs: # new solver config
+            if not solver_ident in solvers: # new solver
                 ex_solver = db.session.query(db.Solver).filter_by(name=solver_name, version=solver_version).first()
                 if ex_solver:
-                    # ... of an existing solver
                     solver = ex_solver
                 else:
-                    # ... of a new solver
                     solver = db.Solver()
                     solver.name = solver_name
                     solver.version = solver_version
@@ -94,19 +93,40 @@ def parse_phase_txt(filepath, phase):
                     solver.md5 = solver_name + solver_version
                     solver.authors = "-"
                     solver.description = "-"
-                
+                    db.session.add(solver)
+                solvers[solver_ident] = solver
+            else:
+                solver = solvers[solver_ident]
+    db.session.commit()
+            
+    i = 0
+    solver_configs = {}
+    # first pass over the file to create solver configs and cache instances
+    with open(filepath) as fh:
+        fh.readline()
+        fh.readline()
+        for line in fh:
+            i += 1
+            if i % 1000 == 0: print i
+            data = map(str.strip, line.split('|'))
+            category, instance_path, answer, cputime, walltime, \
+                solver_name, solver_version =   data[0], data[1], data[2], float(data[3]), float(data[4]), \
+                                                data[5], data[6]
+            
+            solver = solvers[(solver_name, solver_version)]
+            solver_config_ident = (category, solver_name, solver_version)
+            if not solver_config_ident in solver_configs:
                 # create solver config and add it to the experiment
                 solver_config = db.SolverConfiguration()
                 solver_config.solver = solver
-                solver_config.name = solver_name
+                solver_config.name = solver_name + " " + solver_version
                 solver_config.idx = 0
                 solver_config.seed_group = 0
                 solver_config.experiment = experiments[category]
-                db.session.add(solver)
                 db.session.add(solver_config)
-                solver_configs[solver_ident] = solver_config
-                
-    print "Writing solver configurations"
+                solver_configs[solver_config_ident] = solver_config
+
+    print "Writing solvers"
     db.session.commit()
     
     print "Second pass over results"
@@ -124,7 +144,7 @@ def parse_phase_txt(filepath, phase):
                                                 data[5], data[6]
             
             experiment = experiments[category]
-            solver_config = solver_configs[(solver_name, solver_version)]
+            solver_config = solver_configs[(category, solver_name, solver_version)]
             instance = instances[instance_path.split('/')[-1]]
             
             er = db.ExperimentResult()
