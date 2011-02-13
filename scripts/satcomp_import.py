@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+    SAT Competition 2009 results import script
+"""
 import os, sys, datetime
-sys.path.append("..") # append parent directory to python path to be able to import edacc
+sys.path.append("..") # append parent directory to python path to be able to import edacc when running from ./scripts
 from edacc import models, config
 
 config.DATABASE_HOST = "localhost"
 models.add_database("edacc", "edaccteam", "EDACC5", "EDACC5")
 db = models.get_database("EDACC5")
 
+# mapping the "checked answer" column to EDACC's status/resultCode codes
 ANSWER_MAP = {
     'UNKNOWN':          (1, 0),
     'UNKNOWN EXCODE':   (1, 0),
@@ -35,6 +39,7 @@ def parse_phase_txt(filepath, phase):
         experiments[exp].outputSizeLimit = -1
         db.session.add(experiments[exp])
     
+    # hardcoded limits as inferred from the data
     if phase == 2:
         experiments['APPLICATION'].CPUTimeLimit = 10000
         experiments['APPLICATION'].wallClockTimeLimit = 10000
@@ -52,18 +57,20 @@ def parse_phase_txt(filepath, phase):
         
     db.session.commit()
     
-    print "First pass over results"
+    with open(filepath) as fh:
+        num_lines = sum(1 for line in fh)
+    
+    print "Parsing results"
     i = 0
     solvers = {}
     solver_configs = {}
     instances = {}
-    # first pass over the file to create solver configs and cache instances
     with open(filepath) as fh:
         fh.readline()
         fh.readline()
         for line in fh:
             i += 1
-            if i % 1000 == 0: print i
+            if i % 10000 == 0: print i, '/', num_lines-2
             data = map(str.strip, line.split('|'))
             category, instance_path, answer, cputime, walltime, \
                 solver_name, solver_version =   data[0], data[1], data[2], float(data[3]), float(data[4]), \
@@ -71,7 +78,7 @@ def parse_phase_txt(filepath, phase):
             
             instance_name = instance_path.split('/')[-1]
             if instance_name not in instances:
-                # unseen instance, add to cache
+                # new instance, add to cache
                 instances[instance_name] = db.session.query(db.Instance).filter_by(name=instance_name).first()
                 experiments[category].instances.append(instances[instance_name])
                 if instances[instance_name] is None:
@@ -97,23 +104,7 @@ def parse_phase_txt(filepath, phase):
                 solvers[solver_ident] = solver
             else:
                 solver = solvers[solver_ident]
-    db.session.commit()
-            
-    i = 0
-    solver_configs = {}
-    # first pass over the file to create solver configs and cache instances
-    with open(filepath) as fh:
-        fh.readline()
-        fh.readline()
-        for line in fh:
-            i += 1
-            if i % 1000 == 0: print i
-            data = map(str.strip, line.split('|'))
-            category, instance_path, answer, cputime, walltime, \
-                solver_name, solver_version =   data[0], data[1], data[2], float(data[3]), float(data[4]), \
-                                                data[5], data[6]
-            
-            solver = solvers[(solver_name, solver_version)]
+                
             solver_config_ident = (category, solver_name, solver_version)
             if not solver_config_ident in solver_configs:
                 # create solver config and add it to the experiment
@@ -125,24 +116,7 @@ def parse_phase_txt(filepath, phase):
                 solver_config.experiment = experiments[category]
                 db.session.add(solver_config)
                 solver_configs[solver_config_ident] = solver_config
-
-    print "Writing solvers"
-    db.session.commit()
-    
-    print "Second pass over results"
-    i = 0
-    # second pass, add the results
-    with open(filepath) as fh:
-        fh.readline()
-        fh.readline()
-        for line in fh:
-            i += 1
-            if i % 1000 == 0: print i
-            data = map(str.strip, line.split('|'))
-            category, instance_path, answer, cputime, walltime, \
-                solver_name, solver_version =   data[0], data[1], data[2], float(data[3]), float(data[4]), \
-                                                data[5], data[6]
-            
+                
             experiment = experiments[category]
             solver_config = solver_configs[(category, solver_name, solver_version)]
             instance = instances[instance_path.split('/')[-1]]
@@ -159,20 +133,22 @@ def parse_phase_txt(filepath, phase):
             er.date_modified = datetime.datetime.now()
             er.priority = 0
             db.session.add(er)
-    
-    print "Writing results"
+        
+    print "Writing to DB"
     db.session.commit()
     db.session.flush()
             
 if __name__ == '__main__':
     import time
-    dir = raw_input("enter phase files directory: ")
+    dir = raw_input("Warning: Existing experiments and solvers will be deleted!! Enter phase files directory: ")
     start_time = time.clock()
     db.session.query(db.ExperimentResult).delete()
     db.session.query(db.Experiment).delete()
     db.session.query(db.Solver).delete()
     db.session.commit()
+    print "Importing phase1.txt"
     parse_phase_txt(os.path.join(dir, "phase1.txt"), 1)
+    print "Importing phase2.txt\n==========================================="
     parse_phase_txt(os.path.join(dir, "phase2.txt"), 2)
-    print "processed data in ", time.clock() - start_time, "s"
+    print "Done. Imported data in ", time.clock() - start_time, "s"
     
