@@ -92,6 +92,7 @@ def parse_phase_txt(filepath, phase):
                     solver.binary = "dummy"
                     solver.md5 = category + solver_name + solver_version
                     solver.authors = "-"
+                    solver.description = "-"
                 
                 # create solver config and add it to the experiment
                 solver_config = db.SolverConfiguration()
