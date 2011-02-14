@@ -27,8 +27,8 @@ WSGI-compatible, which means it can be deployed on any web server supporting Pyt
 Dependencies
 ------------
 
-- Python 2.6.5 http://www.python.org
-- SQLAlchemy 0.6.4 (SQL Toolkit and Object Relational Mapper)
+- Python 2.6.5 or 2.7.1 http://www.python.org
+- SQLAlchemy 0.6.5 (SQL Toolkit and Object Relational Mapper)
 - mysql-python 1.2.3c1 (Python MySQL adapter)
 - Flask 0.6 (Micro Webframework)
 - Flask-WTF 0.3.3 (Flask extension for WTForms)
@@ -44,7 +44,7 @@ Dependencies
 Installation
 ------------
 
-The required libraries can most likely be installed using the
+The required Python libraries can most likely be installed using the
 package management tool of your favorite Linux distribution.
 However, they are also available in the Python Package Index "PyPi" http://pypi.python.org/pypi
 and can be installed using easy_install or pip. (http://pypi.python.org/pypi/setuptools  http://pypi.python.org/pypi/pip)
@@ -65,7 +65,7 @@ Quick Installation Guide
 ------------------------
 
 To illustrate an installation here's what you would have to do on a linux system (assuming Python and pip are installed,
-using e.g. the distribution's package manager)
+using e.g. the distribution's package manager) to get the development server running.
 
 1. Install R and configure ld as described above
 2. Install virtualenv: "pip install virtualenv"
