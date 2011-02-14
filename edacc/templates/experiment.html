@@ -1,12 +1,45 @@
 {% extends "base.html" %}
 {% block title %}{{experiment.name}} Experiment{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript">
+    	/* <![CDATA[ */
+    	function perc(denom, nom) { // nom nom nom
+			if (nom == 0) return 0;
+    		return denom / nom * 100.0;
+    	}
+    	
+    	$(document).ready(function() {
+			$.ajax({
+			    url: "{{url_for('frontend.experiment_stats_ajax', database=database, experiment_id=experiment.idExperiment)}}",
+			    dataType: 'json',
+			    success: function(data) {
+			    	$('#progress_num_jobs').html(data['num_jobs']);
+			    	$('#progress_num_active').html(data['num_jobs_active']);
+			    	$('#progress_num_active_perc').html(perc(data['num_jobs_active'],data['num_jobs']).toFixed(1) + '%');
+			    	$('#progress_num_finished').html(data['num_jobs_finished']);
+			    	$('#progress_num_finished_perc').html(perc(data['num_jobs_finished'],data['num_jobs_active']).toFixed(1) + '%');
+			    	$('#progress_num_crashed').html(data['num_jobs_error']);
+			    	$('#progress_num_crashed_perc').html(perc(data['num_jobs_error'],data['num_jobs_active']).toFixed(1) + '%');
+			    	$('#progress_num_running').html(data['num_jobs_running']);
+			    	$('#progress_num_running_perc').html(perc(data['num_jobs_running'],data['num_jobs_active']).toFixed(1) + '%');
+			    	$('#progress_num_not_started').html(data['num_jobs_not_started']);
+			    	$('#progress_num_not_started_perc').html(perc(data['num_jobs_not_started'],data['num_jobs_active']).toFixed(1) + '%');
+			    	if (data['eta'] == '0:00:00') $('#progress_eta').html('finished');
+			    	else $('#progress_eta').html(data['eta']);
+			    }
+			});
+    	});
+        /* ]]> */
+    </script>
+{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
         {{experiment.name}}
     </div>
     <h1>{{experiment.name}}</h1>
-    <table border="0">
+    <table style="float: left; margin-right: 50px;" border="0">
         <tr><td>Date:</td><td style="padding-left: 5px">{{experiment.date|datetimeformat('%d %B %Y')}}</td></tr>
         <tr><td>Description:</td><td style="padding-left: 5px">{{experiment.description if experiment.description else "no description"}}</td></tr>
         <tr><td>Timeout (sec):</td><td style="padding-left: 5px">{{experiment.CPUTimeLimit if experiment.CPUTimeLimit != -1 else '-'}}</td></tr>
@@ -15,12 +48,21 @@
         <tr><td>Stack size limit (MB):</td><td style="padding-left: 5px">{{experiment.stackSizeLimit if experiment.stackSizeLimit != -1 else '-'}}</td></tr>
         <tr><td>Output size limit (MB):</td><td style="padding-left: 5px">{{experiment.outputSizeLimit if experiment.outputSizeLimit != -1 else '-'}}</td></tr>
     </table>
+    <table border="0">
+        <tr><td>Jobs:</td><td colspan="2" style="padding-left: 5px" id="progress_num_jobs">-</td></tr>
+        <tr><td>Active:</td><td style="padding-left: 5px; padding-right: 10px;" id="progress_num_active"></td><td id="progress_num_active_perc"></td></tr>
+        <tr><td>Finished:</td><td style="padding-left: 5px" id="progress_num_finished"></td><td id="progress_num_finished_perc"></td></tr>
+        <tr><td>Crashed:</td><td style="padding-left: 5px" id="progress_num_crashed"></td><td id="progress_num_crashed_perc"></td></tr>
+        <tr><td>Running:</td><td style="padding-left: 5px" id="progress_num_running"></td><td id="progress_num_running_perc"></td></tr>
+        <tr><td>Not started:</td><td style="padding-left: 5px" id="progress_num_not_started"></td><td id="progress_num_not_started_perc"></td></tr>
+        <tr><td>ETA</td><td colspan="2" style="padding-left: 5px" id="progress_eta"></td></tr>
+    </table>
     {% if not session.admin and db.is_competition() and db.competition_phase() in OWN_RESULTS %}
-    <div style="margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" /> While the competition isn't finished, you are only able to see your own solvers.</div>
+    <div style="clear:both; margin: 5px; font-weight: bold;"><img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" /> While the competition isn't finished, you are only able to see your own solvers.</div>
     {% endif %}
 
     {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}
-    <h2>Progress</h2>
+    <h2 style="clear:both;">Progress</h2>
     <a href="{{url_for('frontend.experiment_progress', database=database, experiment_id=experiment.idExperiment)}}">Live information about experiment progress</a><br/>
     {% endif %}
 

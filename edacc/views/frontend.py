@@ -357,18 +357,25 @@ def experiment_stats_ajax(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     num_jobs = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
+    num_jobs_active = db.session.query(db.ExperimentResult) \
+                            .filter_by(experiment=experiment) \
+                            .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_not_started = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=experiment, status=STATUS_NOT_STARTED).count()
+            .filter_by(experiment=experiment, status=STATUS_NOT_STARTED) \
+            .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_running = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=experiment, status=STATUS_RUNNING).count()
+            .filter_by(experiment=experiment, status=STATUS_RUNNING) \
+            .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_finished = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_([STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))).count()
+            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_([STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))) \
+            .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_error = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_(list(STATUS_ERRORS))).count()
+            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_(list(STATUS_ERRORS))) \
+            .filter(db.ExperimentResult.priority>=0).count()
 
     avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)) \
                 .filter_by(experiment=experiment) \
-                .filter_by(experiment=experiment) \
+                .filter(db.ExperimentResult.priority>=0) \
                 .filter(db.ExperimentResult.status.in_(
                         [STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))) \
                 .first()
@@ -382,6 +389,7 @@ def experiment_stats_ajax(database, experiment_id):
 
     return json.dumps({
         'num_jobs': num_jobs,
+        'num_jobs_active': num_jobs_active,
         'num_jobs_not_started': num_jobs_not_started,
         'num_jobs_running': num_jobs_running,
         'num_jobs_finished': num_jobs_finished,
