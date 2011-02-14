@@ -101,11 +101,11 @@ class EDACCDatabase(object):
 
             def get_instance(self, db):
                 """
-                    Decompresses the instance blob if necessary and returns it as string
+                    Decompresses the instance blob if necessary and returns it as string.
                     EDACC can store compressed and uncompressed instances. To distinguish
-                    between them, we prepend the ASCII characters "LZMA" to an compressed instance.
+                    between them, we prepend the ASCII characters "LZMA" to a compressed instance.
                     
-                    The LZMA header following the LZMA characters consists of 5 + 8 bytes.
+                    The LZMA header following the "LZMA" characters consists of 5 + 8 bytes.
                     The first 5 bytes are compression parameters, the 8 following bytes specify
                     the length of the data.
                 """
