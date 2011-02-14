@@ -53,8 +53,8 @@
         <tr><td>Active:</td><td style="padding-left: 5px; padding-right: 10px;" id="progress_num_active"></td><td id="progress_num_active_perc"></td></tr>
         <tr><td>Finished:</td><td style="padding-left: 5px" id="progress_num_finished"></td><td id="progress_num_finished_perc"></td></tr>
         <tr><td>Not started:</td><td style="padding-left: 5px" id="progress_num_not_started"></td><td id="progress_num_not_started_perc"></td></tr>
-        <tr><td>Crashed:</td><td style="padding-left: 5px" id="progress_num_crashed"></td><td id="progress_num_crashed_perc"></td></tr>
         <tr><td>Running:</td><td style="padding-left: 5px" id="progress_num_running"></td><td id="progress_num_running_perc"></td></tr>
+        <tr><td>Crashed:</td><td style="padding-left: 5px" id="progress_num_crashed"></td><td id="progress_num_crashed_perc"></td></tr>
         <tr><td>ETA</td><td colspan="2" style="padding-left: 5px" id="progress_eta"></td></tr>
     </table>
     {% if not session.admin and db.is_competition() and db.competition_phase() in OWN_RESULTS %}
