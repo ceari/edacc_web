@@ -13,6 +13,9 @@ import random
 from edacc.web import app
 from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR, JOB_RESULT_CODE, JOB_RESULT_CODE_COLOR
 
+def newline_split_string(s, n):
+    return '\n'.join([s[i:i+n] for i in range(0, len(s), n)])
+
 def download_size(value):
     """ Takes an integer number of bytes and returns a pretty string representation """
     if value <= 0: return "0 Bytes"

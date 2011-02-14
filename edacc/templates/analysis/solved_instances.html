@@ -48,6 +48,7 @@
                         Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
                     </td>
                 </tr>
+                {{ render_field(form.log_y) }}
                 <tr><td colspan="2"><span id="add_instance_group_selector"><a href="#">Add another instance selector</a></span> | <span id="remove_instance_group_selector"><a href="#">Remove the last instance selector</a></span></td></tr>
                 <tr><td colspan="2"><input id="instance_groups_count" name="instance_groups_count" type="hidden" value="1"/><input type="submit" value="Show" onclick="show_plot(); return false;" /></td></tr>
             </table>

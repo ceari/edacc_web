@@ -11,6 +11,7 @@
 from functools import wraps
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
+from edacc.utils import newline_split_string
 
 grdevices = importr('grDevices') # plotting target devices
 np = importr('np') # non-parametric kernel smoothing methods
@@ -173,7 +174,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
 
 
 @synchronized
-def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, ylabel, title, filename, format='png'):
+def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_y, ylabel, title, filename, format='png'):
     """ Cactus plot of the passed solvers configurations. `solvers` has to be
         a list of dictionaries with the keys `xs`, `ys` and `name`. For each
         y in `ys` the corresponding x in `xs` should be the number of
@@ -189,10 +190,13 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
 
     robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
 
+    log = 'y' if log_y else ''
+    
+    robjects.r.options(scipen=10)
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
-                    type='p', col='red', las = 1,
-                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
+                    type='p', col='red', las = 1, log=log,
+                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(min_y,max_y),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
@@ -231,8 +235,8 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
             pch = point_styles[s['instance_group']]
 
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-                        type='p', col=col, pch=pch,
-                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
+                        type='p', col=col, pch=pch, log=log,
+                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(min_y,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
@@ -240,14 +244,14 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
 
         # plot lines
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-                        type='l', col=col,lty=1,
-                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
+                        type='l', col=col,lty=1, log=log,
+                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(min_y,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
         robjects.r.par(new=1)
 
-        legend_strs.append('%s (G%d)' % (s['name'], s['instance_group']))
+        legend_strs.append('%s (G%d)' % (newline_split_string(s['name'], 20), s['instance_group']))
         legend_colors.append(col)
         legend_point_styles.append(pch)
 
@@ -260,8 +264,9 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
                      padj=1, side=3, line=3, cex=1.7) # plot title
 
     robjects.r.par(xpd=True)
+    
     # plot legend
-    robjects.r.legend("right", inset=-0.35,
+    robjects.r.legend("right", inset=-0.40,
                       legend=robjects.StrVector(legend_strs),
                       col=robjects.StrVector(legend_colors),
                       pch=robjects.IntVector(legend_point_styles), lty=1)

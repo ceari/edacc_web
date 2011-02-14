@@ -147,6 +147,7 @@ class CactusPlotForm(Form):
     result_property = SelectField('Property')
     sc = QuerySelectMultipleField('Solver Configurations')
     instance_filter = TextField('Filter Instances')
+    log_y = BooleanField("Logarithmic y-axis")
     i = QuerySelectMultipleField('Instances (Group 0)', get_pk=lambda i: i.idInstance, allow_blank=True)
 
 class RTDComparisonForm(Form):
