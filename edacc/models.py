@@ -11,9 +11,9 @@
     :license: MIT, see LICENSE for details.
 """
 
-import pylzma
+import pylzma, struct
 
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
 from sqlalchemy.orm import relation, relationship, joinedload_all
@@ -99,9 +99,38 @@ class EDACCDatabase(object):
                 except:
                     return None
 
-            def get_instance(self):
-                """ Decompresses the instance blob and returns it as string """
-                return pylzma.decompress(self.instance)
+            def get_instance(self, db):
+                """
+                    Decompresses the instance blob if necessary and returns it as string
+                    EDACC can store compressed and uncompressed instances. To distinguish
+                    between them, we prepend the ASCII characters "LZMA" to an compressed instance.
+                    
+                    The LZMA header following the LZMA characters consists of 5 + 8 bytes.
+                    The first 5 bytes are compression parameters, the 8 following bytes specify
+                    the length of the data.
+                """
+                table = db.metadata.tables['Instances']
+                c_instance = table.c['instance']
+                c_id = table.c['idInstance']
+                # get prefix
+                instance_header = db.session.connection().execute(select([func.substring(c_instance, 1, 4)],
+                                            c_id==self.idInstance).select_from(table)).first()[0]
+                if instance_header == 'LZMA': # compressed instance?
+                    # get blob without LZMA prefix
+                    instance_blob = db.session.connection().execute(select([func.substring(c_instance, 5)],
+                                                c_id==self.idInstance).select_from(table)).first()[0]
+                    # unpack the data length from the LZMA header (bytes # 6-13 inclusively)
+                    coded_length = struct.unpack('<Q', instance_blob[5:13])[0]
+                    if coded_length == '\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF':
+                        # if the length is -1 (in two's complement), there is an EOS marker
+                        # marking the end of the data and pylzma doesn't need the coded_length
+                        return pylzma.decompress(instance_blob[:5] + instance_blob[13:])
+                    else:
+                        # if the length is specified, pylzma needs the coded_length since there probably
+                        # is no EOS marker
+                        return pylzma.decompress(instance_blob[:5] + instance_blob[13:], maxlength=coded_length)
+                else:
+                    return self.instance
 
             def set_instance(self, uncompressed_instance):
                 """ Compresses the instance and sets the instance blob attribute """

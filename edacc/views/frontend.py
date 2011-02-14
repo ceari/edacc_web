@@ -582,7 +582,7 @@ def instance_details(database, instance_id):
         if instance.source_class.user != g.User:
             abort(403)
 
-    instance_blob = instance.instance
+    instance_blob = instance.get_instance(db)
     if len(instance_blob) > 1024:
         # show only the first and last 512 characters if the instance is larger than 1kB
         instance_text = instance_blob[:512] + "\n\n... [truncated " + \
@@ -594,7 +594,7 @@ def instance_details(database, instance_id):
     instance_properties = db.get_instance_properties()
 
     return render('instance_details.html', instance=instance,
-                  instance_text=instance_text, blob_size=len(instance.instance),
+                  instance_text=instance_text, blob_size=len(instance_blob),
                   database=database, db=db,
                   instance_properties=instance_properties)
 
@@ -614,7 +614,7 @@ def instance_download(database, instance_id):
     headers.add('Content-Type', 'text/plain')
     headers.add('Content-Disposition', 'attachment', filename=instance.name)
 
-    return Response(response=instance.instance, headers=headers)
+    return Response(response=instance.get_instance(db), headers=headers)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/solver-configurations/<int:solver_configuration_id>')
