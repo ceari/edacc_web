@@ -4,9 +4,9 @@
     {{ super() }}
     <script type="text/javascript">
     	/* <![CDATA[ */
-    	function perc(denom, nom) { // nom nom nom
-			if (nom == 0) return 0;
-    		return denom / nom * 100.0;
+    	function perc(nom, denom) { // nom nom nom
+			if (denom == 0) return 0;
+    		return nom / denom * 100.0;
     	}
     	
     	$(document).ready(function() {
