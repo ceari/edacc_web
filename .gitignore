@@ -1,3 +1,6 @@
+.project
+.pydevproject
+.settings/
 env/
 client_libs/
 *.pyc
