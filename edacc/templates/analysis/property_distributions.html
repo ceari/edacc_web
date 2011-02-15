@@ -25,7 +25,7 @@
     <div style="margin-left: 5px; float: left;">
         <h2>Property Distributions</h2>
         <form method="get" action="{{url_for('analysis.property_distributions', database=database, experiment_id=experiment.idExperiment)}}">
-            <table>
+            <table id="form_table">
                 {{ render_field(form.sc) }}
                 {{ render_field(form.instance) }}
                 {{ render_field(form.result_property) }}

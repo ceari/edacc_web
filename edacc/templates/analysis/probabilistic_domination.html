@@ -15,7 +15,7 @@
     <div style="margin-left: 5px;">
         <h2>Probabilistic Domination</h2>
         <form method="get" action="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">
-            <table>
+            <table id="form_table">
                 {{ render_field(form.result_property) }}
                 {{ render_field(form.solver_config1) }}
                 {{ render_field(form.solver_config2) }}

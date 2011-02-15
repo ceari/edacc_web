@@ -147,6 +147,7 @@ form {
 form table {
     border-collapse: collapse;
     border-color: #ccc;
+    max-width: 500px;
 }
 
 form td, th {
