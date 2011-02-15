@@ -89,13 +89,12 @@ def parse_phase_txt(filepath, phase):
                         if ic.name != instance_class_hierarchy[i]:
                             correct = False
                             break
-                        elif i == 0: # no mismatch and at root -> correct instance
-                            break
                         else:
                             # instance path is longer than the class hierarchy of this instance in the DB -> mismatch
                             if ic.parent is None and i > 0: correct = False; break
                             # climb up
-                            ic = db.session.query(db.InstanceClass).get(pk=ic.parent)
+                            if i > 0:
+                                ic = db.session.query(db.InstanceClass).get(pk=ic.parent)
                             
                     if correct:
                         instances[instance_path] = instance
