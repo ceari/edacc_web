@@ -105,7 +105,7 @@ def parse_phase_txt(filepath, phase):
                     print "Instance " + instance_path + " hasn't been found in the database! aborting ..."
                     sys.exit(1)
                     
-                experiments[category].instances.append(instances[instance_name])
+                experiments[category].instances.append(instances[instance_path])
 
                 
             solver_ident = (solver_name, solver_version)
