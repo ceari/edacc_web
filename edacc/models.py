@@ -112,6 +112,10 @@ class EDACCDatabase(object):
                 # get prefix
                 instance_header = db.session.connection().execute(select([func.substring(c_instance, 1, 4)],
                                             c_id==self.idInstance).select_from(table)).first()[0]
+                data_length = db.session.connection().execute(select([func.length(c_instance)],
+                                            c_id==self.idInstance).select_from(table)).first()[0]
+                if data_length > 32 * 1024 * 1024:
+                    return "Instance too large for processing. Please use the EDACC GUI application."
                 if instance_header == 'LZMA': # compressed instance?
                     # get blob without LZMA prefix
                     instance_blob = db.session.connection().execute(select([func.substring(c_instance, 5)],
