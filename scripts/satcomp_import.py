@@ -76,15 +76,38 @@ def parse_phase_txt(filepath, phase):
                 solver_name, solver_version =   data[0], data[1], data[2], float(data[3]), float(data[4]), \
                                                 data[5], data[6]
             
-            instance_name = instance_path.split('/')[-1]
-            if instance_name not in instances:
+            if instance_path not in instances:
                 # new instance, add to cache
-                instances[instance_name] = db.session.query(db.Instance).filter_by(name=instance_name).first()
-                experiments[category].instances.append(instances[instance_name])
-                if instances[instance_name] is None:
+                instance_class_hierarchy = instance_path.split('/')[:-1]
+                instance_name = instance_path.split('/')[-1]
+                # find correct instance
+                for instance in db.session.query(db.Instance).filter_by(name=instance_name).all():
+                    ic = instance.source_class
+                    correct = True
+                    for i in xrange(len(instance_class_hierarchy)-1,-1,-1):
+                        # mismatch -> wrong instance
+                        if ic.name != instance_class_hierarchy[i]:
+                            correct = False
+                            break
+                        elif i == 0: # no mismatch and at root -> correct instance
+                            break
+                        else:
+                            # instance path is longer than the class hierarchy of this instance in the DB -> mismatch
+                            if ic.parent is None and i > 0: correct = False; break
+                            # climb up
+                            ic = db.session.query(db.InstanceClass).get(pk=ic.parent)
+                            
+                    if correct:
+                        instances[instance_path] = instance
+                        break
+                    
+                if instances[instance_path] is None:
                     # instance is not in the database yet, which is bad ...
-                    print "Instance " + instance_name + " hasn't been found in the database! aborting ..."
+                    print "Instance " + instance_path + " hasn't been found in the database! aborting ..."
                     sys.exit(1)
+                    
+                experiments[category].instances.append(instances[instance_name])
+
                 
             solver_ident = (solver_name, solver_version)
             if not solver_ident in solvers: # new solver
@@ -119,7 +142,7 @@ def parse_phase_txt(filepath, phase):
                 
             experiment = experiments[category]
             solver_config = solver_configs[(category, solver_name, solver_version)]
-            instance = instances[instance_path.split('/')[-1]]
+            instance = instances[instance_path]
             
             er = db.ExperimentResult()
             er.instance = instance
