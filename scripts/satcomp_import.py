@@ -94,7 +94,7 @@ def parse_phase_txt(filepath, phase):
                             if ic.parent is None and i > 0: correct = False; break
                             # climb up
                             if i > 0:
-                                ic = db.session.query(db.InstanceClass).get(pk=ic.parent)
+                                ic = db.session.query(db.InstanceClass).get(ic.parent)
                             
                     if correct:
                         instances[instance_path] = instance
