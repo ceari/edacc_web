@@ -10,7 +10,11 @@
 """
 
 import random
-from edacc.web import app
+import struct
+from cStringIO import StringIO
+
+import pylzma
+
 from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR, JOB_RESULT_CODE, JOB_RESULT_CODE_COLOR
 
 def newline_split_string(s, n):
@@ -92,17 +96,6 @@ def competition_phase(value):
     elif value == 6: return "Release Phase"
     elif value == 7: return "Post-Release Phase"
     else: return "unknown phase"
-
-
-app.jinja_env.filters['download_size'] = download_size
-app.jinja_env.filters['job_status'] = job_status
-app.jinja_env.filters['result_code'] = result_code
-app.jinja_env.filters['job_status_color'] = job_status_color
-app.jinja_env.filters['job_result_code_color'] = job_result_code_color
-app.jinja_env.filters['launch_command'] = launch_command
-app.jinja_env.filters['datetimeformat'] = datetimeformat
-app.jinja_env.filters['competition_phase'] = competition_phase
-app.jinja_env.filters['result_time'] = result_time
 
 def parse_parameters(parameters):
     """ Parse parameters from the solver submission form, returns a list
@@ -191,8 +184,6 @@ def render_formula(f):
         res.append('(' + u' \u2228 '.join(cl) + ')')
     return u' \u2227 '.join(res)
 
-app.jinja_env.filters['render_formula'] = render_formula
-
 def formatOutputFile(data):
     if data is not None:
         if len(data) > 4*1024:
@@ -203,3 +194,29 @@ def formatOutputFile(data):
     else:
         resultFile_text = "No output"
     return resultFile_text
+
+def lzma_decompress(data):
+    """
+        LZMA decompression using pylzma.
+        The LZMA header consists of 5 + 8 bytes.
+        The first 5 bytes are compression parameters, the 8 following bytes specify
+        the length of the data.
+    """
+    # unpack the data length from the LZMA header (bytes # 6-13 inclusively/unsigned long long int)
+    coded_length = struct.unpack('<Q', data[5:13])[0]
+    if coded_length == '\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF':
+        # if the length is -1 (in two's complement), there is an EOS marker
+        # marking the end of the data and pylzma doesn't need the coded_length
+        return pylzma.decompress(data[:5] + data[13:])
+    else:
+        # if the length is specified, pylzma needs the coded_length since there probably
+        # is no EOS marker
+        return pylzma.decompress(data[:5] + data[13:], maxlength=coded_length)
+
+def lzma_compress(data):
+    """ LZMA compression using pylzma """
+    c = pylzma.compressfile(StringIO(data), dictionary=8, fastBytes=128,
+                            algorithm=0, eos=0, matchfinder='hc3')
+    result = c.read(5)
+    result += struct.pack('<Q', len(data))
+    return result + c.read()

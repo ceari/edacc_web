@@ -15,7 +15,7 @@ import uuid, datetime
 import jinja2
 from werkzeug import ImmutableDict
 from flask import Flask, Request, g
-from edacc import config, models
+from edacc import config, models, utils
 
 Flask.jinja_options = ImmutableDict({
                             'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
@@ -65,6 +65,16 @@ app.register_module(frontend)
 app.register_module(analysis)
 app.register_module(plot)
 
+app.jinja_env.filters['download_size'] = utils.download_size
+app.jinja_env.filters['job_status'] = utils.job_status
+app.jinja_env.filters['result_code'] = utils.result_code
+app.jinja_env.filters['job_status_color'] = utils.job_status_color
+app.jinja_env.filters['job_result_code_color'] = utils.job_result_code_color
+app.jinja_env.filters['launch_command'] = utils.launch_command
+app.jinja_env.filters['datetimeformat'] = utils.datetimeformat
+app.jinja_env.filters['competition_phase'] = utils.competition_phase
+app.jinja_env.filters['result_time'] = utils.result_time
+app.jinja_env.filters['render_formula'] = utils.render_formula
 
 if config.PIWIK:
     @app.before_request
