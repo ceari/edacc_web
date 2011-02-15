@@ -116,10 +116,7 @@ class EDACCDatabase(object):
                     # get blob without LZMA prefix
                     instance_blob = db.session.connection().execute(select([func.substring(c_instance, 5)],
                                                 c_id==self.idInstance).select_from(table)).first()[0]
-                    uncompressed = utils.lzma_decompress(instance_blob)
-                    with open("/home/daniel/test.lzma", "wb") as fp:
-                        fp.write(utils.lzma_compress(uncompressed))
-                    return uncompressed
+                    return utils.lzma_decompress(instance_blob)
                 else:
                     return self.instance
 
