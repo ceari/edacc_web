@@ -8,15 +8,23 @@
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
+import sys, os
+
 from functools import wraps
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 from edacc.utils import newline_split_string
 
 grdevices = importr('grDevices') # plotting target devices
-np = importr('np') # non-parametric kernel smoothing methods
 stats = importr('stats') # statistical methods
-robjects.r("library('np')")
+
+with open(os.devnull) as devnull:
+    # redirect the annoying np package import output to nirvana
+    stdout, stderr = sys.stdout, sys.stderr
+    sys.stdout = sys.stderr = devnull
+    np = importr('np') # non-parametric kernel smoothing methods
+    robjects.r("library('np')")
+    sys.stdout, sys.stderr = stdout, stderr
 
 robjects.r.setEPS() # set some default options for postscript in EPS format
 
