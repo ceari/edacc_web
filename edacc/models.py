@@ -173,7 +173,7 @@ class EDACCDatabase(object):
                 return db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).filter(not_(db.Instance.idInstance.in_(list(r[0] for r in ids)))).all()
 
             def get_instances(self, db):
-                return db.session.query(db.Instance).options(joinedload_all('properties.property')) \
+                return db.session.query(db.Instance).options(joinedload_all('properties')) \
                         .filter(db.Instance.experiments.contains(self)).distinct().all()
 
             def get_num_solver_configs(self, db):
@@ -383,6 +383,12 @@ class EDACCDatabase(object):
                 'launcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.launcherOutputFN),
                 'watcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.watcherOutputFN),
                 'verifierOutputFN': deferred(metadata.tables['ExperimentResults'].c.verifierOutputFN),
+                'solverExitCode': deferred(metadata.tables['ExperimentResults'].c.solverExitCode),
+                'watcherExitCode': deferred(metadata.tables['ExperimentResults'].c.watcherExitCode),
+                'verifierExitCode': deferred(metadata.tables['ExperimentResults'].c.verifierExitCode),
+                'date_modified': deferred(metadata.tables['ExperimentResults'].c.date_modified),
+                'seed': deferred(metadata.tables['ExperimentResults'].c.seed),
+                'computeQueue': deferred(metadata.tables['ExperimentResults'].c.computeQueue),
                 'solver_configuration': relation(SolverConfiguration),
                 'properties': relationship(ExperimentResultProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),
@@ -431,6 +437,12 @@ class EDACCDatabase(object):
             dbConfig.competitionPhase = None
             self.session.add(dbConfig)
             self.session.commit()
+            
+        self.db_is_competition = self.session.query(self.DBConfiguration).get(0).competition
+        if not self.db_is_competition:
+            self.db_competition_phase = None
+        else:
+            self.db_competition_phase = self.session.query(self.DBConfiguration).get(0).competitionPhase
 
     def get_result_properties(self):
         """ Returns a list of the result properties in the database that are
@@ -464,21 +476,24 @@ class EDACCDatabase(object):
         """ returns whether this database is a competition database (user management etc.
         necessary) or not
         """
-        return self.session.query(self.DBConfiguration).get(0).competition
+        return self.db_is_competition
 
     def set_competition(self, b):
         self.session.query(self.DBConfiguration).get(0).competition = b
+        self.db_is_competition = b
+        if b == False:
+            self.db_competition_phase = None
 
     def competition_phase(self):
         """ returns the competition phase this database is in (or None,
         if is_competition() == False) as integer
         """
-        if not self.is_competition(): return None
-        return self.session.query(self.DBConfiguration).get(0).competitionPhase
+        return self.db_competition_phase
 
     def set_competition_phase(self, phase):
         if phase is not None and phase not in (1,2,3,4,5,6,7): return
         self.session.query(self.DBConfiguration).get(0).competitionPhase = phase
+        self.db_competition_phase = phase
 
     def __str__(self):
         return self.label
