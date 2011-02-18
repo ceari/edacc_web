@@ -1,9 +1,10 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 <head>
     {% block head %}
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+    <meta name="description" content="EDACC is an advanced platform for the design, administration and analysis of experiments with algorithms on arbitrary computing systems ranging from multi core PC's to cluster or large scale grids." />
+    <meta http-equiv="cache-control" content="no-cache">
     <title>EDACC - {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}" type="text/css" />
     <link rel="icon" href="{{url_for('static', filename='img/edacc.png')}}" type="image/png" />
@@ -26,7 +27,7 @@
     piwikTracker.trackPageView();
     piwikTracker.enableLinkTracking();
     } catch( err ) {}
-    </script><noscript><p><img src="http://{{g.PIWIK_URL}}piwik.php?idsite=1" style="border:0" alt="" /></p></noscript>
+    </script>
     <!-- End Piwik Tag -->
     {% endif %}
     {% endblock %}
@@ -73,7 +74,7 @@
     </div>
     <div id="footer">
         {% if db.is_competition() %}DEBUG: phase: {{ db.competition_phase()|competition_phase }} {% endif %}
-        <div style="float: right;">Bug Tracker and Code on <a href="http://github.com/ceari/edacc_web">Github</a> — EDACC project on <a href="http://sourceforge.net/projects/edacc/">Sourceforge</a></div>
+        <div style="float: right;"><a href="mailto:daniel.diepold@gmail.com">Email</a> the developer, submit <a href="https://github.com/ceari/edacc_web/issues">bugs</a> and view the <a href="http://github.com/ceari/edacc_web">code on github</a> — EDACC project on <a href="http://sourceforge.net/projects/edacc/">Sourceforge</a></div>
     </div>
 </body>
 </html>
