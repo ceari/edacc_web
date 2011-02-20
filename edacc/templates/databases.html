@@ -1,21 +1,30 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Databases</title>
+        <title>EDACC Web Frontend</title>
         <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}" type="text/css" />
+        <link rel="icon" href="{{url_for('static', filename='img/edacc.png')}}" type="image/png" />
 	    <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
 	    <meta name="description" content="EDACC is an advanced platform for the design, administration and analysis of experiments with algorithms on arbitrary computing systems ranging from multi core PC's to cluster or large scale grids." />
 	    <meta http-equiv="cache-control" content="no-cache" />
 	    <meta http-equiv="content-language" content="en" />
     </head>
     <body>
-        <h2>Databases</h2>
-
-        <h3>The Server is connected to the following databases:</h3>
+        <img style="margin-right:10px" alt="EDACC Logo" src="{{url_for('static', filename='img/edacc.png')}}"/><span id="title">EDACC Web Frontend</span>
+		<div style="margin-top: 8px">
+			EDACC is an advanced platform for the design, administration and analysis of experiments with algorithms on arbitrary<br/> computing systems ranging from multi core PC's to cluster or large scale grids.
+			<p>
+			The sourcecode is freely available at <a href="http://sourceforge.net/projects/edacc/">sourceforge</a>.
+			</p>
+		</div>
+        <h3>This instance is serving the following databases:</h3>
         <ul>
         {% for db in databases %}
             <li><a href="{{url_for('frontend.experiments_index', database=db.database)}}">{{db}}</a>{% if db.is_competition() %} (Competition){% endif %}</li>
         {% endfor %}
         </ul>
+
+
+
     </body>
 </html>
