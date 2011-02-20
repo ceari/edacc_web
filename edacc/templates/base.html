@@ -35,7 +35,7 @@
 </head>
 <body>
     <div id="header">
-        <span id="title">{{db}}</span>
+        <span id="title"><a href="{{url_for('frontend.index')}}">{{db}}</a></span>
     </div>
     <div id="navigation">
         {% if db.is_competition() %}
