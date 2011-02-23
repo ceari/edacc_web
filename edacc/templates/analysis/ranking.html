@@ -3,11 +3,16 @@
 {% block title %}Ranking{% endblock %}
 {% block head %}
     {{ super() }}
+    <link rel="stylesheet" href="{{url_for('static', filename='css/tablesorter_style.css')}}" type="text/css" />
     <script type="text/javascript" src="{{url_for('static', filename='js/jquery.tablesorter.js')}}"></script>
     <script src="{{url_for('static', filename='js/jquery.hotkeys.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-            $('#results').tablesorter();
+            $('#results').tablesorter({
+            	headers: {
+            		0: {sorter: 'digit'}
+            	}
+            });
             {% include '/analysis/multiple_instances_filter_js.html' %}
             $('#i').bind('keydown', 'ctrl+a', function() {
                 $('#i option').attr("selected", "selected");
@@ -34,7 +39,8 @@
                         Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
                     </td>
                 </tr>
-                {{ render_field(form.calculate_average_dev)}}
+                {{ render_field(form.calculate_average_dev, explanation="Average standard deviation of runtimes over all instances")}}
+                {{ render_field(form.penalized_average_runtime, explanation="10 * experiment's CPU time limit for every unsuccessful run")}}
                 <tr><td colspan="2"><input type="submit" value="Show" /></td></tr>
             </table>
         </form>
@@ -45,18 +51,21 @@
         <i>numRuns</i> successful runs on that instance and for each run the run time of the best solver.
     </div>
     <h3>Ranking by the number of successful runs</h3>
-    <table id="results" class="results">
+    <table id="results" class="tablesorter">
         <thead>
             <tr>
                 <th>#</th>
                 <th>Solver</th>
-                <th>Number of successful runs</th>
+                <th># of successful runs</th>
                 <th>% of all runs</th>
                 <th>% of VBS runs</th>
                 <th>cumulated CPU time</th>
                 <th>avg. CPU time per successful run</th>
                 {% if form.calculate_average_dev.data %}
                 <th>avg. deviation of successful runs</th>
+                {% endif %}
+                {% if form.penalized_average_runtime.data %}
+                <th>penalized avg. runtime</th>
                 {% endif %}
             </tr>
         </thead>
@@ -72,6 +81,9 @@
                 <td>{{sc.5|round(2)}}</td>
                 {% if form.calculate_average_dev.data %}
                 <td>{{sc.6|round(2)}}</td>
+                {% endif %}
+                {% if form.penalized_average_runtime.data %}
+                <td>{{sc.7|round(2)}}</td>
                 {% endif %}
             </tr>
         {% endfor %}

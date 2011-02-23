@@ -9,7 +9,7 @@
     <script type="text/javascript">
         $(document).ready(function(){
             {% include '/analysis/multiple_instances_filter_js.html' %}
-
+			
             {% if not form.sc.data %}
             $('#sc option').attr("selected", "selected");
             {% endif %}
@@ -20,8 +20,8 @@
 
             show_plot = function() {
                 data = $('#plot_form').serialize();
-                $('#div_plot').html('<img alt="Generating image..." src="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?'+data+'"/>');
-                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&pdf">PDF</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&eps">EPS</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&csv">Raw Data (CSV)</a>');
+                $('#div_plot').html('<img alt="Generating image..." src="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'"/>');
+                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&pdf">PDF</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&eps">EPS</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&csv">Raw Data (CSV)</a>');
                 return false;
             }
         });
@@ -39,6 +39,7 @@
         <form id='plot_form' method="get" action="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
                 {{ render_field(form.result_property) }}
+                {{ render_field(form.run) }}
                 {{ render_field(form.sc) }}
                 {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
                 <tr name="tr_instances_filter">

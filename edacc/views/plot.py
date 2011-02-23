@@ -15,6 +15,10 @@ import os
 import numpy
 import StringIO
 import csv
+import random
+random.seed()
+
+from sqlalchemy import func, or_, not_
 
 from flask import Module, render_template as render
 from flask import Response, abort, request, g
@@ -491,6 +495,7 @@ def cactus_plot(database, experiment_id):
     use_colors_for = request.args.get('use_colors_for', 'solvers')
     colored_instance_groups = (use_colors_for == 'instance_groups')
     log_y = request.args.has_key('log_y')
+    run = request.args.get('run', 'all')
 
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
@@ -507,18 +512,57 @@ def cactus_plot(database, experiment_id):
     solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('sc')]
 
     solvers = []
+    
+    random_run = random.randint(0, exp.get_num_runs(db) - 1)
 
     for instance_group in xrange(instance_groups_count):
         for sc in solver_configs:
             s = {'xs': [], 'ys': [], 'name': sc.get_name(), 'instance_group': instance_group}
-            sc_res = results.filter_by(solver_configuration=sc, status=1).filter(db.ExperimentResult.resultCode.like('1%')).all()
-            sc_res = sorted(sc_res, key=lambda r: r.get_property_value(result_property, db))
+            sc_res = results.filter_by(solver_configuration=sc, status=1).filter(db.ExperimentResult.resultCode.like('1%')) \
+                             .filter(db.ExperimentResult.Instances_idInstance.in_(instances[instance_group]))
+            if run == 'all':
+                sc_results = filter(lambda j: j is not None, [r.get_property_value(result_property, db) for r in sc_res.all()]) 
+            elif run in ('average', 'median'):
+                sc_results = []
+                for id in instances[instance_group]:
+                    res = sc_res.filter(db.ExperimentResult.Instances_idInstance==id).all()
+                    res = [r.get_property_value(result_property, db) for r in res]
+                    res = filter(lambda r: r is not None, res)
+                    if len(res) > 0:
+                        if run == 'average':
+                            sc_results.append(numpy.average(res))
+                        elif run == 'median':
+                            sc_results.append(numpy.median(res or [0]))
+            elif run == 'random':
+                sc_results = [r.get_property_value(result_property, db) for r in sc_res.filter_by(run=random_run).all()]
+                sc_results = filter(lambda r: r is not None, sc_results)
+            elif run == 'penalized_average':
+                sc_results = []
+                for id in instances[instance_group]:
+                    res = sc_res.filter(db.ExperimentResult.Instances_idInstance==id).all()
+                    res = [r.get_property_value(result_property, db) for r in res]
+                    num_penalized = results.filter_by(solver_configuration=sc) \
+                                        .filter(db.ExperimentResult.Instances_idInstance==id) \
+                                        .filter(or_(db.ExperimentResult.status!=1,
+                                                    not_(db.ExperimentResult.resultCode.like('1%')))).count()
+                    penalized_time = num_penalized * 10.0 * exp.CPUTimeLimit
+                    penalized_avg = (sum(res) + penalized_time) / (num_penalized + len(res)) 
+                    sc_results.append(penalized_avg)
+            else:
+                run_number = int(run)
+                res = sc_res.filter_by(run=run_number).all()
+                res = [r.get_property_value(result_property, db) for r in res]
+                sc_results = filter(lambda r: r is not None, res)
+                
+            sc_results = sorted(sc_results)
+            if not log_y:
+                s['ys'].append(0)
+                s['xs'].append(0)
             i = 1
-            for r in sc_res:
-                if r.Instances_idInstance in instances[instance_group]:
-                    s['ys'].append(r.get_property_value(result_property, db))
-                    s['xs'].append(i)
-                    i += 1
+            for r in sc_results:
+                s['ys'].append(r)
+                s['xs'].append(i)
+                i += 1
             solvers.append(s)
 
     min_y = min([min(s['xs'] or [0.1]) for s in solvers] or [0.1])

@@ -54,7 +54,7 @@ def solver_ranking(database, experiment_id):
 
         vbs_num_solved = 0
         vbs_cumulated_cpu = 0
-        from sqlalchemy import func
+        from sqlalchemy import func, or_, not_
         best_instance_runtimes = db.session.query(func.min(db.ExperimentResult.resultTime)).filter_by(experiment=experiment) \
             .filter(db.ExperimentResult.resultCode.like('1%')) \
             .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
@@ -72,32 +72,45 @@ def solver_ranking(database, experiment_id):
                  1.0,                                   # % of vbs runs
                  vbs_cumulated_cpu,                     # cumulated CPU time
                  (0.0 if vbs_num_solved == 0 else vbs_cumulated_cpu / vbs_num_solved),    # average CPU time per successful run
-                 0.0
+                 0.0,
+                 10.0 * experiment.CPUTimeLimit * (experiment.get_num_instances(db) - len(best_instance_runtimes)) / experiment.get_num_instances(db)
                  )]
 
         for solver in ranked_solvers:
             successful_runs = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
                                         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
                                         .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
-
+                                        
+            successful_runs_sum = sum(j[0] for j in successful_runs)
+            
+            penalized_average_runtime = 0.0
+            if form.penalized_average_runtime.data:
+                failed_runs = db.session.query(db.ExperimentResult).filter_by(experiment=experiment, solver_configuration=solver) \
+                                            .filter(or_(db.ExperimentResult.status != 1, not_(db.ExperimentResult.resultCode.like('1%')))) \
+                                            .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+                                            .count()
+                penalized_average_runtime = (failed_runs * experiment.CPUTimeLimit * 10.0 + successful_runs_sum) \
+                                                / (len(successful_runs) + failed_runs)
+            
             avg_stddev_runtime = 0.0
-            if form.calculate_average_dev.data == True:
+            if form.calculate_average_dev.data:
                 for instance in form.i.data:
                     instance_runtimes = db.session.query(db.ExperimentResult.resultTime).filter(db.ExperimentResult.resultCode.like('1%')) \
                                                 .filter_by(instance=instance) \
                                                 .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
                     avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
                 avg_stddev_runtime /= float(len(form.i.data))
-
+                
             num_successful_runs = len(successful_runs)
             data.append((
                 solver,
                 num_successful_runs,
                 0 if num_runs_per_solver == 0 else num_successful_runs / float(num_runs_per_solver),
                 0 if vbs_num_solved == 0 else num_successful_runs / float(vbs_num_solved),
-                sum(j[0] for j in successful_runs),
+                successful_runs_sum,
                 numpy.average([j[0] for j in successful_runs] or 0),
-                avg_stddev_runtime
+                avg_stddev_runtime,
+                penalized_average_runtime
             ))
 
         return render('/analysis/ranking.html', database=database, db=db,
@@ -128,7 +141,13 @@ def cactus_plot(database, experiment_id):
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
     form.sc.query = experiment.solver_configurations or EmptyQuery()
-
+    numRuns = experiment.get_num_runs(db)
+    form.run.choices = [('all', 'All runs'),
+                        ('average', 'All runs - average'),
+                        ('penalized_average', 'All runs - penalized average runtime'),
+                        ('median', 'All runs - median'),
+                        ('random', 'Random run')] + zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
+                        
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/solved_instances.html', database=database,
