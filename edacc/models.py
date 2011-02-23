@@ -25,11 +25,12 @@ from edacc.constants import *
 
 class EDACCDatabase(object):
     """ Encapsulates a single EDACC database connection. """
-    def __init__(self, username, password, database, label):
+    def __init__(self, username, password, database, label, hidden=False):
         self.database = database
         self.username = username
         self.password = password
         self.label = label
+        self.hidden = hidden
 
         url = URL(drivername=config.DATABASE_DRIVER, username=username,
                   password=password, host=config.DATABASE_HOST,
@@ -506,8 +507,8 @@ def get_databases():
     return databases
 
 
-def add_database(username, password, database, label):
-    databases[database] = EDACCDatabase(username, password, database, label)
+def add_database(username, password, database, label, hidden=False):
+    databases[database] = EDACCDatabase(username, password, database, label, hidden)
 
 
 def remove_database(database):

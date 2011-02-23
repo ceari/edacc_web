@@ -34,7 +34,9 @@
         <h3>This instance is serving the following databases:</h3>
         <ul>
         {% for db in databases %}
+        {%if not db.hidden %}
             <li><a href="{{url_for('frontend.experiments_index', database=db.database)}}">{{db}}</a>{% if db.is_competition() %} (Competition){% endif %}</li>
+        {%endif%}
         {% endfor %}
         </ul>
 

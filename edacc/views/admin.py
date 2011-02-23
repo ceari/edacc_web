@@ -64,12 +64,13 @@ def databases_add():
         database = request.form['database']
         username = request.form['username']
         password = request.form['password']
+        hidden = request.form.has_key('hidden')
 
         if models.get_database(database):
             error = "A database with this name already exists"
         else:
             try:
-                models.add_database(username, password, database, label)
+                models.add_database(username, password, database, label, hidden)
                 return redirect(url_for('frontend.index'))
             except Exception as e:
                 error = "Can't add database: " + str(e)
@@ -84,7 +85,7 @@ def databases_remove(database):
        frontend is serving
     """
     models.remove_database(database)
-    return redirect('admin.databases')
+    return redirect(url_for('admin.databases'))
 
 
 @admin.route('/admin/login/', methods=['GET', 'POST'])
