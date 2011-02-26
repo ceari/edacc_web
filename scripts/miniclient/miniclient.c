@@ -6,7 +6,7 @@
 
 const char * LOCK_JOB = "UDPATE ExperimentResults SET status=0 WHERE idJob=%d;";
 
-/*int fetchJob_RANDOM_LIMIT(MYSQL* conn, int experiment_id) {
+/*int fetchJob_RANDOM_LIMIT(MYSQL* conn, int experiment_id) { // buggy (doesn't process all jobs)
     const char* SELECT_Q = "SELECT idJob FROM ExperimentResults WHERE status < 0 AND Experiment_idExperiment = %d LIMIT %d,1 FOR UPDATE;";
     char* query = calloc(1, 512);
     sprintf(query, SELECT_Q, experiment_id, rand() % 2000);
@@ -165,6 +165,11 @@ int num_jobs(MYSQL* conn, int experiment_id, int status) {
 }
 
 int main(int argc, char* argv[]) {
+    if (argc < 8) {
+        printf("Too few arguments to miniclient!\n");
+        printf("Usage: miniclient <user> <password> <db name> <host> <num clients> <job method> <experiment id>\n");
+        exit(1);
+    }
     char* db_user = argv[1];
     char* db_passw = argv[2];
     char* db_name = argv[3];
@@ -172,11 +177,6 @@ int main(int argc, char* argv[]) {
     int num_clients = atoi(argv[5]);
     int job_method = atoi(argv[6]);
     int experiment_id = atoi(argv[7]);
-    if (argc < 8) {
-        printf("Too few arguments to miniclient!\n");
-        printf("Usage: miniclient <user> <password> <db name> <host> <num clients> <job method> <experiment id>\n");
-        exit(1);
-    }
 
     int (*fetchJob)(MYSQL*, int);
     if (job_method == 0) fetchJob = fetchJob_FLOOR_LOCK;

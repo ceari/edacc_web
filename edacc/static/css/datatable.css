@@ -35,8 +35,6 @@
 .dataTables_paginate {
 	width: 44px;
 	* width: 50px;
-	float: right;
-	text-align: right;
 }
 
 /* Pagination nested */
@@ -44,7 +42,6 @@
 	height: 19px;
 	width: 19px;
 	margin-left: 3px;
-	float: left;
 }
 
 .paginate_disabled_previous {
@@ -101,6 +98,7 @@ table.display td {
     border-width: 1px;
     border-style: solid;
     border-color: black;
+    font-size: 9pt;
 }
 
 table.display td.center {
@@ -246,6 +244,8 @@ td.details {
 	width: 400px;
 	height: 22px;
 	line-height: 22px;
+	margin-top: 20px;
+	margin-bottom: 20px;
 }
 
 .paging_full_numbers span.paginate_button,
