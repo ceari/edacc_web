@@ -11,8 +11,6 @@
     :license: MIT, see LICENSE for details.
 """
 
-import pylzma, struct
-
 from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
@@ -60,7 +58,7 @@ class EDACCDatabase(object):
                     return 0
                 else:
                     return same_solvers.index(self) + 1
-            
+
             def get_name(self):
                 """ Returns the name of the solver configuration. """
                 if hasattr(self, 'name'):
@@ -127,7 +125,7 @@ class EDACCDatabase(object):
 
             def set_instance(self, uncompressed_instance):
                 """ Compresses the instance and sets the instance blob attribute """
-                self.instance = pylzma.compress(uncompressed_instance)
+                self.instance = utils.lzma_compress(uncompressed_instance)
 
 
         class Experiment(object):
@@ -438,7 +436,7 @@ class EDACCDatabase(object):
             dbConfig.competitionPhase = None
             self.session.add(dbConfig)
             self.session.commit()
-            
+
         self.db_is_competition = self.session.query(self.DBConfiguration).get(0).competition
         if not self.db_is_competition:
             self.db_competition_phase = None
