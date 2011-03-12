@@ -1,0 +1,24 @@
+max_connections = 1000
+max_allowed_packet = 1024M
+table_open_cache = 64
+table_cache = 1024
+wait_timeout=259200
+
+innodb_file_per_table = 1
+innodb_data_home_dir = /home/mysqldata
+innodb_log_group_home_dir = /home/mysqldata
+innodb_buffer_pool_size = 18000M
+innodb_additional_mem_pool_size = 16M
+innodb_log_file_size = 32M
+innodb_log_buffer_size = 4M
+innodb_flush_log_at_trx_commit = 2
+innodb_lock_wait_timeout = 120
+innodb_flush_method=O_DIRECT
+innodb_thread_concurrency = 0
+innodb_file_format=Barracuda
+
+
+query_cache_type        = 1
+query_cache_limit       = 10M
+query_cache_size        = 512M
+

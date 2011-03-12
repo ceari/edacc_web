@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
+/* stored procedure:
+ *  CREATE FUNCTION getJob(idExperiment INT) RETURNS INT BEGIN DECLARE job_id INT; DECLARE tmp INT; set job_id = -1; SELECT FLOOR(RAND()*COUNT(idJob)) into tmp FROM ExperimentResults WHERE Experiment_idExperiment=idExperiment AND status<0; SELECT idJob into job_id FROM ExperimentResults WHERE Experiment_idExperiment=idExperiment and status <0 LIMIT tmp,1 FOR UPDATE; UPDATE ExperimentResults SET status=0 WHERE idJob=job_id; return job_id; END;
+  */
+
 const char * LOCK_JOB = "UDPATE ExperimentResults SET status=0 WHERE idJob=%d;";
 
 /*int fetchJob_RANDOM_LIMIT(MYSQL* conn, int experiment_id) { // buggy (doesn't process all jobs)
@@ -95,6 +99,22 @@ int fetchJob_FLOOR_LOCK(MYSQL* conn, int experiment_id) {
     return idJob;
 }
 
+int fetchJob_STORED_PROC(MYSQL* conn, int experiment_id) {
+    const char* SELECT_QUERY = "SELECT getJob(%d);";
+    char * query = calloc(1, 256);
+    sprintf(query, SELECT_QUERY, experiment_id);
+    mysql_query(conn, query);
+    free(query);
+    MYSQL_RES* result = mysql_store_result(conn);
+    if (mysql_num_rows(result) < 1) {
+        mysql_free_result(result);
+        return -1;
+    }
+    MYSQL_ROW row = mysql_fetch_row(result);
+    mysql_free_result(result);
+    return atoi(row[0]);
+}
+
 int fetchJob_ORDER_BY_RAND(MYSQL* conn, int experiment_id) {
     const char * SINGLE_LOCK_QUERY = "SELECT idJob FROM ExperimentResults WHERE Experiment_idExperiment=%d \
                                       AND status<0 ORDER BY RAND() LIMIT 1 FOR UPDATE;";
@@ -152,6 +172,7 @@ void processJob(MYSQL* conn, int idJob) {
 }
 
 int num_jobs(MYSQL* conn, int experiment_id, int status) {
+    usleep((rand() % 1000) * 1000); // job processing time between 0 and 1000 ms
     char* query = calloc(1, 256);
     sprintf(query, "SELECT COUNT(idJob) FROM ExperimentResults WHERE Experiment_idExperiment=%d \
             AND status=%d;", experiment_id, status);
@@ -178,10 +199,11 @@ int main(int argc, char* argv[]) {
     int job_method = atoi(argv[6]);
     int experiment_id = atoi(argv[7]);
 
-    int (*fetchJob)(MYSQL*, int);
+    int (*fetchJob)(MYSQL*, int) = NULL;
     if (job_method == 0) fetchJob = fetchJob_FLOOR_LOCK;
     else if (job_method == 1) fetchJob = fetchJob_ORDER_BY_RAND;
     else if (job_method == 2) fetchJob = fetchJob_FIRST_FREE;
+    else if (job_method == 3) fetchJob = fetchJob_STORED_PROC;
 
     MYSQL* conn = mysql_init(NULL);
     if (mysql_real_connect(conn, db_host, db_user, db_passw, db_name, 3306, NULL, 0) == NULL) {
@@ -189,14 +211,16 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     mysql_close(conn);
-
-    int pid;
+    
+    srand(time(0));
+    int pid = -1;
     for (int i = 0; i < num_clients; i++) {
         pid = fork();
         if (pid == 0) break; // child
     }
 
     if (pid == 0) { // child, process jobs
+        srand(time(0));
         conn = mysql_init(NULL);
         if (mysql_real_connect(conn, db_host, db_user, db_passw, db_name, 3306, NULL, 0) == NULL) {
             printf("Error connecting to DB: %s\n", mysql_error(conn));
