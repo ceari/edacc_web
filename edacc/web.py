@@ -19,7 +19,8 @@ from edacc import config, models, utils
 
 Flask.jinja_options = ImmutableDict({
                             'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
-                            'bytecode_cache': jinja2.FileSystemBytecodeCache(config.TEMP_DIR)
+                            'bytecode_cache': jinja2.FileSystemBytecodeCache(config.TEMP_DIR),
+                            'trim_blocks':True
 })
 app = Flask(__name__)
 app.Debug = config.DEBUG

@@ -11,7 +11,6 @@
 """
 
 from sqlalchemy.sql import select, and_, functions
-from edacc import constants
 
 def avg_point_biserial_correlation_ranking(db, experiment, instance_ids):
     """ Ranking through comparison of the RTDs of the solvers on the instances.
@@ -27,14 +26,14 @@ def avg_point_biserial_correlation_ranking(db, experiment, instance_ids):
     c_result_code = table.c['resultCode']
     c_status = table.c['status']
     c_instance_id = table.c['Instances_idInstance']
-    
+
     s = select([c_solver_config_id, c_instance_id, c_result_time], \
         and_(c_experiment_id==experiment.idExperiment, c_instance_id.in_(instance_ids),
              c_result_code.in_([1,-21,-22]),
               c_status.in_([1,21,22]),
              )) \
         .select_from(table)
-        
+
 
     query_results = db.session.connection().execute(s)
     solver_config_results = dict([(s.idSolverConfig, dict([(i, list()) for i in instance_ids])) for s in experiment.solver_configurations])
