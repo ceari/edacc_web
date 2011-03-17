@@ -167,20 +167,21 @@ def download_instances(database, experiment_id):
     instances = experiment.get_instances(db)
     
     tmp_file = tempfile.TemporaryFile("w+b")
-    with tarfile.open(mode='w', fileobj=tmp_file) as tar_file:
-        for instance in instances:
-            instance_blob = instance.get_instance(db)
-            instance_tar_info = tarfile.TarInfo(name=instance.name)
-            instance_tar_info.size = len(instance_blob)
-            instance_tar_info.type = tarfile.REGTYPE
-            instance_tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
-            tar_file.addfile(instance_tar_info, fileobj=StringIO.StringIO(instance_blob))
+    tar_file = tarfile.open(mode='w', fileobj=tmp_file)
+    for instance in instances:
+        instance_blob = instance.get_instance(db)
+        instance_tar_info = tarfile.TarInfo(name=instance.name)
+        instance_tar_info.size = len(instance_blob)
+        instance_tar_info.type = tarfile.REGTYPE
+        instance_tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
+        tar_file.addfile(instance_tar_info, fileobj=StringIO.StringIO(instance_blob))
+    tar_file.close()
     tmp_file.seek(0)
 
     headers = Headers()
     headers.add('Content-Type', 'application/x-compressed')
     headers.add('Content-Disposition', 'attachment',
-                filename=(experiment.name + "_instances.tar"))
+                filename=(secure_filename(experiment.name + "_instances.tar")))
     return Response(response=tmp_file.read(), headers=headers)
 
 
