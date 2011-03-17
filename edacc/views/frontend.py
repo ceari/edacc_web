@@ -23,6 +23,7 @@ from flask import Module
 from flask import render_template as render
 from flask import Response, abort, g, request, redirect, url_for
 from werkzeug import Headers, secure_filename
+from werkzeug.wsgi import wrap_file
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload, joinedload_all
@@ -176,13 +177,15 @@ def download_instances(database, experiment_id):
         instance_tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
         tar_file.addfile(instance_tar_info, fileobj=StringIO.StringIO(instance_blob))
     tar_file.close()
+    file_size = tmp_file.tell()
     tmp_file.seek(0)
 
     headers = Headers()
-    headers.add('Content-Type', 'application/x-compressed')
+    headers.add('Content-Type', 'application/x-tar')
+    headers.add('Content-Length', file_size)
     headers.add('Content-Disposition', 'attachment',
                 filename=(secure_filename(experiment.name + "_instances.tar")))
-    return Response(response=tmp_file.read(), headers=headers)
+    return Response(tmp_file, headers=headers, direct_passthrough=True)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results/')
