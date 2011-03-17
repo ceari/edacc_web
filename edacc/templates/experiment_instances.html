@@ -13,7 +13,8 @@
     <h2>Instances used in the experiment</h2>
     <div>
         The table below lists the instances that are used in the experiment. Click on the name of an instance in the first column
-        to get to a page with detailed information about the instance and the option to download the instance file.
+        to get to a page with detailed information about the instance and the option to download the instance file.<br/>
+        <a href="{{url_for('frontend.download_instances', database=database, experiment_id=experiment.idExperiment)}}">Download all instances as tarball</a>
     </div>
     {% if instances|length > 0 %}
         <table id="table_instances" class="tablesorter">

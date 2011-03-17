@@ -15,6 +15,9 @@ import datetime
 import json
 import numpy
 import StringIO
+import tempfile
+import tarfile
+import time
 
 from flask import Module
 from flask import render_template as render
@@ -151,6 +154,34 @@ def experiment_instances(database, experiment_id):
     return render('experiment_instances.html', instances=instances,
                   experiment=experiment, database=database, db=db,
                   instance_properties=db.get_instance_properties())
+
+
+@frontend.route('/<database>/experiment/<int:experiment_id>/download-instances')
+@require_phase(phases=(6,7))
+@require_login
+def download_instances(database, experiment_id):
+    """ Lets users download all instances of the experiment as tarball. TODO: improve memory usage """
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    instances = experiment.get_instances(db)
+    
+    tmp_file = tempfile.TemporaryFile("w+b")
+    with tarfile.open(mode='w', fileobj=tmp_file) as tar_file:
+        for instance in instances:
+            instance_blob = instance.get_instance(db)
+            instance_tar_info = tarfile.TarInfo(name=instance.name)
+            instance_tar_info.size = len(instance_blob)
+            instance_tar_info.type = tarfile.REGTYPE
+            instance_tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
+            tar_file.addfile(instance_tar_info, fileobj=StringIO.StringIO(instance_blob))
+    tmp_file.seek(0)
+
+    headers = Headers()
+    headers.add('Content-Type', 'application/x-compressed')
+    headers.add('Content-Disposition', 'attachment',
+                filename=(experiment.name + "_instances.tar"))
+    return Response(response=tmp_file.read(), headers=headers)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results/')
