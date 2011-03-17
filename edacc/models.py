@@ -183,6 +183,16 @@ class EDACCDatabase(object):
                 return db.session.query(db.Instance) \
                         .filter(db.Instance.experiments.contains(self)).distinct().count()
 
+            def get_total_instance_blob_size(self, db):
+                table = db.metadata.tables['Instances']
+                c_instance = table.c['instance']
+                c_id = table.c['idInstance']
+                instance_ids = [i.idInstance for i in self.get_instances(db)]
+                instance_sizes = db.session.connection().execute(select([func.length(c_instance)],
+                              c_id.in_(instance_ids)).select_from(table)).fetchall()
+                total_size = sum(i[0] for i in instance_sizes or [(0)])
+                return total_size
+
         class ExperimentResult(object):
             """ Maps the ExperimentResult table. Provides a function
                 to obtain a result property of a job.

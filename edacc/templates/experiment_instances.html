@@ -2,7 +2,76 @@
 {% block title %}Instances{% endblock %}
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{url_for('static', filename='css/tablesorter_style.css')}}" type="text/css" />
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#table_instances').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": true,
+                "bInfo": false,
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                },
+                "aoColumns": [null, null, {% for _ in range(instance_properties|length) %} null,{% endfor %} {"bSortable": false}]
+            });
+        });
+    </script>
+    <style type="text/css">
+        #table_instances {
+            width: 100%;
+	        border: 1px solid #ddd;
+            border-collapse: collapse;
+        }
+
+        #table_instances td {
+            padding: 2px;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        #table_instances thead th {
+            padding: 3px 18px 3px 10px;
+            background-color: #e6EEFF;
+            cursor: pointer;
+            * cursor: hand;
+        }
+
+        #table_instances tr.odd {
+            background-color: #f5f5f5;
+        }
+
+        #table_instances tr.even {
+            background-color: #fff;
+        }
+
+        #table_instances td, th {
+            border-width: 1px;
+            border-style: solid;
+            border-color: black;
+        }
+
+        .sorting_asc {
+            background: url('/static/img/datatable/sort_asc.png') no-repeat center right;
+        }
+
+        .sorting_desc {
+            background: url('/static/img/datatable/sort_desc.png') no-repeat center right;
+        }
+
+        .sorting {
+            background: url('/static/img/datatable/sort_both.png') no-repeat center right;
+        }
+
+        .sorting_asc_disabled {
+            background: url('/static/img/datatable/sort_asc_disabled.png') no-repeat center right;
+        }
+
+        .sorting_desc_disabled {
+            background: url('/static/img/datatable/sort_desc_disabled.png') no-repeat center right;
+        }
+
+    </style>
 {% endblock %}
 {% block content %}
     <div class="navigation">
@@ -14,10 +83,10 @@
     <div>
         The table below lists the instances that are used in the experiment. Click on the name of an instance in the first column
         to get to a page with detailed information about the instance and the option to download the instance file.<br/>
-        <a href="{{url_for('frontend.download_instances', database=database, experiment_id=experiment.idExperiment)}}">Download all instances as tarball</a>
+        <a href="{{url_for('frontend.download_instances', database=database, experiment_id=experiment.idExperiment)}}">Download all instances as tarball</a> ({{experiment.get_total_instance_blob_size(db)|download_size}})
     </div>
     {% if instances|length > 0 %}
-        <table id="table_instances" class="tablesorter">
+        <table id="table_instances">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -25,7 +94,7 @@
                     {% for prop in instance_properties %}
                     <th>{{prop.name}}</th>
                     {% endfor %}
-                    <th></th>
+                    <th>Results</th>
                 </tr>
             </thead>
             <tbody>

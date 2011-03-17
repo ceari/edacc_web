@@ -1,6 +1,79 @@
 {% from "_formhelpers.html" import render_field %}
 {% extends "base.html" %}
 {% block title %}Results by Solver{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#table_results').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": true,
+                "bInfo": false,
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                },
+                "aoColumns": [null, {% for i in range(experiment.get_num_runs(db)) %}{"bSortable":false},{% endfor %} null]
+            });
+        });
+    </script>
+    <style type="text/css">
+        #table_results {
+	        border: 1px solid #ddd;
+            border-collapse: collapse;
+        }
+
+        #table_results tbody td {
+            padding: 2px;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        #table_results thead th {
+            padding: 3px 18px 3px 10px;
+            background-color: #e6EEFF;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        #table_results tr.odd {
+            background-color: #f5f5f5;
+        }
+
+        #table_results tr.even {
+            background-color: #fff;
+        }
+
+        #table_results td, th {
+            border-width: 1px;
+            border-style: solid;
+            border-color: black;
+            vertical-align: middle;
+        }
+
+        .sorting_asc {
+            background: url('/static/img/datatable/sort_asc.png') no-repeat center right;
+        }
+
+        .sorting_desc {
+            background: url('/static/img/datatable/sort_desc.png') no-repeat center right;
+        }
+
+        .sorting {
+            background: url('/static/img/datatable/sort_both.png') no-repeat center right;
+        }
+
+        .sorting_asc_disabled {
+            background: url('/static/img/datatable/sort_asc_disabled.png') no-repeat center right;
+        }
+
+        .sorting_desc_disabled {
+            background: url('/static/img/datatable/sort_desc_disabled.png') no-repeat center right;
+        }
+
+    </style>
+{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
@@ -18,7 +91,7 @@
             <thead>
                 <tr>
                     <th>Instance</th>
-                    <th colspan="{{experiment.get_num_runs(db)}}">Runs</th>
+                    {% for i in range(experiment.get_num_runs(db)) %}<th>{{i}}</th>{% endfor %}
                     <th>penalized avg. runtime</th>
                 </tr>
             </thead>
@@ -26,13 +99,13 @@
                 {% for result in results %}
                     {% set rowloop = loop %}
                     <tr>
-                        <td class="{{'even' if rowloop.index0 % 2 == 0 else 'odd'}}" nowrap="nowrap">
+                        <td nowrap="nowrap">
                             <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{result.0.idInstance}}">{{ result.0.name }}</a>
                         </td>
                         {% for run in result.1 %}
-                            <td style="text-align: center; vertical-align: middle; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time}}</a></td>
+                            <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time}}</a></td>
                         {% endfor %}
-                        <td class="{{'even' if rowloop.index0 % 2 == 0 else 'odd'}}" nowrap="nowrap" style="text-align: center; vertical-align: middle;">{{par10_by_instance[result.0.idInstance]|round(2)}}</td>
+                        <td nowrap="nowrap" style="text-align: center;">{{par10_by_instance[result.0.idInstance]|round(2)}}</td>
                     </tr>
                 {% endfor %}
             </tbody>

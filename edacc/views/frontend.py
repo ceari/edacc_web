@@ -177,6 +177,7 @@ def download_instances(database, experiment_id):
         instance_tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
         tar_file.addfile(instance_tar_info, fileobj=StringIO.StringIO(instance_blob))
     tar_file.close()
+    
     file_size = tmp_file.tell()
     tmp_file.seek(0)
 

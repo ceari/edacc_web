@@ -39,8 +39,8 @@ if config.LOGGING:
     app.logger.addHandler(file_handler)
 
 # initialize configured database connections
-for username, password, database, label in config.DEFAULT_DATABASES:
-    models.add_database(username, password, database, label)
+for username, password, database, label, hidden in config.DEFAULT_DATABASES:
+    models.add_database(username, password, database, label, hidden)
 
 
 class LimitedRequest(Request):
