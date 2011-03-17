@@ -19,6 +19,7 @@
                 <tr>
                     <th>Instance</th>
                     <th colspan="{{experiment.get_num_runs(db)}}">Runs</th>
+                    <th>penalized avg. runtime</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,6 +32,7 @@
                         {% for run in result.1 %}
                             <td style="text-align: center; vertical-align: middle; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time}}</a></td>
                         {% endfor %}
+                        <td class="{{'even' if rowloop.index0 % 2 == 0 else 'odd'}}" nowrap="nowrap" style="text-align: center; vertical-align: middle;">{{par10_by_instance[result.0.idInstance]|round(2)}}</td>
                     </tr>
                 {% endfor %}
             </tbody>

@@ -240,25 +240,38 @@ def experiment_results_by_solver(database, experiment_id):
                                     database=database, experiment_id=experiment.idExperiment,
                                     solver_configuration_id=solver_config.idSolverConfig))
 
-        runs_by_instance = {}
         ers = db.session.query(db.ExperimentResult).options(joinedload('instance')) \
                                 .filter_by(experiment=experiment,
                                     solver_configuration=solver_config) \
                                 .order_by('Instances_idInstance', 'run').all()
+
+        par10_by_instance = {} # penalized average runtime (timeput * 10 for unsuccessful runs) by instance
+        runs_by_instance = {}
         for r in ers:
             if not r.instance in runs_by_instance:
                 runs_by_instance[r.instance] = [r]
             else:
                 runs_by_instance[r.instance].append(r)
 
+        for instance in runs_by_instance.keys():
+            total_time, count = 0.0, 0
+            for run in runs_by_instance[instance]:
+                count += 1
+                if run.status != 1 or not str(run.resultCode).startswith('1'):
+                    total_time += experiment.CPUTimeLimit * 10
+                else:
+                    total_time += run.resultTime
+
+            par10_by_instance[instance.idInstance] = total_time / count if count != 0 else 0
+
         results = sorted(runs_by_instance.items(), key=lambda i: i[0].idInstance)
 
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
-            csv_writer.writerow(['Instance', 'Runs'])
+            csv_writer.writerow(['Instance'] + ['Run'] * experiment.get_num_runs(db) + ['penalized avg. runtime'])
             for res in results:
-                csv_writer.writerow([res[0].name] + [r.get_time() for r in res[1]])
+                csv_writer.writerow([res[0].name] + [r.get_time() for r in res[1]] + [round(par10_by_instance[res[0].idInstance], 2)])
             csv_response.seek(0)
 
             headers = Headers()
@@ -266,6 +279,10 @@ def experiment_results_by_solver(database, experiment_id):
             headers.add('Content-Disposition', 'attachment',
                         filename=(experiment.name + "_results_by_solver_%s.csv" % (str(solver_config),)))
             return Response(response=csv_response.read(), headers=headers)
+
+        return render('experiment_results_by_solver.html', db=db, database=database,
+                  solver_configs=solver_configs, experiment=experiment,
+                  form=form, results=results, par10_by_instance=par10_by_instance)
 
     return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
