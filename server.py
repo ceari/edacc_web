@@ -19,5 +19,8 @@
 from edacc.web import app
 from edacc.config import DEBUG
 
+#from werkzeug.contrib.profiler import ProfilerMiddleware
+#app.wsgi_app = ProfilerMiddleware(app.wsgi_app)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=DEBUG)

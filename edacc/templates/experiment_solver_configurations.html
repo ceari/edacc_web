@@ -1,5 +1,23 @@
 {% extends "base.html" %}
 {% block title %}Solver Configurations{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#table_solver_configs').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": true,
+                "bInfo": false,
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                },
+                "aoColumns": [null, null, {"bSortable": false}, {"bSortable": false}]
+            });
+        });
+    </script>
+{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
@@ -8,34 +26,26 @@
     </div>
     <h2>Solver configurations used in the experiment</h2>
     {% if solver_configurations|length > 0 %}
-    <ul>
-        {% for solver_config in solver_configurations %}
-            <li>
-                <a href="#{{solver_config.idSolverConfig}}">
-                {{solver_config.get_name()}}
-                </a> ({{solver_config.parameter_instances|length}} parameter{{'s' if solver_config.parameter_instances|length != 1 else '' }} specified)
-            </li>
-        {% endfor %}
-    </ul>
 
-    <table class="details">
-    {% for solver_config in solver_configurations %}
-        <tr id="{{solver_config.idSolverConfig}}" class="odd">
-            <td style="text-align: center" colspan="2"><strong>{{solver_config.get_name()}}</strong> (<a href="{{url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">Details</a>)</td>
-        </tr>
-        <tr class="even">
-            <td>Specified parameters:</td>
-            <td>
-                {% for parameter in solver_config.parameter_instances %}
-                {{parameter.parameter.name}}: {% if not parameter.parameter.hasValue %}Flag set{% else %}{{parameter.value}}{% endif %}<br/>
-                {% endfor %}
-            </td>
-        </tr>
-        <tr class="even">
-            <td>Launch command</td>
-            <td>{{solver_config|launch_command}}</td>
-        </tr>
-    {% endfor %}
+    <table id="table_solver_configs">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Solver</th>
+                <th>Parameters</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for solver_config in solver_configurations %}
+            <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">
+                <td><a href="{{url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">{{solver_config.get_name()}}</a></td>
+                <td>{{solver_config.solver.name}}</td>
+                <td>{{solver_config|launch_command}}</td>
+                <td><a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{solver_config.idSolverConfig}}">Results</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
     </table>
 
     {% else %}

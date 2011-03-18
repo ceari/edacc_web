@@ -1,10 +1,23 @@
-{% from "_formhelpers.html" import render_field %}
 {% extends "base.html" %}
+{% block title %}Unsolved instances{% endblock %}
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{url_for('static', filename='css/tablesorter_style.css')}}" type="text/css" />
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#table_instances').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": true,
+                "bInfo": false,
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                },
+                "aoColumns": [null, {% for _ in range(instance_properties|length) %} null,{% endfor %} {"bSortable": false}]
+            });
+        });
+    </script>
 {% endblock %}
-{% block title %}Unsolved instances{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
@@ -16,7 +29,7 @@
         The following instances have not been solved by any solver in this experiment.
     </div>
     {% if unsolved_instances|length > 0 %}
-        <table id="table_instances" class="tablesorter">
+        <table id="table_instances">
             <thead>
                 <tr>
                     <th>Name</th>

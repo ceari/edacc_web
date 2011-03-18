@@ -62,6 +62,10 @@ def parameter_string(solver_config):
     args = []
     for p in parameters:
         args.append(p.parameter.prefix or "")
+        if p.parameter.name == 'seed':
+            args.append("<seed>")
+        if p.parameter.name == 'instance':
+            args.append("<instance>")
         if p.parameter.hasValue:
             if p.value == "": # if value not set, use default value from parameters table
                 args.append(p.parameter.value or "")

@@ -1,65 +1,6 @@
 {% from "_formhelpers.html" import render_field %}
 {% extends "base.html" %}
 {% block title %}Results by Instance{% endblock %}
-{% block head %}
-    {{ super() }}
-    <style type="text/css">
-        #table_results {
-	        border: 1px solid #ddd;
-            border-collapse: collapse;
-        }
-
-        #table_results tbody td {
-            padding: 2px;
-            padding-left: 5px;
-            padding-right: 5px;
-        }
-
-        #table_results thead th {
-            padding: 3px 18px 3px 10px;
-            background-color: #e6EEFF;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        #table_results tr.odd {
-            background-color: #f5f5f5;
-        }
-
-        #table_results tr.even {
-            background-color: #fff;
-        }
-
-        #table_results td, th {
-            border-width: 1px;
-            border-style: solid;
-            border-color: black;
-            vertical-align: middle;
-            text-align:
-        }
-
-        .sorting_asc {
-            background: url('/static/img/datatable/sort_asc.png') no-repeat center right;
-        }
-
-        .sorting_desc {
-            background: url('/static/img/datatable/sort_desc.png') no-repeat center right;
-        }
-
-        .sorting {
-            background: url('/static/img/datatable/sort_both.png') no-repeat center right;
-        }
-
-        .sorting_asc_disabled {
-            background: url('/static/img/datatable/sort_asc_disabled.png') no-repeat center right;
-        }
-
-        .sorting_desc_disabled {
-            background: url('/static/img/datatable/sort_desc_disabled.png') no-repeat center right;
-        }
-
-    </style>
-{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
@@ -85,16 +26,16 @@
             <tbody>
                 {% for run in range(experiment.get_num_runs(db)) %}
                     {% set rowloop = loop %}
-                    <tr>
+                    <tr class="{{'odd' if rowloop.index0 % 2 == 1 else 'even'}}">
                         <td>
                             {{loop.index0}}
                         </td>
                         {% for result in results %}
-                            <td style="background-color: {{result[1][rowloop.index0].resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result[1][rowloop.index0].idJob) }}">{{ result[1][rowloop.index0].get_time()|result_time}}</a></td>
+                            <td style="text-align: center; background-color: {{result[1][rowloop.index0].resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result[1][rowloop.index0].idJob) }}">{{ result[1][rowloop.index0].get_time()|result_time}}</a></td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
-                <tr>
+                <tr class="odd">
                     <td>Mean</td>
                     {% for result in results %}
                     <td>
@@ -102,7 +43,7 @@
                     </td>
                     {% endfor %}
                 </tr>
-                <tr>
+                <tr class="even">
                     <td>Median</td>
                     {% for result in results %}
                     <td>

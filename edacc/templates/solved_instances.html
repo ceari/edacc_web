@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Instances{% endblock %}
+{% block title %}Solved instances{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
@@ -13,7 +13,7 @@
                 "oLanguage": {
                     "sZeroRecords": "No matching results"
                 },
-                "aoColumns": [null, null, {% for _ in range(instance_properties|length) %} null,{% endfor %} {"bSortable": false}]
+                "aoColumns": [null, {% for _ in range(instance_properties|length) %} null,{% endfor %} {"bSortable": false}]
             });
         });
     </script>
@@ -22,20 +22,17 @@
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
         <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
-        Instances
+        Solved instances
     </div>
-    <h2>Instances used in the experiment</h2>
+    <h2>Solved instances</h2>
     <div>
-        The table below lists the instances that are used in the experiment. Click on the name of an instance in the first column
-        to get to a page with detailed information about the instance and the option to download the instance file.<br/>
-        <a href="{{url_for('frontend.download_instances', database=database, experiment_id=experiment.idExperiment)}}">Download all instances as tarball</a> ({{experiment.get_total_instance_blob_size(db)|download_size}})
+        These instances have been solved by at least one solver in any of its runs.
     </div>
-    {% if instances|length > 0 %}
+    {% if solved_instances|length > 0 %}
         <table id="table_instances">
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>MD5</th>
                     {% for prop in instance_properties %}
                     <th>{{prop.name}}</th>
                     {% endfor %}
@@ -43,10 +40,9 @@
                 </tr>
             </thead>
             <tbody>
-            {% for instance in instances %}
+            {% for instance in solved_instances %}
                 <tr>
                     <td><a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a></td>
-                    <td>{{instance.md5}}</td>
                     {% for prop in instance_properties %}
                     <td>{{instance.get_property_value(prop.idProperty, db)}}</td>
                     {% endfor %}
@@ -56,6 +52,6 @@
             </tbody>
         </table>
     {% else %}
-        No instances configured yet.
+        All instances have been solved.
     {% endif %}
 {% endblock %}

@@ -12,14 +12,14 @@
 
 import uuid, datetime
 
-import jinja2
+from jinja2 import FileSystemBytecodeCache
 from werkzeug import ImmutableDict
 from flask import Flask, Request, g
 from edacc import config, models, utils
 
 Flask.jinja_options = ImmutableDict({
                             'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
-                            'bytecode_cache': jinja2.FileSystemBytecodeCache(config.TEMP_DIR),
+                            'bytecode_cache': FileSystemBytecodeCache(config.TEMP_DIR),
                             'trim_blocks':True
 })
 app = Flask(__name__)

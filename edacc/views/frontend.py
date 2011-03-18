@@ -198,7 +198,8 @@ def experiment_results(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     instances = experiment.instances
-    solver_configs = db.session.query(db.SolverConfiguration).options(joinedload_all('solver')).filter_by(experiment=experiment).all()
+    solver_configs = db.session.query(db.SolverConfiguration).options(joinedload_all('solver'))\
+                                        .filter_by(experiment=experiment).all()
 
     # if competition db, show only own solvers unless phase is 6 or 7
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
@@ -241,7 +242,8 @@ def experiment_results(database, experiment_id):
                         'var_coeff': numpy.std(runtimes) / numpy.average(runtimes),
                         'completed': completed,
                         'total': len(jobs),
-                        'first_job': (None if len(jobs) == 0 else jobs[0]), # needed for alternative presentation if there's only 1 run
+                        # needed for alternative presentation if there's only 1 run:
+                        'first_job': (None if len(jobs) == 0 else jobs[0]),
                         'solver_config': solver_config
                         })
         results.append({'instance': instances_dict[idInstance], 'times': row})
@@ -308,7 +310,8 @@ def experiment_results_by_solver(database, experiment_id):
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'])
-            results = [[res[0].name] + [r.get_time() for r in res[1]] + [round(par10_by_instance[res[0].idInstance], 2)] for res in results]
+            results = [[res[0].name] + [r.get_time() for r in res[1]] +
+                       [round(par10_by_instance[res[0].idInstance], 2)] for res in results]
             
             if request.args.get('sort_by_instance_name', None):
                 sort_dir = request.args.get('sort_by_instance_name_dir', 'asc')
@@ -436,7 +439,7 @@ def experiment_stats_ajax(database, experiment_id):
             .filter_by(experiment=experiment, status=STATUS_RUNNING) \
             .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_finished = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_([STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))) \
+            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_([STATUS_FINISHED] +list(STATUS_EXCEEDED_LIMITS))) \
             .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_error = db.session.query(db.ExperimentResult) \
             .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_(list(STATUS_ERRORS))) \
@@ -494,7 +497,8 @@ def experiment_progress_ajax(database, experiment_id):
               ["`"+prop.name+"_value`.value" for prop in result_properties]
 
     # build the query part for the result properties that should be included
-    prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+prop.name+"_value`.value END" for prop in result_properties])
+    prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
+                             prop.name+"_value`.value END" for prop in result_properties])
     prop_joins = ""
     for prop in result_properties:
         prop_joins += """LEFT JOIN ExperimentResult_has_Property as `%s_hasP` ON
@@ -595,7 +599,8 @@ def experiment_progress_ajax(database, experiment_id):
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'Status', 'Result'] + [p.name for p in result_properties])
+        csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'Status', 'Result'] +
+                            [p.name for p in result_properties])
         for d in aaData:
             csv_writer.writerow(d[0:8] + d[9:])
         csv_response.seek(0)
@@ -747,6 +752,18 @@ def unsolved_instances(database, experiment_id):
 
     return render('unsolved_instances.html', database=database, db=db, experiment=experiment,
                   unsolved_instances=unsolved_instances, instance_properties=db.get_instance_properties())
+
+@frontend.route('/<database>/experiment/<int:experiment_id>/solved-instances/')
+@require_phase(phases=[5,6,7])
+@require_login
+def solved_instances(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    solved_instances = experiment.get_solved_instances(db)
+
+    return render('solved_instances.html', database=database, db=db, experiment=experiment,
+                  solved_instances=solved_instances, instance_properties=db.get_instance_properties())
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-solver-output')

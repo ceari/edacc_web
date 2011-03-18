@@ -144,8 +144,17 @@ class EDACCDatabase(object):
                 return num_results / num_solver_configs / num_instances
 
             def get_solved_instances(self, db):
+                """ Returns the instances of the experiment that any solver
+                solved in any of its runs
+                """
+                instance_ids = [i[0] for i in db.session.query(db.ExperimentResult.Instances_idInstance) \
+                            .filter_by(experiment=self).filter(db.ExperimentResult.resultCode.like('1%')) \
+                            .filter_by(status=1).distinct().all()]
+                return db.session.query(db.Instance).filter(db.Instance.idInstance.in_(instance_ids)).all()
+
+            def get_fully_solved_instances(self, db):
                 """ Returns the instances of the experiment that all solvers
-                solved in every run
+                solved in all of their runs
                 """
                 numInstances = db.session.query(db.Instance) \
                         .filter(db.Instance.experiments.contains(self)).distinct().count()

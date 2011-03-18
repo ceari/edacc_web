@@ -2,6 +2,7 @@
 {% block title %}{{experiment.name}} Experiment{% endblock %}
 {% block head %}
     {{ super() }}
+    <script src="{{url_for('static', filename='js/jquery.tooltip.min.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
     	/* <![CDATA[ */
     	function perc(nom, denom) { // nom nom nom
@@ -77,7 +78,8 @@
     <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">By solver configuration and instance</a> (runs accumulated)<br/>
     <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment) }}">By solver configuration</a><br/>
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a><br/>
-    <a href="{{ url_for('frontend.unsolved_instances', database=database, experiment_id=experiment.idExperiment) }}">Unsolved instances</a>
+    <a href="{{ url_for('frontend.unsolved_instances', database=database, experiment_id=experiment.idExperiment) }}">Unsolved instances</a><br/>
+    <a href="{{ url_for('frontend.solved_instances', database=database, experiment_id=experiment.idExperiment) }}">Solved instances</a>
     {% endif %}
 
     <h2>Analysis</h2>
