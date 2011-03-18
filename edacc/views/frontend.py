@@ -260,6 +260,8 @@ def experiment_results_by_solver(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+    num_runs = experiment.get_num_runs(db)
+
     solver_configs = experiment.solver_configurations
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
@@ -305,9 +307,23 @@ def experiment_results_by_solver(database, experiment_id):
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
-            csv_writer.writerow(['Instance'] + ['Run'] * experiment.get_num_runs(db) + ['penalized avg. runtime'])
+            csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'])
+            results = [[res[0].name] + [r.get_time() for r in res[1]] + [round(par10_by_instance[res[0].idInstance], 2)] for res in results]
+            
+            if request.args.get('sort_by_instance_name', None):
+                sort_dir = request.args.get('sort_by_instance_name_dir', 'asc')
+                results.sort(key=lambda r: r[0], reverse=sort_dir=='desc')
+
+            if request.args.get('sort_by_par10', None):
+                sort_dir = request.args.get('sort_by_par10_dir', 'asc')
+                results.sort(key=lambda r: r[num_runs+1], reverse=sort_dir=='desc')
+
+            search = request.args.get('search', "")
+            if search:
+                results = filter(lambda r: search in r[0], results)
+                
             for res in results:
-                csv_writer.writerow([res[0].name] + [r.get_time() for r in res[1]] + [round(par10_by_instance[res[0].idInstance], 2)])
+                csv_writer.writerow(res)
             csv_response.seek(0)
 
             headers = Headers()
@@ -318,11 +334,11 @@ def experiment_results_by_solver(database, experiment_id):
 
         return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
-                  form=form, results=results, par10_by_instance=par10_by_instance)
+                  form=form, results=results, par10_by_instance=par10_by_instance, num_runs=num_runs)
 
     return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
-                  form=form, results=results)
+                  form=form, results=results, num_runs=num_runs)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-instance')
