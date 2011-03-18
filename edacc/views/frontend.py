@@ -374,22 +374,33 @@ def experiment_results_by_instance(database, experiment_id):
                                    instance=instance,
                                    solver_configuration=sc).all()
 
-            mean, median = None, None
+            mean, median, par10 = 0.0, 0.0, 0.0
             if len(runs) > 0:
                 runtimes = [j.get_time() for j in runs]
                 runtimes = filter(lambda t: t is not None, runtimes)
+                count = 0
+                for j in runs:
+                    if j.get_time() is not None:
+                        count += 1
+                        if not str(j.resultCode).startswith('1') or j.status != 1:
+                            par10 += experiment.CPUTimeLimit * 10
+                        else:
+                            par10 += j.get_time()
+                if count > 0:
+                    par10 /= count
                 mean = numpy.average(runtimes)
                 median = numpy.median(runtimes)
 
-            results.append((sc, runs, mean, median))
+
+            results.append((sc, runs, mean, median, par10))
 
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
             num_runs = experiment.get_num_runs(db)
-            csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median'])
+            csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median', 'penalized avg. runtime'])
             for res in results:
-                csv_writer.writerow([str(res[0])] + [r.get_time() for r in res[1]] + [res[2], res[3]])
+                csv_writer.writerow([str(res[0])] + [r.get_time() for r in res[1]] + [res[2], res[3], res[4]])
             csv_response.seek(0)
 
             headers = Headers()
