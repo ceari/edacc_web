@@ -112,7 +112,7 @@ table.display td.center {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * DataTables sorting
  */
-
+/* using the definitions from base.css instead
 .sorting_asc {
 	background: url('/static/img/datatable/sort_asc.png') no-repeat center right;
 }
@@ -131,7 +131,7 @@ table.display td.center {
 
 .sorting_desc_disabled {
 	background: url('/static/img/datatable/sort_desc_disabled.png') no-repeat center right;
-}
+}*/
 
 
 
