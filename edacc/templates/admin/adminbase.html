@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+    <title>EDACC - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}" type="text/css" />
+    <link rel="icon" href="{{url_for('static', filename='img/edacc.png')}}" type="image/png" />
+    {% endblock %}
+</head>
+<body>
+    <div id="header">
+        <span id="title">Administration</span>
+    </div>
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

@@ -1,4 +1,6 @@
-
+{% extends "admin/adminbase.html" %}
+{% block title %}Administration{% endblock %}
+{% block content %}
     <h2>Add Database</h2>
     <a href="{{url_for('admin.databases')}}">Back</a>
 
@@ -28,3 +30,4 @@
         </table>
     </form>
     {% if error %}{{error}}{% endif %}
+{% endblock %}

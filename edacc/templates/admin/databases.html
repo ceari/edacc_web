@@ -1,4 +1,6 @@
-
+{% extends "admin/adminbase.html" %}
+{% block title %}Administration{% endblock %}
+{% block content %}
     <h2>Databases (connected to {{host}}:{{port}})</h2>
 
     <a href="{{url_for('admin.databases_add')}}">Add Database</a>
@@ -9,3 +11,4 @@
         <li>{{db}} ({{db.username}}@{{db.database}})<a href="{{url_for('databases_remove', database=db.database)}}"><img style="margin-left: 5px;" title="Remove" src="{{url_for('static', filename='img/remove.png')}}"/></a><a href="{{url_for('phase', database=db.database)}}">Competition Settings</a> {% if db.hidden %}(hidden){%endif%}</li>
     {% endfor %}
     </ul>
+{% endblock %}

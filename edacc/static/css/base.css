@@ -154,7 +154,7 @@ form td, th {
     font-size: 12px;
     line-height: 13px;
     border-bottom: 1px solid #eee;
-    vertical-align: top;
+    vertical-align: middle;
     padding-top: 3px;
     padding-bottom: 3px;
 }

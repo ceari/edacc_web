@@ -1,12 +1,16 @@
-<h2>Competition Phase</h2>
+{% extends "admin/adminbase.html" %}
+{% block title %}Administration{% endblock %}
+{% block content %}
+    <h2>Competition Phase</h2>
 
-<form action="{{url_for('admin.phase', database=database)}}" method="post">
-    Competiton?: <input type="checkbox" name="competition" {% if competition %}checked{% endif %} /><br/>
-    Phase:
-    <select name="competition_phase">
-        {% for phase in phases %}
-            <option {% if competition_phase == phase %}selected{% endif %} value="{{phase}}">{{phase|competition_phase}}</option>
-        {% endfor %}
-    </select>
-    <input type="submit" value="Save"/>
-</form>
+    <form action="{{url_for('admin.phase', database=database)}}" method="post">
+        Competiton?: <input type="checkbox" name="competition" {% if competition %}checked{% endif %} /><br/>
+        Phase:
+        <select name="competition_phase">
+            {% for phase in phases %}
+                <option {% if competition_phase == phase %}selected{% endif %} value="{{phase}}">{{phase|competition_phase}}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Save"/>
+    </form>
+{% endblock %}
