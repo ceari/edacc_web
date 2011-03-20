@@ -526,6 +526,7 @@ def get_databases():
 
 def add_database(username, password, database, label, hidden=False):
     databases[database] = EDACCDatabase(username, password, database, label, hidden)
+    return databases[database]
 
 
 def remove_database(database):
