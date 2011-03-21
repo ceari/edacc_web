@@ -59,12 +59,14 @@ from edacc.views.accounts import accounts
 from edacc.views.frontend import frontend
 from edacc.views.analysis import analysis
 from edacc.views.plot import plot
+from edacc.views.api import api
 
 app.register_module(admin)
 app.register_module(accounts)
 app.register_module(frontend)
 app.register_module(analysis)
 app.register_module(plot)
+app.register_module(api)
 
 app.jinja_env.filters['download_size'] = utils.download_size
 app.jinja_env.filters['job_status'] = utils.job_status

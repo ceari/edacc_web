@@ -12,7 +12,10 @@
 
 import csv
 import datetime
-import json
+try:
+    import simplejson as json
+except ImportError:
+    import json
 import numpy
 import StringIO
 import tempfile

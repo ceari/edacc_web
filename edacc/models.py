@@ -11,6 +11,8 @@
     :license: MIT, see LICENSE for details.
 """
 
+import base64
+
 from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
@@ -243,6 +245,24 @@ class EDACCDatabase(object):
                         return pv.get_value()
                     except:
                         return None
+
+            def to_json(self):
+                return {
+                    'idJob': self.idJob,
+                    'Experiment_idExperiment': self.Experiment_idExperiment,
+                    'Instances_idInstance': self.Instances_idInstance,
+                    'run': self.run,
+                    'resultCode': self.resultCode,
+                    'resultTime': self.resultTime,
+                    'status': self.status,
+                    'seed': self.seed,
+                    'startTime': str(self.startTime),
+                    'computeQueue': self.computeQueue,
+                    'solverExitCode': self.solverExitCode,
+                    'watcherExitCode': self.watcherExitCode,
+                    'verifierExitCode': self.verifierExitCode,
+                    'priority': self.priority,
+                }
 
         class InstanceClass(object):
             def __str__(self):
