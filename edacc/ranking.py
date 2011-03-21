@@ -9,16 +9,19 @@
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
-
+import numpy
+import scipy
 from sqlalchemy.sql import select, and_, functions
 
-def avg_point_biserial_correlation_ranking(db, experiment, instance_ids):
+def avg_point_biserial_correlation_ranking(db, experiment, instances):
     """ Ranking through comparison of the RTDs of the solvers on the instances.
         This ranking only makes sense if the there were multiple runs of each
         solver on each instance.
         See the paper "Statistical Methodology for Comparison of SAT Solvers"
         by M. Nikolić for details.
     """
+    instance_ids = [i.idInstance for i in instances]
+
     table = db.metadata.tables['ExperimentResults']
     c_solver_config_id = table.c['SolverConfig_idSolverConfig']
     c_result_time = table.c['resultTime']
@@ -77,11 +80,12 @@ def avg_point_biserial_correlation_ranking(db, experiment, instance_ids):
     # List of solvers sorted by their rank. Best solver first.
     return list(sorted(experiment.solver_configurations, cmp=comp))
 
-def number_of_solved_instances_ranking(db, experiment, instance_ids):
+def number_of_solved_instances_ranking(db, experiment, instances):
     """ Ranking by the number of instances correctly solved.
         This is determined by an resultCode that starts with '1' and a 'finished' status
         of a job.
     """
+    instance_ids = [i.idInstance for i in instances]
 
     table = db.metadata.tables['ExperimentResults']
     c_solver_config_id = table.c['SolverConfig_idSolverConfig']
@@ -119,3 +123,85 @@ def number_of_solved_instances_ranking(db, experiment, instance_ids):
                 return 0
 
     return list(reversed(sorted(experiment.solver_configurations,cmp=comp)))
+
+def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev):
+    instance_ids = [i.idInstance for i in instances]
+    num_runs = experiment.get_num_runs(db)
+    num_runs_per_solver = num_runs * len(instance_ids)
+
+    vbs_num_solved = 0
+    vbs_cumulated_cpu = 0
+    from sqlalchemy import func, or_, not_
+    best_instance_runtimes = db.session.query(func.min(db.ExperimentResult.resultTime)) \
+        .filter_by(experiment=experiment) \
+        .filter(db.ExperimentResult.resultCode.like(u'1%')) \
+        .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+        .group_by(db.ExperimentResult.Instances_idInstance).all()
+
+    vbs_num_solved = len(best_instance_runtimes) * num_runs
+    vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes) * num_runs
+
+    # Virtual best solver data
+    data = [('Virtual Best Solver (VBS)',                   # name of the solver
+             vbs_num_solved,                                # number of successful runs
+             0.0 if num_runs_per_solver == 0 else \
+                    vbs_num_solved / float(num_runs_per_solver) ,  # % of all runs
+             1.0,                                           # % of vbs runs
+             vbs_cumulated_cpu,                             # cumulated CPU time
+             (0.0 if vbs_num_solved == 0 else \
+                     vbs_cumulated_cpu / vbs_num_solved),   # average CPU time per successful run
+             0.0, # avg stddev
+             10.0 * experiment.CPUTimeLimit * (experiment.get_num_instances(db) - len(best_instance_runtimes)) \
+                                            / experiment.get_num_instances(db) #par 10
+             )]
+
+    for solver in ranked_solvers:
+        successful_runs = db.session.query(db.ExperimentResult.resultTime) \
+                                    .filter(db.ExperimentResult.resultCode.like(u'1%')) \
+                                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+                                    .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
+
+        successful_runs_sum = sum(j[0] for j in successful_runs)
+
+        penalized_average_runtime = 0.0
+        if calculate_par10:
+            failed_runs = db.session.query(db.ExperimentResult) \
+                                    .filter_by(experiment=experiment, solver_configuration=solver) \
+                                    .filter(or_(db.ExperimentResult.status != 1,
+                                                not_(db.ExperimentResult.resultCode.like(u'1%')))) \
+                                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+                                    .count()
+            if len(successful_runs) + failed_runs == 0:
+                # this should mean there are no jobs of this solver yet
+                penalized_average_runtime = experiment.CPUTimeLimit
+            else:
+                penalized_average_runtime = (failed_runs * experiment.CPUTimeLimit * 10.0 + successful_runs_sum) \
+                                            / (len(successful_runs) + failed_runs)
+
+        avg_stddev_runtime = 0.0
+        if calculate_avg_stddev:
+            for instance in instance_ids:
+                # TODO: optimize, use one query to get all data and hash it
+                # by solver and instance beforehand
+                instance_runtimes = db.session.query(db.ExperimentResult.resultTime) \
+                                            .filter(db.ExperimentResult.resultCode.like(u'1%')) \
+                                            .filter_by(Instances_idInstance=instance) \
+                                            .filter_by(experiment=experiment,
+                                                       solver_configuration=solver,
+                                                       status=1) \
+                                            .all()
+                avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
+            avg_stddev_runtime /= float(len(instance_ids))
+
+        data.append((
+            solver,
+            len(successful_runs),
+            0 if len(successful_runs) == 0 else len(successful_runs) / float(num_runs_per_solver),
+            0 if vbs_num_solved == 0 else len(successful_runs) / float(vbs_num_solved),
+            successful_runs_sum,
+            numpy.average([j[0] for j in successful_runs] or 0),
+            avg_stddev_runtime,
+            penalized_average_runtime
+        ))
+    
+    return data
