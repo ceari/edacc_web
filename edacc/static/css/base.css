@@ -13,28 +13,22 @@ img {
 }
 
 a:link {
+    color: #5b80b2;
     text-decoration: none;
 }
 
 a:visited {
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-a:active {
-    text-decoration: none;
-}
-
-a:link, a:visited {
     color: #5b80b2;
     text-decoration: none;
 }
 
 a:hover {
+    text-decoration: none;
     color: #036;
+}
+
+a:active {
+    text-decoration: none;
 }
 
 #header {
@@ -53,10 +47,6 @@ a:hover {
     color: black;
 }
 
-#navigation a:hover {
-    text-decoration: underline;
-}
-
 #content {
     margin-left: 3px;
     min-height: 500px;
@@ -64,9 +54,9 @@ a:hover {
 }
 
 #footer {
-    padding: 3px;
+    margin-top: 5px;
     border-top: 1px solid #ccc;
-    clear:both;
+    clear: both;
 }
 
 #title {
