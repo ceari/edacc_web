@@ -156,14 +156,14 @@ class UtilsTestCase(unittest.TestCase):
         assert len(compressed_data) > 13 # there should always be a 13 bytes header
         len_bytes = struct.unpack('<Q', compressed_data[5:13])[0]
         assert len_bytes == len(uncompressed_data)
-        
+
     def test_format_output_file(self):
         from edacc.utils import formatOutputFile
         assert formatOutputFile("") == ""
         assert formatOutputFile(None) == "No output"
         assert formatOutputFile("a" * 4096) == "a" * 4096
         assert formatOutputFile("a" * 4097) == "a" * 2048 + "\n\n... [truncated 0 kB]\n\n" + "a" * 2048
-    
+
     def test_newline_split_string(self):
         from edacc.utils import newline_split_string
         assert newline_split_string("test", 0) == "test"
@@ -172,7 +172,7 @@ class UtilsTestCase(unittest.TestCase):
         assert newline_split_string("test", 1) == "t\ne\ns\nt"
         assert newline_split_string("test", 2) == "te\nst"
         assert newline_split_string("test", 3) == "tes\nt"
-        
+
     def test_download_size(self):
         from edacc.utils import download_size
         assert download_size(0) == "0 Bytes"
@@ -193,6 +193,27 @@ class UtilsTestCase(unittest.TestCase):
         assert ("-p1", "-p1", "1.0", False, 0) in params
         assert ("instance", "-i", "", False, 2) in params
         assert ("seed", "", "", False, 4) in params
+
+class AnalysisTestCase(unittest.TestCase):
+    def setUp(self):
+        from edacc import models, config
+        config.DEFAULT_DATABASES = [("edacc", "edaccteam", TEST_DATABASE, TEST_DATABASE, True)]
+        from edacc.web import app
+        self.app = app.test_client()
+        self.db = db = models.add_database("edacc", "edaccteam", TEST_DATABASE, TEST_DATABASE)
+        clean_database(db)
+        fixtures.setup_ranking_fixture(db)
+
+    def test_solver_ranking(self):
+        exp = self.db.session.query(self.db.Experiment).first()
+        assert "The virtual best solver" in self.app.get('/'+TEST_DATABASE+"/experiment/" + \
+                str(exp.idExperiment) + "/ranking/").data
+
+    def tearDown(self):
+        clean_database(self.db)
+        self.db.session.remove()
+
+
 
 if __name__ == '__main__':
     unittest.main()

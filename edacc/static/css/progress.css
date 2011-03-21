@@ -1,0 +1,33 @@
+div.progress {
+    border: 1px solid #ccc;
+    width: 300px;
+    margin: 2px 2px 2px 0;
+    padding: 1px;
+    float: left;
+    background: #fff;
+}
+
+div.progress > div {
+    height: 20px;
+}
+
+div.progress > div.crashed {
+    background-color: #e02121;
+    float: left;
+    clear: both;
+}
+
+div.progress > div.finished {
+    background-color: #409f40;
+    float: left;
+}
+
+div.progress > div.notstarted {
+    background-color: #5d96ec;
+    float: left;
+}
+
+div.progress > div.running {
+    background-color: #ffb943;
+    float: left;
+}
