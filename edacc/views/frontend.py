@@ -456,7 +456,7 @@ def experiment_stats_ajax(database, experiment_id):
             .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_([STATUS_FINISHED] +list(STATUS_EXCEEDED_LIMITS))) \
             .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_error = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_(list(STATUS_ERRORS))) \
+            .filter_by(experiment=experiment).filter(db.ExperimentResult.status<=-2) \
             .filter(db.ExperimentResult.priority>=0).count()
 
     avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)) \
