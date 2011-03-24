@@ -7,7 +7,7 @@
  *  CREATE FUNCTION getJob(idExperiment INT) RETURNS INT BEGIN DECLARE job_id INT; DECLARE tmp INT; set job_id = -1; SELECT FLOOR(RAND()*COUNT(idJob)) into tmp FROM ExperimentResults WHERE Experiment_idExperiment=idExperiment AND status<0; SELECT idJob into job_id FROM ExperimentResults WHERE Experiment_idExperiment=idExperiment and status <0 LIMIT tmp,1 FOR UPDATE; UPDATE ExperimentResults SET status=0 WHERE idJob=job_id; return job_id; END;
  */
 
-const char * LOCK_JOB = "UDPATE ExperimentResults SET status=0 WHERE status<0 AND idJob=%d;";
+const char * LOCK_JOB = "UPDATE ExperimentResults SET status=0 WHERE idJob=%d;";
 
 int fetchJob_RANDOM_LIMIT(MYSQL* conn, int experiment_id) {
     MYSQL_RES* result;
@@ -136,7 +136,10 @@ int fetchJob_FLOOR_LOCK2(MYSQL* conn, int experiment_id) {
                                 WHERE Experiment_idExperiment=%d AND status < 0;";
     char* query = calloc(1, 256);
     sprintf(query, SELECT_QUERY, experiment_id);
-    mysql_query(conn, query);
+    if (mysql_query(conn, query) != 0) {
+        printf("error: %s\n", mysql_error(conn));
+        exit(1);
+    }
     free(query);
     MYSQL_RES* result = mysql_store_result(conn);
     if (mysql_num_rows(result) < 1) {
@@ -152,7 +155,10 @@ int fetchJob_FLOOR_LOCK2(MYSQL* conn, int experiment_id) {
 
     query = calloc(1, 256);
     sprintf(query, ID_QUERY, experiment_id, limit);
-    mysql_query(conn, query);
+    if (mysql_query(conn, query) != 0) {
+        printf("error: %s\n", mysql_error(conn));
+        exit(1);
+    }
     free(query);
     result = mysql_store_result(conn);
     if (mysql_num_rows(result) < 1) {
@@ -166,19 +172,25 @@ int fetchJob_FLOOR_LOCK2(MYSQL* conn, int experiment_id) {
     const char * LOCK_QUERY = "SELECT idJob FROM ExperimentResults WHERE idJob = %d and status<0 FOR UPDATE;";
     query = calloc(1, 256);
     sprintf(query, LOCK_QUERY, idJob);
-    mysql_query(conn, query);
+    if (mysql_query(conn, query) != 0) {
+        printf("error: %s\n", mysql_error(conn));
+        exit(1);
+    }
     free(query);
     result = mysql_store_result(conn);
     if (mysql_num_rows(result) < 1) {
         mysql_free_result(result);
-        mysql_commit(conn);
+        mysql_commit();
         return -2; // job was taken by another client between the 2 queries
     }
     mysql_free_result(result);
 
     query = calloc(1, 256);
     sprintf(query, LOCK_JOB, idJob);
-    mysql_query(conn, query);
+    if (mysql_query(conn, query) != 0) {
+        printf("error: %s\n", mysql_error(conn));
+        exit(1);
+    }
     free(query);
     mysql_commit(conn);
     return idJob;
