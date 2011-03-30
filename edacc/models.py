@@ -127,7 +127,7 @@ class EDACCDatabase(object):
 
             def set_instance(self, uncompressed_instance):
                 """ Compresses the instance and sets the instance blob attribute """
-                self.instance = utils.lzma_compress(uncompressed_instance)
+                self.instance = "LZMA" + utils.lzma_compress(uncompressed_instance)
 
 
         class Experiment(object):
