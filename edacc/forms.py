@@ -184,6 +184,6 @@ class BoxPlotForm(Form):
 
 class RankingForm(Form):
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
-    calculate_average_dev = BooleanField('Calculate avg. deviation (slow)')
+    calculate_average_dev = BooleanField('Calculate avg. deviation')
     penalized_average_runtime = BooleanField('Calculate penalized average runtime')
     instance_filter = TextField('Filter Instances')

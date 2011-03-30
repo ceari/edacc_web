@@ -126,6 +126,7 @@ def number_of_solved_instances_ranking(db, experiment, instances):
 
 def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev):
     instance_ids = [i.idInstance for i in instances]
+    solver_config_ids = [s.idSolverConfig for s in ranked_solvers]
     num_runs = experiment.get_num_runs(db)
     num_runs_per_solver = num_runs * len(instance_ids)
 
@@ -155,13 +156,26 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                                             / experiment.get_num_instances(db) #par 10
              )]
 
-    for solver in ranked_solvers:
-        successful_runs = db.session.query(db.ExperimentResult.resultTime) \
-                                    .filter(db.ExperimentResult.resultCode.like(u'1%')) \
-                                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
-                                    .filter_by(experiment=experiment, solver_configuration=solver, status=1).all()
+    # single query fetch of all/most required data
+    successful_runs = db.session.query(db.ExperimentResult.resultTime,
+                                       db.ExperimentResult.SolverConfig_idSolverConfig,
+                                       db.ExperimentResult.Instances_idInstance) \
+                                .filter(db.ExperimentResult.resultCode.like(u'1%')) \
+                                .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+                                .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
+                                .filter_by(experiment=experiment, status=1).all()
 
-        successful_runs_sum = sum(j[0] for j in successful_runs)
+    runs_by_solver_and_instance = {}
+    for run in successful_runs:
+        if not runs_by_solver_and_instance.has_key(run.SolverConfig_idSolverConfig):
+            runs_by_solver_and_instance[run.SolverConfig_idSolverConfig] = {}
+        if not runs_by_solver_and_instance[run.SolverConfig_idSolverConfig].has_key(run.Instances_idInstance):
+            runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance] = []
+        runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance].append(run)
+
+    for solver in ranked_solvers:
+        successful_runs = [run for ilist in runs_by_solver_and_instance[solver.idSolverConfig].values() for run in ilist]
+        successful_runs_sum = sum(j.resultTime for j in successful_runs)
 
         penalized_average_runtime = 0.0
         if calculate_par10:
@@ -180,18 +194,16 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
         avg_stddev_runtime = 0.0
         if calculate_avg_stddev:
+            count = 0
             for instance in instance_ids:
-                # TODO: optimize, use one query to get all data and hash it
-                # by solver and instance beforehand
-                instance_runtimes = db.session.query(db.ExperimentResult.resultTime) \
-                                            .filter(db.ExperimentResult.resultCode.like(u'1%')) \
-                                            .filter_by(Instances_idInstance=instance) \
-                                            .filter_by(experiment=experiment,
-                                                       solver_configuration=solver,
-                                                       status=1) \
-                                            .all()
-                avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
-            avg_stddev_runtime /= float(len(instance_ids))
+                if runs_by_solver_and_instance[solver.idSolverConfig].has_key(instance):
+                    instance_runtimes = runs_by_solver_and_instance[solver.idSolverConfig][instance]
+                    avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
+                    count += 1
+            if count > 0:
+                avg_stddev_runtime /= float(count)
+            else:
+                avg_stddev_runtime = 0.0
 
         data.append((
             solver,
