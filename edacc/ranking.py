@@ -174,7 +174,11 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance].append(run)
 
     for solver in ranked_solvers:
-        successful_runs = [run for ilist in runs_by_solver_and_instance[solver.idSolverConfig].values() for run in ilist]
+        if runs_by_solver_and_instance.has_key(solver.idSolverConfig):
+            successful_runs = [run for ilist in runs_by_solver_and_instance[solver.idSolverConfig].values() \
+                                for run in ilist]
+        else:
+            successful_runs = []
         successful_runs_sum = sum(j.resultTime for j in successful_runs)
 
         penalized_average_runtime = 0.0
