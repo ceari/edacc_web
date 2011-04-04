@@ -11,11 +11,14 @@
 
 import math
 import numpy
+import StringIO
+import csv
 import scipy
 
 from flask import Module
 from flask import render_template as render
-from flask import abort, request, jsonify
+from flask import abort, request, jsonify, Response
+from werkzeug import Headers, secure_filename
 
 from edacc import models, forms, ranking, statistics
 from edacc.views.helpers import require_phase, require_login
@@ -50,6 +53,31 @@ def solver_ranking(database, experiment_id):
         ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data)
         ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                 form.penalized_average_runtime.data, form.calculate_average_dev.data)
+
+        if 'csv' in request.args:
+            csv_response = StringIO.StringIO()
+            csv_writer = csv.writer(csv_response)
+            head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
+                                 'cumulated CPU time', 'avg. CPU time per successful run']
+            
+            if form.calculate_average_dev.data: head.append('avg. deviation of successful runs')
+            if form.penalized_average_runtime.data: head.append('penalized avg. runtime')
+            csv_writer.writerow(head)
+
+            rnk = 0
+            for row in ranking_data:
+                write_row = [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 2), row[4:6])
+                if form.calculate_average_dev.data: write_row.append(round(row[6], 2))
+                if form.penalized_average_runtime.data: write_row.append(round(row[7], 2))
+                csv_writer.writerow(write_row)
+                rnk += 1
+
+            csv_response.seek(0)
+            headers = Headers()
+            headers.add('Content-Type', 'text/csv')
+            headers.add('Content-Disposition', 'attachment',
+                        filename=secure_filename(experiment.name + "_ranking.csv"))
+            return Response(response=csv_response.read(), headers=headers)
 
         return render('/analysis/ranking.html', database=database, db=db,
                       experiment=experiment, ranked_solvers=ranked_solvers,

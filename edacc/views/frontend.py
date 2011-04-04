@@ -251,6 +251,38 @@ def experiment_results(database, experiment_id):
                         })
         results.append({'instance': instances_dict[idInstance], 'times': row})
 
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+
+        if experiment.get_num_runs(db) > 1:
+            head = ['Instance']
+            for sc in solver_configs_dict.values():
+                head += [str(sc), '', '', '', '', '']
+            csv_writer.writerow(head)
+            csv_writer.writerow([''] + ['median', 'min.', 'max.', 'avg.', 'stddev', 'var coeff.'] * len(solver_configs_dict))
+        else:
+            csv_writer.writerow(['Instance'] + map(str, solver_configs_dict.values()))
+            
+        for row in results:
+            write_row = [row['instance'].name]
+            for sc_results in row['times']:
+                if sc_results['total'] == 1:
+                    write_row.append(sc_results['first_job'].resultTime)
+                else:
+                    write_row += map(lambda x: round(x, 2), [
+                                sc_results['time_median'], sc_results['time_min'], sc_results['time_max'],
+                                sc_results['time_avg'], sc_results['time_stddev'], sc_results['var_coeff']
+                        ])
+            csv_writer.writerow(write_row)
+
+        csv_response.seek(0)
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment',
+                    filename=secure_filename(experiment.name + "_results.csv"))
+        return Response(response=csv_response.read(), headers=headers)
+
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     solver_configs_dict=solver_configs_dict,
