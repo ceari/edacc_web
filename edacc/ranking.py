@@ -200,7 +200,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         if calculate_avg_stddev:
             count = 0
             for instance in instance_ids:
-                if runs_by_solver_and_instance[solver.idSolverConfig].has_key(instance):
+                if solver.idSolverConfig in runs_by_solver_and_instance and runs_by_solver_and_instance[solver.idSolverConfig].has_key(instance):
                     instance_runtimes = runs_by_solver_and_instance[solver.idSolverConfig][instance]
                     avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
                     count += 1
