@@ -142,6 +142,11 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     vbs_num_solved = len(best_instance_runtimes) * num_runs
     vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes) * num_runs
 
+    num_unsolved_instances = len(instances) - len(best_instance_runtimes)
+
+    vbs_par10 = vbs_cumulated_cpu + 10.0 * experiment.CPUTimeLimit * num_unsolved_instances * num_runs
+    vbs_par10 = vbs_par10 / num_runs_per_solver if num_runs_per_solver != 0 else 0
+
     # Virtual best solver data
     data = [('Virtual Best Solver (VBS)',                   # name of the solver
              vbs_num_solved,                                # number of successful runs
@@ -152,8 +157,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
              (0.0 if vbs_num_solved == 0 else \
                      vbs_cumulated_cpu / vbs_num_solved),   # average CPU time per successful run
              0.0, # avg stddev
-             10.0 * experiment.CPUTimeLimit * (len(instances) - len(best_instance_runtimes)) \
-                                            / len(instances) #par 10
+             vbs_par10
              )]
 
     # single query fetch of all/most required data
