@@ -152,8 +152,8 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
              (0.0 if vbs_num_solved == 0 else \
                      vbs_cumulated_cpu / vbs_num_solved),   # average CPU time per successful run
              0.0, # avg stddev
-             10.0 * experiment.CPUTimeLimit * (experiment.get_num_instances(db) - len(best_instance_runtimes)) \
-                                            / experiment.get_num_instances(db) #par 10
+             10.0 * experiment.CPUTimeLimit * (len(instances) - len(best_instance_runtimes)) \
+                                            / len(instances) #par 10
              )]
 
     # single query fetch of all/most required data
