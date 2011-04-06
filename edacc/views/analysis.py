@@ -81,10 +81,10 @@ def solver_ranking(database, experiment_id):
 
         return render('/analysis/ranking.html', database=database, db=db,
                       experiment=experiment, ranked_solvers=ranked_solvers,
-                      data=ranking_data, form=form)
+                      data=ranking_data, form=form, instance_properties=db.get_instance_properties())
 
     return render('/analysis/ranking.html', database=database, db=db,
-              experiment=experiment, form=form)
+              experiment=experiment, form=form, instance_properties=db.get_instance_properties())
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus/')

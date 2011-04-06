@@ -232,7 +232,7 @@ def experiment_results(database, experiment_id):
             jobs = rs[idSolverConfig]
 
             completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
-            runtimes = [j.get_time() for j in jobs]
+            runtimes = [j.get_time() or experiment.CPUTimeLimit for j in jobs]
             runtimes = filter(lambda r: r is not None, runtimes)
             runtimes = runtimes or [0]
             time_max = max(runtimes)
