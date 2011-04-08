@@ -195,7 +195,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                                     .count()
             if len(successful_runs) + failed_runs == 0:
                 # this should mean there are no jobs of this solver yet
-                penalized_average_runtime = experiment.CPUTimeLimit
+                penalized_average_runtime = 10 * experiment.CPUTimeLimit
             else:
                 penalized_average_runtime = (failed_runs * experiment.CPUTimeLimit * 10.0 + successful_runs_sum) \
                                             / (len(successful_runs) + failed_runs)

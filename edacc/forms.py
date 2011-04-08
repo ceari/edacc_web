@@ -148,7 +148,8 @@ class CactusPlotForm(Form):
     sc = QuerySelectMultipleField('Solver Configurations')
     instance_filter = TextField('Filter Instances')
     run = SelectField('Plot for run')
-    log_y = BooleanField("Logarithmic y-axis")
+    flip_axes = BooleanField("Swap axes")
+    log_property = BooleanField("Logarithmic property-axis")
     i = QuerySelectMultipleField('Instances (Group 0)', get_pk=lambda i: i.idInstance, allow_blank=True)
 
 class RTDComparisonForm(Form):

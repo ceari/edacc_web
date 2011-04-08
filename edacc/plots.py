@@ -45,10 +45,7 @@ def synchronized(f):
     def lockedfunc(*args, **kwargs):
         try:
             global_lock.acquire()
-            try:
-                return f(*args, **kwargs)
-            except Exception, e:
-                raise e
+            return f(*args, **kwargs)
         finally:
             global_lock.release()
     return lockedfunc
@@ -68,6 +65,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     elif format == 'eps':
         grdevices.postscript(file=filename, height=7, width=9)
     elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
         file = open(filename, 'w')
 
     # set margins to fit in labels on the right and top
@@ -182,7 +180,8 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
 
 
 @synchronized
-def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_y, ylabel, title, filename, format='png'):
+def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y,
+           log_property, flip_axes, ylabel, title, filename, format='png'):
     """ Cactus plot of the passed solvers configurations. `solvers` has to be
         a list of dictionaries with the keys `xs`, `ys` and `name`. For each
         y in `ys` the corresponding x in `xs` should be the number of
@@ -195,19 +194,38 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
         grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
     elif format == 'eps':
         grdevices.postscript(file=filename, height=7, width=9)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
 
     robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
+    if format == 'rscript':
+        file.write('par(mar=c(5,4,4,15))\n')
 
-    log = 'y' if log_y else ''
+    log = ''
+    if log_property:
+        log = 'y'
+        if flip_axes: log = 'x'
+
+    min_x = 0.0
+    if flip_axes:
+        max_x, max_y = max_y, max_x
+        min_x, min_y = min_y, min_x
     
     robjects.r.options(scipen=10)
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
                     type='p', col='red', las = 1, log=log,
-                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(min_y,max_y),
+                    xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(min_y,max_y),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
+    if format == 'rscript':
+        file.write('options(scipen=10)\n')
+        file.write(('plot(c(), c(), type="p", col="red", las=1, log="%s",' +
+                    'xlim=c(%f,%f), ylim=c(%f,%f), xaxs="i", yaxs="i",' +
+                    'xlab="", ylab="", cex.main=1.5)\n') % (log, min_x, max_x, min_y, max_y))
+        file.write('par(new=1)\n\n\n\n')
 
     legend_strs = []
     legend_colors = []
@@ -234,6 +252,9 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
         xs = s['xs']
         ys = s['ys']
 
+        if flip_axes:
+            xs, ys = ys, xs
+
         # plot points
         if colored_instance_groups:
             col = color_styles[s['instance_group']]
@@ -244,41 +265,75 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
 
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
                         type='p', col=col, pch=pch, log=log,
-                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(min_y,max_y),
+                        xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(min_y,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
         robjects.r.par(new=1)
+        if format == 'rscript':
+            file.write(('plot(c(%s), c(%s), type="p", col="%s", pch=%d, log="%s", ' +
+                        'xlim=c(%f,%f), ylim=c(%f,%f), xaxs="i", yaxs="i", xaxt="n", yaxt="n", axes=0,' +
+                        'xlab="", ylab="", cex.main=1.5)\n')
+                        % (','.join(map(str, xs)), ','.join(map(str, ys)), col, pch, log, min_x, max_x, min_y, max_y))
+            file.write('par(new=1)\n')
 
         # plot lines
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
                         type='l', col=col,lty=1, log=log,
-                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(min_y,max_y),
+                        xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(min_y,max_y),
                         xaxs='i', yaxs='i',
                         xaxt='n', yaxt='n',
                         axes=False, xlab='',ylab='', **{'cex.main': 1.5})
         robjects.r.par(new=1)
+        if format == 'rscript':
+            file.write(('plot(c(%s), c(%s), type="l", col="%s", lty=1, log="%s",' +
+                        'xlim=c(%f,%f), ylim=c(%f,%f), xaxs="i", yaxs="i", xaxt="n", yaxt="n", axes=0,' +
+                        'xlab="", ylab="", cex.main=1.5)\n')
+                        % (','.join(map(str, xs)), ','.join(map(str, ys)), col, log, min_x, max_x, min_y, max_y))
+            file.write('par(new=1)\n\n\n')
+
 
         legend_strs.append('%s (G%d)' % (newline_split_string(s['name'], 20), s['instance_group']))
         legend_colors.append(col)
         legend_point_styles.append(pch)
 
     # plot labels and axes
-    robjects.r.mtext('number of solved instances', side=1,
-                     line=3, cex=1.2) # bottom axis label
-    robjects.r.mtext(ylabel, side=2, padj=0,
-                     line=3, cex=1.2) # left axis label
+    if flip_axes:
+        robjects.r.mtext(ylabel, side=1,
+                         line=3, cex=1.2) # bottom axis label
+        robjects.r.mtext('number of solved instances', side=2, padj=0,
+                         line=3, cex=1.2) # left axis label
+    else:
+        robjects.r.mtext('number of solved instances', side=1,
+                         line=3, cex=1.2) # bottom axis label
+        robjects.r.mtext(ylabel, side=2, padj=0,
+                         line=3, cex=1.2) # left axis label
     robjects.r.mtext(title,
                      padj=1, side=3, line=3, cex=1.7) # plot title
-
     robjects.r.par(xpd=True)
-    
+
+    if format == 'rscript':
+        if flip_axes:
+            file.write('mtext("%s", side=1, line=3, cex=1.2)\n'% (ylabel))
+            file.write('mtext("number of solved instances", side=2, padj=0, line=3, cex=1.2)\n')
+        else:
+            file.write('mtext("number of solved instances", side=1, line=3, cex=1.2)\n')
+            file.write('mtext("%s", side=2, padj=0, line=3, cex=1.2)\n' % (ylabel))
+        file.write('mtext("%s", padj=1, side=3, line=3, cex=1.7)\n' % (title))
+        file.write('par(xpd=1)\n')
+
     # plot legend
     robjects.r.legend("right", inset=-0.40,
                       legend=robjects.StrVector(legend_strs),
                       col=robjects.StrVector(legend_colors),
                       pch=robjects.IntVector(legend_point_styles), lty=1)
-
+    if format == 'rscript':
+        file.write('legend("right", inset=-0.40, legend=c(%s), col=c(%s), pch=c(%s), lty=1)\n'
+                    % (','.join(map(lambda s: '"' + s + '"', legend_strs)).replace('\n',''),
+                      ','.join(map(lambda s: '"' + s + '"', legend_colors)),
+                      ','.join(map(str, legend_point_styles))))
+        file.close()
+        
     grdevices.dev_off()
 
 

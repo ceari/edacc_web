@@ -21,7 +21,7 @@
             show_plot = function() {
                 data = $('#plot_form').serialize();
                 $('#div_plot').html('<img alt="Generating image..." src="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'"/>');
-                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&pdf">PDF</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&eps">EPS</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&csv">Raw Data (CSV)</a>');
+                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&pdf">PDF</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&eps">EPS</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&csv">Raw Data (CSV)</a> | <a href="{{url_for("plot.cactus_plot", database=database, experiment_id=experiment.idExperiment)}}?dontcache='+Math.random()+'&'+data+'&rscript">R script</a>');
                 return false;
             }
         });
@@ -49,7 +49,8 @@
                         Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
                     </td>
                 </tr>
-                {{ render_field(form.log_y) }}
+                {{ render_field(form.flip_axes) }}
+                {{ render_field(form.log_property) }}
                 <tr><td colspan="2"><span id="add_instance_group_selector"><a href="#">Add another instance selector</a></span> | <span id="remove_instance_group_selector"><a href="#">Remove the last instance selector</a></span></td></tr>
                 <tr><td colspan="2"><input id="instance_groups_count" name="instance_groups_count" type="hidden" value="1"/><input type="submit" value="Show" onclick="show_plot(); return false;" /></td></tr>
             </table>
@@ -59,7 +60,7 @@
     {% if form.result_property.data and form.i.data %}
         {% autoescape false %}
         <img alt="Generating image..." src="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-        Download as <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> | <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a>
+        Download as <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> | <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a> | <a href="{{url_for('plot.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&rscript">R script</a>
         {% endautoescape %}
     {% endif %}
     </div>

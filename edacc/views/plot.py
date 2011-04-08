@@ -494,7 +494,8 @@ def cactus_plot(database, experiment_id):
     instance_groups_count = int(request.args.get('instance_groups_count', 0))
     use_colors_for = request.args.get('use_colors_for', 'solvers')
     colored_instance_groups = (use_colors_for == 'instance_groups')
-    log_y = request.args.has_key('log_y')
+    log_property = request.args.has_key('log_property')
+    flip_axes = request.args.has_key('flip_axes')
     run = request.args.get('run', 'all')
 
     results = db.session.query(db.ExperimentResult)
@@ -555,7 +556,7 @@ def cactus_plot(database, experiment_id):
                 sc_results = filter(lambda r: r is not None, res)
 
             sc_results = sorted(sc_results)
-            if not log_y:
+            if not log_property:
                 s['ys'].append(0)
                 s['xs'].append(0)
 
@@ -594,7 +595,7 @@ def cactus_plot(database, experiment_id):
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.pdf'
-        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_y, ylabel, title, filename, format='pdf')
+        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_property, flip_axes, ylabel, title, filename, format='pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + '_cactus.pdf'))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -602,15 +603,23 @@ def cactus_plot(database, experiment_id):
         return response
     elif request.args.has_key('eps'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.eps'
-        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_y, ylabel, title, filename, format='eps')
+        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_property, flip_axes, ylabel, title, filename, format='eps')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + '_cactus.eps'))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
+    elif request.args.has_key('rscript'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.txt'
+        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_property, flip_axes, ylabel, title, filename, format='rscript')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + '_cactus.txt'))
+        response = Response(response=open(filename, 'rb').read(), mimetype='text/plain', headers=headers)
+        os.remove(filename)
+        return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.png'
-        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_y, ylabel, title, filename)
+        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_property, flip_axes, ylabel, title, filename)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
