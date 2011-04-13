@@ -771,10 +771,10 @@ def experiment_result(database, experiment_id, result_id):
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if result.solver_configuration.solver.user != g.User: abort(401)
 
-    solverOutput = result.solverOutput
-    launcherOutput = result.launcherOutput
-    watcherOutput = result.watcherOutput
-    verifierOutput = result.verifierOutput
+    solverOutput = result.output.solverOutput
+    launcherOutput = result.output.launcherOutput
+    watcherOutput = result.output.watcherOutput
+    verifierOutput = result.output.verifierOutput
 
     solverOutput_text = utils.formatOutputFile(solverOutput)
     launcherOutput_text = utils.formatOutputFile(launcherOutput)
@@ -827,7 +827,7 @@ def solver_output_download(database, experiment_id, result_id):
     headers.add('Content-Type', 'text/plain')
     headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
-    return Response(response=result.solverOutput, headers=headers)
+    return Response(response=result.output.solverOutput, headers=headers)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-launcher-output')

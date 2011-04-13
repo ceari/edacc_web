@@ -258,11 +258,13 @@ class EDACCDatabase(object):
                     'seed': self.seed,
                     'startTime': str(self.startTime),
                     'computeQueue': self.computeQueue,
-                    'solverExitCode': self.solverExitCode,
-                    'watcherExitCode': self.watcherExitCode,
-                    'verifierExitCode': self.verifierExitCode,
+                    'solverExitCode': self.output.solverExitCode,
+                    'watcherExitCode': self.output.watcherExitCode,
+                    'verifierExitCode': self.output.verifierExitCode,
                     'priority': self.priority,
                 }
+
+        class ExperimentResultOutput(object): pass
 
         class InstanceClass(object):
             def __str__(self):
@@ -349,6 +351,7 @@ class EDACCDatabase(object):
         self.Instance = Instance
         self.Experiment = Experiment
         self.ExperimentResult = ExperimentResult
+        self.ExperimentResultOutput = ExperimentResultOutput
         self.InstanceClass = InstanceClass
         self.GridQueue = GridQueue
 
@@ -411,19 +414,10 @@ class EDACCDatabase(object):
                 'results': relation(ExperimentResult)
             }
         )
+        mapper(ExperimentResultOutput, metadata.tables['ExperimentResultsOutput'])
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
-                'solverOutput': deferred(metadata.tables['ExperimentResults'].c.solverOutput),
-                'launcherOutput': deferred(metadata.tables['ExperimentResults'].c.launcherOutput),
-                'watcherOutput': deferred(metadata.tables['ExperimentResults'].c.watcherOutput),
-                'verifierOutput': deferred(metadata.tables['ExperimentResults'].c.verifierOutput),
-                'solverOutputFN': deferred(metadata.tables['ExperimentResults'].c.solverOutputFN),
-                'launcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.launcherOutputFN),
-                'watcherOutputFN': deferred(metadata.tables['ExperimentResults'].c.watcherOutputFN),
-                'verifierOutputFN': deferred(metadata.tables['ExperimentResults'].c.verifierOutputFN),
-                'solverExitCode': deferred(metadata.tables['ExperimentResults'].c.solverExitCode),
-                'watcherExitCode': deferred(metadata.tables['ExperimentResults'].c.watcherExitCode),
-                'verifierExitCode': deferred(metadata.tables['ExperimentResults'].c.verifierExitCode),
+                'output': relation(ExperimentResultOutput),
                 'date_modified': deferred(metadata.tables['ExperimentResults'].c.date_modified),
                 'seed': deferred(metadata.tables['ExperimentResults'].c.seed),
                 'computeQueue': deferred(metadata.tables['ExperimentResults'].c.computeQueue),
