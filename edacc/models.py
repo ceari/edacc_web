@@ -221,7 +221,7 @@ class EDACCDatabase(object):
                 if self.status == STATUS_FINISHED \
                         or self.status in STATUS_EXCEEDED_LIMITS :
                     if not str(self.resultCode).startswith('1'):
-                        return self.experiment.CPUTimeLimit
+                        return self.CPUTimeLimit
                     else:
                         return self.resultTime
 
@@ -417,7 +417,7 @@ class EDACCDatabase(object):
         mapper(ExperimentResultOutput, metadata.tables['ExperimentResultsOutput'])
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
-                'output': relation(ExperimentResultOutput),
+                'output': relation(ExperimentResultOutput, backref='result', uselist=False),
                 'date_modified': deferred(metadata.tables['ExperimentResults'].c.date_modified),
                 'seed': deferred(metadata.tables['ExperimentResults'].c.seed),
                 'computeQueue': deferred(metadata.tables['ExperimentResults'].c.computeQueue),
