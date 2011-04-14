@@ -560,6 +560,8 @@ def experiment_progress_ajax(database, experiment_id):
     if request.args.has_key('sSearch') and request.args.get('sSearch') != '':
         where_clause += "(ExperimentResults.idJob LIKE %s OR "
         where_clause += "Instances.name LIKE %s OR "
+        where_clause += "ResultCodes.description LIKE %s OR "
+        where_clause += "StatusCodes.description LIKE %s OR "
         where_clause += "ExperimentResults.run LIKE %s OR "
         where_clause += "ExperimentResults.resultTime LIKE %s OR "
         where_clause += "ExperimentResults.seed LIKE %s OR "
@@ -574,7 +576,7 @@ def experiment_progress_ajax(database, experiment_id):
                     CASE ExperimentResults.resultCode
                         """ + '\n'.join(["WHEN %d THEN '%s'" % (k, v) for k, v in JOB_RESULT_CODE.iteritems()]) + """
                     END LIKE %s) """
-        params += ['%' + request.args.get('sSearch') + '%'] * 10 # 10 conditions
+        params += ['%' + request.args.get('sSearch') + '%'] * 12 # 12 conditions
 
     if where_clause != "": where_clause += " AND "
     where_clause += "ExperimentResults.Experiment_idExperiment = %s "

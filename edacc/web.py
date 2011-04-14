@@ -69,8 +69,6 @@ app.register_module(plot)
 app.register_module(api)
 
 app.jinja_env.filters['download_size'] = utils.download_size
-app.jinja_env.filters['job_status'] = utils.job_status
-app.jinja_env.filters['result_code'] = utils.result_code
 app.jinja_env.filters['job_status_color'] = utils.job_status_color
 app.jinja_env.filters['job_result_code_color'] = utils.job_result_code_color
 app.jinja_env.filters['launch_command'] = utils.launch_command
