@@ -601,10 +601,12 @@ def experiment_progress_ajax(database, experiment_id):
                        SolverConfig.idSolverConfig, Instances.name,
                        ExperimentResults.run, ExperimentResults.resultTime,
                        ExperimentResults.seed, ExperimentResults.status,
-                       ExperimentResults.resultCode,
+                       StatusCodes.description, ResultCodes.description,
                        TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW()) AS runningTime
                        """ + (',' if prop_columns else '') + prop_columns + """
                  FROM ExperimentResults
+                    LEFT JOIN ResultCodes ON ExperimentResults.resultCode=ResultCodes.resultCode
+                    LEFT JOIN StatusCodes ON ExperimentResults.status=StatusCodes.statusCode
                     LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
                     LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
                     """+prop_joins+"""
@@ -630,16 +632,17 @@ def experiment_progress_ajax(database, experiment_id):
 
     aaData = []
     for job in jobs:
-        status = utils.job_status(job[6])
-        if job[6] == STATUS_RUNNING:
+        status = job[7]
+        if status == 'running':
             try:
-                seconds_running = int(job[8])
+                seconds_running = int(job[9])
             except:
                 seconds_running = 0
             status += ' (' + str(datetime.timedelta(seconds=seconds_running)) + ')'
+
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
-                job[4], job[5], status, utils.result_code(job[7]), str(job[6])] \
-                + [job[i] for i in xrange(9, 9+len(result_properties))]
+                job[4], job[5], status, job[8], job[6]] \
+                + [job[i] for i in xrange(10, 10+len(result_properties))]
             )
 
     if request.args.has_key('csv'):
@@ -648,7 +651,7 @@ def experiment_progress_ajax(database, experiment_id):
         csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'Status', 'Result'] +
                             [p.name for p in result_properties])
         for d in aaData:
-            csv_writer.writerow(d[0:8] + d[9:])
+            csv_writer.writerow(d[0:9] + d[10:])
         csv_response.seek(0)
         headers = Headers()
         headers.add('Content-Type', 'text/csv')

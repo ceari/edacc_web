@@ -343,6 +343,8 @@ class EDACCDatabase(object):
                 except ValueError:
                     return None
 
+        class ResultCodes(object): pass
+        class StatusCodes(object): pass
 
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
@@ -354,6 +356,8 @@ class EDACCDatabase(object):
         self.ExperimentResultOutput = ExperimentResultOutput
         self.InstanceClass = InstanceClass
         self.GridQueue = GridQueue
+        self.ResultCodes = ResultCodes
+        self.StatusCodes = StatusCodes
 
         self.User = User
         self.DBConfiguration = DBConfiguration
@@ -414,6 +418,8 @@ class EDACCDatabase(object):
                 'results': relation(ExperimentResult)
             }
         )
+        mapper(StatusCodes, metadata.tables['StatusCodes'])
+        mapper(ResultCodes, metadata.tables['ResultCodes'])
         mapper(ExperimentResultOutput, metadata.tables['ExperimentResultsOutput'])
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
@@ -425,6 +431,8 @@ class EDACCDatabase(object):
                 'properties': relationship(ExperimentResultProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),
                 'instance': relation(Instance, backref='results'),
+                'status_code': relation(StatusCodes, uselist=False),
+                'result_code': relation(ResultCodes, uselist=False),
             }
         )
 
