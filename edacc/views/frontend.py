@@ -232,7 +232,7 @@ def experiment_results(database, experiment_id):
             jobs = rs[idSolverConfig]
 
             completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
-            runtimes = [j.get_time() or experiment.CPUTimeLimit for j in jobs]
+            runtimes = [j.get_time() or j.CPUTimeLimit for j in jobs]
             runtimes = filter(lambda r: r is not None, runtimes)
             runtimes = runtimes or [0]
             time_max = max(runtimes)
@@ -333,7 +333,7 @@ def experiment_results_by_solver(database, experiment_id):
             for run in runs_by_instance[instance]:
                 count += 1
                 if run.status != 1 or not str(run.resultCode).startswith('1'):
-                    total_time += experiment.CPUTimeLimit * 10
+                    total_time += run.CPUTimeLimit * 10
                 else:
                     total_time += run.resultTime
 
@@ -418,7 +418,7 @@ def experiment_results_by_instance(database, experiment_id):
                     if j.get_time() is not None:
                         count += 1
                         if not str(j.resultCode).startswith('1') or j.status != 1:
-                            par10 += experiment.CPUTimeLimit * 10
+                            par10 += j.CPUTimeLimit * 10
                         else:
                             par10 += j.get_time()
                 if count > 0:

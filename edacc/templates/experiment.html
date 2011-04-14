@@ -56,11 +56,6 @@
     <table style="float: left; margin-right: 50px;" border="0">
         <tr><td>Date:</td><td style="padding-left: 5px">{{experiment.date|datetimeformat('%d %B %Y')}}</td></tr>
         <tr><td>Description:</td><td style="padding-left: 5px">{{experiment.description if experiment.description else "no description"}}</td></tr>
-        <tr><td>Timeout (sec):</td><td style="padding-left: 5px">{{experiment.CPUTimeLimit if experiment.CPUTimeLimit != -1 else '-'}}</td></tr>
-        <tr><td>Max memory (MB):</td><td style="padding-left: 5px">{{experiment.memoryLimit if experiment.memoryLimit != -1 else '-'}}</td></tr>
-        <tr><td>Wall clock limit (sec):</td><td style="padding-left: 5px">{{experiment.wallClockTimeLimit if experiment.wallClockTimeLimit != -1 else '-'}}</td></tr>
-        <tr><td>Stack size limit (MB):</td><td style="padding-left: 5px">{{experiment.stackSizeLimit if experiment.stackSizeLimit != -1 else '-'}}</td></tr>
-        <tr><td>Output size limit (MB):</td><td style="padding-left: 5px">{{experiment.outputSizeLimit if experiment.outputSizeLimit != -1 else '-'}}</td></tr>
     </table>
     <table border="0">
         <tr><td>Jobs:</td><td colspan="2" style="padding-left: 5px" id="progress_num_jobs"><img src="{{url_for('static', filename='img/ajax-loader.gif')}}" /></td></tr>
