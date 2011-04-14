@@ -850,7 +850,7 @@ def launcher_output_download(database, experiment_id, result_id):
     headers.add('Content-Type', 'text/plain')
     headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
-    return Response(response=result.launcherOutput, headers=headers)
+    return Response(response=result.output.launcherOutput, headers=headers)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-watcher-output')
@@ -868,7 +868,7 @@ def watcher_output_download(database, experiment_id, result_id):
     headers.add('Content-Type', 'text/plain')
     headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
-    return Response(response=result.watcherOutput, headers=headers)
+    return Response(response=result.output.watcherOutput, headers=headers)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>/download-verifier-output')
@@ -886,4 +886,4 @@ def verifier_output_download(database, experiment_id, result_id):
     headers.add('Content-Type', 'text/plain')
     headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
-    return Response(response=result.verifierOutput, headers=headers)
+    return Response(response=result.output.verifierOutput, headers=headers)
