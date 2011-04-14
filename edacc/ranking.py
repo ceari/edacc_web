@@ -144,8 +144,10 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
     num_unsolved_instances = len(instances) - len(best_instance_runtimes)
 
-    vbs_par10 = vbs_cumulated_cpu + 10.0 * experiment.CPUTimeLimit * num_unsolved_instances * num_runs
-    vbs_par10 = vbs_par10 / num_runs_per_solver if num_runs_per_solver != 0 else 0
+    #vbs_par10 = vbs_cumulated_cpu + 10.0 * experiment.CPUTimeLimit * num_unsolved_instances * num_runs
+    #vbs_par10 = vbs_par10 / num_runs_per_solver if num_runs_per_solver != 0 else 0
+    # TODO: make this work somehow with the new DB model (no more experiment.CPUTimeLimit)
+    vbs_par10 = 0.0
 
     # Virtual best solver data
     data = [('Virtual Best Solver (VBS)',                   # name of the solver
@@ -191,13 +193,13 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                                     .filter_by(experiment=experiment, solver_configuration=solver) \
                                     .filter(or_(db.ExperimentResult.status != 1,
                                                 not_(db.ExperimentResult.resultCode.like(u'1%')))) \
-                                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
-                                    .count()
-            if len(successful_runs) + failed_runs == 0:
+                                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
+
+            if len(successful_runs) + len(failed_runs) == 0:
                 # this should mean there are no jobs of this solver yet
-                penalized_average_runtime = 10 * experiment.CPUTimeLimit
+                penalized_average_runtime = 0.0
             else:
-                penalized_average_runtime = (failed_runs * experiment.CPUTimeLimit * 10.0 + successful_runs_sum) \
+                penalized_average_runtime = (sum([j.CPUTimeLimit * 10.0 for j in failed_runs]) + successful_runs_sum) \
                                             / (len(successful_runs) + failed_runs)
 
         avg_stddev_runtime = 0.0
