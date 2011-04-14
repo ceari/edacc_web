@@ -200,7 +200,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                 penalized_average_runtime = 0.0
             else:
                 penalized_average_runtime = (sum([j.CPUTimeLimit * 10.0 for j in failed_runs]) + successful_runs_sum) \
-                                            / (len(successful_runs) + failed_runs)
+                                            / (len(successful_runs) + len(failed_runs))
 
         avg_stddev_runtime = 0.0
         if calculate_avg_stddev:
@@ -225,5 +225,5 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             avg_stddev_runtime,
             penalized_average_runtime
         ))
-    
+
     return data
