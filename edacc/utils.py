@@ -54,7 +54,7 @@ def parameter_string(solver_config):
             args.append("<instance>")
         if p.parameter.hasValue:
             if p.value == "": # if value not set, use default value from parameters table
-                args.append(p.parameter.value or "")
+                args.append(p.parameter.defaultValue or "")
             else:
                 args.append(p.value or "")
     return " ".join(args)
