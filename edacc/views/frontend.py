@@ -572,6 +572,7 @@ def experiment_progress_ajax(database, experiment_id):
         where_clause += "ExperimentResults.seed LIKE %s OR "
         where_clause += "ExperimentResults.computeNode LIKE %s OR "
         where_clause += "ExperimentResults.computeNodeIP LIKE %s OR "
+        where_clause += "gridQueue.name LIKE %s OR "
         where_clause += "SolverConfig.name LIKE %s OR "
         where_clause += """
                     CASE ExperimentResults.status
@@ -581,7 +582,7 @@ def experiment_progress_ajax(database, experiment_id):
                     CASE ExperimentResults.resultCode
                         """ + '\n'.join(["WHEN %d THEN '%s'" % (k, v) for k, v in JOB_RESULT_CODE.iteritems()]) + """
                     END LIKE %s) """
-        params += ['%' + request.args.get('sSearch') + '%'] * 12 # 12 conditions
+        params += ['%' + request.args.get('sSearch') + '%'] * 13 # 13 conditions
 
     if where_clause != "": where_clause += " AND "
     where_clause += "ExperimentResults.Experiment_idExperiment = %s "
