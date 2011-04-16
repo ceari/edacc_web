@@ -24,7 +24,7 @@ LOGGING = False
 LOG_FILE = '/srv/edacc_web/error.log'
 
 # Enable use of piwik web analytics tool
-PIWIK = True
+PIWIK = False
 # URL of the piwik installation to use (omit http://). Trailing slash is important!
 PIWIK_URL = 'localhost/piwik/'
 
@@ -43,5 +43,5 @@ ADMIN_PASSWORD = 'affe42'
 # List of databases this server connects to at startup
 # Format: Tuples of username, password, database, label (used on the pages)
 DEFAULT_DATABASES = (
-    ('edacc', 'pw', 'EDACC', 'EDACC'),
+    ('edacc', 'edaccteam', 'EDACC', 'EDACC', False),
 )

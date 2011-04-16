@@ -539,8 +539,9 @@ def experiment_progress_ajax(database, experiment_id):
     # that column is hidden in the jquery table
     columns = ["ExperimentResults.idJob", "SolverConfig.idSolverConfig", "Instances.name",
                "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
-               "ExperimentResults.status", "StatusCodes.description", "ResultCodes.description", ""
+               "StatusCodes.description", "ResultCodes.description", "ExperimentResults.status",
                "ExperimentResults.CPUTimeLimit", "ExperimentResults.wallClockTimeLimit",
+               "ExperimentResults.memoryLimit",
                "ExperimentResults.stackSizeLimit", "ExperimentResults.outputSizeLimit",
                "ExperimentResults.computeNode", "ExperimentResults.computeNodeIP",
                "ExperimentResults.priority", "ExperimentResults.computeQueue"] + \
