@@ -539,7 +539,11 @@ def experiment_progress_ajax(database, experiment_id):
     # that column is hidden in the jquery table
     columns = ["ExperimentResults.idJob", "SolverConfig.idSolverConfig", "Instances.name",
                "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
-               "ExperimentResults.status", "ExperimentResults.resultCode", ""] + \
+               "ExperimentResults.status", "StatusCodes.description", "ResultCodes.description", ""
+               "ExperimentResults.CPUTimeLimit", "ExperimentResults.wallClockTimeLimit",
+               "ExperimentResults.stackSizeLimit", "ExperimentResults.outputSizeLimit",
+               "ExperimentResults.computeNode", "ExperimentResults.computeNodeIP",
+               "ExperimentResults.priority", "ExperimentResults.computeQueue"] + \
               ["`"+prop.name+"_value`.value" for prop in result_properties]
 
     # build the query part for the result properties that should be included
@@ -565,8 +569,8 @@ def experiment_progress_ajax(database, experiment_id):
         where_clause += "ExperimentResults.run LIKE %s OR "
         where_clause += "ExperimentResults.resultTime LIKE %s OR "
         where_clause += "ExperimentResults.seed LIKE %s OR "
-        where_clause += "ExperimentResults.status LIKE %s OR "
-        where_clause += "ExperimentResults.resultCode LIKE %s OR "
+        where_clause += "ExperimentResults.computeNode LIKE %s OR "
+        where_clause += "ExperimentResults.computeNodeIP LIKE %s OR "
         where_clause += "SolverConfig.name LIKE %s OR "
         where_clause += """
                     CASE ExperimentResults.status
@@ -604,7 +608,11 @@ def experiment_progress_ajax(database, experiment_id):
                        ExperimentResults.run, ExperimentResults.resultTime,
                        ExperimentResults.seed, ExperimentResults.status,
                        StatusCodes.description, ResultCodes.description,
-                       TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW()) AS runningTime
+                       TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW()) AS runningTime,
+                       ExperimentResults.CPUTimeLimit, ExperimentResults.wallClockTimeLimit, ExperimentResults.memoryLimit,
+                       ExperimentResults.stackSizeLimit, ExperimentResults.outputSizeLimit,
+                       ExperimentResults.computeNode, ExperimentResults.computeNodeIP, ExperimentResults.priority,
+                       ExperimentResults.computeQueue
                        """ + (',' if prop_columns else '') + prop_columns + """
                  FROM ExperimentResults
                     LEFT JOIN ResultCodes ON ExperimentResults.resultCode=ResultCodes.resultCode
@@ -643,17 +651,20 @@ def experiment_progress_ajax(database, experiment_id):
             status += ' (' + str(datetime.timedelta(seconds=seconds_running)) + ')'
 
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
-                job[4], job[5], status, job[8], job[6]] \
-                + [job[i] for i in xrange(10, 10+len(result_properties))]
+                job[4], job[5], status, job[8], job[6], \
+                job[10], job[11], job[12], job[13], job[14], job[15], job[16], job[17], job[18] ] \
+                + [job[i] for i in xrange(19, 19+len(result_properties))]
             )
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'Status', 'Result'] +
+        csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'status code', 'Status'] +
+                            ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
+                            ['stackSizeLimit', 'outputSizeLimit', 'computeNode', 'computeNodeIP', 'priority', 'computeQueue ID'] +
                             [p.name for p in result_properties])
         for d in aaData:
-            csv_writer.writerow(d[0:9] + d[10:])
+            csv_writer.writerow(d[0:19] + d[19:])
         csv_response.seek(0)
         headers = Headers()
         headers.add('Content-Type', 'text/csv')

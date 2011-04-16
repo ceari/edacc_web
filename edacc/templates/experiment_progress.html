@@ -32,7 +32,10 @@
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[8]]);
                     return nRow;
 				},
-                "aoColumns": [null, null, null, null, null, null, null, null, {"bVisible": false}, {% for prop in db.get_result_properties() %}null, {%endfor%}]
+                "aoColumns": [null, null, null, null, null, null, null, null, {"bVisible": false},
+                             {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
+                             {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
+                             {% for prop in db.get_result_properties() %}null, {%endfor%}]
             });
 
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="{{url_for('static', filename='img/clear.png')}}" title="Clear"/>');
@@ -188,7 +191,16 @@
                 <th>Seed</th>
                 <th>Status</th>
                 <th>Result</th>
-                <th>Status</th>
+                <th>Status code</th>
+                <th>CPU time limit</th>
+                <th>Wall Clock limit</th>
+                <th>Memory limit</th>
+                <th>Stack size limit</th>
+                <th>Output size limit</th>
+                <th>Compute node</th>
+                <th>Compute node IP</th>
+                <th>Priority</th>
+                <th>Compute queue ID</th>
                 {% for prop in db.get_result_properties() %}
                 <th>{{prop.name}}</th>
                 {% endfor %}
