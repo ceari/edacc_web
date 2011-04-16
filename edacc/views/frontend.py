@@ -544,7 +544,7 @@ def experiment_progress_ajax(database, experiment_id):
                "ExperimentResults.memoryLimit",
                "ExperimentResults.stackSizeLimit", "ExperimentResults.outputSizeLimit",
                "ExperimentResults.computeNode", "ExperimentResults.computeNodeIP",
-               "ExperimentResults.priority", "ExperimentResults.computeQueue"] + \
+               "ExperimentResults.priority", "gridQueue.name"] + \
               ["`"+prop.name+"_value`.value" for prop in result_properties]
 
     # build the query part for the result properties that should be included
@@ -613,13 +613,14 @@ def experiment_progress_ajax(database, experiment_id):
                        ExperimentResults.CPUTimeLimit, ExperimentResults.wallClockTimeLimit, ExperimentResults.memoryLimit,
                        ExperimentResults.stackSizeLimit, ExperimentResults.outputSizeLimit,
                        ExperimentResults.computeNode, ExperimentResults.computeNodeIP, ExperimentResults.priority,
-                       ExperimentResults.computeQueue
+                       gridQueue.name
                        """ + (',' if prop_columns else '') + prop_columns + """
                  FROM ExperimentResults
                     LEFT JOIN ResultCodes ON ExperimentResults.resultCode=ResultCodes.resultCode
                     LEFT JOIN StatusCodes ON ExperimentResults.status=StatusCodes.statusCode
                     LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
                     LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
+                    LEFT JOIN gridQueue ON gridQueue.idgridQueue=ExperimentResults.computeQueue
                     """+prop_joins+"""
                  WHERE """ + where_clause + " " + order + " " + limit, tuple(params))
 
