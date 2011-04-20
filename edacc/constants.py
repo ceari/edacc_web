@@ -88,6 +88,9 @@ JOB_STATUS_COLOR = {
     25: '#FF6600',
 }
 
+for sig in range(1, 31):
+    JOB_STATUS_COLOR[-400 - sig] = '#FF0000'
+
 OWN_RESULTS = set([3, 4, 5])        # phases where own results are shown
 ALL_RESULTS = set([6, 7])           # phases where all results are shown
 INSTANCE_DETAILS = set([6, 7])      # phases where full access to instance details/downloads is granted

@@ -169,7 +169,7 @@ def download_instances(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     instances = experiment.get_instances(db)
-    
+
     tmp_file = tempfile.TemporaryFile("w+b")
     tar_file = tarfile.open(mode='w', fileobj=tmp_file)
     for instance in instances:
@@ -180,7 +180,7 @@ def download_instances(database, experiment_id):
         instance_tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
         tar_file.addfile(instance_tar_info, fileobj=StringIO.StringIO(instance_blob))
     tar_file.close()
-    
+
     file_size = tmp_file.tell()
     tmp_file.seek(0)
 
@@ -263,7 +263,7 @@ def experiment_results(database, experiment_id):
             csv_writer.writerow([''] + ['median', 'min.', 'max.', 'avg.', 'stddev', 'var coeff.'] * len(solver_configs_dict))
         else:
             csv_writer.writerow(['Instance'] + map(str, solver_configs_dict.values()))
-            
+
         for row in results:
             write_row = [row['instance'].name]
             for sc_results in row['times']:
@@ -347,7 +347,7 @@ def experiment_results_by_solver(database, experiment_id):
             csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'])
             results = [[res[0].name] + [r.get_time() for r in res[1]] +
                        [round(par10_by_instance[res[0].idInstance], 2)] for res in results]
-            
+
             if request.args.get('sort_by_instance_name', None):
                 sort_dir = request.args.get('sort_by_instance_name_dir', 'asc')
                 results.sort(key=lambda r: r[0], reverse=sort_dir=='desc')
@@ -359,7 +359,7 @@ def experiment_results_by_solver(database, experiment_id):
             search = request.args.get('search', "")
             if search:
                 results = filter(lambda r: search in r[0], results)
-                
+
             for res in results:
                 csv_writer.writerow(res)
             csv_response.seek(0)
@@ -651,7 +651,7 @@ def experiment_progress_ajax(database, experiment_id):
         if job[6] == 0: # status == running
             running = str(datetime.timedelta(seconds=job[9]))
         else:
-            running = ""
+            running = "not running"
 
 
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
