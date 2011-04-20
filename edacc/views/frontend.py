@@ -539,7 +539,7 @@ def experiment_progress_ajax(database, experiment_id):
     # that column is hidden in the jquery table
     columns = ["ExperimentResults.idJob", "SolverConfig.idSolverConfig", "Instances.name",
                "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
-               "StatusCodes.description, runningTime", "ResultCodes.description", "ExperimentResults.status",
+               "StatusCodes.description", "runningTime", "ResultCodes.description", "ExperimentResults.status",
                "ExperimentResults.CPUTimeLimit", "ExperimentResults.wallClockTimeLimit",
                "ExperimentResults.memoryLimit",
                "ExperimentResults.stackSizeLimit", "ExperimentResults.outputSizeLimit",
@@ -610,7 +610,10 @@ def experiment_progress_ajax(database, experiment_id):
                        ExperimentResults.run, ExperimentResults.resultTime,
                        ExperimentResults.seed, ExperimentResults.status,
                        StatusCodes.description, ResultCodes.description,
-                       TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW()) AS runningTime,
+                       CASE
+                           WHEN status=0 THEN TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW())
+                           ELSE 0
+                       END as runningTime,
                        ExperimentResults.CPUTimeLimit, ExperimentResults.wallClockTimeLimit, ExperimentResults.memoryLimit,
                        ExperimentResults.stackSizeLimit, ExperimentResults.outputSizeLimit,
                        ExperimentResults.computeNode, ExperimentResults.computeNodeIP, ExperimentResults.priority,
@@ -645,16 +648,14 @@ def experiment_progress_ajax(database, experiment_id):
 
     aaData = []
     for job in jobs:
-        status = job[7]
-        if status == 'running':
-            try:
-                seconds_running = int(job[9])
-            except:
-                seconds_running = 0
-            status += ' (' + str(datetime.timedelta(seconds=seconds_running)) + ')'
+        if job[6] == 0: # status == running
+            running = str(datetime.timedelta(seconds=job[9]))
+        else:
+            running = ""
+
 
         aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
-                job[4], job[5], status, job[8], job[6], \
+                job[4], job[5], job[7], running , job[8], job[6], \
                 job[10], job[11], job[12], job[13], job[14], job[15], job[16], job[17], job[18] ] \
                 + [job[i] for i in xrange(19, 19+len(result_properties))]
             )
@@ -667,7 +668,7 @@ def experiment_progress_ajax(database, experiment_id):
                             ['stackSizeLimit', 'outputSizeLimit', 'computeNode', 'computeNodeIP', 'priority', 'computeQueue ID'] +
                             [p.name for p in result_properties])
         for d in aaData:
-            csv_writer.writerow(d[0:19] + d[19:])
+            csv_writer.writerow(d[0:20] + d[20:])
         csv_response.seek(0)
         headers = Headers()
         headers.add('Content-Type', 'text/csv')
