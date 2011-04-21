@@ -565,6 +565,7 @@ def experiment_progress_ajax(database, experiment_id):
     if request.args.has_key('sSearch') and request.args.get('sSearch') != '':
         where_clause += "(ExperimentResults.idJob LIKE %s OR "
         where_clause += "Instances.name LIKE %s OR "
+        where_clause += "SolverConfig.name LIKE %s OR "
         where_clause += "ResultCodes.description LIKE %s OR "
         where_clause += "StatusCodes.description LIKE %s OR "
         where_clause += "ExperimentResults.run LIKE %s OR "
@@ -573,16 +574,8 @@ def experiment_progress_ajax(database, experiment_id):
         where_clause += "ExperimentResults.computeNode LIKE %s OR "
         where_clause += "ExperimentResults.computeNodeIP LIKE %s OR "
         where_clause += "gridQueue.name LIKE %s OR "
-        where_clause += "SolverConfig.name LIKE %s OR "
-        where_clause += """
-                    CASE ExperimentResults.status
-                        """ + '\n'.join(["WHEN %d THEN '%s'" % (k, v) for k, v in JOB_STATUS.iteritems()]) + """
-                    END LIKE %s
-                    OR
-                    CASE ExperimentResults.resultCode
-                        """ + '\n'.join(["WHEN %d THEN '%s'" % (k, v) for k, v in JOB_RESULT_CODE.iteritems()]) + """
-                    END LIKE %s) """
-        params += ['%' + request.args.get('sSearch') + '%'] * 13 # 13 conditions
+        where_clause += "SolverConfig.name LIKE %s ) """
+        params += ['%' + request.args.get('sSearch') + '%'] * 12 # 12 conditions
 
     if where_clause != "": where_clause += " AND "
     where_clause += "ExperimentResults.Experiment_idExperiment = %s "
@@ -606,7 +599,7 @@ def experiment_progress_ajax(database, experiment_id):
 
     conn = db.session.connection()
     res = conn.execute("""SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
-                       SolverConfig.idSolverConfig, Instances.name,
+                       SolverConfig.name, Instances.name,
                        ExperimentResults.run, ExperimentResults.resultTime,
                        ExperimentResults.seed, ExperimentResults.status,
                        StatusCodes.description, ResultCodes.description,
@@ -641,11 +634,6 @@ def experiment_progress_ajax(database, experiment_id):
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         jobs = filter(lambda j: db.session.query(db.SolverConfiguration).get(j[1]).solver.user == g.User, jobs)
 
-    # cache solver configuration names in a dictionary
-    solver_config_names = {}
-    for solver_config in experiment.solver_configurations:
-        solver_config_names[solver_config.idSolverConfig] = solver_config.get_name()
-
     aaData = []
     for job in jobs:
         if job[6] == 0: # status == running
@@ -653,8 +641,7 @@ def experiment_progress_ajax(database, experiment_id):
         else:
             running = "not running"
 
-
-        aaData.append([job.idJob, solver_config_names[job[1]], job[2], job[3],
+        aaData.append([job.idJob, job[1], job[2], job[3],
                 job[4], job[5], job[7], running , job[8], job[6], \
                 job[10], job[11], job[12], job[13], job[14], job[15], job[16], job[17], job[18] ] \
                 + [job[i] for i in xrange(19, 19+len(result_properties))]

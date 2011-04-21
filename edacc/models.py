@@ -381,7 +381,6 @@ class EDACCDatabase(object):
                 'instance': deferred(metadata.tables['Instances'].c.instance),
                 'instance_classes': relationship(InstanceClass,
                     secondary=metadata.tables['Instances_has_instanceClass'], backref='instances'),
-                'source_class': relation(InstanceClass, backref='source_instances'),
                 'properties': relation(InstanceProperties, backref='instance'),
             }
         )
