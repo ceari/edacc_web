@@ -533,6 +533,7 @@ def experiment_progress_ajax(database, experiment_id):
         return json.dumps({'aaData': []})
 
     result_properties = db.get_result_properties()
+    instance_properties = db.get_instance_properties()
 
     # list of columns of the SQL query
     # dummy column ("") in the middle for correct indexing in the ORDER part since
@@ -545,7 +546,8 @@ def experiment_progress_ajax(database, experiment_id):
                "ExperimentResults.stackSizeLimit", "ExperimentResults.outputSizeLimit",
                "ExperimentResults.computeNode", "ExperimentResults.computeNodeIP",
                "ExperimentResults.priority", "gridQueue.name"] + \
-              ["`"+prop.name+"_value`.value" for prop in result_properties]
+              ["`"+prop.name+"_value`.value" for prop in result_properties] + \
+              ["`"+iprop.name+"_value`.value" for iprop in instance_properties]
 
     # build the query part for the result properties that should be included
     prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
@@ -559,6 +561,16 @@ def experiment_progress_ajax(database, experiment_id):
         prop_joins += """LEFT JOIN ExperimentResult_has_PropertyValue as `%s_value` ON
                         `%s_value`.idExperimentResult_has_Property = `%s_hasP`.idExperimentResult_has_Property
                       """ % (prop.name, prop.name, prop.name)
+
+    # build the query part for the instance properties that should be included
+    #inst_prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
+    #                         prop.name+"_value`.value END" for prop in instance_properties])
+    #inst_prop_joins = ""
+    #for prop in instance_properties:
+    #    inst_prop_joins += """LEFT JOIN Instance_has_Property as `%s_value` ON
+    #                    (`%s_value`.idInstance = Instances.idInstance
+    #                    AND `%s_value`.idProperty = %d)
+    #                  """ % (prop.name, prop.name, prop.name, prop.idProperty)
 
     params = []
     where_clause = ""
@@ -645,6 +657,7 @@ def experiment_progress_ajax(database, experiment_id):
                 job[4], job[5], job[7], running , job[8], job[6], \
                 job[10], job[11], job[12], job[13], job[14], job[15], job[16], job[17], job[18] ] \
                 + [job[i] for i in xrange(19, 19+len(result_properties))]
+                #+ [job[i] for i in xrange(19+len(result_properties), 19+len(result_properties)+len(instance_properties))]
             )
 
     if request.args.has_key('csv'):
@@ -653,9 +666,9 @@ def experiment_progress_ajax(database, experiment_id):
         csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'status code', 'Status'] +
                             ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
                             ['stackSizeLimit', 'outputSizeLimit', 'computeNode', 'computeNodeIP', 'priority', 'computeQueue ID'] +
-                            [p.name for p in result_properties])
+                            [p.name for p in result_properties] + [p.name for p in instance_properties])
         for d in aaData:
-            csv_writer.writerow(d[0:20] + d[20:])
+            csv_writer.writerow(d)
         csv_response.seek(0)
         headers = Headers()
         headers.add('Content-Type', 'text/csv')

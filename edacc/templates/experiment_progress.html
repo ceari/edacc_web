@@ -35,7 +35,7 @@
                 "aoColumns": [null, null, null, null, null, null, null, null, null, {"bVisible": false},
                              {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
                              {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
-                             {% for prop in db.get_result_properties() %}null, {%endfor%}]
+                             {% for prop in db.get_result_properties() %}{"bVisible": false}, {%endfor%}]
             });
 
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="{{url_for('static', filename='img/clear.png')}}" title="Clear"/>');
@@ -205,6 +205,9 @@
                 {% for prop in db.get_result_properties() %}
                 <th>{{prop.name}}</th>
                 {% endfor %}
+                <!--{% for prop in db.get_instance_properties() %}
+                <th>{{prop.name}}</th>
+                {% endfor %}-->
             </tr>
         </thead>
         <tbody>
