@@ -8,9 +8,39 @@
     <script src="{{url_for('static', filename='js/jquery.hotkeys.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-            $('#results').tablesorter({
+            //Sorted Column Highlight Widget by Bill Beckelman http://beckelman.net
+            //Requires sortedeven and sortedodd classes in your CSS
+            $.tablesorter.addWidget({
+                id: "columnHighlight",
+                format: function(table) {
+                    $("td", table.tBodies[0]).removeClass("sortedeven").removeClass("sortedodd");
+                    var ascSort = "th." + table.config.cssAsc;
+                    var descSort = "th." + table.config.cssDesc;
+
+                    $(table.tHead).find(ascSort).add($(table.tHead).find(descSort)).each(function() {
+                        $("tr:visible", table.tBodies[0]).find("td:nth-child(" + ($("thead th", table).index(this) + 1) + ")")
+                            .filter(':even').addClass("sortedeven").end()
+                            .filter(':odd').addClass("sortedodd");
+                    });
+                }
+            });
+
+            $.tablesorter.addWidget({
+                // give the widget a id
+                id: "indexFirstColumn",
+                // format is called when the on init and when a sorting has finished
+                format: function(table) {
+                        // loop all tr elements and set the value for the first column
+                        for(var i=0; i < table.tBodies[0].rows.length; i++) {
+                                $("tbody tr:eq(" + (i) + ") td:first",table).html(i+1);
+                        }
+                }
+            });
+
+            $('#ranking').tablesorter({
+                widgets: ['zebra', 'columnHighlight', 'indexFirstColumn'],
             	headers: {
-            		0: {sorter: 'digit'},
+            	    0: {sorter: 'digit'},
                     2: {sorter: 'digit'},
                     3: {sorter: 'digit'},
                     4: {sorter: 'digit'},
@@ -65,8 +95,8 @@
         sucessful on that instance in any of their <i>numRuns</i> runs. In this case the VBS gets<br/>
         <i>numRuns</i> successful runs on that instance and for each run the run time of the best solver.
     </div>
-    <h3>Ranking by the number of successful runs</h3>
-    <table id="results" class="tablesorter">
+    <h3>Ranking</h3>
+    <table id="ranking" class="tablesorter">
         <thead>
             <tr>
                 <th>#</th>
@@ -86,8 +116,8 @@
         </thead>
         <tbody>
         {% for sc in data %}
-            <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">
-                <td>{% if loop.index0 > 0 %}{{loop.index0}}{% endif %}</td>
+            <tr>
+                <td>{{loop.index1}}</td>
                 <td>{% if loop.index0 > 0 %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}">{{sc.0.get_name()}}</a>{% else %}{{sc.0}}{% endif %}</td>
                 <td>{{sc.1}}</td>
                 <td>{{(sc.2 * 100.0)|round(2)}} %</td>

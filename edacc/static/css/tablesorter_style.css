@@ -36,3 +36,11 @@ table.tablesorter thead tr .headerSortDown {
 table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
     background-color: #a9b9d9;
 }
+table.tablesorter td.sortedeven
+{
+	background-color:#EDF5FF;
+}
+table.tablesorter td.sortedodd
+{
+	background-color:#DBEAFF;
+}

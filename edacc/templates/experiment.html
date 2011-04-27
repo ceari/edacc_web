@@ -26,7 +26,7 @@
                     $('#progressbar').append('<div title="'+data['num_jobs_finished']+' finished jobs" class="finished" style="width: '+perc_finished+'%;"></div>');
                     $('#progressbar').append('<div title="'+data['num_jobs_running']+' jobs currently being processed" class="running" style="width: '+perc_running+'%;"></div>');
                     $('#progressbar').append('<div title="'+data['num_jobs_not_started']+' jobs waiting for processing" class="notstarted" style="width: '+perc_notstarted+'%;"></div>');
-                    
+
                     $('#progress_num_jobs').html(data['num_jobs']);
 			    	$('#progress_num_active').html(data['num_jobs_active']);
 			    	$('#progress_num_active_perc').html(perc(data['num_jobs_active'],data['num_jobs']).toFixed(1) + ' %');
@@ -113,7 +113,7 @@
 
     {% if not db.is_competition() or db.competition_phase() in RANKING %}
     <h2>Ranking</h2>
-    <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Ranking by number of successful runs</a><br/>
+    <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Ranking</a><br/>
     {% endif %}
 
 {% endblock %}
