@@ -39,6 +39,7 @@
 
             $('#ranking').tablesorter({
                 widgets: ['zebra', 'columnHighlight', 'indexFirstColumn'],
+                sortList: [[2,1]],  // sort by number of successful runs by default
             	headers: {
             	    0: {sorter: 'digit'},
                     2: {sorter: 'digit'},
