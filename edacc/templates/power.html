@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Power consumption{% endblock %}
+{% block head %}
+    <meta name="robots" content="index,nofollow" />
+    {{ super() }}
+    <script src="{{url_for('static', filename='js/jquery.timers-1.2.js')}}" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(this).everyTime(1000, function() {
+                $('#image').fadeOut("slow").fadeIn("slow");
+            });
+
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <div style="float: left; margin: 10px;">
+        <span style="font-weight: bold;">Total computation time:</span> {{(total_time / 60.0 / 60.0) | round(2)}} CPU hours ({{(total_time / 60.0 / 60.0 / 24.0 / 365.0) | round(1)}} years)<br/>
+        <span style="font-weight: bold;">Power consumption:</span> {{power_consumed | round(2)}} kWh (at 30 W/h)<br/>
+        <span style="font-weight: bold;">Cost:</span> {{cost | round(2)}} € (at 0.2 €/kWh)<br/>
+        <span style="font-weight: bold;">CO₂:</span> {{(power_consumed * 50 / 1000.0) | round(2)}} kg (at 50g/kWh)<br/>
+    </div>
+    <div style="padding: 10px;">
+    {% if 100.0 <= power_consumed <= 250.0  %}
+        <img  id="image" src="{{url_for('static', filename='img/coal.png')}}" />
+    {% elif 250.0 < power_consumed %}
+        <img id="image" src="{{url_for('static', filename='img/radiation.png')}}" />
+    {% endif %}
+    </div>
+{% endblock %}

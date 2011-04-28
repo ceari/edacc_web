@@ -902,3 +902,16 @@ def verifier_output_download(database, experiment_id, result_id):
     headers.add('Content-Disposition', 'attachment', filename="result.txt")
 
     return Response(response=result.output.verifierOutput, headers=headers)
+
+@frontend.route('/<database>/power/')
+def power(database):
+    """ Reports the estimated power consumption and cost of the jobs that were run
+        in the database on a computer cluster in Germany."""
+    db = models.get_database(database) or abort(404)
+
+    total_time = db.session.query(func.sum(db.ExperimentResult.resultTime)).first()[0]
+    power_consumed = 30.0 * total_time / 60.0 / 60.0 / 1000.0 # in kWh
+    cost = 0.2 * power_consumed # in Euro
+
+    return render('power.html', database=database, db=db, total_time=total_time,
+                                power_consumed=power_consumed, cost=cost)
