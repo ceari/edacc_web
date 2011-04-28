@@ -386,7 +386,6 @@ class EDACCDatabase(object):
         )
         mapper(Solver, metadata.tables['Solver'],
             properties = {
-                'binary': deferred(metadata.tables['Solver'].c.binary),
                 'code': deferred(metadata.tables['Solver'].c.code),
                 'parameters': relation(Parameter, backref='solver'),
                 'competition_categories': relationship(
