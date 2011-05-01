@@ -55,7 +55,7 @@ class EDACCDatabase(object):
                 function returns 0.
                 """
                 same_solvers = [sc for sc in self.experiment.solver_configurations
-                                 if sc.solver == self.solver]
+                                 if sc.solver_binary == self.solver_binary]
                 if len(same_solvers) == 1:
                     return 0
                 else:
@@ -68,9 +68,9 @@ class EDACCDatabase(object):
                 else:
                     n = self.get_number()
                     if n == 0:
-                        return self.solver.name
+                        return self.solver_binary.solver.name
                     else:
-                        return "%s (%s)" % (self.solver.name, str(n))
+                        return "%s (%s)" % (self.solver_binary.solver.name, str(n))
 
             def __str__(self):
                 return self.get_name()
@@ -345,6 +345,7 @@ class EDACCDatabase(object):
 
         class ResultCodes(object): pass
         class StatusCodes(object): pass
+        class SolverBinary(object): pass
 
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
@@ -358,6 +359,7 @@ class EDACCDatabase(object):
         self.GridQueue = GridQueue
         self.ResultCodes = ResultCodes
         self.StatusCodes = StatusCodes
+        self.SolverBinary = SolverBinary
 
         self.User = User
         self.DBConfiguration = DBConfiguration
@@ -387,6 +389,7 @@ class EDACCDatabase(object):
         mapper(Solver, metadata.tables['Solver'],
             properties = {
                 'code': deferred(metadata.tables['Solver'].c.code),
+                'binaries': relation(SolverBinary, backref='solver'),
                 'parameters': relation(Parameter, backref='solver'),
                 'competition_categories': relationship(
                     CompetitionCategory,
@@ -394,6 +397,7 @@ class EDACCDatabase(object):
                     secondary=metadata.tables['Solver_has_CompetitionCategory'])
             }
         )
+        mapper(SolverBinary, metadata.tables['SolverBinaries'])
         mapper(ParameterInstance, metadata.tables['SolverConfig_has_Parameters'],
             properties = {
                 'parameter': relation(Parameter)
@@ -402,7 +406,7 @@ class EDACCDatabase(object):
         mapper(SolverConfiguration, metadata.tables['SolverConfig'],
             properties = {
                 'parameter_instances': relation(ParameterInstance),
-                'solver': relation(Solver),
+                'solver_binary': relation(SolverBinary),
                 'experiment': relation(Experiment),
             }
         )

@@ -40,7 +40,7 @@
         {% for solver_config in solver_configurations %}
             <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">
                 <td><a href="{{url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">{{solver_config.get_name()}}</a></td>
-                <td>{{solver_config.solver.name}}</td>
+                <td>{{solver_config.solver_binary.solver.name}}</td>
                 <td>{{solver_config|launch_command}}</td>
                 <td><a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{solver_config.idSolverConfig}}">Results</a></td>
             </tr>

@@ -766,7 +766,7 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id)
     solver_config = db.session.query(db.SolverConfiguration).get(solver_configuration_id) or abort(404)
-    solver = solver_config.solver
+    solver = solver_config.solver_binary.solver
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if solver.user != g.User: abort(401)
