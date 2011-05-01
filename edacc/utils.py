@@ -15,7 +15,7 @@ from cStringIO import StringIO
 
 import pylzma
 
-from edacc.constants import JOB_STATUS, JOB_STATUS_COLOR, JOB_RESULT_CODE, JOB_RESULT_CODE_COLOR
+from edacc.constants import JOB_STATUS_COLOR, JOB_RESULT_CODE, JOB_RESULT_CODE_COLOR
 
 def newline_split_string(s, n):
     if n == 0: return s
@@ -30,7 +30,7 @@ def download_size(value):
 
 def job_status_color(value):
     """ Returns an HTML conform color string for the job status """
-    if value not in JOB_STATUS:
+    if value not in JOB_STATUS_COLOR:
         return 'grey'
     else:
         return JOB_STATUS_COLOR[value]

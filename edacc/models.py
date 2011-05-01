@@ -85,7 +85,6 @@ class EDACCDatabase(object):
                     Decompresses the instance blob if necessary and returns it as string.
                     EDACC can store compressed and uncompressed instances. To distinguish
                     between them, we prepend the ASCII characters "LZMA" to a compressed instance.
-
                 """
                 table = db.metadata.tables['Instances']
                 c_instance = table.c['instance']

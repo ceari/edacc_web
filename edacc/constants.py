@@ -32,22 +32,6 @@ STATUS_EXCEEDED_LIMITS = (
     21,22,23,24,25
 )
 
-# status id to string map
-JOB_STATUS = {
-    -5: 'launcher crash',
-    -4: 'watcher crash',
-    -3: 'solver crash',
-    -2: 'verifier crash',
-    -1: 'not started',
-    0:  'running',
-    1:  'finished',
-    21: 'terminated by ulimit',
-    22: 'terminated by ulimit',
-    23: 'terminated by ulimit',
-    24: 'terminated by ulimit',
-    25: 'terminated by ulimit',
-}
-
 JOB_RESULT_CODE = {
     11: 'SAT',
     10: 'UNSAT',
