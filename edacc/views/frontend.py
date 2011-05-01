@@ -201,7 +201,7 @@ def experiment_results(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     instances = experiment.instances
-    solver_configs = db.session.query(db.SolverConfiguration).options(joinedload_all('solver'))\
+    solver_configs = db.session.query(db.SolverConfiguration).options(joinedload_all('solver_binaries'))\
                                         .filter_by(experiment=experiment).all()
 
     # if competition db, show only own solvers unless phase is 6 or 7
