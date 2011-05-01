@@ -270,7 +270,14 @@ class EDACCDatabase(object):
             def __str__(self):
                 return self.name
 
-        class GridQueue(object): pass
+        class ResultCodes(object): pass
+        class StatusCodes(object): pass
+        class SolverBinary(object): pass
+        class Client(object): pass
+        class Experiment_has_Client(object): pass
+
+        class GridQueue(object):
+            pass
 
         # competition tables
 
@@ -343,10 +350,6 @@ class EDACCDatabase(object):
                 except ValueError:
                     return None
 
-        class ResultCodes(object): pass
-        class StatusCodes(object): pass
-        class SolverBinary(object): pass
-
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
         self.Parameter = Parameter
@@ -360,6 +363,8 @@ class EDACCDatabase(object):
         self.ResultCodes = ResultCodes
         self.StatusCodes = StatusCodes
         self.SolverBinary = SolverBinary
+        self.Client = Client
+        self.Experiment_has_Client = Experiment_has_Client
 
         self.User = User
         self.DBConfiguration = DBConfiguration
@@ -375,6 +380,14 @@ class EDACCDatabase(object):
         metadata.reflect()
 
         # Table-Class mapping
+        mapper(Client, metadata.tables['Client'],
+            properties = {
+                'grid_queue': relationship(GridQueue, backref='clients'),
+                'experiments': relationship(Experiment,
+                    secondary=metadata.tables['Experiment_has_Client'], backref='clients'),
+            }
+        )
+        mapper(Experiment_has_Client, metadata.tables['Experiment_has_Client'])
         mapper(Parameter, metadata.tables['Parameters'])
         mapper(GridQueue, metadata.tables['gridQueue'])
         mapper(InstanceClass, metadata.tables['instanceClass'])
@@ -417,7 +430,7 @@ class EDACCDatabase(object):
                 'solver_configurations': relation(SolverConfiguration),
                 'grid_queue': relationship(GridQueue,
                     secondary=metadata.tables['Experiment_has_gridQueue']),
-                'results': relation(ExperimentResult)
+                'results': relation(ExperimentResult),
             }
         )
         mapper(StatusCodes, metadata.tables['StatusCodes'])
@@ -435,6 +448,7 @@ class EDACCDatabase(object):
                 'instance': relation(Instance, backref='results'),
                 'status_code': relation(StatusCodes, uselist=False),
                 'result_code': relation(ResultCodes, uselist=False),
+                'client': relation(Client),
             }
         )
 
