@@ -181,7 +181,7 @@ class EDACCDatabase(object):
                 instance_ids = [i.idInstance for i in self.get_instances(db)]
                 instance_sizes = db.session.connection().execute(select([func.length(c_instance)],
                               c_id.in_(instance_ids)).select_from(table)).fetchall()
-                total_size = sum(i[0] for i in instance_sizes or [(0)])
+                total_size = sum(i[0] for i in instance_sizes or [(0,)])
                 return total_size
 
         class ExperimentResult(object):
