@@ -119,8 +119,8 @@ class TwoSolversOnePropertyScatterPlotForm(Form):
     instance_filter = TextField('Filter Instances')
     result_property = SelectField('Property')
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
-    xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
-    yscale = RadioField('Y-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
+    xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='log')
+    yscale = RadioField('Y-axis scale', choices=[('', 'linear'), ('log', 'log')], default='log')
     run = SelectField('Plot for run')
 
 class OneSolverTwoResultPropertiesPlotForm(Form):
@@ -129,8 +129,8 @@ class OneSolverTwoResultPropertiesPlotForm(Form):
     result_property2 = SelectField('Second Result Property')
     instance_filter = TextField('Filter Instances')
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
-    xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
-    yscale = RadioField('Y-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
+    xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='log')
+    yscale = RadioField('Y-axis scale', choices=[('', 'linear'), ('log', 'log')], default='log')
     run = SelectField('Plot for run')
 
 class OneSolverInstanceAgainstResultPropertyPlotForm(Form):
@@ -140,7 +140,7 @@ class OneSolverInstanceAgainstResultPropertyPlotForm(Form):
     instance_filter = TextField('Filter Instances')
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
     xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
-    yscale = RadioField('Y-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
+    yscale = RadioField('Y-axis scale', choices=[('', 'linear'), ('log', 'log')], default='log')
     run = SelectField('Plot for run')
 
 class CactusPlotForm(Form):
@@ -148,26 +148,29 @@ class CactusPlotForm(Form):
     sc = QuerySelectMultipleField('Solver Configurations')
     instance_filter = TextField('Filter Instances')
     run = SelectField('Plot for run')
-    flip_axes = BooleanField("Swap axes")
-    log_property = BooleanField("Logarithmic property-axis")
+    flip_axes = BooleanField("Swap axes", default=True)
+    log_property = BooleanField("Logarithmic property-axis", default=True)
     i = QuerySelectMultipleField('Instances (Group 0)', get_pk=lambda i: i.idInstance, allow_blank=True)
 
 class RTDComparisonForm(Form):
     solver_config1 = QuerySelectField('First Solver Configuration')
     solver_config2 = QuerySelectField('Second Solver Configuration')
     result_property = SelectField('Property')
+    log_property = BooleanField("Logarithmic property-axis", default=True)
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
 class RTDPlotsForm(Form):
     sc = QuerySelectMultipleField('Solver Configurations')
     result_property = SelectField('Property')
+    log_property = BooleanField("Logarithmic property-axis", default=True)
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
 class RTDPlotForm(Form):
     solver_config = QuerySelectField('Solver Configuration')
     result_property = SelectField('Property')
+    log_property = BooleanField("Logarithmic property-axis", default=True)
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
@@ -188,3 +191,8 @@ class RankingForm(Form):
     calculate_average_dev = BooleanField('Calculate avg. deviation')
     penalized_average_runtime = BooleanField('Calculate penalized average runtime')
     instance_filter = TextField('Filter Instances')
+
+class ResultsBySolverAndInstanceForm(Form):
+    display_measure = SelectField('Display measure', default='par10',
+                                  choices=[('mean', 'mean'), ('median', 'median'),
+                                    ('par10', 'par10'), ('min', 'min'), ('max', 'max')])

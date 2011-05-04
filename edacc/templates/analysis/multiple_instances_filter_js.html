@@ -130,9 +130,16 @@ $('#remove_instance_group_selector').click(function() {
     return false;
 });
 
+bind_ctrla_handler = function(group) {
+    $('#i'+group).bind('keydown', 'ctrl+a', function() {
+        $('#i'+group+' option').attr("selected", "selected");
+        return false;
+    });
+}
+
 $('#add_instance_group_selector').click(function() {
     $('#form_table tr[name="tr_instances_filter"]:last').after(
-        '<tr><td style="vertical-align: middle;">Instances (Group '+instance_groups_count+')</td><td><select id="i'+instance_groups_count+'" multiple="multiple" name="i'+instance_groups_count+'" size="10"></select></td></tr>' +
+        '<tr><td style="vertical-align: middle;">Instances (Group '+instance_groups_count+')</td><td><select onmouseover="bind_ctrla_handler('+instance_groups_count+')" id="i'+instance_groups_count+'" multiple="multiple" name="i'+instance_groups_count+'" size="10"></select></td></tr>' +
         '<tr name="tr_instances_filter"><td style="vertical-align: middle;">Filter instances</td>' +
         '<td><input type="text" name="instance_filter_'+instance_groups_count+'" id="instance_filter_'+instance_groups_count+'" onkeypress="return handle_enter_key(event, '+instance_groups_count+');" value=""></input>' +
         '<img onClick="apply_instance_filter('+instance_groups_count+');" id="instance_filter_apply_'+instance_groups_count+'" src="{{url_for("static", filename="img/search.png")}}"/><img onClick="clear_instance_filter('+instance_groups_count+')" id="instance_filter_clear_'+instance_groups_count+'" src="{{url_for("static", filename="img/clear.png")}}"/>' +

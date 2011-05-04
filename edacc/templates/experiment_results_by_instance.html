@@ -6,7 +6,7 @@
     <script src="{{url_for('static', filename='js/jquery.tooltip.min.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            $('#td_par10').tooltip();
+            $('#th_par10').tooltip();
         });
     </script>
 {% endblock %}
@@ -27,51 +27,30 @@
             <thead>
                 <tr>
                     <th>Run</th>
-                    {% for result in results %}
-                    <th nowrap="nowrap"><a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{result.0.idSolverConfig}}">{{ result.0}}</a></th>
+                    {% for run in range(experiment.get_num_runs(db)) %}
+                    <th nowrap="nowrap">{{run}}</th>
                     {% endfor %}
+                    <th>Mean</th>
+                    <th>Median</th>
+                    <th id="th_par10" title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the experiment's timeout for unsuccessful runs">penalized avg. runtime</th>
+
                 </tr>
             </thead>
             <tbody>
-                {% for run in range(experiment.get_num_runs(db)) %}
+                {% for result in results %}
                     {% set rowloop = loop %}
                     <tr class="{{'odd' if rowloop.index0 % 2 == 1 else 'even'}}">
                         <td>
-                            {{loop.index0}}
-                        </td>
-                        {% for result in results %}
-                            {% if result[1] %}
-                                <td style="text-align: center; background-color: {{result[1][rowloop.index0].resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result[1][rowloop.index0].idJob) }}">{{ result[1][rowloop.index0].get_time()|result_time}}</a></td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
+                            <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{result.0.idSolverConfig}}">{{ result.0}}</a>
+                        <td>
+                        {% for run in result[1] %}
+                            <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time|round(4}}</a></td>
                         {% endfor %}
+                        <td>{{result[2]|result_time|round(4)}}</td>
+                        <td>{{result[3]|result_time|round(4)}}</td>
+                        <td>{{result[4]|result_time|round(4)}}</td>
                     </tr>
                 {% endfor %}
-                <tr class="odd">
-                    <td>Mean</td>
-                    {% for result in results %}
-                    <td>
-                        {{result[2]|result_time|round(4)}}
-                    </td>
-                    {% endfor %}
-                </tr>
-                <tr class="even">
-                    <td>Median</td>
-                    {% for result in results %}
-                    <td>
-                        {{result[3]|result_time|round(4)}}
-                    </td>
-                    {% endfor %}
-                </tr>
-                <tr class="odd">
-                    <td id="td_par10" title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the experiment's timeout for unsuccessful runs">penalized avg. runtime</td>
-                    {% for result in results %}
-                    <td>
-                        {{result[4]|result_time|round(4)}}
-                    </td>
-                    {% endfor %}
-                </tr>
             </tbody>
         </table>
     {% else %}

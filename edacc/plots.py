@@ -116,7 +116,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         min_y = min([y for y in ys if y > 0.0] or [0.01])
 
     min_v = min(min_x, min_y)
-    
+
     legend_colors = []
     legend_strs = []
     legend_point_styles = []
@@ -125,7 +125,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     for ig in points:
         ig_xs = [p[0] for p in ig]
         ig_ys = [p[1] for p in ig]
-        
+
         # plot running times
         robjects.r.plot(robjects.FloatVector(ig_xs), robjects.FloatVector(ig_ys),
                         type='p', col=colors[col], las = 1,
@@ -148,13 +148,13 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     robjects.r.mtext(ylabel, side=4, line=4, cex=1.2) # right axis label
     robjects.r.mtext(xlabel, side=3, padj=0, line=3, cex=1.2) # top axis label
     robjects.r.mtext(title, padj=-1.7, side=3, line=3, cex=1.7) # plot title
-    
+
     robjects.r.par(xpd=True)
     robjects.r.legend("right", inset=-0.35,
                       legend=robjects.StrVector(legend_strs),
                       col=robjects.StrVector(legend_colors),
                       pch=robjects.IntVector(legend_point_styles))
-    
+
     if format == 'rscript':
         file.write(('plot(c(%s), c(%s), type="p", col="red", las=1,' + \
                    'xlim=c(%f, %f), ylim=c(%f, %f),' + \
@@ -168,7 +168,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         file.write('mtext("%s", side=3, padj=0, line=3, cex=1.2)\n' % (xlabel,))
         file.write('mtext("%s", padj=-1.7, side=3, line=3, cex=1.7)\n' % (title,))
         file.close()
-    
+
     pts = []
     for ig in points:
         xs = [p[0] for p in ig]
@@ -211,7 +211,7 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
     if flip_axes:
         max_x, max_y = max_y, max_x
         min_x, min_y = min_y, min_x
-    
+
     robjects.r.options(scipen=10)
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
@@ -333,12 +333,12 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
                       ','.join(map(lambda s: '"' + s + '"', legend_colors)),
                       ','.join(map(str, legend_point_styles))))
         file.close()
-        
+
     grdevices.dev_off()
 
 
 @synchronized
-def result_property_comparison(results1, results2, solver1, solver2, result_property_name,
+def result_property_comparison(results1, results2, solver1, solver2, result_property_name, log_property,
                                filename, format='png', dim=700):
     """Result property distribution comparison.
     Plots an cumulative empirical distribution function for the result vectors
@@ -360,9 +360,14 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
     max_x = max([max(results1), max(results2)])
 
+    if log_property:
+        log = 'x'
+    else:
+        log = ''
+
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
-                    type='p', col='red', las = 1,
+                    type='p', col='red', las = 1, log=log,
                     xlim=robjects.r.c(0, max_x), ylim=robjects.r.c(-0.05, 1.05),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
@@ -370,12 +375,12 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
     # plot the two distributions
     robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results1)),
-                    main='', xaxt='n', yaxt='n',
+                    main='', xaxt='n', yaxt='n', log=log,
                     xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='red',
                     xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
     robjects.r.par(new=1)
     robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results2)),
-                    main='', xaxt='n', yaxt='n',
+                    main='', xaxt='n', yaxt='n', log=log,
                     xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='blue',
                     xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
 
@@ -397,7 +402,7 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
 
 @synchronized
-def property_distributions(results, filename, property_name, format='png'):
+def property_distributions(results, filename, property_name, log_property, format='png'):
     """Runtime distribution plots for multiple result vectors.
     results is expected to be a list of tuples (sc, data)
     where data is the result vector of the solver configuration sc.
@@ -412,9 +417,14 @@ def property_distributions(results, filename, property_name, format='png'):
 
     max_x = max([max(r[1] or [0]) for r in results] or [0])
 
+    if log_property:
+        log = 'x'
+    else:
+        log = ''
+
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
-                    type='p', col='red', las = 1,
+                    type='p', col='red', las = 1, log=log,
                     xlim=robjects.r.c(0.0, max_x), ylim=robjects.r.c(-0.05, 1.05),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
@@ -431,7 +441,7 @@ def property_distributions(results, filename, property_name, format='png'):
     for res in results:
         if len(res[1]) > 0:
             robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(res[1])),
-                            main='', col=colors[point_style], pch=point_style,
+                            main='', col=colors[point_style], pch=point_style, log=log,
                             xlab='', ylab='', xaxs='i', yaxs='i', las=1,
                             xaxt='n', yaxt='n',
                             xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(-0.05, 1.05))
@@ -490,7 +500,7 @@ def box_plot(data, filename, property_label, format='png'):
 
 
 @synchronized
-def property_distribution(results, filename, property_name, format='png'):
+def property_distribution(results, filename, property_name, log_property, format='png'):
     """Plot of a single property distribution.
 
     :param results: result vector
@@ -505,9 +515,14 @@ def property_distribution(results, filename, property_name, format='png'):
 
     max_x = max(results or [0])
 
+    if log_property:
+        log = 'x'
+    else:
+        log = ''
+
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
-                    type='p', col='red', las = 1,
+                    type='p', col='red', las = 1, log=log,
                     xlim=robjects.r.c(0, max_x), ylim=robjects.r.c(-0.05, 1.05),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
@@ -515,7 +530,7 @@ def property_distribution(results, filename, property_name, format='png'):
 
     if len(results) > 0:
         robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results or [0])),
-                        main='', xaxt='n', yaxt='n',
+                        main='', xaxt='n', yaxt='n', log=log,
                         xlab='', ylab='', xaxs='i', yaxs='i', las=1,
                         xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
 
@@ -533,7 +548,7 @@ def property_distribution(results, filename, property_name, format='png'):
 
 
 @synchronized
-def kerneldensity(data, filename, property_name, format='png'):
+def kerneldensity(data, filename, property_name, log_property, format='png'):
     """Non-parametric kernel density estimation plot of a result vector.
 
     :param data: result vector
@@ -546,12 +561,17 @@ def kerneldensity(data, filename, property_name, format='png'):
     elif format == 'eps':
         grdevices.postscript(file=filename)
 
+    if log_property:
+        log = 'x'
+    else:
+        log = ''
+
     if len(data) > 0:
         robjects.r('d <- npudens(c(' + ",".join(map(str, data + [max(data or [0]) + 0.00001])) + '))')
         robjects.r("d$bws$xnames = '"+property_name+"'")
         # add some pseudo value to data because R crashes when the data is constant
         # and takes python down with it ...
-        robjects.r("plot(d, main='', xaxt='n', yaxt='n', xlab='', ylab='', xaxs='i', yaxs='i', las=1)")
+        robjects.r("plot(d, main='', log='"+log+"', xaxt='n', yaxt='n', xlab='', ylab='', xaxs='i', yaxs='i', las=1)")
         # plot labels and axes
         robjects.r.mtext('Nonparametric kernel density estimation',
                          padj=1, side=3, line=3, cex=1.7) # plot title

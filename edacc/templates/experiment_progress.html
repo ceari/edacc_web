@@ -8,6 +8,7 @@
     <script src="{{url_for('static', filename='js/jquery.timers-1.2.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/jquery.dataTables.ajaxReloadPlugin.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/ColVis.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         /* <![CDATA[ */
         $(document).ready(function() {
@@ -31,12 +32,14 @@
                     $('td:eq(0)', nRow).html('<a style="color: black;" href="/{{database}}/experiment/{{experiment.idExperiment}}/result/'+aData[0]+'">'+$('td:eq(0)', nRow).html()+'</a>');
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[9]]);
                     return nRow;
-				},
+		},
                 "aoColumns": [null, null, null, null, null, null, null, null, null, {"bVisible": false},
                              {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
                              {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
                              {% for prop in db.get_result_properties() %}{"bVisible": false}, {%endfor%}]
             });
+            var fixed_header = new FixedHeader( oTable );
+
 
             $('#table_jobs_filter').append('<img id="img_clear" style="margin-left: 3px; margin-top: 3px;" src="{{url_for('static', filename='img/clear.png')}}" title="Clear"/>');
 
@@ -62,7 +65,7 @@
 
             $('#refresh').click(function() {
                 oTable.fnReloadAjax();
-				updateExperimentStats();
+		updateExperimentStats();
                 return false;
             });
 
@@ -176,7 +179,7 @@
         Notice that the F5 key was overriden on this page to use Ajax to refresh the table data without having to reload the whole page. You can also use the following link or set a periodic refresh interval:
     </div>
     -->
-    <div style="font-weight: bold; margin-bottom: 5px;"><span id="stats"></span></div>
+    <div style="font-weight: bold; margin-bottom: 5px;"><span id="stats">&nbsp;</span></div>
     <a id="get_csv" href="#">Download as CSV</a> | <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
     <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select><br/>
     <div style="max-width: 98%">

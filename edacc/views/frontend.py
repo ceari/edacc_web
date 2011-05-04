@@ -21,6 +21,7 @@ import StringIO
 import tempfile
 import tarfile
 import time
+from collections import namedtuple
 
 from flask import Module
 from flask import render_template as render
@@ -208,6 +209,8 @@ def experiment_results(database, experiment_id):
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
+    form = forms.ResultsBySolverAndInstanceForm(request.args)
+
     instances_dict = dict((i.idInstance, i) for i in instances)
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
 
@@ -227,23 +230,35 @@ def experiment_results(database, experiment_id):
     results = []
     for idInstance in instances_dict.iterkeys():
         row = []
+        if idInstance not in results_by_instance: continue
         rs = results_by_instance[idInstance]
         for idSolverConfig, solver_config in solver_configs_dict.iteritems():
             jobs = rs[idSolverConfig]
 
             completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
-            runtimes = [j.get_time() or j.CPUTimeLimit for j in jobs]
+            jobs = filter(lambda j: j.status not in STATUS_PROCESSING, jobs)
+            successful = len(filter(lambda j: str(j.resultCode).startswith('1'), jobs))
+            runtimes = [j.get_time() for j in jobs]
             runtimes = filter(lambda r: r is not None, runtimes)
             runtimes = runtimes or [0]
             time_max = max(runtimes)
             time_min = min(runtimes)
+            time_par10 = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else 10*j.CPUTimeLimit) for j in jobs] or [0])
+            if completed > 0:
+                bg_color = successful/float(completed) * int('00FF00', 16) + (1-successful/float(completed)) * int('00FF00', 16)
+                bg_color = hex(bg_color)[2:] # remove leading 0x
+            else:
+                bg_color = 'FF8040'
             row.append({'time_avg': numpy.average(runtimes),
                         'time_median': numpy.median(runtimes),
                         'time_max': time_max,
                         'time_min': time_min,
+                        'time_par10': time_par10,
                         'time_stddev': numpy.std(runtimes),
                         'var_coeff': numpy.std(runtimes) / numpy.average(runtimes),
+                        'successful': successful,
                         'completed': completed,
+                        'bg_color': bg_color,
                         'total': len(jobs),
                         # needed for alternative presentation if there's only 1 run:
                         'first_job': (None if len(jobs) == 0 else jobs[0]),
@@ -287,7 +302,7 @@ def experiment_results(database, experiment_id):
                     instances=instances, solver_configs=solver_configs,
                     solver_configs_dict=solver_configs_dict,
                     instances_dict=instances_dict,
-                    results=results, database=database, db=db)
+                    results=results, database=database, db=db, form=form)
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
@@ -425,7 +440,6 @@ def experiment_results_by_instance(database, experiment_id):
                     par10 /= count
                 mean = numpy.average(runtimes)
                 median = numpy.median(runtimes)
-
 
             results.append((sc, runs, mean, median, par10))
 
@@ -801,7 +815,7 @@ def experiment_result(database, experiment_id, result_id):
     watcherOutput_text = utils.formatOutputFile(watcherOutput)
     verifierOutput_text = utils.formatOutputFile(verifierOutput)
 
-    return render('result_details.html', experiment=experiment, result=result, solver=result.solver_configuration.solver,
+    return render('result_details.html', experiment=experiment, result=result, solver=result.solver_configuration,
                   solver_config=result.solver_configuration, instance=result.instance, solverOutput_text=solverOutput_text,
                   launcherOutput_text=launcherOutput_text, watcherOutput_text=watcherOutput_text,
                   verifierOutput_text=verifierOutput_text, database=database, db=db)

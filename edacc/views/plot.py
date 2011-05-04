@@ -640,6 +640,7 @@ def result_property_comparison_plot(database, experiment_id):
     s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
     dim = int(request.args.get('dim', 700))
 
+    log_property = request.args.has_key('log_property')
     result_property = request.args.get('result_property')
     if result_property != 'cputime':
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
@@ -674,7 +675,7 @@ def result_property_comparison_plot(database, experiment_id):
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.pdf'
-        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, filename, format='pdf', dim=dim)
+        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, log_property, filename, format='pdf', dim=dim)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(s1) + "_" + str(s2) + "result_comparison.pdf"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -682,7 +683,7 @@ def result_property_comparison_plot(database, experiment_id):
         return response
     elif request.args.has_key('eps'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.eps'
-        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, filename, format='eps', dim=dim)
+        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, log_property, filename, format='eps', dim=dim)
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(s1) + "_" + str(s2) + "result_comparison.eps"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
@@ -690,7 +691,7 @@ def result_property_comparison_plot(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
-        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, filename, 'png', dim=dim)
+        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, log_property, filename, 'png', dim=dim)
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
@@ -706,6 +707,7 @@ def property_distributions_plot(database, experiment_id):
     instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
     solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('sc')]
 
+    log_property = request.args.has_key('log_property')
     result_property = request.args.get('result_property')
     if result_property != 'cputime':
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
@@ -734,7 +736,7 @@ def property_distributions_plot(database, experiment_id):
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
-        plots.property_distributions(results, filename, result_property_name, 'pdf')
+        plots.property_distributions(results, filename, result_property_name, log_property, 'pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_rtds.pdf"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -742,7 +744,7 @@ def property_distributions_plot(database, experiment_id):
         return response
     elif request.args.has_key('eps'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.eps'
-        plots.property_distributions(results, filename, result_property_name, 'eps')
+        plots.property_distributions(results, filename, result_property_name, log_property, 'eps')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_rtds.eps"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
@@ -750,7 +752,7 @@ def property_distributions_plot(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
-        plots.property_distributions(results, filename, result_property_name, 'png')
+        plots.property_distributions(results, filename, result_property_name, log_property, 'png')
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
@@ -765,6 +767,7 @@ def property_distribution(database, experiment_id):
     sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
 
+    log_property = request.args.has_key('log_property')
     result_property = request.args.get('result_property')
     if result_property != 'cputime':
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
@@ -792,7 +795,7 @@ def property_distribution(database, experiment_id):
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.pdf'
-        plots.property_distribution(results, filename, result_property_name, 'pdf')
+        plots.property_distribution(results, filename, result_property_name, log_property, 'pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.pdf"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -800,7 +803,7 @@ def property_distribution(database, experiment_id):
         return response
     elif request.args.has_key('eps'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.eps'
-        plots.property_distribution(results, filename, result_property_name, 'eps')
+        plots.property_distribution(results, filename, result_property_name, log_property, 'eps')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.eps"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
@@ -808,7 +811,7 @@ def property_distribution(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.png'
-        plots.property_distribution(results, filename, result_property_name, 'png')
+        plots.property_distribution(results, filename, result_property_name, log_property, 'png')
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
@@ -823,6 +826,7 @@ def kerneldensity(database, experiment_id):
     sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
 
+    log_property = request.args.has_key('log_property')
     result_property = request.args.get('result_property')
     if result_property != 'cputime':
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
@@ -850,7 +854,7 @@ def kerneldensity(database, experiment_id):
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.pdf'
-        plots.kerneldensity(results, filename, result_property_name, 'pdf')
+        plots.kerneldensity(results, filename, result_property_name, log_property, 'pdf')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_kerneldensity.pdf"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -858,7 +862,7 @@ def kerneldensity(database, experiment_id):
         return response
     elif request.args.has_key('eps'):
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.eps'
-        plots.kerneldensity(results, filename, result_property_name, 'eps')
+        plots.kerneldensity(results, filename, result_property_name, log_property, 'eps')
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_kerneldensity.eps"))
         response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
@@ -866,7 +870,7 @@ def kerneldensity(database, experiment_id):
         return response
     else:
         filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.png'
-        plots.kerneldensity(results, filename, result_property_name, 'png')
+        plots.kerneldensity(results, filename, result_property_name, log_property, 'png')
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
