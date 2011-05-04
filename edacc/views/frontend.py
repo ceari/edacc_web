@@ -228,10 +228,14 @@ def experiment_results(database, experiment_id):
                 rs[r.SolverConfig_idSolverConfig].append(r)
 
     results = []
+    best_sc_by_instance_id = {}
     for idInstance in instances_dict.iterkeys():
         row = []
         if idInstance not in results_by_instance: continue
         rs = results_by_instance[idInstance]
+        best_sc_by_instance_id[idInstance] = None
+        best_sc_time = None
+
         for idSolverConfig, solver_config in solver_configs_dict.iteritems():
             jobs = rs[idSolverConfig]
 
@@ -241,21 +245,33 @@ def experiment_results(database, experiment_id):
             runtimes = [j.get_time() for j in jobs]
             runtimes = filter(lambda r: r is not None, runtimes)
             runtimes = runtimes or [0]
-            time_max = max(runtimes)
-            time_min = min(runtimes)
-            time_par10 = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else 10*j.CPUTimeLimit) for j in jobs] or [0])
+
+            time_measure = None
+            if form.display_measure.data == 'mean':
+                time_measure = numpy.average(runtimes)
+            elif form.display_measure.data == 'median':
+                time_measure = numpy.median(runtimes)
+            elif form.display_measure.data == 'min':
+                time_measure = min(runtimes)
+            elif form.display_measure.data == 'max':
+                time_measure = max(runtimes)
+            elif form.display_measure.data == 'par10' or form.display_measure.data is None:
+                time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else 10*j.CPUTimeLimit) for j in jobs] or [0])
+
+            if best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time:
+                best_sc_time = time_measure
+                best_sc_by_instance_id[idInstance] = solver_config
+
             if completed > 0:
-                bg_color = successful/float(completed) * int('00FF00', 16) + (1-successful/float(completed)) * int('00FF00', 16)
-                bg_color = hex(bg_color)[2:] # remove leading 0x
+                red = (1.0, 0)
+                green = (0.0, 1.0)
+                t = successful/float(completed)
+                bg_color = ((green[0] - red[0]) * t + red[0], (green[1] - red[1]) * t + red[1])
+                bg_color = hex((int(bg_color[0] * 255) << 16) + (int(bg_color[1] * 255) << 8))[2:].zfill(6) # remove leading 0x
             else:
-                bg_color = 'FF8040'
-            row.append({'time_avg': numpy.average(runtimes),
-                        'time_median': numpy.median(runtimes),
-                        'time_max': time_max,
-                        'time_min': time_min,
-                        'time_par10': time_par10,
-                        'time_stddev': numpy.std(runtimes),
-                        'var_coeff': numpy.std(runtimes) / numpy.average(runtimes),
+                bg_color = 'FF8040' #orange
+
+            row.append({'time_measure': time_measure ,
                         'successful': successful,
                         'completed': completed,
                         'bg_color': bg_color,
@@ -301,7 +317,7 @@ def experiment_results(database, experiment_id):
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     solver_configs_dict=solver_configs_dict,
-                    instances_dict=instances_dict,
+                    instances_dict=instances_dict, best_sc_by_instance_id=best_sc_by_instance_id,
                     results=results, database=database, db=db, form=form)
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
@@ -442,6 +458,16 @@ def experiment_results_by_instance(database, experiment_id):
                 median = numpy.median(runtimes)
 
             results.append((sc, runs, mean, median, par10))
+            min_mean_sc, min_mean = None, 0
+            min_median_sc, min_median = None, 0
+            min_par10_sc, min_par10 = None, 0
+            for r in results:
+                if min_mean_sc is None or r[2] < min_mean:
+                    min_mean_sc, min_mean = r[0], r[2]
+                if min_median_sc is None or r[3] < min_median:
+                    min_median_sc, min_median = r[0], r[3]
+                if min_par10_sc is None or r[4] < min_par10:
+                    min_par10_sc, min_par10 = r[0], r[4]
 
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
@@ -457,6 +483,11 @@ def experiment_results_by_instance(database, experiment_id):
             headers.add('Content-Disposition', 'attachment',
                         filename=(experiment.name + "_results_by_instance_%s.csv" % (str(instance),)))
             return Response(response=csv_response.read(), headers=headers)
+
+        return render('experiment_results_by_instance.html', db=db, database=database,
+                  instances=instances, experiment=experiment,
+                  form=form, results=results, min_mean_sc=min_mean_sc,
+                  min_median_sc=min_median_sc, min_par10_sc=min_par10_sc)
 
 
     return render('experiment_results_by_instance.html', db=db, database=database,

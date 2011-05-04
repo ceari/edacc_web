@@ -59,7 +59,7 @@ def solver_ranking(database, experiment_id):
             csv_writer = csv.writer(csv_response)
             head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
                                  'cumulated CPU time', 'avg. CPU time per successful run']
-            
+
             if form.calculate_average_dev.data: head.append('avg. deviation of successful runs')
             if form.penalized_average_runtime.data: head.append('penalized avg. runtime')
             csv_writer.writerow(head)
@@ -113,7 +113,7 @@ def cactus_plot(database, experiment_id):
                         ('penalized_average', 'All runs - penalized average runtime'),
                         ('median', 'All runs - median'),
                         ('random', 'Random run')] + zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
-                        
+
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/solved_instances.html', database=database,
@@ -272,7 +272,7 @@ def scatter_2solver_1property(database, experiment_id):
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
-        
+
         if request.args.has_key('ajax_correlation'):
             # this request was an ajax call from the form, return correlation data in JSON
             return jsonify({'spearman_r': spearman_r, 'spearman_p_value': spearman_p_value,
@@ -332,7 +332,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
-        
+
         if request.args.has_key('ajax_correlation'):
             # this request was an ajax call from the form, return correlation data in JSON
             return jsonify({'spearman_r': spearman_r, 'spearman_p_value': spearman_p_value,
@@ -388,7 +388,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
         spearman_r, spearman_p_value = statistics.spearman_correlation([p[0] for p in points], [p[1] for p in points])
         pearson_r, pearson_p_value = statistics.pearson_correlation([p[0] for p in points], [p[1] for p in points])
-        
+
         if request.args.has_key('ajax_correlation'):
             # this request was an ajax call from the form, return correlation data in JSON
             return jsonify({'spearman_r': spearman_r, 'spearman_p_value': spearman_p_value,

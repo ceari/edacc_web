@@ -3,9 +3,25 @@
 {% block title %}Results by Instance{% endblock %}
 {% block head %}
     {{ super() }}
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/jquery.tooltip.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function() {
+            oTable = $('#table_results').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": true,
+                "bInfo": false,
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                },
+                "aoColumns": [{"bSearchable": true},
+                              {% for i in range(experiment.get_num_runs(db)) %}{"bSearchable":false},{% endfor %}
+                              {"bSearchable": false},{"bSearchable": false},{"bSearchable": false}, ]
+            });
+            new FixedHeader(oTable);
+
             $('#th_par10').tooltip();
         });
     </script>
@@ -32,8 +48,7 @@
                     {% endfor %}
                     <th>Mean</th>
                     <th>Median</th>
-                    <th id="th_par10" title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the experiment's timeout for unsuccessful runs">penalized avg. runtime</th>
-
+                    <th id="th_par10" title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the job's cpu time limit for unsuccessful runs">par10</th>
                 </tr>
             </thead>
             <tbody>
@@ -42,13 +57,13 @@
                     <tr class="{{'odd' if rowloop.index0 % 2 == 1 else 'even'}}">
                         <td>
                             <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{result.0.idSolverConfig}}">{{ result.0}}</a>
-                        <td>
+                        </td>
                         {% for run in result[1] %}
-                            <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time|round(4}}</a></td>
+                            <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time|round(4)}}</a></td>
                         {% endfor %}
-                        <td>{{result[2]|result_time|round(4)}}</td>
-                        <td>{{result[3]|result_time|round(4)}}</td>
-                        <td>{{result[4]|result_time|round(4)}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_mean_sc else ''}}">{{result[2]|round(4)}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_median_sc else ''}}">{{result[3]|round(4)}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_par10_sc else ''}}">{{result[4]|round(4)}}</td>
                     </tr>
                 {% endfor %}
             </tbody>

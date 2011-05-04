@@ -5,6 +5,7 @@
     {{ super() }}
     <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/jquery.tooltip.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             oTable = $('#table_results').dataTable({
@@ -19,6 +20,7 @@
                               {% for i in range(num_runs) %}{"bSortable":false,"bSearchable":false},{% endfor %}
                               {"bSearchable": false}]
             });
+
 
             $('#csv').click(function() {
                 var oSettings = oTable.fnSettings();
@@ -43,6 +45,7 @@
             });
 
             $('#th_par10').tooltip();
+            new FixedHeader(oTable);
         });
     </script>
 {% endblock %}
@@ -59,7 +62,7 @@
         <input id="csv" type="submit" name="csv" value="CSV"/>
     </form>
     {% if results %}
-        <table id="table_results" class="results">
+        <table id="table_results">
             <thead>
                 <tr>
                     <th>Instance</th>

@@ -359,16 +359,16 @@ class EDACCDatabase(object):
         metadata.reflect()
 
         # Table-Class mapping
+        mapper(GridQueue, metadata.tables['gridQueue'])
         mapper(Client, metadata.tables['Client'],
             properties = {
                 'grid_queue': relationship(GridQueue, backref='clients'),
                 'experiments': relationship(Experiment,
-                    secondary=metadata.tables['Experiment_has_Client'], backref='clients'),
+                    secondary=metadata.tables['Experiment_has_Client'],),
             }
         )
         mapper(Experiment_has_Client, metadata.tables['Experiment_has_Client'])
         mapper(Parameter, metadata.tables['Parameters'])
-        mapper(GridQueue, metadata.tables['gridQueue'])
         mapper(InstanceClass, metadata.tables['instanceClass'])
         mapper(Instance, metadata.tables['Instances'],
             properties = {

@@ -69,7 +69,7 @@ def launch_command(solver_config):
     """ Returns a string of what the solver launch command looks like
     given the solver configuration
     """
-    return "./" + solver_config.solver.name + " " + parameter_string(solver_config)
+    return "./" + solver_config.solver_binary.binaryName + " " + parameter_string(solver_config)
 
 def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
     """ Returns the passed datetime value as formatted string according to the formatting string
