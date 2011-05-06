@@ -258,7 +258,7 @@ def experiment_results(database, experiment_id):
             elif form.display_measure.data == 'par10' or form.display_measure.data is None:
                 time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else 10*j.CPUTimeLimit) for j in jobs] or [0])
 
-            if best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time:
+            if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and successful > 0:
                 best_sc_time = time_measure
                 best_sc_by_instance_id[idInstance] = solver_config
 
