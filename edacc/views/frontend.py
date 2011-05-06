@@ -240,7 +240,7 @@ def experiment_results(database, experiment_id):
             jobs = rs[idSolverConfig]
 
             completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
-            jobs = filter(lambda j: j.status not in STATUS_PROCESSING, jobs)
+            #jobs = filter(lambda j: j.status not in STATUS_PROCESSING, jobs)
             successful = len(filter(lambda j: str(j.resultCode).startswith('1'), jobs))
             runtimes = [j.get_time() for j in jobs]
             runtimes = filter(lambda r: r is not None, runtimes)
@@ -289,9 +289,9 @@ def experiment_results(database, experiment_id):
         if experiment.get_num_runs(db) > 1:
             head = ['Instance']
             for sc in solver_configs_dict.values():
-                head += [str(sc), '', '', '', '', '']
+                head += [str(sc)]
             csv_writer.writerow(head)
-            csv_writer.writerow([''] + ['median', 'min.', 'max.', 'avg.', 'stddev', 'var coeff.'] * len(solver_configs_dict))
+            csv_writer.writerow([''] + [form.display_measure.data] * len(solver_configs_dict))
         else:
             csv_writer.writerow(['Instance'] + map(str, solver_configs_dict.values()))
 
@@ -302,8 +302,7 @@ def experiment_results(database, experiment_id):
                     write_row.append(sc_results['first_job'].resultTime)
                 else:
                     write_row += map(lambda x: round(x, 2), [
-                                sc_results['time_median'], sc_results['time_min'], sc_results['time_max'],
-                                sc_results['time_avg'], sc_results['time_stddev'], sc_results['var_coeff']
+                                sc_results['time_measure']
                         ])
             csv_writer.writerow(write_row)
 
@@ -440,11 +439,13 @@ def experiment_results_by_instance(database, experiment_id):
                                    instance=instance,
                                    solver_configuration=sc).all()
 
-            mean, median, par10 = 0.0, 0.0, 0.0
+            mean, median, par10 = None, None, None
             if len(runs) > 0:
                 runtimes = [j.get_time() for j in runs]
                 runtimes = filter(lambda t: t is not None, runtimes)
                 count = 0
+                if len(runtimes) > 0:
+                    par10 = 0.0
                 for j in runs:
                     if j.get_time() is not None:
                         count += 1
@@ -454,14 +455,16 @@ def experiment_results_by_instance(database, experiment_id):
                             par10 += j.get_time()
                 if count > 0:
                     par10 /= count
-                mean = numpy.average(runtimes)
-                median = numpy.median(runtimes)
+                if len(runtimes) > 0:
+                    mean = numpy.average(runtimes)
+                    median = numpy.median(runtimes)
 
             results.append((sc, runs, mean, median, par10))
             min_mean_sc, min_mean = None, 0
             min_median_sc, min_median = None, 0
             min_par10_sc, min_par10 = None, 0
             for r in results:
+                if r[2] is None: continue
                 if min_mean_sc is None or r[2] < min_mean:
                     min_mean_sc, min_mean = r[0], r[2]
                 if min_median_sc is None or r[3] < min_median:

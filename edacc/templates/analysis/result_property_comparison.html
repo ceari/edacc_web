@@ -1,6 +1,6 @@
 {% from "_formhelpers.html" import render_field %}
 {% extends "base.html" %}
-{% block title %}RTD Comparison{% endblock %}
+{% block title %}RPD Comparison{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{url_for('static', filename='js/jquery.tablesorter.js')}}" type="text/javascript"></script>
@@ -38,8 +38,8 @@
         {% if form.solver_config1.data and form.solver_config2.data %}
             <h3>Kolmogorow-Smirnow two-sample test</h3>
             {% if not ks_error %}
-                H0: RTD1 = RTD2<br/>
-                H1: RTD1 != RTD2<br/>
+                H0: RPD1 = RPD2<br/>
+                H1: RPD1 != RPD2<br/>
                 Statistic: {{ks_statistic|round(2)}}<br/>
                 <i>p</i>-value: {{ks_p_value}} (two-sided)<br/>
                 {% if ks_p_value <= 0.05 %}
@@ -52,8 +52,8 @@
             {% endif %}
             <h3>Mann-Whitney-U Test (Wilcoxon rank sum test)</h3>
             {% if not wx_error %}
-                H0: RTD1 = RTD2<br/>
-                H1: RTD1 != RTD2<br/>
+                H0: RPD1 = RPD2<br/>
+                H1: RPD1 != RPD2<br/>
                 Statistic: {{wx_statistic|round(2)}}<br/>
                 Median {{form.solver_config1.data}}: {{median1}}<br/>
                 Median {{form.solver_config2.data}}: {{median2}}<br/>

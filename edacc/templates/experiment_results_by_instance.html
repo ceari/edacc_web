@@ -59,11 +59,15 @@
                             <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{result.0.idSolverConfig}}">{{ result.0}}</a>
                         </td>
                         {% for run in result[1] %}
+                            {% if run.get_time() %}
                             <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time|round(4)}}</a></td>
+                            {% else %}
+                                <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">-</a></td>
+                            {% endif %}
                         {% endfor %}
-                        <td style="{{'background-color: yellow;' if result[0] == min_mean_sc else ''}}">{{result[2]|round(4)}}</td>
-                        <td style="{{'background-color: yellow;' if result[0] == min_median_sc else ''}}">{{result[3]|round(4)}}</td>
-                        <td style="{{'background-color: yellow;' if result[0] == min_par10_sc else ''}}">{{result[4]|round(4)}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_mean_sc else ''}}">{{result[2]|round(4) if result[2] else ''}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_median_sc else ''}}">{{result[3]|round(4) if result[3] else ''}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_par10_sc else ''}}">{{result[4]|round(4) if result[4] else ''}}</td>
                     </tr>
                 {% endfor %}
             </tbody>
