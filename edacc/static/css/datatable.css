@@ -139,7 +139,7 @@ table.display td.center {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * DataTables row classes
- 
+
 table.display tr.odd.gradeA {
 	background-color: #ddffdd;
 }
@@ -283,7 +283,7 @@ table.display tr.odd.row_selected td {
 /*
  * Sorting classes for columns
  */
-/* For the standard odd/even 
+/* For the standard odd/even
 tr.odd td.sorting_1 {
 	background-color: #D3D6FF;
 }

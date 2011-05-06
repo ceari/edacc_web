@@ -421,13 +421,15 @@ def property_distributions(results, filename, property_name, log_property, forma
 
     if log_property:
         log = 'x'
+        min_x = min([min(r[1] or [0.1]) for r in results] or [0.1])
     else:
         log = ''
+        min_x = 0
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
                     type='p', col='red', las = 1, log=log,
-                    xlim=robjects.r.c(0.0, max_x), ylim=robjects.r.c(-0.05, 1.05),
+                    xlim=robjects.r.c(min_x, max_x), ylim=robjects.r.c(-0.05, 1.05),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
@@ -446,7 +448,7 @@ def property_distributions(results, filename, property_name, log_property, forma
                             main='', col=colors[point_style], pch=point_style, log=log,
                             xlab='', ylab='', xaxs='i', yaxs='i', las=1,
                             xaxt='n', yaxt='n',
-                            xlim=robjects.r.c(0.0,max_x), ylim=robjects.r.c(-0.05, 1.05))
+                            xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(-0.05, 1.05))
             robjects.r.par(new=1)
             point_style += 1
 
@@ -519,13 +521,15 @@ def property_distribution(results, filename, property_name, log_property, format
 
     if log_property:
         log = 'x'
+        min_x = min(results or [0.1])
     else:
         log = ''
+        min_x = 0
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
                     type='p', col='red', las = 1, log=log,
-                    xlim=robjects.r.c(0, max_x), ylim=robjects.r.c(-0.05, 1.05),
+                    xlim=robjects.r.c(min_x, max_x), ylim=robjects.r.c(-0.05, 1.05),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
@@ -534,7 +538,7 @@ def property_distribution(results, filename, property_name, log_property, format
         robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results or [0])),
                         main='', xaxt='n', yaxt='n', log=log,
                         xlab='', ylab='', xaxs='i', yaxs='i', las=1,
-                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
+                        xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(-0.05, 1.05))
 
         # plot labels and axes
         robjects.r.mtext(property_name, side=1,
@@ -565,8 +569,10 @@ def kerneldensity(data, filename, property_name, log_property, format='png'):
 
     if log_property:
         log = 'x'
+        min_x = min(data or [0.1])
     else:
         log = ''
+        min_x = 0
 
     if len(data) > 0:
         robjects.r('d <- npudens(c(' + ",".join(map(str, data + [max(data or [0]) + 0.00001])) + '))')
