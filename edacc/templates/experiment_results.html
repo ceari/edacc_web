@@ -86,7 +86,7 @@
                     {% else %}
                         <td style="text-align: center; background-color: {{job.first_job.resultCode|job_result_code_color}}">
                     {% endif %}
-                        <a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=job.first_job.idJob) }}">{{job.first_job.get_time()|result_time}}</a>
+                        <a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=job.first_job.idJob) }}">{{job.time_measure|round(2)}}</a>
                         {{job.first_job.result_code.description}}
                     </td>
                     {% endif %}
