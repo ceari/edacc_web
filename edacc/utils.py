@@ -15,7 +15,7 @@ from cStringIO import StringIO
 
 import pylzma
 
-from edacc.constants import JOB_STATUS_COLOR, JOB_RESULT_CODE, JOB_RESULT_CODE_COLOR
+from edacc.constants import JOB_STATUS_COLOR, JOB_RESULT_CODE_COLOR
 
 def newline_split_string(s, n):
     if n == 0: return s

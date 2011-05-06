@@ -32,22 +32,10 @@ STATUS_EXCEEDED_LIMITS = (
     21,22,23,24,25
 )
 
-JOB_RESULT_CODE = {
-    11: 'SAT',
-    10: 'UNSAT',
-    0: 'UNKNOWN',
-    -1: 'wrong answer',
-    -21: 'cpu time limit exceeded',
-    -22: 'wall clock time limit exceeded',
-    -23: 'memory limit exceeded',
-    -24: 'stack size limit exceeded',
-    -25: 'output size limit exceeded',
-    -309: 'SIGNAL',
-}
-
 JOB_RESULT_CODE_COLOR = {
     11: '#00CC33',
     10: '#00CC33',
+    1: '#00CC33',
     0: '#D3D3D3',
     -21: 'red',
     -22: 'red',
@@ -74,6 +62,9 @@ JOB_STATUS_COLOR = {
 
 for sig in range(1, 31):
     JOB_STATUS_COLOR[-400 - sig] = '#FF0000'
+
+for sig in range(1, 31):
+    JOB_RESULT_CODE_COLOR[-300 - sig] = '#FF0000'
 
 OWN_RESULTS = set([3, 4, 5])        # phases where own results are shown
 ALL_RESULTS = set([6, 7])           # phases where all results are shown
