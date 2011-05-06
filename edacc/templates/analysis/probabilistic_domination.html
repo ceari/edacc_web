@@ -4,6 +4,12 @@
 {% block head %}
     {{ super() }}
     <script src="{{url_for('static', filename='js/jquery.image_preview.js')}}" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            {% include '/analysis/multiple_instances_filter_js.html' %}
+
+        });
+    </script>
 {% endblock %}
 {% block content %}
     <div class="navigation">
@@ -12,33 +18,58 @@
         Probabilistic Domination
     </div>
 
-    <div style="margin-left: 5px;">
+    <div style="float: left; margin-left: 5px;">
         <h2>Probabilistic Domination</h2>
         <form method="get" action="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
                 {{ render_field(form.result_property) }}
                 {{ render_field(form.solver_config1) }}
                 {{ render_field(form.solver_config2) }}
+                {{ render_field(form.i, size=10) }}
+                <tr name="tr_instances_filter">
+                    <td style="vertical-align: middle;">Filter instances</td>
+                    <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
+                        JS expression filter. Valid variables are {% for prop in instance_properties %}"{{prop.name}}", {% endfor %} <br/>
+                        Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
+                    </td>
+                </tr>
                 <tr><td colspan="2"><input type="submit" value="Show" /></td></tr>
             </table>
         </form>
     </div>
 
     {% if form.solver_config1.data and form.solver_config2.data %}
-    <div>
-        <ul>
-        <li>
-            <strong>Instances where {{form.solver_config1.data}} prob. dominates {{form.solver_config2.data}} ({{sc1_dom_sc2|length}}):</strong><br/>
-            {% for i in sc1_dom_sc2 %}{{i}} (<a class="screenshot" rel="{{url_for('plot.result_property_comparison_plot', database=database, experiment_id=experiment.idExperiment)}}?instance={{i.idInstance}}&solver_config1={{form.solver_config1.data.idSolverConfig}}&solver_config2={{form.solver_config2.data.idSolverConfig}}&dim=400&result_property={{form.result_property.data}}" href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}?instance={{i.idInstance}}&solver_config1={{form.solver_config1.data.idSolverConfig}}&solver_config2={{form.solver_config2.data.idSolverConfig}}&result_property={{form.result_property.data}}">RTD Plot</a>)<br/>{% endfor %}
-        </li>
-        <li>
-            <strong>Instances where {{form.solver_config2.data}} prob. dominates {{form.solver_config1.data}} ({{sc2_dom_sc1|length}}):</strong><br/>
-            {% for i in sc2_dom_sc1 %}{{i}} (<a class="screenshot" rel="{{url_for('plot.result_property_comparison_plot', database=database, experiment_id=experiment.idExperiment)}}?instance={{i.idInstance}}&solver_config2={{form.solver_config1.data.idSolverConfig}}&solver_config1={{form.solver_config2.data.idSolverConfig}}&dim=400&result_property={{form.result_property.data}}" href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}?instance={{i.idInstance}}&solver_config2={{form.solver_config1.data.idSolverConfig}}&solver_config1={{form.solver_config2.data.idSolverConfig}}&result_property={{form.result_property.data}}">RTD Plot</a>)<br/>{% endfor %}
-        </li>
-        <li>
-            <strong>Instances with crossovers in the result property distributions ({{no_dom|length}}):</strong><br/>
-            {% for i in no_dom %}{{i}} (<a class="screenshot" rel="{{url_for('plot.result_property_comparison_plot', database=database, experiment_id=experiment.idExperiment)}}?instance={{i.idInstance}}&solver_config1={{form.solver_config1.data.idSolverConfig}}&solver_config2={{form.solver_config2.data.idSolverConfig}}&dim=400&result_property={{form.result_property.data}}" href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}?instance={{i.idInstance}}&solver_config1={{form.solver_config1.data.idSolverConfig}}&solver_config2={{form.solver_config2.data.idSolverConfig}}&result_property={{form.result_property.data}}">RTD Plot</a>)<br/>{% endfor %}
-        </li>
-    </div>
+    <img style="clear:both; margin-left:50px;" src="{{url_for('plot.barplot', database=database, experiment_id=experiment.idExperiment, gt=sc1_dom_sc2|length, eq=no_dom|length, lt=sc2_dom_sc1|length)}}" />
+    <table style="clear:both;" class="results">
+        <thead>
+            <tr>
+                <th>{{form.solver_config1.data}} > {{form.solver_config2.data}} ({{sc1_dom_sc2|length}})</th>
+                <th>{{form.solver_config1.data}} ?=? {{form.solver_config2.data}} ({{no_dom|length}})</th>
+                <th>{{form.solver_config1.data}} < {{form.solver_config2.data}} ({{sc2_dom_sc1|length}})</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in range(num_total) %}
+                <tr class="{{'odd' if i % 2 == 1 else 'even'}}">
+                    <td>
+                        {% if i < sc1_dom_sc2|length %}
+                            <a class="screenshot" rel="{{url_for('plot.result_property_comparison_plot', database=database, experiment_id=experiment.idExperiment)}}?instance={{sc1_dom_sc2[i].idInstance}}&solver_config1={{form.solver_config1.data.idSolverConfig}}&solver_config2={{form.solver_config2.data.idSolverConfig}}&dim=400&result_property={{form.result_property.data}}&log_property" href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}?instance={{sc1_dom_sc2[i].idInstance}}&solver_config1={{form.solver_config1.data.idSolverConfig}}&solver_config2={{form.solver_config2.data.idSolverConfig}}&result_property={{form.result_property.data}}&log_property">{{sc1_dom_sc2[i]}}</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if i < no_dom|length %}
+                            <a class="screenshot" rel="{{url_for('plot.result_property_comparison_plot', database=database, experiment_id=experiment.idExperiment)}}?instance={{no_dom[i].idInstance}}&solver_config2={{form.solver_config1.data.idSolverConfig}}&solver_config1={{form.solver_config2.data.idSolverConfig}}&dim=400&result_property={{form.result_property.data}}&log_property" href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}?instance={{no_dom[i].idInstance}}&solver_config2={{form.solver_config1.data.idSolverConfig}}&solver_config1={{form.solver_config2.data.idSolverConfig}}&result_property={{form.result_property.data}}&log_property">{{no_dom[i]}}</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if i < sc2_dom_sc1|length %}
+                            <a class="screenshot" rel="{{url_for('plot.result_property_comparison_plot', database=database, experiment_id=experiment.idExperiment)}}?instance={{sc2_dom_sc1[i].idInstance}}&solver_config1={{form.solver_config1.data.idSolverConfig}}&solver_config2={{form.solver_config2.data.idSolverConfig}}&dim=400&result_property={{form.result_property.data}}&log_property" href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}?instance={{sc2_dom_sc1[i].idInstance}}&solver_config1={{form.solver_config1.data.idSolverConfig}}&solver_config2={{form.solver_config2.data.idSolverConfig}}&result_property={{form.result_property.data}}&log_property">{{sc2_dom_sc1[i]}}</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     {% endif %}
 {% endblock %}

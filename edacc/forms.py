@@ -178,6 +178,8 @@ class ProbabilisticDominationForm(Form):
     result_property = SelectField('Property')
     solver_config1 = QuerySelectField('First Solver Configuration')
     solver_config2 = QuerySelectField('Second Solver Configuration')
+    instance_filter = TextField('Filter Instances')
+    i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
 
 class BoxPlotForm(Form):
     solver_configs = QuerySelectMultipleField('Solver Configurations')

@@ -933,3 +933,14 @@ def box_plots(database, experiment_id):
         response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
         return response
+
+
+@plot.route('/<database>/experiment/<int:experiment_id>/barplot/<int:gt>/<int:eq>/<int:lt>')
+@require_phase(phases=ANALYSIS2)
+@require_login
+def barplot(database, experiment_id, gt, eq, lt):
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'barplot.png'
+    plots.barplot([gt, eq, lt], filename, 'png')
+    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+    os.remove(filename)
+    return response

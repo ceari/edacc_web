@@ -15,6 +15,8 @@ import StringIO
 import csv
 import scipy
 
+from sqlalchemy.orm import joinedload
+
 from flask import Module
 from flask import render_template as render
 from flask import abort, request, jsonify, Response
@@ -443,35 +445,59 @@ def probabilistic_domination(database, experiment_id):
     form = forms.ProbabilisticDominationForm(request.args)
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
+    form.i.query = experiment.get_instances(db) or EmptyQuery()
     result_properties = db.get_plotable_result_properties() # plotable = numeric
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+
     if form.solver_config1.data and form.solver_config2.data:
+        instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i')))).all()
+        instance_ids = [i.idInstance for i in instances]
         sc1 = form.solver_config1.data
         sc2 = form.solver_config2.data
 
-        sc1_dom_sc2 = set()
-        sc2_dom_sc1 = set()
-        no_dom = set()
+        query = db.session.query(db.ExperimentResult)
+        query.enable_eagerloads(True).options(joinedload(db.ExperimentResult.properties))
 
-        for instance in experiment.get_instances(db):
-            res1 = [r.get_property_value(form.result_property.data, db) for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc1).all()]
-            res2 = [r.get_property_value(form.result_property.data, db) for r in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance, solver_configuration=sc2).all()]
+        sc1_results_by_instance_id = {}
+        sc2_results_by_instance_id = {}
+        for r in query.filter_by(experiment=experiment, solver_configuration=sc1).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all():
+            if r.Instances_idInstance in sc1_results_by_instance_id:
+                sc1_results_by_instance_id[r.Instances_idInstance].append(r)
+            else:
+                sc1_results_by_instance_id[r.Instances_idInstance] = [r]
+
+        for r in query.filter_by(experiment=experiment, solver_configuration=sc2).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all():
+            if r.Instances_idInstance in sc2_results_by_instance_id:
+                sc2_results_by_instance_id[r.Instances_idInstance].append(r)
+            else:
+                sc2_results_by_instance_id[r.Instances_idInstance] = [r]
+
+        sc1_dom_sc2 = []
+        sc2_dom_sc1 = []
+        no_dom = []
+
+        for instance in instances:
+            res1 = [r.get_property_value(form.result_property.data, db) for r in sc1_results_by_instance_id[instance.idInstance]]
+            res2 = [r.get_property_value(form.result_property.data, db) for r in sc2_results_by_instance_id[instance.idInstance]]
             res1 = filter(lambda r: r is not None, res1)
             res2 = filter(lambda r: r is not None, res2)
             if len(res1) > 0 and len(res2) > 0:
                 d = statistics.prob_domination(res1, res2)
                 if d == 1:
-                    sc1_dom_sc2.add(instance)
+                    sc1_dom_sc2.append(instance)
                 elif d == -1:
-                    sc2_dom_sc1.add(instance)
+                    sc2_dom_sc1.append(instance)
                 else:
-                    no_dom.add(instance)
+                    no_dom.append(instance)
+
+        num_total = max(max(len(sc1_dom_sc2), len(sc2_dom_sc1)), len(no_dom))
 
         return render('/analysis/probabilistic_domination.html',
                       database=database, db=db, experiment=experiment,
                       form=form, sc1_dom_sc2=sc1_dom_sc2, sc2_dom_sc1=sc2_dom_sc1,
-                      no_dom=no_dom, instance_properties=db.get_instance_properties())
+                      no_dom=no_dom, instance_properties=db.get_instance_properties(),
+                      num_total=num_total)
 
     return render('/analysis/probabilistic_domination.html', database=database, db=db,
                   experiment=experiment, form=form, instance_properties=db.get_instance_properties())

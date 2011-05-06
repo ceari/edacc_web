@@ -362,13 +362,15 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
     if log_property:
         log = 'x'
+        min_x = min([min(results1), min(results2)])
     else:
         log = ''
+        min_x = 0
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
                     type='p', col='red', las = 1, log=log,
-                    xlim=robjects.r.c(0, max_x), ylim=robjects.r.c(-0.05, 1.05),
+                    xlim=robjects.r.c(min_x, max_x), ylim=robjects.r.c(-0.05, 1.05),
                     xaxs='i', yaxs='i',
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
@@ -377,12 +379,12 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
     robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results1)),
                     main='', xaxt='n', yaxt='n', log=log,
                     xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='red',
-                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
+                    xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(-0.05, 1.05))
     robjects.r.par(new=1)
     robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results2)),
                     main='', xaxt='n', yaxt='n', log=log,
                     xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='blue',
-                    xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(-0.05, 1.05))
+                    xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(-0.05, 1.05))
 
     # plot labels and axes
     robjects.r.mtext(result_property_name, side=1,
@@ -578,5 +580,21 @@ def kerneldensity(data, filename, property_name, log_property, format='png'):
     else:
         robjects.r.frame()
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
+
+    grdevices.dev_off()
+
+@synchronized
+def barplot(values, filename, format='png'):
+    if format == 'png':
+        grdevices.png(file=filename, units="px", width=400,
+                      height=400, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename)
+
+    robjects.r.par(mar = robjects.FloatVector([2, 2, 2, 2]))
+    robjects.r.barplot(robjects.IntVector(values),
+                       names=robjects.StrVector(['>', '?=?', '<']))
 
     grdevices.dev_off()
