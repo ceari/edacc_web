@@ -8,3 +8,4 @@ client_libs/
 *.kpf
 er_model.mwb.bak
 edacc.komodoproject
+edacc/local_config.py
