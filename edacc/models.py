@@ -137,7 +137,7 @@ class EDACCDatabase(object):
                 """ Returns the instances of the experiment that all solvers
                 solved in all of their runs
                 """
-                numInstances = db.session.query(db.Instance) \
+                numInstances = db.session.query(db.Instance).options(joinedload_all('properties')) \
                         .filter(db.Instance.experiments.contains(self)).distinct().count()
                 if numInstances == 0: return 0
                 num_jobs_per_instance = db.session.query(db.ExperimentResult) \
@@ -159,7 +159,7 @@ class EDACCDatabase(object):
                                  t_results.c['status']==1),
                             from_obj=t_results).distinct()
                 ids = db.session.connection().execute(s).fetchall()
-                return db.session.query(db.Instance).filter(db.Instance.experiments.contains(self)).filter(not_(db.Instance.idInstance.in_(list(r[0] for r in ids)))).all()
+                return db.session.query(db.Instance).options(joinedload_all('properties')).filter(db.Instance.experiments.contains(self)).filter(not_(db.Instance.idInstance.in_(list(r[0] for r in ids)))).all()
 
             def get_instances(self, db):
                 return db.session.query(db.Instance).options(joinedload_all('properties')) \
