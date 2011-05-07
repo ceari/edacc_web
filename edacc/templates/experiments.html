@@ -3,8 +3,8 @@
 {% block head %}
 	<!-- index experiments but don't follow links since they will probably change a lot anyway  -->
     <meta name="robots" content="index,nofollow" />
-	{{ super() }}  
-{% endblock %} 
+	{{ super() }}
+{% endblock %}
 {% block content %}
     <div class="navigation">
         » Experiments
@@ -14,7 +14,7 @@
         {% if experiments %}
             {% for experiment in experiments %}
                 <li>
-                    <a title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.get_num_solver_configs(db)}} Solvers, {{experiment.get_num_instances(db)}} Instances, {{experiment.get_num_runs(db)}} runs)
+                    <a title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.get_num_solver_configs(db)}} Solvers, {{experiment.get_num_instances(db)}} Instances, {{experiment.get_num_jobs(db)}} jobs)
                 </li>
             {% endfor %}
         {% else %}

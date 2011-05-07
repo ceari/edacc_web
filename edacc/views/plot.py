@@ -36,8 +36,8 @@ def filter_results(l1, l2):
     """Filter the lists l1 and l2 pairwise for None elements in either
     pair component. Only elements i with l1[i] == l2[i] != None remain.
     """
-    r1 = [l1[i] for i in xrange(len(l1)) if l1[i] is not None and l2[i] is not None]
-    r2 = [l2[i] for i in xrange(len(l2)) if l2[i] is not None and l1[i] is not None]
+    r1 = [l1[i] for i in xrange(min(len(l1), len(l2))) if l1[i] is not None and l2[i] is not None]
+    r2 = [l2[i] for i in xrange(min(len(l1), len(l2))) if l2[i] is not None and l1[i] is not None]
     return r1, r2
 
 def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, result_property, run):
@@ -81,6 +81,7 @@ def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, result_proper
         for instance in instances:
             r1 = results1.filter_by(instance=instance, run=int(run)).first()
             r2 = results2.filter_by(instance=instance, run=int(run)).first()
+            if r1 is None or r2 is None: continue
             if r1.get_property_value(result_property, db) is not None and r2.get_property_value(result_property, db) is not None:
                 points.append((
                     r1.get_property_value(result_property, db),
@@ -232,6 +233,7 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
     else:
         for instance in instances:
             res = results.filter_by(instance=instance, run=int(run)).first()
+            if res is None: continue
             if instance.get_property_value(instance_property, db) is not None and res.get_property_value(result_property, db) is not None:
                 points.append((
                     instance.get_property_value(instance_property, db),
@@ -371,6 +373,7 @@ def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, insta
     else:
         for instance in instances:
             res = results.filter_by(instance=instance, run=int(run)).first()
+            if res is None: continue
             if res.get_property_value(result_property1, db) is not None and res.get_property_value(result_property2, db) is not None:
                 points.append((
                     res.get_property_value(result_property1, db),
@@ -514,7 +517,7 @@ def cactus_plot(database, experiment_id):
 
     solvers = []
 
-    random_run = random.randint(0, exp.get_num_runs(db) - 1)
+    random_run = random.randint(0, exp.get_max_num_runs(db) - 1)
 
     for instance_group in xrange(instance_groups_count):
         for sc in solver_configs:

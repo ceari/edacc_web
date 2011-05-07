@@ -109,7 +109,7 @@ def cactus_plot(database, experiment_id):
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
     form.sc.query = experiment.solver_configurations or EmptyQuery()
-    numRuns = experiment.get_num_runs(db)
+    numRuns = experiment.get_max_num_runs(db)
     form.run.choices = [('all', 'All runs'),
                         ('average', 'All runs - average'),
                         ('penalized_average', 'All runs - penalized average runtime'),
@@ -244,7 +244,7 @@ def scatter_2solver_1property(database, experiment_id):
 
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
-    numRuns = experiment.get_num_runs(db)
+    numRuns = experiment.get_max_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 
     form = forms.TwoSolversOnePropertyScatterPlotForm(request.args)
@@ -304,7 +304,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     instance_properties = db.get_plotable_instance_properties()
     instance_properties = zip([p.idProperty for p in instance_properties], [p.name for p in instance_properties])
-    numRuns = experiment.get_num_runs(db)
+    numRuns = experiment.get_max_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 
     form = forms.OneSolverInstanceAgainstResultPropertyPlotForm(request.args)
@@ -361,7 +361,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
-    numRuns = experiment.get_num_runs(db)
+    numRuns = experiment.get_max_num_runs(db)
     runs = zip(range(numRuns), ["#" + str(i) for i in range(numRuns)])
 
     form = forms.OneSolverTwoResultPropertiesPlotForm(request.args)

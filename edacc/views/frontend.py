@@ -290,24 +290,16 @@ def experiment_results(database, experiment_id):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
 
-        if experiment.get_num_runs(db) > 1:
-            head = ['Instance']
-            for sc in solver_configs_dict.values():
-                head += [str(sc)]
-            csv_writer.writerow(head)
-            csv_writer.writerow([''] + [form.display_measure.data] * len(solver_configs_dict))
-        else:
-            csv_writer.writerow(['Instance'] + map(str, solver_configs_dict.values()))
+        csv_writer.writerow(['Measure: ' + (form.display_measure.data or 'par10')])
+        head = ['Instance']
+        for sc in solver_configs_dict.values():
+            head += [str(sc)]
+        csv_writer.writerow(head)
 
         for row in results:
             write_row = [row['instance'].name]
             for sc_results in row['times']:
-                if sc_results['total'] == 1:
-                    write_row.append(sc_results['first_job'].resultTime)
-                else:
-                    write_row += map(lambda x: round(x, 2), [
-                                sc_results['time_measure']
-                        ])
+                write_row.append(sc_results['time_measure'])
             csv_writer.writerow(write_row)
 
         csv_response.seek(0)
@@ -331,7 +323,7 @@ def experiment_results_by_solver(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    num_runs = experiment.get_num_runs(db)
+    num_runs = experiment.get_max_num_runs(db)
 
     solver_configs = experiment.solver_configurations
 
@@ -371,6 +363,9 @@ def experiment_results_by_solver(database, experiment_id):
                 else:
                     total_time += run.resultTime
 
+            # fill up runs_by_instance with None's up to num_runs
+            runs_by_instance[instance] += [None] * (num_runs - count)
+
             par10_by_instance[instance.idInstance] = total_time / count if count != 0 else 0
 
         results = sorted(runs_by_instance.items(), key=lambda i: i[0].idInstance)
@@ -379,7 +374,7 @@ def experiment_results_by_solver(database, experiment_id):
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'])
-            results = [[res[0].name] + [r.get_time() for r in res[1]] +
+            results = [[res[0].name] + [('' if r is None else r.get_time()) for r in res[1]] +
                        [round(par10_by_instance[res[0].idInstance], 2)] for res in results]
 
             if request.args.get('sort_by_instance_name', None):
@@ -429,6 +424,7 @@ def experiment_results_by_instance(database, experiment_id):
 
     form = forms.ResultByInstanceForm(request.args)
     form.instance.query = instances or EmptyQuery()
+    num_runs = experiment.get_max_num_runs(db)
 
     results = []
     if form.instance.data:
@@ -463,7 +459,7 @@ def experiment_results_by_instance(database, experiment_id):
                     mean = numpy.average(runtimes)
                     median = numpy.median(runtimes)
 
-            results.append((sc, runs, mean, median, par10))
+            results.append((sc, runs + [None] * (num_runs - len(runs)), mean, median, par10))
             min_mean_sc, min_mean = None, 0
             min_median_sc, min_median = None, 0
             min_par10_sc, min_par10 = None, 0
@@ -479,10 +475,9 @@ def experiment_results_by_instance(database, experiment_id):
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
-            num_runs = experiment.get_num_runs(db)
             csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median', 'penalized avg. runtime'])
             for res in results:
-                csv_writer.writerow([str(res[0])] + [r.get_time() for r in res[1]] + [res[2], res[3], res[4]])
+                csv_writer.writerow([str(res[0])] + [('' if r is None else r.get_time()) for r in res[1]] + [res[2], res[3], res[4]])
             csv_response.seek(0)
 
             headers = Headers()
@@ -494,12 +489,12 @@ def experiment_results_by_instance(database, experiment_id):
         return render('experiment_results_by_instance.html', db=db, database=database,
                   instances=instances, experiment=experiment,
                   form=form, results=results, min_mean_sc=min_mean_sc,
-                  min_median_sc=min_median_sc, min_par10_sc=min_par10_sc)
+                  min_median_sc=min_median_sc, min_par10_sc=min_par10_sc, num_runs=num_runs)
 
 
     return render('experiment_results_by_instance.html', db=db, database=database,
                   instances=instances, experiment=experiment,
-                  form=form, results=results)
+                  form=form, results=results, num_runs=num_runs)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress/')

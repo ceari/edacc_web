@@ -41,8 +41,8 @@
     </div>
     <h2>Results by solver configuration and instance</h2>
     <div>
-        {% if experiment.get_num_runs(db) > 1 %}
-        In this table multiple runs of a solver on an instance are grouped in one cell. If there's only run of a solver configuration on an instance only the single run is displayed.
+        {% if experiment.get_max_num_runs(db) > 1 %}
+        In this table multiple runs of a solver on an instance are grouped in one cell. If there's only run only that single run is displayed.
         {% endif %}
         <form method="get" action="{{ url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment) }}">
             <table id="form_table">

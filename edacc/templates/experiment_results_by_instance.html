@@ -17,7 +17,7 @@
                     "sZeroRecords": "No matching results"
                 },
                 "aoColumns": [{"bSearchable": true},
-                              {% for i in range(experiment.get_num_runs(db)) %}{"bSearchable":false},{% endfor %}
+                              {% for i in range(experiment.get_max_num_runs(db)) %}{"bSearchable":false},{% endfor %}
                               {"bSearchable": false},{"bSearchable": false},{"bSearchable": false}, ]
             });
             new FixedHeader(oTable);
@@ -43,7 +43,7 @@
             <thead>
                 <tr>
                     <th>Run</th>
-                    {% for run in range(experiment.get_num_runs(db)) %}
+                    {% for run in range(experiment.get_max_num_runs(db)) %}
                     <th nowrap="nowrap">{{run}}</th>
                     {% endfor %}
                     <th>Mean</th>
@@ -59,10 +59,13 @@
                             <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{result.0.idSolverConfig}}">{{ result.0}}</a>
                         </td>
                         {% for run in result[1] %}
-                            {% if run.get_time() %}
-                            <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time|round(4)}}</a></td>
+                            {% if run == None %}<td></td>
                             {% else %}
-                                <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">-</a></td>
+                                {% if run.get_time() %}
+                                <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">{{ run.get_time()|result_time|round(4)}}</a></td>
+                                {% else %}
+                                    <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=run.idJob) }}">-</a></td>
+                                {% endif %}
                             {% endif %}
                         {% endfor %}
                         <td style="{{'background-color: yellow;' if result[0] == min_mean_sc else ''}}">{{result[2]|round(4) if result[2] else ''}}</td>

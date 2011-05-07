@@ -601,6 +601,6 @@ def barplot(values, filename, format='png'):
 
     robjects.r.par(mar = robjects.FloatVector([2, 2, 2, 2]))
     robjects.r.barplot(robjects.IntVector(values),
-                       names=robjects.StrVector(['>', '≟', '<']))
+                       names=robjects.StrVector(['>', '=?', '<']))
 
     grdevices.dev_off()

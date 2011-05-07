@@ -127,8 +127,8 @@ def number_of_solved_instances_ranking(db, experiment, instances):
 def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in ranked_solvers]
-    num_runs = experiment.get_num_runs(db)
-    num_runs_per_solver = num_runs * len(instance_ids)
+    max_num_runs = experiment.get_max_num_runs(db)
+    max_num_runs_per_solver = max_num_runs * len(instance_ids)
 
     vbs_num_solved = 0
     vbs_cumulated_cpu = 0
@@ -139,21 +139,18 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
         .group_by(db.ExperimentResult.Instances_idInstance).all()
 
-    vbs_num_solved = len(best_instance_runtimes) * num_runs
-    vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes) * num_runs
+    vbs_num_solved = len(best_instance_runtimes) * max_num_runs
+    vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes) * max_num_runs
 
     num_unsolved_instances = len(instances) - len(best_instance_runtimes)
 
-    #vbs_par10 = vbs_cumulated_cpu + 10.0 * experiment.CPUTimeLimit * num_unsolved_instances * num_runs
-    #vbs_par10 = vbs_par10 / num_runs_per_solver if num_runs_per_solver != 0 else 0
-    # TODO: make this work somehow with the new DB model (no more experiment.CPUTimeLimit)
     vbs_par10 = 0.0
 
     # Virtual best solver data
     data = [('Virtual Best Solver (VBS)',                   # name of the solver
              vbs_num_solved,                                # number of successful runs
-             0.0 if num_runs_per_solver == 0 else \
-                    vbs_num_solved / float(num_runs_per_solver) ,  # % of all runs
+             0.0 if max_num_runs_per_solver == 0 else \
+                    vbs_num_solved / float(max_num_runs_per_solver) ,  # % of all runs
              1.0,                                           # % of vbs runs
              vbs_cumulated_cpu,                             # cumulated CPU time
              (0.0 if vbs_num_solved == 0 else \
@@ -218,7 +215,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         data.append((
             solver,
             len(successful_runs),
-            0 if len(successful_runs) == 0 else len(successful_runs) / float(num_runs_per_solver),
+            0 if len(successful_runs) == 0 else len(successful_runs) / float(max_num_runs_per_solver),
             0 if vbs_num_solved == 0 else len(successful_runs) / float(vbs_num_solved),
             successful_runs_sum,
             numpy.average([j[0] for j in successful_runs] or 0),

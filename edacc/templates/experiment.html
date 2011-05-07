@@ -102,7 +102,7 @@
     {% if not db.is_competition() or db.competition_phase() in ANALYSIS1 %}
     <a href="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">Cactus plot - Number of solved instances within a given amount of a property (e.g. time, memory, ...)</a><br/>
     {% endif %}
-    {% if experiment.get_num_runs(db) > 1 %}
+    {% if experiment.get_max_num_runs(db) > 1 %}
         <a href="{{url_for('analysis.property_distribution', database=database, experiment_id=experiment.idExperiment)}}">Result Property Distribution plot - Distribution and Kernel Density Estimation</a><br/>
         <a href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}">Property distribution comparison of two solvers on an instance</a><br/>
         <a href="{{url_for('analysis.property_distributions', database=database, experiment_id=experiment.idExperiment)}}">Property distributions of solvers on an instance</a><br/>

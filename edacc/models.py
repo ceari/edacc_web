@@ -111,18 +111,27 @@ class EDACCDatabase(object):
 
         class Experiment(object):
             """ Maps the Experiment table. """
-            def get_num_runs(self, db):
+            def get_num_jobs(self, db):
+                return db.session.query(db.ExperimentResult).filter_by(experiment=self).count()
+
+            #def get_num_runs(self, db):
+            #    """ Returns the number of runs of the experiment """
+            #    num_results = db.session.query(db.ExperimentResult) \
+            #                        .filter_by(experiment=self).count()
+            #    num_solver_configs = db.session.query(db.SolverConfiguration) \
+            #                            .filter_by(experiment=self).count()
+            #    num_instances = db.session.query(db.Instance) \
+            #                                .filter(db.Instance.experiments \
+            #                                        .contains(self)).distinct().count()
+            #    if num_solver_configs == 0 or num_instances == 0:
+            #        return 0
+            #    return num_results / num_solver_configs / num_instances
+
+            def get_max_num_runs(self, db):
                 """ Returns the number of runs of the experiment """
-                num_results = db.session.query(db.ExperimentResult) \
-                                    .filter_by(experiment=self).count()
-                num_solver_configs = db.session.query(db.SolverConfiguration) \
-                                        .filter_by(experiment=self).count()
-                num_instances = db.session.query(db.Instance) \
-                                            .filter(db.Instance.experiments \
-                                                    .contains(self)).distinct().count()
-                if num_solver_configs == 0 or num_instances == 0:
-                    return 0
-                return num_results / num_solver_configs / num_instances
+                res = db.session.query(func.max(db.ExperimentResult.run)).filter_by(experiment=self).first()
+                if res is None: return 0
+                return res[0] + 1
 
             def get_solved_instances(self, db):
                 """ Returns the instances of the experiment that any solver
