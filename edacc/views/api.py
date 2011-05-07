@@ -28,13 +28,13 @@ from edacc.views.helpers import require_admin
 
 api = Module(__name__)
 
-@api.route('/api/<database>/experiment-results/<int:id>')
+@api.route('/api/<database>/experiment-results/<int:id>/')
 def get_experiment_result(database, id):
     db = models.get_database(database) or abort(404)
     er = db.session.query(db.ExperimentResult).get(id) or abort(404)
     return json.dumps(er.to_json())
 
-@api.route('/api/<database>/statistics')
+@api.route('/api/<database>/statistics/')
 def statistics(database):
     db = models.get_database(database) or abort(404)
     jobs_running = db.session.query(db.ExperimentResult).filter_by(status=0).count()
@@ -45,6 +45,15 @@ def statistics(database):
         'total_time_days': total_time / 60 / 60 / 24,
     })
 
+@api.route('/api/<database>/result-codes/')
+def result_codes(database):
+    db = models.get_database(database) or abort(404)
+    return json.dumps([rc.to_json() for rc in db.session.query(db.ResultCodes).all()])
+
+@api.route('/api/<database>/status-codes/')
+def status_codes(database):
+    db = models.get_database(database) or abort(404)
+    return json.dumps([sc.to_json() for sc in db.session.query(db.StatusCodes).all()])
 
 """
 URIs that should eventually be implemented (all starting with /api)

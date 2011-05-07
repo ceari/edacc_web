@@ -258,8 +258,18 @@ class EDACCDatabase(object):
             def __str__(self):
                 return self.name
 
-        class ResultCodes(object): pass
-        class StatusCodes(object): pass
+        class ResultCodes(object):
+            def to_json(self):
+                return {
+                    'code': self.resultCode,
+                    'description': self.description,
+                }
+        class StatusCodes(object):
+            def to_json(self):
+                return {
+                    'code': self.statusCode,
+                    'description': self.description,
+                }
         class SolverBinary(object): pass
         class Client(object): pass
         class Experiment_has_Client(object): pass
