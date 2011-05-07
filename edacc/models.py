@@ -130,7 +130,7 @@ class EDACCDatabase(object):
             def get_max_num_runs(self, db):
                 """ Returns the number of runs of the experiment """
                 res = db.session.query(func.max(db.ExperimentResult.run)).filter_by(experiment=self).first()
-                if res is None: return 0
+                if res is None or res[0] is None: return 0
                 return res[0] + 1
 
             def get_solved_instances(self, db):
