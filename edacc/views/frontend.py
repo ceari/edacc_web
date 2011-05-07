@@ -437,7 +437,8 @@ def experiment_results_by_instance(database, experiment_id):
             runs = db.session.query(db.ExperimentResult) \
                         .filter_by(experiment=experiment,
                                    instance=instance,
-                                   solver_configuration=sc).all()
+                                   solver_configuration=sc) \
+                        .order_by('Instances_idInstance', 'run').all()
 
             mean, median, par10 = None, None, None
             if len(runs) > 0:
