@@ -27,7 +27,7 @@
                 "oLanguage": {
                     "sZeroRecords": "No matching results"
                 },
-                "aoColumns": [null, {% for i in range(1, solver_configs|length + 1) %} {"sType": "anchor-numeric"},{% endfor %}]
+                "aoColumns": [null, {"sType": "anchor-numeric"}, {% for i in range(1, solver_configs|length + 1) %} {"sType": "anchor-numeric"},{% endfor %}]
             });
             new FixedHeader(oTable);
         });
@@ -55,6 +55,7 @@
         <thead>
             <tr>
                 <th>Instance</th>
+                <th>Best time</th>
                 {% for idSolverConfig in solver_configs_dict.iterkeys()  %}
                     <th>
                         <a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{idSolverConfig}}">
@@ -67,7 +68,15 @@
         <tbody>
         {% for row in results %}
             <tr>
-                <td><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{row.instance.idInstance}}">{{row.instance.name}}</a></td>
+                <td nowrap="nowrap"><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{row.instance.idInstance}}">{{row.instance.name}}</a></td>
+                {% for job in row.times %}
+                    {% if job.solver_config == best_sc_by_instance_id[row.instance.idInstance] %}
+                    <td style="text-align: center;"><a style="color: black;" href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
+                            solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">
+                            {{job.time_measure|round(2)}}
+                            </a></td>
+                    {% endif %}
+                {% endfor %}
                 {% for job in row.times %}
                     {% if job.total > 1 %}
                         {% if job.solver_config == best_sc_by_instance_id[row.instance.idInstance] %}

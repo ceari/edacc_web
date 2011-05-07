@@ -282,7 +282,7 @@ def experiment_results(database, experiment_id):
                         'total': len(jobs),
                         # needed for alternative presentation if there's only 1 run:
                         'first_job': (None if len(jobs) == 0 else jobs[0]),
-                        'solver_config': solver_config
+                        'solver_config': solver_config,
                         })
         results.append({'instance': instances_dict[idInstance], 'times': row})
 
