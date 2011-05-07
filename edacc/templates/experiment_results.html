@@ -95,4 +95,16 @@
         {% endfor %}
         </tbody>
     </table>
+    <div style="margin-top: 10px;">
+        Legend:
+        <table>
+            <tr>
+                <td style="padding: 2px; background-color: {{(-21)|job_result_code_color}}">crash/limit exceeded</td>
+                <td style="padding: 2px; background-color: {{(1)|job_result_code_color}}">Correct answer</td>
+                <td style="padding: 2px; background-color: {{(0)|job_result_code_color}}">Unknown result</td>
+                <td style="padding: 2px; background-color: yellow">Best runtime</td>
+                <td style="padding: 2px; background-color: #FF8040">not processed yet</td>
+            </tr>
+        </table>
+    </div>
 {% endblock %}

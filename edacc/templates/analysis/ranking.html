@@ -94,8 +94,9 @@
     </div>
     <div>
         The virtual best solver (VBS) solves an instance if any of the experiment's solvers are<br/>
-        sucessful on that instance in any of their <i>numRuns</i> runs. In this case the VBS gets<br/>
-        <i>numRuns</i> successful runs on that instance and for each run the run time of the best solver.
+        sucessful on that instance in any of their runs. In this case the VBS gets<br/>
+        the maximum number of successful runs on that instance and for each run the run time of the best solver.
+        The maximum number of runs is determined by the solver that was given the highest number of runs on any instance.
     </div>
     <h3>Ranking</h3>
     {% if data %}
