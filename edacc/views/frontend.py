@@ -533,7 +533,7 @@ def experiment_stats_ajax(database, experiment_id):
             .filter_by(experiment=experiment, status=STATUS_RUNNING) \
             .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_finished = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=experiment).filter(db.ExperimentResult.status>=1) \
+            .filter_by(experiment=experiment).filter(db.ExperimentResult.status.in_([STATUS_FINISHED] +list(STATUS_EXCEEDED_LIMITS))) \
             .filter(db.ExperimentResult.priority>=0).count()
     num_jobs_error = db.session.query(db.ExperimentResult) \
             .filter_by(experiment=experiment).filter(db.ExperimentResult.status<=-2) \
@@ -542,7 +542,8 @@ def experiment_stats_ajax(database, experiment_id):
     avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)) \
                 .filter_by(experiment=experiment) \
                 .filter(db.ExperimentResult.priority>=0) \
-                .filter(db.ExperimentResult.status>=1) \
+                .filter(db.ExperimentResult.status.in_(
+                        [STATUS_FINISHED] + list(STATUS_EXCEEDED_LIMITS))) \
                 .first()
     if avg_time is None: avg_time = 0
     else: avg_time = avg_time[0]
