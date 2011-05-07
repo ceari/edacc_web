@@ -28,6 +28,8 @@ def clean_database(db):
     db.session.query(db.Instance).delete()
     db.session.query(db.Solver).delete()
     db.session.query(db.InstanceClass).delete()
+    db.session.query(db.ResultCodes).delete()
+    db.session.query(db.StatusCodes).delete()
     db.session.commit()
 
 def float_eq(x, y, eps=1e-10):
