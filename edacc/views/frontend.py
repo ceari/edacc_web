@@ -13,9 +13,13 @@
 import csv
 import datetime
 try:
-    import simplejson as json
-except ImportError:
-    import json
+    from cjson import encode as json_dumps
+except:
+    try:
+        from simplejson import dumps as json_dumps
+    except ImportError:
+        from json import dumps as json_dumps
+
 import numpy
 import StringIO
 import tempfile
@@ -553,7 +557,7 @@ def experiment_stats_ajax(database, experiment_id):
     else:
         timeleft = datetime.timedelta(seconds = 0)
 
-    return json.dumps({
+    return json_dumps({
         'num_jobs': num_jobs,
         'num_jobs_active': num_jobs_active,
         'num_jobs_not_started': num_jobs_not_started,
@@ -578,7 +582,7 @@ def experiment_progress_ajax(database, experiment_id):
 
     if not request.args.has_key('csv') and not request.args.has_key('iDisplayStart'):
         # catch malformed datatable updates (jquery datatables sends 2 requests for some reason per refresh)
-        return json.dumps({'aaData': []})
+        return json_dumps({'aaData': []})
 
     result_properties = db.get_result_properties()
     instance_properties = db.get_instance_properties()
@@ -723,7 +727,7 @@ def experiment_progress_ajax(database, experiment_id):
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(experiment.name) + "_data.csv")
         return Response(response=csv_response.read(), headers=headers)
 
-    return json.dumps({
+    return json_dumps({
         'aaData': aaData,
         'sEcho': request.args.get('sEcho'),
         'iTotalRecords': str(numTotal),
