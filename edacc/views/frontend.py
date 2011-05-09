@@ -284,20 +284,20 @@ def experiment_results(database, experiment_id):
                         'first_job': (None if len(jobs) == 0 else jobs[0]),
                         'solver_config': solver_config,
                         })
-        results.append({'instance': instances_dict[idInstance], 'times': row})
+        results.append({'instance': instances_dict[idInstance], 'times': row, 'best_time': best_sc_time})
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
 
         csv_writer.writerow(['Measure: ' + (form.display_measure.data or 'par10')])
-        head = ['Instance']
+        head = ['Instance', 'Best time']
         for sc in solver_configs_dict.values():
             head += [str(sc)]
         csv_writer.writerow(head)
 
         for row in results:
-            write_row = [row['instance'].name]
+            write_row = [row['instance'].name, str(row['best_time'])]
             for sc_results in row['times']:
                 write_row.append(sc_results['time_measure'])
             csv_writer.writerow(write_row)
