@@ -96,7 +96,7 @@ def setup_ranking_fixture(db):
                 er.run = run
                 er.status = 1
                 er.CPUTimeLimit = 1000
-                er.wallClockTimeLimit = er.memoryLimit = er.stackSizeLimit = er.outputSizeLimit = -1
+                er.wallClockTimeLimit = er.memoryLimit = er.stackSizeLimit = er.outputSizeLimitFirst = er.outputSizeLimitLast = -1
                 er.resultCode = 11
                 er.date_modified = datetime.date(2011, 1, 1)
                 er.priority = 0
