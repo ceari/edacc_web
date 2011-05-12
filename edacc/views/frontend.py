@@ -205,7 +205,6 @@ def experiment_results(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    instances = experiment.instances
     solver_configs = db.session.query(db.SolverConfiguration).options(joinedload_all('solver_binary'))\
                                         .filter_by(experiment=experiment).all()
 
@@ -214,6 +213,11 @@ def experiment_results(database, experiment_id):
         solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
 
     form = forms.ResultsBySolverAndInstanceForm(request.args)
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    if form.i.data:
+        instances = form.i.data
+    else:
+        instances = experiment.instances
 
     instances_dict = dict((i.idInstance, i) for i in instances)
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
@@ -231,6 +235,7 @@ def experiment_results(database, experiment_id):
             else:
                 rs[r.SolverConfig_idSolverConfig].append(r)
 
+    times_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
     results = []
     best_sc_by_instance_id = {}
     for idInstance in instances_dict.iterkeys():
@@ -240,7 +245,8 @@ def experiment_results(database, experiment_id):
         best_sc_by_instance_id[idInstance] = None
         best_sc_time = None
 
-        for idSolverConfig, solver_config in solver_configs_dict.iteritems():
+        for solver_config in solver_configs:
+            idSolverConfig = solver_config.idSolverConfig
             jobs = rs[idSolverConfig]
 
             completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
@@ -248,19 +254,21 @@ def experiment_results(database, experiment_id):
             successful = len(filter(lambda j: str(j.resultCode).startswith('1'), jobs))
             runtimes = [j.get_time() for j in jobs]
             runtimes = filter(lambda r: r is not None, runtimes)
-            runtimes = runtimes or [0]
 
             time_measure = None
-            if form.display_measure.data == 'mean':
-                time_measure = numpy.average(runtimes)
-            elif form.display_measure.data == 'median':
-                time_measure = numpy.median(runtimes)
-            elif form.display_measure.data == 'min':
-                time_measure = min(runtimes)
-            elif form.display_measure.data == 'max':
-                time_measure = max(runtimes)
-            elif form.display_measure.data == 'par10' or form.display_measure.data is None:
-                time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else 10*j.CPUTimeLimit) for j in jobs] or [0])
+            if len(runtimes) > 0:
+                if form.display_measure.data == 'mean':
+                    time_measure = numpy.average(runtimes)
+                elif form.display_measure.data == 'median':
+                    time_measure = numpy.median(runtimes)
+                elif form.display_measure.data == 'min':
+                    time_measure = min(runtimes)
+                elif form.display_measure.data == 'max':
+                    time_measure = max(runtimes)
+                elif form.display_measure.data == 'par10' or form.display_measure.data is None:
+                    time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else 10*j.CPUTimeLimit) for j in jobs] or [0])
+
+                times_by_solver[idSolverConfig].append(time_measure)
 
             if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and successful > 0:
                 best_sc_time = time_measure
@@ -286,6 +294,12 @@ def experiment_results(database, experiment_id):
                         })
         results.append({'instance': instances_dict[idInstance], 'times': row, 'best_time': best_sc_time})
 
+    sum_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+    avg_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+    for idSolverConfig in solver_configs_dict.iterkeys():
+        sum_by_solver[idSolverConfig] = sum(times_by_solver[idSolverConfig])
+        avg_by_solver[idSolverConfig] = numpy.average(times_by_solver[idSolverConfig])
+
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
@@ -302,6 +316,9 @@ def experiment_results(database, experiment_id):
                 write_row.append(sc_results['time_measure'])
             csv_writer.writerow(write_row)
 
+        csv_writer.writerow(['Average', ''] + map(str, [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+        csv_writer.writerow(['Sum', ''] + map(str, [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+
         csv_response.seek(0)
         headers = Headers()
         headers.add('Content-Type', 'text/csv')
@@ -312,8 +329,10 @@ def experiment_results(database, experiment_id):
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     solver_configs_dict=solver_configs_dict,
+                    instance_properties=db.get_instance_properties(),
                     instances_dict=instances_dict, best_sc_by_instance_id=best_sc_by_instance_id,
-                    results=results, database=database, db=db, form=form)
+                    results=results, database=database, db=db, form=form,
+                    sum_by_solver=sum_by_solver, avg_by_solver=avg_by_solver)
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))

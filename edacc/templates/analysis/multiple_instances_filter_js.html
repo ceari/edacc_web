@@ -17,6 +17,21 @@ instances[{{outer_loop.index0}}]["{{prop.name}}"] = {{instance.get_property_valu
 var selected_instances = new Array();
 {% for instance in request.args.getlist('i') %}selected_instances.push({{instance}});{% endfor %}
 
+$.ctrl = function(key, callback, args) {
+    $(document).keydown(function(e) {
+        if (!args) args = [];
+        if (e.keyCode == key.charCodeAt(0) && e.ctrlKey) {
+            callback.apply(this, args);
+            return false;
+        }
+    });
+};
+
+$.ctrl('A', function() {
+    $('#i option').attr("selected", "selected");
+    return false;
+});
+
 $('#i').bind('keydown', 'ctrl+a', function() {
     $('#i option').attr("selected", "selected");
     return false;
