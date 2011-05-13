@@ -247,7 +247,7 @@ def experiment_results(database, experiment_id):
 
         for solver_config in solver_configs:
             idSolverConfig = solver_config.idSolverConfig
-            jobs = rs[idSolverConfig]
+            jobs = rs.get(idSolverConfig, [])
 
             completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
             #jobs = filter(lambda j: j.status not in STATUS_PROCESSING, jobs)

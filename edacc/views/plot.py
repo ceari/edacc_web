@@ -41,21 +41,32 @@ def filter_results(l1, l2):
     return r1, r2
 
 def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, result_property, run):
+    instance_ids = [i.idInstance for i in instances]
+
     results1 = db.session.query(db.ExperimentResult)
     results1.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
     results1.options(joinedload(db.ExperimentResult.properties), joinedload(db.ExperimentResult.instance))
-    results1 = results1.filter_by(experiment=exp, solver_configuration=sc1).order_by(db.ExperimentResult.run)
+    results1 = results1.filter_by(experiment=exp, solver_configuration=sc1).order_by(db.ExperimentResult.run) \
+                        .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
 
     results2 = db.session.query(db.ExperimentResult)
     results2.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
     results2.options(joinedload(db.ExperimentResult.properties), joinedload(db.ExperimentResult.instance))
-    results2 = results2.filter_by(experiment=exp, solver_configuration=sc2).order_by(db.ExperimentResult.run)
+    results2 = results2.filter_by(experiment=exp, solver_configuration=sc2).order_by(db.ExperimentResult.run) \
+                        .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
+
+    jobs_by_instance_id1 = dict((i.idInstance, list()) for i in instances)
+    jobs_by_instance_id2 = dict((i.idInstance, list()) for i in instances)
+    for res in results1:
+        jobs_by_instance_id1[res.Instances_idInstance].append(res)
+    for res in results2:
+        jobs_by_instance_id2[res.Instances_idInstance].append(res)
 
     points = []
     if run == 'average':
         for instance in instances:
-            r1 = [j.get_property_value(result_property, db) for j in results1.filter_by(instance=instance).all()]
-            r2 = [j.get_property_value(result_property, db) for j in results2.filter_by(instance=instance).all()]
+            r1 = [j.get_property_value(result_property, db) for j in jobs_by_instance_id1[instance.idInstance]]
+            r2 = [j.get_property_value(result_property, db) for j in jobs_by_instance_id2[instance.idInstance]]
             r1, r2 = filter_results(r1, r2)
             if len(r1) > 0 and len(r2) > 0:
                 s1_avg = numpy.average(r1)
@@ -63,8 +74,8 @@ def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, result_proper
                 points.append((s1_avg, s2_avg, instance))
     elif run == 'median':
         for instance in instances:
-            r1 = [j.get_property_value(result_property, db) for j in results1.filter_by(instance=instance).all()]
-            r2 = [j.get_property_value(result_property, db) for j in results2.filter_by(instance=instance).all()]
+            r1 = [j.get_property_value(result_property, db) for j in jobs_by_instance_id1[instance.idInstance]]
+            r2 = [j.get_property_value(result_property, db) for j in jobs_by_instance_id2[instance.idInstance]]
             r1, r2 = filter_results(r1, r2)
             if len(r1) > 0 and len(r2) > 0:
                 x = numpy.median(r1)
@@ -72,15 +83,15 @@ def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, result_proper
                 points.append((x, y, instance))
     elif run == 'all':
         for instance in instances:
-            xs = [j.get_property_value(result_property, db) for j in results1.filter_by(instance=instance).all()]
-            ys = [j.get_property_value(result_property, db) for j in results2.filter_by(instance=instance).all()]
+            xs = [j.get_property_value(result_property, db) for j in jobs_by_instance_id1[instance.idInstance]]
+            ys = [j.get_property_value(result_property, db) for j in jobs_by_instance_id2[instance.idInstance]]
             xs, ys = filter_results(xs, ys)
             if len(xs) > 0 and len(ys) > 0:
                 points += zip(xs, ys, [instance] * len(xs))
     else:
         for instance in instances:
-            r1 = results1.filter_by(instance=instance, run=int(run)).first()
-            r2 = results2.filter_by(instance=instance, run=int(run)).first()
+            r1 = ([j for j in jobs_by_instance_id1[instance.idInstance] if j.run == int(run)] or [None])[0]
+            r2 = ([j for j in jobs_by_instance_id2[instance.idInstance] if j.run == int(run)] or [None])[0]
             if r1 is None or r2 is None: continue
             if r1.get_property_value(result_property, db) is not None and r2.get_property_value(result_property, db) is not None:
                 points.append((
@@ -201,15 +212,21 @@ def scatter_2solver_1property(database, experiment_id):
 
 
 def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, instances, instance_property, result_property, run):
+    instance_ids = [i.idInstance for i in instances]
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
-    results = results.filter_by(experiment=exp, solver_configuration=solver_config)
+    results = results.filter_by(experiment=exp, solver_configuration=solver_config) \
+                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
+
+    jobs_by_instance_id = dict((i, list()) for i in instance_ids)
+    for res in results:
+        jobs_by_instance_id[res.Instances_idInstance].append(res)
 
     points = []
     if run == 'average':
         for instance in instances:
             prop_value = instance.get_property_value(instance_property, db)
-            res = [j.get_property_value(result_property, db) for j in results.filter_by(instance=instance).all()]
+            res = [j.get_property_value(result_property, db) for j in jobs_by_instance_id[instance.idInstance]]
             res = filter(lambda r: r is not None, res)
             if res != [] and prop_value is not None:
                 s_avg = numpy.average(res)
@@ -217,7 +234,7 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
     elif run == 'median':
         for instance in instances:
             prop_value = instance.get_property_value(instance_property, db)
-            res = [j.get_property_value(result_property, db) for j in results.filter_by(instance=instance).all()]
+            res = [j.get_property_value(result_property, db) for j in jobs_by_instance_id[instance.idInstance]]
             res = filter(lambda r: r is not None, res)
             if res != [] and prop_value is not None:
                 y = numpy.median(res)
@@ -227,12 +244,12 @@ def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, i
             prop_value = instance.get_property_value(instance_property, db)
             if prop_value is not None:
                 xs = [prop_value] * len(results.filter_by(instance=instance).all())
-                ys = [j.get_property_value(result_property, db) for j in results.filter_by(instance=instance).all()]
+                ys = [j.get_property_value(result_property, db) for j in jobs_by_instance_id[instance.idInstance]]
                 ys = filter(lambda r: r is not None, ys)
                 points += zip(xs, ys, [instance] * len(xs))
     else:
         for instance in instances:
-            res = results.filter_by(instance=instance, run=int(run)).first()
+            res = ([j for j in jobs_by_instance_id[instance.idInstance] if j.run == int(run)] or [None])[0]
             if res is None: continue
             if instance.get_property_value(instance_property, db) is not None and res.get_property_value(result_property, db) is not None:
                 points.append((
@@ -340,15 +357,21 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
 
 def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, instances, result_property1, result_property2, run):
+    instance_ids = [i.idInstance for i in instances]
     results = db.session.query(db.ExperimentResult)
     results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
-    results = results.filter_by(experiment=exp, solver_configuration=solver_config).order_by(db.ExperimentResult.run)
+    results = results.filter_by(experiment=exp, solver_configuration=solver_config).order_by(db.ExperimentResult.run) \
+                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
+
+    jobs_by_instance_id = dict((i, list()) for i in instance_ids)
+    for res in results:
+        jobs_by_instance_id[res.Instances_idInstance].append(res)
 
     points = []
     if run == 'average':
         for instance in instances:
-            r1 = [j.get_property_value(result_property1, db) for j in results.filter_by(instance=instance).all()]
-            r2 = [j.get_property_value(result_property2, db) for j in results.filter_by(instance=instance).all()]
+            r1 = [j.get_property_value(result_property1, db) for j in jobs_by_instance_id[instance.idInstance]]
+            r2 = [j.get_property_value(result_property2, db) for j in jobs_by_instance_id[instance.idInstance]]
             r1, r2 = filter_results(r1, r2)
             if len(r1) > 0 and len(r2) > 0:
                 s1_avg = numpy.average(r1)
@@ -356,8 +379,8 @@ def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, insta
                 points.append((s1_avg, s2_avg, instance))
     elif run == 'median':
         for instance in instances:
-            r1 = [j.get_property_value(result_property1, db) for j in results.filter_by(instance=instance).all()]
-            r2 = [j.get_property_value(result_property2, db) for j in results.filter_by(instance=instance).all()]
+            r1 = [j.get_property_value(result_property1, db) for j in jobs_by_instance_id[instance.idInstance]]
+            r2 = [j.get_property_value(result_property2, db) for j in jobs_by_instance_id[instance.idInstance]]
             r1, r2 = filter_results(r1, r2)
             if len(r1) > 0 and len(r2) > 0:
                 x = numpy.median(r1)
@@ -365,14 +388,14 @@ def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, insta
                 points.append((x, y, instance))
     elif run == 'all':
         for instance in instances:
-            xs = [j.get_property_value(result_property1, db) for j in results.filter_by(instance=instance).all()]
-            ys = [j.get_property_value(result_property2, db) for j in results.filter_by(instance=instance).all()]
+            xs = [j.get_property_value(result_property1, db) for j in jobs_by_instance_id[instance.idInstance]]
+            ys = [j.get_property_value(result_property2, db) for j in jobs_by_instance_id[instance.idInstance]]
             xs, ys = filter_results(xs, ys)
             if len(xs) > 0 and len(ys) > 0:
                 points += zip(xs, ys, [instance] * len(xs))
     else:
         for instance in instances:
-            res = results.filter_by(instance=instance, run=int(run)).first()
+            res = ([j for j in jobs_by_instance_id[instance.idInstance] if j.run == int(run)] or [None])[0]
             if res is None: continue
             if res.get_property_value(result_property1, db) is not None and res.get_property_value(result_property2, db) is not None:
                 points.append((
