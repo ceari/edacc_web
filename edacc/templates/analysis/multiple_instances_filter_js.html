@@ -32,10 +32,6 @@ $.ctrl('A', function() {
     return false;
 });
 
-$('#i').bind('keydown', 'ctrl+a', function() {
-    $('#i option').attr("selected", "selected");
-    return false;
-});
 
 function reEscape(str) {
     return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");

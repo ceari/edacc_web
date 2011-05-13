@@ -136,21 +136,23 @@
                 {% endfor %}
             </tr>
         {% endfor %}
-        <tr>
-            <td>Sum</td>
-            <td></td>
-            {% for sc in solver_configs %}
-                <td style="text-align: center;">{{sum_by_solver[sc.idSolverConfig]|round(2)}}</td>
-            {% endfor %}
-        </tr>
-        <tr>
-            <td>Average</td>
-            <td></td>
-            {% for sc in solver_configs %}
-                <td style="text-align: center;">{{avg_by_solver[sc.idSolverConfig]|round(2)}}</td>
-            {% endfor %}
-        </tr>
         </tbody>
+        <tfoot>
+            <tr class="odd">
+                <td>Sum</td>
+                <td></td>
+                {% for sc in solver_configs %}
+                    <td style="text-align: center;">{{sum_by_solver[sc.idSolverConfig]|round(2)}}</td>
+                {% endfor %}
+            </tr>
+            <tr class="even">
+                <td>Average</td>
+                <td></td>
+                {% for sc in solver_configs %}
+                    <td style="text-align: center;">{{avg_by_solver[sc.idSolverConfig]|round(2)}}</td>
+                {% endfor %}
+            </tr>
+        </tfoot>
     </table>
     <div style="margin-top: 10px;">
         Legend:
