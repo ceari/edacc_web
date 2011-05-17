@@ -66,13 +66,11 @@ def solver_ranking(database, experiment_id):
             if form.penalized_average_runtime.data: head.append('penalized avg. runtime')
             csv_writer.writerow(head)
 
-            rnk = 0
-            for row in ranking_data:
+            for rnk, row in enumerate(ranking_data):
                 write_row = [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 2), row[4:6])
                 if form.calculate_average_dev.data: write_row.append(round(row[6], 2))
                 if form.penalized_average_runtime.data: write_row.append(round(row[7], 2))
                 csv_writer.writerow(write_row)
-                rnk += 1
 
             csv_response.seek(0)
             headers = Headers()

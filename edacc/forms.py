@@ -71,12 +71,12 @@ class SolverForm(Form):
                                                      categories for your solver \
                                                      to compete in.')])
 
-    def validate_parameters(form, field):
+    def validate_parameters(self, field):
         if not 'SEED' in field.data or not 'INSTANCE' in field.data:
             raise ValidationError('You have to specify SEED \
                                              and INSTANCE as parameters.')
 
-    def validate_code(form, field):
+    def validate_code(self, field):
         if not field.file.filename or not field.file.filename.endswith('.zip'):
             raise ValidationError('The code archive has to be a .zip file.')
 
@@ -93,17 +93,17 @@ class BenchmarkForm(Form):
                                     query_factory=lambda: [],
                                     blank_text='Create a new source class')
 
-    def validate_new_benchmark_type(form, field):
-        if form.benchmark_type.data is None and field.data.strip() == '':
+    def validate_new_benchmark_type(self, field):
+        if self.benchmark_type.data is None and field.data.strip() == '':
             raise ValidationError('Please specify a new benchmark type or choose \
                                   an existing one.')
 
-    def validate_new_source_class(form, field):
-        if form.source_class.data is None and field.data.strip() == '':
+    def validate_new_source_class(self, field):
+        if self.source_class.data is None and field.data.strip() == '':
             raise ValidationError('Please specify a new source class or choose \
                                   an existing one.')
 
-    def validate_instance(form, field):
+    def validate_instance(self, field):
         if not field.file.filename:
             raise ValidationError(ERROR_REQUIRED)
 

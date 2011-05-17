@@ -17,24 +17,24 @@ def setup_ranking_fixture(db):
     """
     sc = db.StatusCodes()
     sc.statusCode = 1
-    sc.description = "finished"
+    sc.description = u"finished"
     db.session.add(sc)
 
     rc = db.ResultCodes()
     rc.resultCode = 11
-    rc.description = 'SAT'
+    rc.description = u'SAT'
     db.session.add(rc)
 
     for i in range(10):
         s = db.Solver()
         sb = db.SolverBinary()
         sb.solver = s
-        sb.binaryName = "TestSolverBinary"
-        sb.binaryArchive = "dummy"
-        sb.md5 = "dummy"
-        sb.version = "dummy"
-        sb.runCommand = "dummy"
-        sb.runPath = "dummy"
+        sb.binaryName = u"TestSolverBinary"
+        sb.binaryArchive = u"dummy"
+        sb.md5 = u"dummy"
+        sb.version = u"dummy"
+        sb.runCommand = u"dummy"
+        sb.runPath = u"dummy"
         s.name = u"TestSolver" + str(i)
         s.description = u"TestSolver" + str(i)
         s.code = u" dummy"

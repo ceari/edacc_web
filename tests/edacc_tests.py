@@ -126,8 +126,8 @@ class StatisticsTestCase(unittest.TestCase):
 
     def test_spearman_correlation(self):
         from edacc.statistics import spearman_correlation
-        rho, p = spearman_correlation([1.0, 2.0, 3.0, 4.0], [2.0, 3.0, 4.0, 5.0])
-        assert rho == 1.0
+        rho, p = spearman_correlation([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+        assert rho > 0.99 and p <= 0.001
 
     def test_pearson_correlation(self):
         from edacc.statistics import pearson_correlation
