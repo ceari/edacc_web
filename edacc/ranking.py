@@ -196,7 +196,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                 # this should mean there are no jobs of this solver yet
                 penalized_average_runtime = 0.0
             else:
-                penalized_average_runtime = (sum([j.CPUTimeLimit * 10.0 for j in failed_runs]) + successful_runs_sum) \
+                penalized_average_runtime = (sum([j.get_penalized_time(10) for j in failed_runs]) + successful_runs_sum) \
                                             / (len(successful_runs) + len(failed_runs))
 
         avg_stddev_runtime = 0.0

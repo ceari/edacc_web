@@ -202,19 +202,19 @@ class EDACCDatabase(object):
                     not correct (certified SAT/UNSAT answer).
                 """
                 # if the job is being processed or the CC had a crash return None
-                if self.status in (STATUS_LAUNCHER_CRASH, STATUS_WATCHER_CRASH,
-                        STATUS_VERIFIER_CRASH) or self.status in STATUS_PROCESSING:
+                if self.status <= 0:
                     return None
 
-                if self.status == STATUS_FINISHED \
-                        or self.status in STATUS_EXCEEDED_LIMITS :
-                    if not str(self.resultCode).startswith('1'):
-                        return self.CPUTimeLimit
-                    else:
-                        return self.resultTime
+                if self.status in (STATUS_FINISHED, 21):
+                    return self.resultTime
 
                 return None
 
+            def get_penalized_time(self, p_factor=10):
+                if self.CPUTimeLimit == -1:
+                    return float('inf')
+                else:
+                    return self.resultTime * p_factor
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name.
@@ -408,7 +408,11 @@ class EDACCDatabase(object):
                     secondary=metadata.tables['Solver_has_CompetitionCategory'])
             }
         )
-        mapper(SolverBinary, metadata.tables['SolverBinaries'])
+        mapper(SolverBinary, metadata.tables['SolverBinaries'],
+            properties = {
+                'binaryArchive': deferred(metadata.tables['SolverBinaries'].c.binaryArchive),
+            }
+        )
         mapper(ParameterInstance, metadata.tables['SolverConfig_has_Parameters'],
             properties = {
                 'parameter': relation(Parameter)

@@ -266,7 +266,7 @@ def experiment_results(database, experiment_id):
                 elif form.display_measure.data == 'max':
                     time_measure = max(runtimes)
                 elif form.display_measure.data == 'par10' or form.display_measure.data is None:
-                    time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else 10*j.CPUTimeLimit) for j in jobs] or [0])
+                    time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else j.get_penalized_time(10)) for j in jobs] or [0])
 
                 times_by_solver[idSolverConfig].append(time_measure)
 
@@ -275,11 +275,11 @@ def experiment_results(database, experiment_id):
                 best_sc_by_instance_id[idInstance] = solver_config
 
             if completed > 0:
-                red = (1.0, 0)
-                green = (0.0, 1.0)
+                red = (1.0, 0, 0.0)
+                green = (0.0, 0.8, 0.2) # darker green
                 t = successful/float(completed)
-                bg_color = ((green[0] - red[0]) * t + red[0], (green[1] - red[1]) * t + red[1])
-                bg_color = hex((int(bg_color[0] * 255) << 16) + (int(bg_color[1] * 255) << 8))[2:].zfill(6) # remove leading 0x
+                bg_color = ((green[0] - red[0]) * t + red[0], (green[1] - red[1]) * t + red[1], (green[2] - red[2]) * t + red[2])
+                bg_color = hex((int(bg_color[0] * 255) << 16) + (int(bg_color[1] * 255) << 8) + (int(bg_color[2] * 255)))[2:].zfill(6) # remove leading 0x
             else:
                 bg_color = 'FF8040' #orange
 
@@ -378,7 +378,7 @@ def experiment_results_by_solver(database, experiment_id):
             for run in runs_by_instance[instance]:
                 count += 1
                 if run.status != 1 or not str(run.resultCode).startswith('1'):
-                    total_time += run.CPUTimeLimit * 10
+                    total_time += run.get_penalized_time(10)
                 else:
                     total_time += run.resultTime
 
@@ -470,7 +470,7 @@ def experiment_results_by_instance(database, experiment_id):
                     if j.get_time() is not None:
                         count += 1
                         if not str(j.resultCode).startswith('1') or j.status != 1:
-                            par10 += j.CPUTimeLimit * 10
+                            par10 += j.get_penalized_time(10)
                         else:
                             par10 += j.get_time()
                 if count > 0:

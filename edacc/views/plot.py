@@ -573,7 +573,7 @@ def cactus_plot(database, experiment_id):
                                         .filter(or_(db.ExperimentResult.status!=1,
                                                     not_(db.ExperimentResult.resultCode.like('1%')))).count()
                     if result_property == 'cputime':
-                        penalized_time = sum([j.CPUTimeLimit * 10.0 for j in res if not str(res.resultCode).startswith('1')])
+                        penalized_time = sum([j.get_penalized_time(10) for j in res if not str(res.resultCode).startswith('1')])
                     else:
                         penalized_time = 0
                     penalized_avg = (sum(res) + penalized_time) / (num_penalized + len(res))
