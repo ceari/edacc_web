@@ -13,7 +13,6 @@ import math
 import numpy
 import StringIO
 import csv
-import scipy
 
 from sqlalchemy.orm import joinedload
 
