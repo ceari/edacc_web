@@ -19,7 +19,7 @@ from sqlalchemy.orm import joinedload
 
 from flask import Module
 from flask import render_template as render
-from flask import abort, request, jsonify, Response
+from flask import abort, request, jsonify, Response, make_response
 from werkzeug import Headers, secure_filename
 
 from edacc import models, forms, ranking, statistics
@@ -55,15 +55,16 @@ def solver_ranking(database, experiment_id):
         ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data)
         ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                 form.penalized_average_runtime.data, form.calculate_average_dev.data)
-
+        
+            
         if 'csv' in request.args:
-            csv_response = StringIO.StringIO()
-            csv_writer = csv.writer(csv_response)
             head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
                                  'cumulated CPU time', 'avg. CPU time per successful run']
-
+    
             if form.calculate_average_dev.data: head.append('avg. deviation of successful runs')
             if form.penalized_average_runtime.data: head.append('penalized avg. runtime')
+            csv_response = StringIO.StringIO()
+            csv_writer = csv.writer(csv_response)
             csv_writer.writerow(head)
 
             for rnk, row in enumerate(ranking_data):
@@ -78,6 +79,25 @@ def solver_ranking(database, experiment_id):
             headers.add('Content-Disposition', 'attachment',
                         filename=secure_filename(experiment.name + "_ranking.csv"))
             return Response(response=csv_response.read(), headers=headers)
+        elif 'latex' in request.args:
+            head = ['\\#', 'Solver', '\\# of successful runs', '\\% of all runs', '\\% of VBS runs',
+                                 'cumulated CPU time', 'avg. CPU time per successful run']
+    
+            if form.calculate_average_dev.data: head.append('avg. deviation of successful runs')
+            if form.penalized_average_runtime.data: head.append('penalized avg. runtime')
+            table = "\\begin{tabular}{" + ('|'.join(['c'] * len(head))) + "}\n"
+            table += ' & '.join(head) + "\\\\ \\hline\n"
+            for rnk, row in enumerate(ranking_data):
+                table += ' & '.join(map(str, [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 2), row[4:6])))
+                if form.calculate_average_dev.data: table += " & " + str(round(row[6], 2))
+                if form.penalized_average_runtime.data: table += " & " + str(round(row[7], 2))
+                table += "\\\\ \\hline\n"
+            table += "\\end{tabular}"
+            
+            headers = Headers()
+            headers.add('Content-Type', 'text/plain')
+            return Response(response=table, headers=headers)
+            
 
         return render('/analysis/ranking.html', database=database, db=db,
                       experiment=experiment, ranked_solvers=ranked_solvers,

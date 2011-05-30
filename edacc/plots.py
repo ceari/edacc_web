@@ -326,9 +326,9 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
     robjects.r.legend("right", inset=-0.40,
                       legend=robjects.StrVector(legend_strs),
                       col=robjects.StrVector(legend_colors),
-                      pch=robjects.IntVector(legend_point_styles), lty=1)
+                      pch=robjects.IntVector(legend_point_styles), lty=1, **{'y.intersp': 1.4})
     if format == 'rscript':
-        file.write('legend("right", inset=-0.40, legend=c(%s), col=c(%s), pch=c(%s), lty=1)\n'
+        file.write('legend("right", inset=-0.40, legend=c(%s), col=c(%s), y.intersp=1.4, pch=c(%s), lty=1)\n'
                     % (','.join(map(lambda s: '"' + s + '"', legend_strs)).replace('\n',''),
                       ','.join(map(lambda s: '"' + s + '"', legend_colors)),
                       ','.join(map(str, legend_point_styles))))
@@ -410,12 +410,12 @@ def property_distributions(results, filename, property_name, log_property, forma
     where data is the result vector of the solver configuration sc.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=600,
+        grdevices.png(file=filename, units="px", width=800,
                       height=600, type="cairo")
     elif format == 'pdf':
-        grdevices.bitmap(file=filename, type="pdfwrite")
+        grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
     elif format == 'eps':
-        grdevices.postscript(file=filename)
+        grdevices.postscript(file=filename, height=7, width=9)
 
     max_x = max([max(r[1] or [0]) for r in results] or [0])
 
@@ -425,7 +425,8 @@ def property_distributions(results, filename, property_name, log_property, forma
     else:
         log = ''
         min_x = 0
-
+        
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
                     type='p', col='red', las = 1, log=log,
@@ -459,12 +460,13 @@ def property_distributions(results, filename, property_name, log_property, forma
                      line=3, cex=1.2) # left axis label
     robjects.r.mtext(property_name + ' distributions',
                      padj=1, side=3, line=3, cex=1.7) # plot title
+    robjects.r.par(xpd=True)
 
     # plot legend
-    robjects.r.legend("bottomright", inset=.01,
-                      legend=robjects.StrVector([str(r[0]) for r in results]),
+    robjects.r.legend("right", inset=-0.4,
+                      legend=robjects.StrVector([newline_split_string(str(r[0]), 23) for r in results]),
                       col=robjects.StrVector(colors[:len(results)]),
-                      pch=robjects.IntVector(range(len(results))), lty=1)
+                      pch=robjects.IntVector(range(len(results))), lty=1, **{'y.intersp': 1.4})
 
     grdevices.dev_off()
 

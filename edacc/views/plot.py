@@ -598,7 +598,7 @@ def cactus_plot(database, experiment_id):
                 i += 1
             solvers.append(s)
 
-    min_y = min([min(s['xs'] or [0.1]) for s in solvers] or [0.1])
+    min_y = min([min(s['ys'] or [0.01]) for s in solvers] or [0.01])
     max_x = max([max(s['xs'] or [0]) for s in solvers] or [0]) + 10
     max_y = max([max(s['ys'] or [0]) for s in solvers] or [0]) * 1.1
 
