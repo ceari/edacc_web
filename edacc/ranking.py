@@ -10,7 +10,6 @@
     :license: MIT, see LICENSE for details.
 """
 import numpy
-import scipy
 from sqlalchemy.sql import select, and_, functions
 
 def avg_point_biserial_correlation_ranking(db, experiment, instances):
@@ -42,8 +41,28 @@ def avg_point_biserial_correlation_ranking(db, experiment, instances):
     solver_config_results = dict([(s.idSolverConfig, dict([(i, list()) for i in instance_ids])) for s in experiment.solver_configurations])
     for row in query_results:
         solver_config_results[row[0]][row[1]].append(row[2])
+        
+    def rank_simple(vector):
+        return sorted(range(len(vector)), key=vector.__getitem__)
 
-    from scipy import stats
+    def rankdata(a):
+        n = len(a)
+        ivec=rank_simple(a)
+        svec=[a[rank] for rank in ivec]
+        sumranks = 0
+        dupcount = 0
+        newarray = [0]*n
+        for i in xrange(n):
+            sumranks += i
+            dupcount += 1
+            if i==n-1 or svec[i] != svec[i+1]:
+                averank = sumranks / float(dupcount) + 1
+                for j in xrange(i-dupcount+1,i+1):
+                    newarray[ivec[j]] = averank
+                sumranks = 0
+                dupcount = 0
+        return newarray
+
     def pointbiserialcorr(s1, s2):
         """ Calculate the mean point biserial correlation of the RTDs of
             the two given solvers on all instances of the experiment.
@@ -56,7 +75,7 @@ def avg_point_biserial_correlation_ranking(db, experiment, instances):
         for i in instance_ids:
             res1 = solver_config_results[s1.idSolverConfig][i]
             res2 = solver_config_results[s2.idSolverConfig][i]
-            ranked_data = list(stats.stats.rankdata(res1 + res2))
+            ranked_data = list(rankdata(res1 + res2))
 
             r, p = stats.pointbiserialr([1] * len(res1) + [0] * len(res2), ranked_data)
             # only take instances with significant differences into account
@@ -205,7 +224,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             for instance in instance_ids:
                 if solver.idSolverConfig in runs_by_solver_and_instance and runs_by_solver_and_instance[solver.idSolverConfig].has_key(instance):
                     instance_runtimes = runs_by_solver_and_instance[solver.idSolverConfig][instance]
-                    avg_stddev_runtime += scipy.std([j[0] for j in instance_runtimes])
+                    avg_stddev_runtime += numpy.std([j[0] for j in instance_runtimes])
                     count += 1
             if count > 0:
                 avg_stddev_runtime /= float(count)

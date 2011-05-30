@@ -270,7 +270,7 @@ def experiment_results(database, experiment_id):
 
                 times_by_solver[idSolverConfig].append(time_measure)
 
-            if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and successful > 0:
+            if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and len(runtimes) > 0:
                 best_sc_time = time_measure
                 best_sc_by_instance_id[idInstance] = solver_config
 
