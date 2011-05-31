@@ -41,7 +41,7 @@ def avg_point_biserial_correlation_ranking(db, experiment, instances):
     solver_config_results = dict([(s.idSolverConfig, dict([(i, list()) for i in instance_ids])) for s in experiment.solver_configurations])
     for row in query_results:
         solver_config_results[row[0]][row[1]].append(row[2])
-        
+
     def rank_simple(vector):
         return sorted(range(len(vector)), key=vector.__getitem__)
 
@@ -141,7 +141,7 @@ def number_of_solved_instances_ranking(db, experiment, instances):
             else:
                 return 0
 
-    return list(reversed(sorted(experiment.solver_configurations,cmp=comp)))
+    return list(sorted(experiment.solver_configurations,cmp=comp))
 
 def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev):
     instance_ids = [i.idInstance for i in instances]

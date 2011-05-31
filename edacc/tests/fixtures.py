@@ -85,7 +85,7 @@ def setup_ranking_fixture(db):
     db.session.commit()
 
     sc_i = 0
-    for sc in exp.solver_configurations:
+    for sc in sorted(exp.solver_configurations, key=lambda sc: str(sc)):
         sc_i += 1
         for instance in exp.instances:
             for run in range(10):
@@ -95,7 +95,7 @@ def setup_ranking_fixture(db):
                 er.experiment = exp
                 er.run = run
                 er.status = 1
-                er.CPUTimeLimit = 1000
+                er.CPUTimeLimit = 100
                 er.wallClockTimeLimit = er.memoryLimit = er.stackSizeLimit = er.outputSizeLimitFirst = er.outputSizeLimitLast = -1
                 er.resultCode = 11
                 er.date_modified = datetime.date(2011, 1, 1)

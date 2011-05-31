@@ -15,12 +15,11 @@ import struct
 
 from sqlalchemy import func
 
-import fixtures
-
-# append parent directory to python path to be able to import edacc
-sys.path.append("..")
+from edacc.tests import fixtures
+from edacc import config
 
 TEST_DATABASE = "EDACCUnitTests"
+config.DATABASE_HOST = "localhost"
 
 def clean_database(db):
     db.session.query(db.ExperimentResult).delete()
