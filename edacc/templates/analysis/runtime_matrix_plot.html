@@ -21,7 +21,10 @@
     <div style="margin-right: 5px; float: left;">
         <h2>Runtime Matrix Plot</h2>
         <div style="margin-bottom: 5px;">
-        description
+        Each point (rectangle) represents the results of a solver configuration on<br/>
+        an instance aggregated by the specified measure. The solver configurations and<br/>
+        instances are sorted by this measure over all results (e.g. the par10 of a<br/>
+        solver configuration over all its jobs, and the par10 of all results for an instance). 
         </div>
         <form method="get" action="{{url_for('analysis.runtime_matrix_plot', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">

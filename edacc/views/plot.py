@@ -1077,15 +1077,19 @@ def runtime_matrix_plot(database, experiment_id):
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_runtime_matrix.csv"))
         return Response(response=csv_response.read(), headers=headers)
     elif request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.png'
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.pdf'
         plots.runtime_matrix_plot(flattened_rt_matrix, sorted_solver_configs, sorted_instances, measure, filename, 'pdf')
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "rt_matrix.pdf"))
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
         os.remove(filename)
         return response
     elif request.args.has_key('eps'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.png'
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.eps'
         plots.runtime_matrix_plot(flattened_rt_matrix, sorted_solver_configs, sorted_instances, measure, filename, 'eps')
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "rt_matrix.eps"))
+        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
         os.remove(filename)
         return response
     else:
