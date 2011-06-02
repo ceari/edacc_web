@@ -541,3 +541,16 @@ def box_plots(database, experiment_id):
     return render('/analysis/box_plots.html', database=database, db=db,
                   experiment=experiment, form=form, GET_data=GET_data,
                   instance_properties=db.get_instance_properties())
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/runtime-matrix-plot/')
+@require_phase(phases=ANALYSIS2)
+@require_login
+def runtime_matrix_plot(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    
+    form = forms.RuntimeMatrixPlotForm(request.args)
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+    
+    return render('/analysis/runtime_matrix_plot.html', database=database, db=db,
+                  experiment=experiment, form=form, GET_data=GET_data)

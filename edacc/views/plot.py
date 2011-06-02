@@ -27,7 +27,7 @@ from werkzeug import Headers, secure_filename
 from edacc import plots, config, models
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
-from edacc.constants import ANALYSIS1, ANALYSIS2
+from edacc.constants import ANALYSIS1, ANALYSIS2, STATUS_PROCESSING
 
 plot = Module(__name__)
 
@@ -970,3 +970,127 @@ def barplot(database, experiment_id, gt, eq, lt):
     response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
     os.remove(filename)
     return response
+
+
+@plot.route('/<database>/experiment/<int:experiment_id>/runtime-matrix-plot-img/')
+@require_phase(phases=ANALYSIS2)
+@require_login
+def runtime_matrix_plot(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    
+    measure = request.args.get('measure', 'par10') or abort(404)
+    
+    solver_configs = sorted(exp.solver_configurations, key=lambda sc: sc.idSolverConfig)
+    instances = sorted(exp.instances, key=lambda i: i.idInstance)
+
+    solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
+
+    results = db.session.query(db.ExperimentResult).filter_by(experiment=exp).all()
+
+    results_by_instance = {}
+    for r in results:
+        if r.Instances_idInstance not in results_by_instance:
+            results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [r]}
+        else:
+            rs = results_by_instance[r.Instances_idInstance]
+            if r.SolverConfig_idSolverConfig not in rs:
+                rs[r.SolverConfig_idSolverConfig] = [r]
+            else:
+                rs[r.SolverConfig_idSolverConfig].append(r)
+
+    solver_score = dict((sc_id, None) for sc_id in solver_configs_dict.iterkeys())
+    for solver_config in solver_configs:
+        jobs = []
+        for instance in instances:
+            jobs += results_by_instance.get(instance.idInstance, {}).get(solver_config.idSolverConfig, [])
+            
+        runtimes = [j.get_time() for j in jobs]
+        runtimes = filter(lambda r: r is not None, runtimes)
+        time_measure = None
+        if len(runtimes) > 0:
+            if measure == 'mean': time_measure = numpy.average(runtimes)
+            elif measure == 'median': time_measure = numpy.median(runtimes)
+            elif measure == 'min': time_measure = min(runtimes)
+            elif measure == 'max': time_measure = max(runtimes)
+            elif measure == 'par10' or measure is None:
+                time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else j.get_penalized_time(10)) for j in jobs] or [0])
+        solver_score[solver_config.idSolverConfig] = time_measure
+    
+    instance_hardness = dict((i.idInstance, None) for i in instances)
+    for instance in instances:
+        jobs_by_instance = results_by_instance.get(instance.idInstance, None)
+        jobs = []
+        if jobs_by_instance:
+            for jobs_by_solver in jobs_by_instance.itervalues():
+                jobs += jobs_by_solver
+        
+        runtimes = [j.get_time() for j in jobs]
+        runtimes = filter(lambda r: r is not None, runtimes)
+        time_measure = None
+        if len(runtimes) > 0:
+            if measure == 'mean': time_measure = numpy.average(runtimes)
+            elif measure == 'median': time_measure = numpy.median(runtimes)
+            elif measure == 'min': time_measure = min(runtimes)
+            elif measure == 'max': time_measure = max(runtimes)
+            elif measure == 'par10' or measure is None:
+                time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else j.get_penalized_time(10)) for j in jobs] or [0])
+        instance_hardness[instance.idInstance] = time_measure
+    
+    sorted_solver_configs = sorted(solver_configs, key=lambda sc: solver_score[sc.idSolverConfig], reverse=True)
+    sorted_instances = sorted(instances, key=lambda i: instance_hardness[i.idInstance])
+    
+    rt_matrix = dict((sc.idSolverConfig, dict((i.idInstance, None) for i in instances)) for sc in solver_configs)
+    flattened_rt_matrix = []
+    for instance in sorted_instances:
+        if instance.idInstance not in results_by_instance: continue
+        rs = results_by_instance[instance.idInstance]
+        for solver_config in sorted_solver_configs:
+            idSolverConfig = solver_config.idSolverConfig
+            jobs = rs.get(idSolverConfig, [])
+            runtimes = [j.get_time() for j in jobs]
+            runtimes = filter(lambda r: r is not None, runtimes)
+            time_measure = None
+            if len(runtimes) > 0:
+                if measure == 'mean': time_measure = numpy.average(runtimes)
+                elif measure == 'median': time_measure = numpy.median(runtimes)
+                elif measure == 'min': time_measure = min(runtimes)
+                elif measure == 'max': time_measure = max(runtimes)
+                elif measure == 'par10' or measure is None:
+                    time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else j.get_penalized_time(10)) for j in jobs] or [0])
+            rt_matrix[solver_config.idSolverConfig][instance.idInstance] = time_measure
+            flattened_rt_matrix.append(time_measure)
+    
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow([''] + map(str, sorted_solver_configs))
+        for instance in sorted_instances:
+            row = [str(instance)]
+            for sc in sorted_solver_configs:
+                row.append(str(rt_matrix[sc.idSolverConfig][instance.idInstance]))
+            csv_writer.writerow(row)
+        csv_response.seek(0)
+
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_runtime_matrix.csv"))
+        return Response(response=csv_response.read(), headers=headers)
+    elif request.args.has_key('pdf'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.png'
+        plots.runtime_matrix_plot(flattened_rt_matrix, sorted_solver_configs, sorted_instances, measure, filename, 'pdf')
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
+    elif request.args.has_key('eps'):
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.png'
+        plots.runtime_matrix_plot(flattened_rt_matrix, sorted_solver_configs, sorted_instances, measure, filename, 'eps')
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response
+    else:
+        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.png'
+        plots.runtime_matrix_plot(flattened_rt_matrix, sorted_solver_configs, sorted_instances, measure, filename, 'png')
+        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
+        os.remove(filename)
+        return response

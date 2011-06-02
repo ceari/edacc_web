@@ -8,7 +8,7 @@
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
-import sys, os
+import sys, os, math
 
 from functools import wraps
 from rpy2 import robjects
@@ -18,13 +18,13 @@ from edacc.utils import newline_split_string
 grdevices = importr('grDevices') # plotting target devices
 stats = importr('stats') # statistical methods
 
-with open(os.devnull) as devnull:
+#with open(os.devnull) as devnull:
     # redirect the annoying np package import output to nirvana
-    stdout, stderr = sys.stdout, sys.stderr
-    sys.stdout = sys.stderr = devnull
-    np = importr('np') # non-parametric kernel smoothing methods
-    robjects.r("library('np')")
-    sys.stdout, sys.stderr = stdout, stderr
+#    stdout, stderr = sys.stdout, sys.stderr
+#    sys.stdout = sys.stderr = devnull
+np = importr('np') # non-parametric kernel smoothing methods
+robjects.r("library('np')")
+#    sys.stdout, sys.stderr = stdout, stderr
 
 robjects.r.setEPS() # set some default options for postscript in EPS format
 
@@ -605,4 +605,52 @@ def barplot(values, filename, format='png'):
     robjects.r.barplot(robjects.IntVector(values),
                        names=robjects.StrVector(['>', '=?', '<']))
 
+    grdevices.dev_off()
+    
+@synchronized
+def runtime_matrix_plot(flattened_rtmatrix, sorted_solver_configs, sorted_instances, measure, filename, format='png'):
+    if format == 'png':
+        grdevices.png(file=filename, units="px", width=600,
+                      height=500, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite")
+    elif format == 'eps':
+        grdevices.postscript(file=filename)
+    
+    if None in flattened_rtmatrix:
+        robjects.r.frame()
+        robjects.r.mtext('There are unfinished jobs', padj=5, side=3, line=3, cex=1.7)
+        grdevices.dev_off()
+        return
+
+    m = robjects.r.matrix(robjects.FloatVector(flattened_rtmatrix), nrow=len(sorted_instances))
+    m = robjects.r.log10(m)
+    
+    min_val = math.log10(min(flattened_rtmatrix))
+    max_val = math.log10(max(flattened_rtmatrix))
+
+    robjects.r.layout(robjects.r.matrix(robjects.IntVector([1,2]), nrow=1, ncol=2),
+                      widths=robjects.IntVector([4,1]), heights=robjects.IntVector([1,1]))
+    
+    color_ramp = robjects.r.rgb(robjects.r.seq(0,1,length=256),
+                                robjects.r.seq(0,1,length=256),
+                                robjects.r.seq(0,1,length=256))
+    color_levels = robjects.r.seq(min_val, max_val, length=robjects.r.length(color_ramp))
+    
+    robjects.r.par(mar = robjects.FloatVector([5,5,2.5,3]))
+
+    robjects.r.image(robjects.IntVector(range(1, len(sorted_instances)+1)), robjects.IntVector(range(1, len(sorted_solver_configs)+1)),
+                     m, col=color_ramp, xlab="", ylab="", ylim=robjects.FloatVector([len(sorted_solver_configs), 1]), # invert y axis
+                     xlim=robjects.FloatVector([1, len(sorted_instances)]),
+                     zlim=robjects.FloatVector([min_val, max_val]))
+    
+    robjects.r.mtext("instance (sorted by %s)" % (measure,), side=1, line=3, cex=1.2) # bottom axis label
+    robjects.r.mtext("config (sorted by %s)" % (measure,), side=2, line=3, cex=1.2) # left axis label
+    robjects.r.title('Runtime Matrix Plot', cex=1.4)
+    
+    robjects.r.par(mar = robjects.FloatVector([5,2.5,2.5,3]))
+    robjects.r.image(1, color_levels, robjects.r.matrix(data=color_levels, ncol=robjects.r.length(color_levels), nrow=1),
+                     col=color_ramp, xlab="", ylab="", xaxt="n")
+    robjects.r.layout(1)
+    
     grdevices.dev_off()
