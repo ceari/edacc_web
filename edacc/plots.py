@@ -619,7 +619,7 @@ def runtime_matrix_plot(flattened_rtmatrix, sorted_solver_configs, sorted_instan
     
     if None in flattened_rtmatrix:
         robjects.r.frame()
-        robjects.r.mtext('There are unfinished jobs', padj=5, side=3, line=3, cex=1.7)
+        robjects.r.mtext('Missing results for some instances\nor configs', padj=5, side=3, line=3, cex=1.7)
         grdevices.dev_off()
         return
 
