@@ -987,13 +987,11 @@ def power(database):
                                 power_consumed=power_consumed, cost=cost)
 
 @frontend.route('/<database>/monitor')
-@require_admin
 def choose_monitor_mode(database):
     db = models.get_database(database) or abort(404)
     return render('choose_monitor_mode.html', database=database, db = db)
 
 @frontend.route('/<database>/monitor/clients', methods = ['GET', 'POST'])
-@require_admin
 def client_mode(database):
     db = models.get_database(database) or abort(404)
     form = forms.ClientForm()
@@ -1013,7 +1011,6 @@ def client_mode(database):
     return render('client_mode.html', database = database, db = db, form = form, coordinates = coordinates)
 
 @frontend.route('/<database>/client_pic')
-@require_admin
 def show_clientMonitor(database):  
     db = models.get_database(database) or abort(404)
     expID = map(int, request.args.getlist('e')) 
@@ -1029,7 +1026,6 @@ def show_clientMonitor(database):
     return f.getvalue()
 
 @frontend.route('/<database>/monitor/nodes', methods = ['GET', 'POST'])
-@require_admin
 def monitor_formular(database):
     form = forms.MonitorForm()
     db = models.get_database(database) or abort(404)
@@ -1056,7 +1052,6 @@ def monitor_formular(database):
     return render('node_mode.html', database = database, db = db, form = form)
 
 @frontend.route('/<database>/monitor_pic')
-@require_admin
 def show_monitor(database):  
     status = map(str, request.args.getlist('s'))
     expID = map(int, request.args.getlist('e')) 
@@ -1068,7 +1063,6 @@ def show_monitor(database):
     return f.getvalue()
 
 @frontend.route('/<database>/monitor_tabelle')
-@require_admin
 def ajax_monitor_tabelle(database):
     status = map(str, request.args.getlist('amp;s'))
     expID = map(int, request.args.getlist('e'))
@@ -1077,4 +1071,4 @@ def ajax_monitor_tabelle(database):
      expID.append(eID)
     m = monitor.Monitor(database, status, expID)    
     table = m.getTable()
-    return json.dumps(table)
+    return json_dumps(table)

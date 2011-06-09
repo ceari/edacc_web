@@ -10,8 +10,10 @@
 """
 
 import pygame
+from pygame import gfxdraw
 pygame.font.init()
 from math import *
+import Image, ImageDraw
 
 from sqlalchemy import func, text
 
@@ -84,8 +86,14 @@ class Canvas(object):
         pygame.draw.ellipse(self.surf, pygame.Color("black"), pygame.Rect(x1, y1, x2-x1, y2-y1), 1)
     
     def create_arc(self, xy, start, extent, fill):
-        x1, y1, x2, y2 = xy
-        pygame.draw.arc(self.surf, pygame.Color(fill), pygame.Rect(x1, y1, x2-x1, y2-y1), radians(start), radians(start+extent))
+        x1, y1, x2, y2 = map(int, xy)
+        img = Image.new('RGB', ((x2-x1),(y2-y1)))
+        draw = ImageDraw.Draw(img)
+        draw.rectangle((0,0,x2-x1,y2-y1), outline=(255,105,180), fill=(255,105,180))
+        draw.pieslice((0,0,x2-x1,y2-y1), int(start), int(start+extent) , outline=fill, fill=fill)
+        srf = pygame.image.fromstring(img.tostring(), img.size, img.mode)
+        srf.set_colorkey((255,105,180))
+        self.surf.blit(srf, (x1, y1))
     
     def pack(self, *args, **kwargs): pass
     
@@ -328,7 +336,7 @@ class Monitor(Canvas):
         dbTable['table'] = dbSTable
         statusTable[str(database)] = dbTable
         self.circleDiagram(db_xy, dbStatus, numDBStatus, database, dbRadiusDiagram)
-
+        
     def getImageMap(self):
         return imageMap
 
@@ -340,7 +348,6 @@ class Monitor(Canvas):
         extentStatus = extent(numStatus)
         self.create_oval(xy, fill = "white")
         for e, c in zip(extentStatus, status):
-                   
             if e == 360.0:
                 self.create_oval(xy, fill=constants.JOB_STATUS_COLOR[c]) 
             else:            
