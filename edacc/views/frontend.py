@@ -24,7 +24,9 @@ import numpy
 import StringIO
 import tempfile
 import tarfile
+import Image
 import time
+import os
 from collections import namedtuple
 
 from flask import Module
@@ -38,9 +40,11 @@ from sqlalchemy.orm import joinedload, joinedload_all
 from sqlalchemy import func
 from edacc.constants import *
 from edacc.views.helpers import require_phase, require_competition
-from edacc.views.helpers import require_login, is_admin
+from edacc.views.helpers import require_login, is_admin, require_admin
 from edacc import forms
 from edacc.forms import EmptyQuery
+from edacc import monitor, clientMonitor
+from edacc import config
 
 frontend = Module(__name__)
 
@@ -981,3 +985,96 @@ def power(database):
 
     return render('power.html', database=database, db=db, total_time=total_time,
                                 power_consumed=power_consumed, cost=cost)
+
+@frontend.route('/<database>/monitor')
+@require_admin
+def choose_monitor_mode(database):
+    db = models.get_database(database) or abort(404)
+    return render('choose_monitor_mode.html', database=database, db = db)
+
+@frontend.route('/<database>/monitor/clients', methods = ['GET', 'POST'])
+@require_admin
+def client_mode(database):
+    db = models.get_database(database) or abort(404)
+    form = forms.ClientForm()
+    form.experiments.query = db.session.query(db.Experiment).join(db.Experiment_has_Client) or EmptyQuery()
+    expID = []
+    if form.experiments.data:
+        url_param = "&".join(['e=' + str(exp.idExperiment) for exp in form.experiments.data])
+        for eID in form.experiments.data:
+            expID.append(eID.idExperiment)        
+        m = clientMonitor.ClientMonitor(database, expID)
+        coordinates = m.getImageMap()
+        return render('client_mode.html', database = database, db = db, form = form, url_param = url_param, coordinates = coordinates)
+    for exp in form.experiments.query:
+        expID.append(str(exp.idExperiment))
+    m = clientMonitor.ClientMonitor(database, expID)
+    coordinates = m.getImageMap()
+    return render('client_mode.html', database = database, db = db, form = form, coordinates = coordinates)
+
+@frontend.route('/<database>/client_pic')
+@require_admin
+def show_clientMonitor(database):  
+    db = models.get_database(database) or abort(404)
+    expID = map(int, request.args.getlist('e')) 
+    if (len(expID) == 0):
+        #TODO: kann ich dass auch ohne db abfragen?
+        for exp in db.session.query(db.Experiment).join(db.Experiment_has_Client):
+            expID.append(str(exp.idExperiment))
+    m = clientMonitor.ClientMonitor(database, expID)
+    m.postscript(file = os.path.join(config.TEMP_DIR, g.unique_id), width=clientMonitor.winWidth, height=clientMonitor.winHeight, pagewidth=clientMonitor.winWidth, pageheight=clientMonitor.winHeight, x=0, y=0)
+    im = Image.open(os.path.join(config.TEMP_DIR, g.unique_id))
+    f = StringIO.StringIO()
+    im.save(f, "PNG")
+    return f.getvalue()
+
+@frontend.route('/<database>/monitor/nodes', methods = ['GET', 'POST'])
+@require_admin
+def monitor_formular(database):
+    form = forms.MonitorForm()
+    db = models.get_database(database) or abort(404)
+    form.experiments.query = db.session.query(db.Experiment).all() or EmptyQuery()
+    form.status.query = db.session.query(db.StatusCodes).join(db.ExperimentResult) or EmptyQuery()
+    if form.experiments.data:
+        exp_param = "&".join(['e=' + str(exp.idExperiment) for exp in form.experiments.data])
+        if request.form.get("submit") == "problem mode": stat_param = 's=pm' 
+        else:
+            stat_param = "&".join(['s=' + str(stat.statusCode) for stat in form.status.data])
+        url_param = "&".join((exp_param, stat_param))
+        status = []
+        for st in form.status.data:
+            status.append(st.statusCode)
+        expID = []
+        for eID in form.experiments.data:
+            expID.append(eID.idExperiment)        
+        m = monitor.Monitor(database, status, expID)
+        coordinates = m.getImageMap()
+        tableview = False
+        if request.form.get("submit") == "table view":
+            tableview = True
+        return render('node_mode.html', database = database, db = db, form = form, url_param = url_param, coordinates = coordinates, tableview=tableview)
+    return render('node_mode.html', database = database, db = db, form = form)
+
+@frontend.route('/<database>/monitor_pic')
+@require_admin
+def show_monitor(database):  
+    status = map(str, request.args.getlist('s'))
+    expID = map(int, request.args.getlist('e')) 
+    m = monitor.Monitor(database, status, expID)
+    m.postscript(file = os.path.join(config.TEMP_DIR, g.unique_id), width=monitor.winWidth, height=monitor.winHeight, pagewidth=monitor.winWidth, pageheight=monitor.winHeight, x=0, y=0)
+    im = Image.open(os.path.join(config.TEMP_DIR, g.unique_id))
+    f = StringIO.StringIO()
+    im.save(f, "PNG")
+    return f.getvalue()
+
+@frontend.route('/<database>/monitor_tabelle')
+@require_admin
+def ajax_monitor_tabelle(database):
+    status = map(str, request.args.getlist('amp;s'))
+    expID = map(int, request.args.getlist('e'))
+    expID2 = map(int, request.args.getlist('amp;e'))
+    for eID in expID2:
+     expID.append(eID)
+    m = monitor.Monitor(database, status, expID)    
+    table = m.getTable()
+    return json.dumps(table)

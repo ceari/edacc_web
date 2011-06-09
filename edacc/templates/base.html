@@ -48,6 +48,7 @@
         {% endif %}
         {% endif %}
         <a href="{{url_for('frontend.experiments_index', database=database)}}">Results</a>
+        <a href="{{url_for('frontend.choose_monitor_mode', database=database)}}">Monitor</a>
         {% if db.is_competition() and session.logged_in %}
             |<a href="{{url_for('accounts.manage', database=database)}}">Manage</a>
         {% endif %}

@@ -1,0 +1,116 @@
+{% from "_formhelpers.html" import render_field %}
+{% extends "base.html" %}
+{% block title %}Monitor{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('static', filename='js/jquery.timers-1.2.js')}}" type="text/javascript"></script>
+    <script type="text/javascript">
+        var idMap = new Array();
+
+        $(document).ready(function() {
+            $("map > area").click(function(elem) {
+                id = ($(this).attr("href"));
+                coords = $(this).attr("coords").split(",");
+                 
+                if(idMap[0]){
+ 
+                    if(idMap.indexOf(id) != -1){idMap.splice(idMap.indexOf(id), 1);
+                        x = parseFloat(coords[0]); y = parseFloat(coords[1]);
+                        $('#' + id.replace(/\./g, "\\.")).remove();
+                    }
+                    else {
+                        idMap.push(id);
+                        x = parseFloat(coords[0]); y = parseFloat(coords[1]);
+                        $.ajax({
+                            url: "{{url_for('frontend.ajax_monitor_tabelle', database = database)}}?{{url_param}}&id="+id, 
+                            dataType: 'json',
+                            timeout: 10000,
+                            success: function(data){
+                                txt = "" + id + "<br/>" + "Exp = " + data[id]["expID"] + "<br/>";
+                                for (i in data[id]["table"]) txt += data[id]["table"][i]["name"] + " = " + data[id]["table"][i]["val"]+ " / " + data[id]["table"][i]["perc"] + "<br/>";
+                                $('#monitor').append('<div style="background-color:white; position:absolute; top:'+y+'px; left:'+x+'px;" id="'+ id +'">'+txt+ '</div>');
+                            }
+                        });
+                }
+                    }
+                //kommt bei diagramm view zum einsatz
+                else {
+                    idMap[0]=id;
+                  
+                    x = parseFloat(coords[0]); y = parseFloat(coords[1]);
+                    $.ajax({
+                        url: "{{url_for('frontend.ajax_monitor_tabelle', database = database)}}?{{url_param}}&id="+id, 
+                        dataType: 'json',
+                        timeout: 10000,
+                        success: function(data){
+                            txt = "" + id + "<br/>" + "Exp = " + data[id]["expID"] + "<br/>";                         
+                            for (i in data[id]["table"]) txt += data[id]["table"][i]["name"] + " = " + data[id]["table"][i]["val"]+ " / " + data[id]["table"][i]["perc"] + "<br/>";
+                            $('#monitor').append('<div style="background-color:white; position:absolute; top:'+y+'px; left:'+x+'px;" id="'+ id +'">'+txt+ '</div>');
+                        }
+                    });
+                }
+                return false;
+            });
+
+            {% if tableview %}
+
+                    $.ajax({
+                        url: "{{url_for('frontend.ajax_monitor_tabelle', database = database)}}?{{url_param}}", 
+                        dataType: 'json',
+                        timeout: 10000,
+                        success: function(data){
+                            
+                            $('map > area').each(function(elem) {
+                                id = ($(this).attr("href"));
+                                coords = $(this).attr("coords").split(",");
+                                idMap.push(id);
+                                x = parseFloat(coords[0]); y = parseFloat(coords[1]);
+                                txt = "" + id + "<br/>" + "Exp = " + data[id]["expID"] + "<br/>";                         
+                                for (i in data[id]["table"]) txt += data[id]["table"][i]["name"] + " = " + data[id]["table"][i]["val"]+ " / " + data[id]["table"][i]["perc"] + "<br/>";
+                                $('#monitor').append('<div style="background-color:white; position:absolute; top:'+y+'px; left:'+x+'px;" id="'+ id +'">'+txt+ '</div>');
+                            
+                            });
+
+                    
+                        }
+                    });
+
+                $(this).everyTime(5000, function() {
+                    //TODO: refresh rate aehnlich wie in experiment_progress.html machen
+                });
+            {% endif %}
+        });
+
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="navigation">
+        » <a href="{{url_for('frontend.choose_monitor_mode', database=database)}}">Monitor</a> ::
+        Nodes
+    </div>
+    <div style="float:left;">
+    <form  method="post" action="{{url_for('frontend.monitor_formular', database = database)}}">
+		<table>
+           
+			{{render_field(form.experiments)}}
+			{{render_field(form.status, explanation='Hold Ctrl to select multiple instances.')}}
+			<tr><td colspan="4"><input type="submit" name="submit" value="diagram view"/><input type="submit" name="submit" value="table view"/><input type="submit" name="submit" value="problem mode"/><input type="submit" name="submit" value="refresh"/>  </td></tr>
+		</table>
+	</form>
+    </div>
+    {% if form.experiments.data %}
+        <div id="monitor" style="position: relative; float: left;">
+            <img src="{{url_for('frontend.show_monitor', database = database)}}?{{url_param}}" usemap="#monitormap"> 
+        </div>
+        <map name="monitormap">   
+            <area shape="circle" coords="{{coordinates['db']['position'].0}}, {{coordinates['db']['position'].1}} ,{{coordinates['db']['radius']}}" href={{coordinates['db']['id']}} />
+            {% for c in coordinates['cluster'] %}  
+                <area shape="circle" coords="{{c['position'].0}}, {{c['position'].1}} ,{{c['radius']}}" href={{c['id']}} />
+                {% for cl in c['clients'] %}
+                    <area shape="circle" coords="{{cl['position'].0}}, {{cl['position'].1}} ,{{cl['radius']}}" href={{cl['id']}} />
+                {% endfor %}
+            {% endfor %}
+        </map>
+        
+    {% endif %}
+{% endblock %}

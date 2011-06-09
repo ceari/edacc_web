@@ -205,3 +205,10 @@ class RuntimeMatrixPlotForm(Form):
     measure = SelectField('Measure', default='par10',
                                   choices=[('mean', 'mean'), ('median', 'median'),
                                     ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
+
+class MonitorForm(Form):
+    experiments = QuerySelectMultipleField('Experiments', get_label = lambda e: e.name)
+    status = QuerySelectMultipleField('Status', get_label = lambda e: e.description)
+
+class ClientForm(Form):
+    experiments = QuerySelectMultipleField('Experiments', get_label = lambda e: e.name)

@@ -1,0 +1,32 @@
+{% from "_formhelpers.html" import render_field %}
+{% extends "base.html" %}
+{% block title %}Monitor{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <div class="navigation">
+        » <a href="{{url_for('frontend.choose_monitor_mode', database=database)}}">Monitor</a> ::
+        Clients
+    </div>
+    <div style="float: left">
+    <form method="post" action="{{url_for('frontend.client_mode', database = database)}}">
+    <table>
+        {{render_field(form.experiments, explanation='Hold Ctrl to select multiple instances.')}}
+        <tr><td colspan="4"><input type="submit" name="submit" value="refresh"/>  </td></tr>
+    </table>
+	</form>
+    </div>
+
+    <div id='clientMonitor' style="position: relative; float: left;">
+	<img src="{{url_for('frontend.show_clientMonitor', database = database)}}?{{url_param}}" usemap="#clientMonitormap"> 
+    </div>
+    <map name="clientMonitormap">           
+        {% for c in coordinates['cluster'] %}  
+            {% for cl in c['clients'] %}
+                <area shape="circle" coords="{{cl['position'].0}}, {{cl['position'].1}} ,{{cl['radius']}}" href="{{url_for('frontend.experiment_progress', database=database, experiment_id=cl['exp'])}}" />
+            {% endfor %}
+        {% endfor %}
+    </map>
+
+{% endblock %}

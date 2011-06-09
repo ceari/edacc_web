@@ -383,7 +383,7 @@ class EDACCDatabase(object):
             properties = {
                 'grid_queue': relationship(GridQueue, backref='clients'),
                 'experiments': relationship(Experiment,
-                    secondary=metadata.tables['Experiment_has_Client'],),
+                    secondary=metadata.tables['Experiment_has_Client'], backref='clients'),
             }
         )
         mapper(Experiment_has_Client, metadata.tables['Experiment_has_Client'])

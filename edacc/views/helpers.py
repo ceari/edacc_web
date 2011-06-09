@@ -30,8 +30,10 @@ def require_admin(f):
     """
     @wraps(f)
     def decorated_f(*args, **kwargs):
-        if not session.get('admin'):
-            abort(401)
+        if not session.get('admin', False):
+            def redirect_f(*args, **kwargs):
+                return redirect(url_for('admin.admin_login'))
+            return redirect_f(*args, **kwargs)
         return f(*args, **kwargs)
     return decorated_f
 
