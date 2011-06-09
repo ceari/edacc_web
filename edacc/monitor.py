@@ -9,13 +9,15 @@
     :license: MIT, see LICENSE for details.
 """
 
-from Tkinter import *
+import pygame
+pygame.font.init()
 from math import *
 
 from sqlalchemy import func, text
 
 from edacc import utils, models, constants
 
+NW = True
 
 #screensize
 winWidth = 820
@@ -47,12 +49,53 @@ def extent(numStatus):
             e.append(temp)  
     return e
 
-
+class Canvas(object):
+    def __init__(self, *args, **kwargs):
+        pass
+    
+    def config(self, height, width):
+        self.surf = pygame.Surface((width, height))
+        self.surf.fill(pygame.Color("white"))
+    
+    def create_text(self, x, y=None, text="", anchor=None):
+        if y is None: x, y = x
+        font = pygame.font.Font(pygame.font.match_font("monospace"), 14)
+        txtsurf = font.render(text, 1, pygame.Color("black"))
+        if anchor:
+            self.surf.blit(txtsurf, (x, y - txtsurf.get_height() / 2))
+        else:
+            self.surf.blit(txtsurf, (x - txtsurf.get_width() / 2, y - txtsurf.get_height() / 2))
+        
+    def create_rectangle(self, x1, y1, x2, y2, width=1, fill=None):
+        pygame.draw.rect(self.surf, pygame.Color(fill), pygame.Rect(x1, y1, x2-x1, y2-y1), 0)
+        if fill:
+            pygame.draw.rect(self.surf, pygame.Color("black"), pygame.Rect(x1, y1, x2-x1, y2-y1), width)
+            
+    def create_line(self, fr, to, x2=None):
+        if x2 is not None:
+            pygame.draw.line(self.surf, pygame.Color("black"), (fr, to), (x2[0], x2[1]))
+        else:
+            print fr, to
+            pygame.draw.line(self.surf, pygame.Color("black"), fr, to)
+            
+    def create_oval(self, xy, fill="white"):
+        x1, y1, x2, y2 = xy
+        pygame.draw.ellipse(self.surf, pygame.Color(fill), pygame.Rect(x1, y1, x2-x1, y2-y1), 0)
+        pygame.draw.ellipse(self.surf, pygame.Color("black"), pygame.Rect(x1, y1, x2-x1, y2-y1), 1)
+    
+    def create_arc(self, xy, start, extent, fill):
+        x1, y1, x2, y2 = xy
+        pygame.draw.arc(self.surf, pygame.Color(fill), pygame.Rect(x1, y1, x2-x1, y2-y1), radians(start), radians(start+extent))
+    
+    def pack(self, *args, **kwargs): pass
+    
+    def save(self, file, *args, **kwargs):
+        pygame.image.save(self.surf, file)
+    
+    
 class Monitor(Canvas):           
     
     def __init__(self, database, status, expID, **config):
-        Canvas.__init__(self, None, config)
-        self.pack(expand=YES, fill=BOTH)
         self.config(height = winHeight, width = winWidth)
         db = models.get_database(database) or abort(404)     
      

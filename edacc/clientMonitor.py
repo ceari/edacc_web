@@ -9,11 +9,14 @@
     :license: MIT, see LICENSE for details.
 """
 
-from Tkinter import *
+import pygame
 from math import *
 from sqlalchemy import text, func
 
 from edacc import utils, models, constants
+from monitor import Canvas
+
+NW = True
 
 
 #screensize
@@ -37,8 +40,6 @@ def center(x, y, radiusDiagram):
 class ClientMonitor(Canvas):           
     
     def __init__(self, database, expID, **config):
-        Canvas.__init__(self, None, config)
-        self.pack(expand=YES, fill=BOTH)
         self.config(height = winHeight, width = winWidth)
         db = models.get_database(database) or abort(404)    
         
