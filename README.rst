@@ -39,6 +39,9 @@ Dependencies
 - Jinja2 2.5 (Template Engine)
 - PyLZMA 0.4.2 (Python LZMA SDK bindings)
 - rpy2 2.1.4 (Python R interface)
+- PIL 1.1.7
+- numpy 1.5.1
+- pygame 1.9
 - R 2.11 (language for statistical computing and graphics)
 - R package 'np' (available via CRAN)
 - python-memcached v1.45 + memcached 1.4.5 (optional, enable/disable in config.py)
@@ -70,12 +73,13 @@ To illustrate an installation here's what you would have to do on a linux system
 using e.g. the distribution's package manager) to get the development server running.
 
 1. Install R and configure ld as described above
-2. Install virtualenv: "pip install virtualenv"
-3. Create a virtual python environment in the subdirectory env of the current directory: "virtualenv env"
-4. Activate the virtual environment: "source env/bin/activate" (This will set up some environment variables so
+2. Create a virtual python environment in the subdirectory env of the current directory: "virtualenv env"
+3. Activate the virtual environment: "source env/bin/activate" (This will set up some environment variables so
    Python packages are installed to the virtual environment)
-5. Install the dependencies: "pip install mysql-python sqlalchemy flask rpy2 flask-wtf flask-actions mysql-python pylzma numpy" (some of them need to be compiled and require the appropriate libraries. On Windows and some linux distributions you can find binaries)
-6. Change to the folder containing the file server.py that comes with the web frontend
-7. Adjust the configuration in ./edacc/config.py
+4. Install the web frontend python package into the virtual environment: "python edacc_web-1.0/setup.py install"
+5. Install the dependencies that can't be installed by the setup procedure. Some of them need to be compiled and require the
+ appropriate libraries. On most linux distributions you can find binaries in the package manager. This applies mostly to numpy, mysql-python, rpy2 and pygame.
+6. Adjust the configuration in env/lib/python<PYTHONVERSION>/site-pacakges/edacc_web-1.0-py<PYTHONVERSION>.egg/edacc/local_config.py
+7. Copy the server.py file from the edacc_web-1.0 directory to the current directory and delete the edacc_web-1.0 directory: "cp edacc_web-1.0/server.py . && rm -r edacc_web-1.0"
 8. Run "python server.py" which will start a web server on port 5000 listening on all IPs of the machine (Make sure
    the virtual environment is activated)
