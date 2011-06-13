@@ -33,17 +33,17 @@ methods. This package can be installed by running "install.packages('np')" withi
 
 1. Install R and configure ld as described above
 2. Create a virtual python environment in some directory outside(!) the extracted edacc_web-1.0/ directory:
-   > "virtualenv env"
+   > virtualenv env
 3. Activate the virtual environment: (This will set up some environment variables in your bash session so
    Python packages are installed to the virtual environment)
-   > "source env/bin/activate" 
+   > source env/bin/activate
 4. Install the web frontend python package into the virtual environment. If there are errors read 5) and run setup.py again after.
-   > "python edacc_web-1.0/setup.py install". 
+   > python edacc_web-1.0/setup.py install
 5. Install the dependencies that can't be installed by the setup procedure. Some of them need to be compiled and require the
    appropriate libraries. On most linux distributions you can find binaries in the package manager.
    This applies mostly to numpy, mysql-python, rpy2 and pygame.
    > Ubuntu: apt-get install python-numpy python-pygame python-mysqldb python-rpy2
-   > Archlinux: pacman -S python-pygame python2-numpy mysql-python
+   > Arch Linux: pacman -S python-pygame python2-numpy mysql-python
 6. Adjust the configuration in "env/lib/python<PYTHONVERSION>/site-packages/edacc_web-1.0-py<PYTHONVERSION>.egg/edacc/local_config.py"
 7. Copy the server.py file from the edacc_web-1.0 directory to some directory and delete the edacc_web-1.0 directory.
 8. Run "python server.py" which will start a web server on port 5000 listening on all IPs of the machine (Make sure
