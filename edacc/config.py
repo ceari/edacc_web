@@ -41,7 +41,7 @@ DATABASE_PORT       = 3306
 ADMIN_PASSWORD = 'affe42'
 
 # List of databases this server connects to at startup
-# Format: Tuples of username, password, database, label (used on the pages)
+# Format: Tuples of username, password, database, label (used on the pages), hidden
 DEFAULT_DATABASES = (
     ('username', 'password', 'db name', 'db label', False),
 )
