@@ -69,7 +69,7 @@ For further information see http://flask.pocoo.org/docs/installation/ and http:/
 Quick Installation Guide
 ------------------------
 
-To illustrate an installation here's what you would have to do on a linux system (assuming Python and pip are installed,
+To illustrate an installation here's what you would have to do on a linux system (assuming Python and python-pip are installed,
 using e.g. the distribution's package manager) to get the development server running.
 
 1. Install R and configure ld as described above
@@ -82,4 +82,4 @@ using e.g. the distribution's package manager) to get the development server run
 6. Adjust the configuration in env/lib/python<PYTHONVERSION>/site-pacakges/edacc_web-1.0-py<PYTHONVERSION>.egg/edacc/local_config.py
 7. Copy the server.py file from the edacc_web-1.0 directory to the current directory and delete the edacc_web-1.0 directory: "cp edacc_web-1.0/server.py . && rm -r edacc_web-1.0"
 8. Run "python server.py" which will start a web server on port 5000 listening on all IPs of the machine (Make sure
-   the virtual environment is activated)
+   the virtual environment is activated 3.)
