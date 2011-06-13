@@ -19,6 +19,30 @@ aswell as the individual jobs that were run.
 Additionally, you can set up an EDACC database to run a solver competition, where users can register
 and submit solvers using the web frontend.
 
+Quick Installation Guide
+------------------------
+
+To illustrate an installation here's what you would have to do on a linux system (assuming Python, python-pip and python-virtualenv are installed,
+using e.g. the distribution's package manager) to get the development server running.
+
+To get rpy2 working the GNU linker (ld) has to be able to find libR.so. Add the folder containing
+libR.so (usually /usr/lib/R/lib) to the ld config: Create a file called R.conf containing the
+path in the folder /etc/ld.so.conf.d/ and run ldconfig without parameters as root to update.
+Additionally, you have to install the R package 'np' which provides non-parametric statistical
+methods. This package can be installed by running "install.packages('np')" within the R interpreter.
+
+1. Install R and configure ld as described above
+2. Create a virtual python environment in the subdirectory env of the current directory: "virtualenv env"
+3. Activate the virtual environment: "source env/bin/activate" (This will set up some environment variables so
+   Python packages are installed to the virtual environment)
+4. Install the web frontend python package into the virtual environment: "python edacc_web-1.0/setup.py install"
+5. Install the dependencies that can't be installed by the setup procedure. Some of them need to be compiled and require the
+ appropriate libraries. On most linux distributions you can find binaries in the package manager. This applies mostly to numpy, mysql-python, rpy2 and pygame.
+6. Adjust the configuration in env/lib/python<PYTHONVERSION>/site-packages/edacc_web-1.0-py<PYTHONVERSION>.egg/edacc/local_config.py
+7. Copy the server.py file from the edacc_web-1.0 directory to the current directory and delete the edacc_web-1.0 directory: "cp edacc_web-1.0/server.py . && rm -r edacc_web-1.0"
+8. Run "python server.py" which will start a web server on port 5000 listening on all IPs of the machine (Make sure
+   the virtual environment is activated 3.)
+   
 Implementation
 --------------
 
@@ -45,41 +69,3 @@ Dependencies
 - R 2.11 (language for statistical computing and graphics)
 - R package 'np' (available via CRAN)
 - python-memcached v1.45 + memcached 1.4.5 (optional, enable/disable in config.py)
-
-Installation
-------------
-
-The required Python libraries can most likely be installed using the
-package management tool of your favorite Linux distribution.
-However, they are also available in the Python Package Index "PyPi" http://pypi.python.org/pypi
-and can be installed using easy_install or pip. (http://pypi.python.org/pypi/setuptools  http://pypi.python.org/pypi/pip)
-
-It is recommended not to install these libraries system-wide but in a virtual
-python environment to prevent any conflicts and ensure that the correct versions are
-available for the web frontend.
-
-To get rpy2 working the GNU linker (ld) has to be able to find libR.so. Add the folder containing
-libR.so (usually /usr/lib/R/lib) to the ld config: Create a file called R.conf containing the
-path in the folder /etc/ld.so.conf.d/ and run ldconfig without parameters as root to update.
-Additionally, you have to install the R package 'np' which provides non-parametric statistical
-methods. This package can be installed by running "install.packages('np')" within the R interpreter.
-
-For further information see http://flask.pocoo.org/docs/installation/ and http://flask.pocoo.org/docs/deploying/
-
-Quick Installation Guide
-------------------------
-
-To illustrate an installation here's what you would have to do on a linux system (assuming Python and python-pip are installed,
-using e.g. the distribution's package manager) to get the development server running.
-
-1. Install R and configure ld as described above
-2. Create a virtual python environment in the subdirectory env of the current directory: "virtualenv env"
-3. Activate the virtual environment: "source env/bin/activate" (This will set up some environment variables so
-   Python packages are installed to the virtual environment)
-4. Install the web frontend python package into the virtual environment: "python edacc_web-1.0/setup.py install"
-5. Install the dependencies that can't be installed by the setup procedure. Some of them need to be compiled and require the
- appropriate libraries. On most linux distributions you can find binaries in the package manager. This applies mostly to numpy, mysql-python, rpy2 and pygame.
-6. Adjust the configuration in env/lib/python<PYTHONVERSION>/site-pacakges/edacc_web-1.0-py<PYTHONVERSION>.egg/edacc/local_config.py
-7. Copy the server.py file from the edacc_web-1.0 directory to the current directory and delete the edacc_web-1.0 directory: "cp edacc_web-1.0/server.py . && rm -r edacc_web-1.0"
-8. Run "python server.py" which will start a web server on port 5000 listening on all IPs of the machine (Make sure
-   the virtual environment is activated 3.)
