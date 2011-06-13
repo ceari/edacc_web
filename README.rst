@@ -66,7 +66,7 @@ methods. This package can be installed by running "install.packages('np')" withi
    Python packages are installed to the virtual environment)
    > source env/bin/activate
 4. Install the web frontend python package into the virtual environment. If there are errors read 5) and run setup.py again after.
-   > python edacc_web-1.0/setup.py install
+   > python setup.py install
 5. Install the dependencies that can't be installed by the setup procedure. Some of them need to be compiled and require the
    appropriate libraries. On most linux distributions you can find binaries in the package manager.
    This applies mostly to numpy, mysql-python, rpy2 and pygame.
