@@ -567,7 +567,7 @@ def experiment_stats_ajax(database, experiment_id):
                 .filter(db.ExperimentResult.priority>=0) \
                 .filter(db.ExperimentResult.status>=1) \
                 .first()
-    if avg_time is None: avg_time = 0
+    if avg_time is None or avg_time[0] is None: avg_time = 0
     else: avg_time = avg_time[0]
 
     if num_jobs_running != 0:
