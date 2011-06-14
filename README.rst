@@ -60,20 +60,30 @@ Additionally, you have to install the R package 'np' which provides non-parametr
 methods. This package can be installed by running "install.packages('np')" within the R interpreter.
 
 1. Install R and configure ld as described above
-2. Create a virtual python environment in some directory outside(!) the extracted edacc_web-1.0/ directory:
+2. Create a virtual python environment in some directory outside(!) the extracted edacc_web-1.0/ directory::
+
    > virtualenv env
+
 3. Activate the virtual environment: (This will set up some environment variables in your bash session so
-   Python packages are installed to the virtual environment)
+   Python packages are installed to the virtual environment)::
+
    > source env/bin/activate
-4. Install the web frontend python package into the virtual environment. If there are errors read 5) and run setup.py again after.
+
+4. Install the web frontend python package into the virtual environment. If there are errors read 5) and run setup.py again after::
+
    > python setup.py install
+
 5. Install the dependencies that can't be installed by the setup procedure. Some of them need to be compiled and require the
    appropriate libraries. On most linux distributions you can find binaries in the package manager.
-   This applies mostly to numpy, mysql-python, rpy2 and pygame.
+   This applies mostly to numpy, mysql-python, rpy2 and pygame::
+
    > Ubuntu: apt-get install python-numpy python-pygame python-mysqldb python-rpy2
    > Arch Linux: pacman -S python-pygame python2-numpy mysql-python
+
 6. Adjust the configuration in "env/lib/python<PYTHONVERSION>/site-packages/edacc_web-1.0-py<PYTHONVERSION>.egg/edacc/local_config.py"
+
 7. Copy the server.py file from the edacc_web-1.0 directory to some directory and delete the edacc_web-1.0 directory.
+
 8. Run "python server.py" which will start a web server on port 5000 listening on all IPs of the machine (Make sure
    the virtual environment is activated, see 3.)
    
@@ -90,70 +100,70 @@ methods. This package can be installed by running "install.packages('np')" withi
 
 The following installation example outlines the step that have to be taken to install the web frontend on Ubuntu 10.04
 running on the Apache 2.2.14 web server. For performance reasons (e.g. query latency) the web frontend should run on the
-same machine that the EDACC database runs on.
+same machine that the EDACC database runs on::
 
-- Install Apache and the WSGI module:
-> apt-get install apache2 libapache2-mod-wsgi
+    - Install Apache and the WSGI module:
+    > apt-get install apache2 libapache2-mod-wsgi
 
-- Copy the web frontend files to /srv/edacc_web/, create an empty error.log file and change their ownership to the Apache user: 
-> touch /srv/edacc_web/error.log
-> chown www-data:www-data -R /srv/edacc_web
+    - Copy the web frontend files to /srv/edacc_web/, create an empty error.log file and change their ownership to the Apache user: 
+    > touch /srv/edacc_web/error.log
+    > chown www-data:www-data -R /srv/edacc_web
 
-- Create an Apache virtual host file at /etc/apache2/sites-available/edacc_web, containing:
-<VirtualHost *:80>
-  ServerAdmin email@email.com
-  ServerName foo.server.com
+    - Create an Apache virtual host file at /etc/apache2/sites-available/edacc_web, containing:
+    <VirtualHost *:80>
+    ServerAdmin email@email.com
+    ServerName foo.server.com
 
-  LimitRequestLine 51200000
+    LimitRequestLine 51200000
 
-  WSGIDaemonProcess edacc processes=1 threads=15
-  WSGIScriptAlias / /srv/edacc_web/edacc_web.wsgi
+    WSGIDaemonProcess edacc processes=1 threads=15
+    WSGIScriptAlias / /srv/edacc_web/edacc_web.wsgi
 
-  Alias /static/ /srv/edacc_web/edacc/static/
+    Alias /static/ /srv/edacc_web/edacc/static/
 
-  <Directory /srv/edacc_web>
-    WSGIProcessGroup edacc
-    WSGIApplicationGroup %{GLOBAL}
-    Order deny,allow
-    Allow from all
-  </Directory>
+    <Directory /srv/edacc_web>
+        WSGIProcessGroup edacc
+        WSGIApplicationGroup %{GLOBAL}
+        Order deny,allow
+        Allow from all
+    </Directory>
 
-  <Directory /srv/edacc_web/edacc/static>
-    Order allow,deny
-    Allow from all
-  </Directory>
-</VirtualHost>
+    <Directory /srv/edacc_web/edacc/static>
+        Order allow,deny
+        Allow from all
+    </Directory>
+    </VirtualHost>
 
-- Install dependencies and create a virtual environment for Python libraries:
-> apt-get install python-pip python-virtualenv python-scipy python-pygame python-imaging python-numpy
-> virtualenv /srv/edacc_web/env
-> apt-get build-dep python-mysqldb
-> apt-get install r-base
-> echo "/usr/lib/R/lib" > /etc/ld.so.conf.d/R.config
-> ldconfig
-> source /srv/edacc_web/env/bin/activate
-> pip install mysql-python
-> pip install rpy2
-> pip install flask flask-wtf flask-actions
-> pip install sqlalchemy pylzma
+    - Install dependencies and create a virtual environment for Python libraries:
+    > apt-get install python-pip python-virtualenv python-scipy python-pygame python-imaging python-numpy
+    > virtualenv /srv/edacc_web/env
+    > apt-get build-dep python-mysqldb
+    > apt-get install r-base
+    > echo "/usr/lib/R/lib" > /etc/ld.so.conf.d/R.config
+    > ldconfig
+    > source /srv/edacc_web/env/bin/activate
+    > pip install mysql-python
+    > pip install rpy2
+    > pip install flask flask-wtf flask-actions
+    > pip install sqlalchemy pylzma
 
-- Install R libraries ("R" launches the R interpreter):
-> R
-> (in R) install.packages('np')
+    - Install R libraries ("R" launches the R interpreter):
+    > R
+    > (in R) install.packages('np')
 
-- Create a WSGI file at /srv/edacc_web/edacc_web.wsgi with the following content:
-import site, sys, os
-site.addsitedir('/srv/edacc_web/env/lib/python2.6/site-packages')
-sys.path.append('/srv/edacc_web')
-sys.path.append('/srv/edacc_web/edacc')
-os.environ['PYTHON_EGG_CACHE'] = '/tmp'
-sys.stdout = sys.stderr
-from edacc.web import app as application
+    - Create a WSGI file at /srv/edacc_web/edacc_web.wsgi with the following content:
+    import site, sys, os
+    site.addsitedir('/srv/edacc_web/env/lib/python2.6/site-packages')
+    sys.path.append('/srv/edacc_web')
+    sys.path.append('/srv/edacc_web/edacc')
+    os.environ['PYTHON_EGG_CACHE'] = '/tmp'
+    sys.stdout = sys.stderr
+    from edacc.web import app as application
 
-- Configure the web frontend by editing /srv/edacc_web/edacc/config.py
-- Enable the Apache virtual host created earlier:
-> a2ensite edacc_web
-> service apache2 restart
+    - Configure the web frontend by editing /srv/edacc_web/edacc/config.py
+    - Enable the Apache virtual host created earlier:
+    > a2ensite edacc_web
+    > service apache2 restart
 
 The web frontend should now be running under http://foo.server.com/
 
