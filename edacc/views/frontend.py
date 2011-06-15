@@ -69,7 +69,7 @@ def experiments_index(database):
         experiments = []
     else:
         experiments = db.session.query(db.Experiment).all()
-        experiments.sort(key=lambda e: e.name.lower())
+        experiments.sort(key=lambda e: e.date)
 
     return render('experiments.html', experiments=experiments, db=db, database=database)
 
