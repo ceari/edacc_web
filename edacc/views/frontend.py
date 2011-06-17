@@ -37,7 +37,7 @@ from werkzeug.wsgi import wrap_file
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload, joinedload_all
-from sqlalchemy import func
+from sqlalchemy import func, text as sqla_text
 from edacc.constants import *
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin, require_admin
@@ -564,12 +564,20 @@ def experiment_stats_ajax(database, experiment_id):
 
     avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)) \
                 .filter_by(experiment=experiment) \
-                .filter(db.ExperimentResult.priority>=0) \
                 .filter(db.ExperimentResult.status>=1) \
                 .first()
-    if avg_time is None or avg_time[0] is None: avg_time = 0
+    if avg_time is None or avg_time[0] is None: avg_time = 0.0
     else: avg_time = avg_time[0]
-
+    
+    avg_running_time = db.session.query(func.avg(func.timestampdiff(sqla_text("SECOND"), db.ExperimentResult.startTime, func.now()))) \
+                .filter_by(experiment=experiment) \
+                .filter(db.ExperimentResult.status==0) \
+                .first()
+    
+    if avg_running_time[0] is not None:
+        if num_jobs_finished + num_jobs_running != 0:
+            avg_time = ((num_jobs_finished * avg_time) + (num_jobs_running * float(avg_running_time[0]))) / (num_jobs_finished + num_jobs_running) 
+                
     if num_jobs_running != 0:
         timeleft = datetime.timedelta(seconds = int((num_jobs_not_started + num_jobs_running) * avg_time / float(num_jobs_running)))
     else:
