@@ -317,7 +317,6 @@ code, pre {
     padding: 3px 18px 3px 10px;
     background-color: #e6EEFF;
     cursor: pointer;
-    white-space: nowrap;
 }
 
 #table_results tr.odd {
@@ -333,7 +332,6 @@ code, pre {
     border-style: solid;
     border-color: black;
     vertical-align: middle;
-    text-align:
 }
 
 .sorting_asc {
