@@ -464,6 +464,7 @@ def experiment_results_by_instance(database, experiment_id):
                         .order_by('Instances_idInstance', 'run').all()
 
             mean, median, par10 = None, None, None
+            successful = len([j for j in runs if str(j.resultCode).startswith("1")])
             if len(runs) > 0:
                 runtimes = [j.get_time() for j in runs]
                 runtimes = filter(lambda t: t is not None, runtimes)
@@ -483,12 +484,12 @@ def experiment_results_by_instance(database, experiment_id):
                     mean = numpy.average(runtimes)
                     median = numpy.median(runtimes)
 
-            results.append((sc, runs + [None] * (num_runs - len(runs)), mean, median, par10))
+            results.append((sc, runs + [None] * (num_runs - len(runs)), mean, median, par10, successful))
             min_mean_sc, min_mean = None, 0
             min_median_sc, min_median = None, 0
             min_par10_sc, min_par10 = None, 0
             for r in results:
-                if r[2] is None: continue
+                if r[2] is None or r[5] == 0: continue
                 if min_mean_sc is None or r[2] < min_mean:
                     min_mean_sc, min_mean = r[0], r[2]
                 if min_median_sc is None or r[3] < min_median:
