@@ -274,7 +274,7 @@ def experiment_results(database, experiment_id):
 
                 times_by_solver[idSolverConfig].append(time_measure)
 
-            if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and len(runtimes) > 0:
+            if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and successful > 0:
                 best_sc_time = time_measure
                 best_sc_by_instance_id[idInstance] = solver_config
 
@@ -569,7 +569,8 @@ def experiment_stats_ajax(database, experiment_id):
     if avg_time is None or avg_time[0] is None: avg_time = 0.0
     else: avg_time = avg_time[0]
     
-    avg_running_time = db.session.query(func.avg(func.timestampdiff(sqla_text("SECOND"), db.ExperimentResult.startTime, func.now()))) \
+    avg_running_time = db.session.query(func.avg(func.timestampdiff(sqla_text("SECOND"),
+                                        db.ExperimentResult.startTime, func.now()))) \
                 .filter_by(experiment=experiment) \
                 .filter(db.ExperimentResult.status==0) \
                 .first()
