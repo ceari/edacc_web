@@ -246,9 +246,6 @@ class EDACCDatabase(object):
                     'seed': self.seed,
                     'startTime': str(self.startTime),
                     'computeQueue': self.computeQueue,
-                    'solverExitCode': self.output.solverExitCode,
-                    'watcherExitCode': self.output.watcherExitCode,
-                    'verifierExitCode': self.output.verifierExitCode,
                     'priority': self.priority,
                 }
 
@@ -441,9 +438,6 @@ class EDACCDatabase(object):
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
                 'output': relation(ExperimentResultOutput, backref='result', uselist=False),
-                'date_modified': deferred(metadata.tables['ExperimentResults'].c.date_modified),
-                'seed': deferred(metadata.tables['ExperimentResults'].c.seed),
-                'computeQueue': deferred(metadata.tables['ExperimentResults'].c.computeQueue),
                 'solver_configuration': relation(SolverConfiguration),
                 'properties': relationship(ExperimentResultProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),
