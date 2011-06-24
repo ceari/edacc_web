@@ -47,6 +47,21 @@ a:active {
     color: black;
 }
 
+div .explanation {
+	float: right;
+	position: absolute;
+	right: 20px;
+	width: 400px;
+	z-index:199;
+	background-color: white;
+	padding: 5px;
+}
+div .explanation > img {
+	float: right;
+	right: 20px;
+	text-align: right;
+}
+
 #content {
     margin-left: 3px;
     min-height: 500px;
