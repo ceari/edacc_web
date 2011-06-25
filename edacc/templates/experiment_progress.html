@@ -167,14 +167,13 @@
     </script>
 {% endblock %}
 {% block content %}
-    <div class="explanation">
-    	<img src="{{url_for('static', filename='img/question.png')}}" alt="Explanation" onLoad="$('#explanation_text').hide();" onClick="$('#explanation_text').toggle();">
-    	<div id="explanation_text">
+	<img id="explanation_img" src="{{url_for('static', filename='img/question.png')}}" alt="Explanation" onLoad="$('#explanation_text').hide();" onMouseOver="$('#explanation_text').show();" onMouseOut="$('#explanation_text').hide();" />
+    <div id="explanation_text">
         The table below shows an overview of the individual benchmarks that are performed in this experiment.
         If you click on the ID of a job in the first column you'll get to a page with more detailed information
         about the job including output of the solver once the job is finished.<br/>
-        Notice that the F5 key was overriden on this page to use Ajax to refresh the table data without having to reload the whole page. You can also set a periodic refresh interval.
-    	</div>
+        Notice that the F5 key was overridden on this page to use Ajax to refresh the table data without having to reload the whole page.
+        You can also set a periodic refresh interval.
     </div>
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::

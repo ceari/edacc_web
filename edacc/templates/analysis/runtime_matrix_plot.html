@@ -24,7 +24,12 @@
         Each point (rectangle) represents the results of a solver configuration on<br/>
         an instance aggregated by the specified measure. The solver configurations and<br/>
         instances are sorted by this measure over all results (e.g. the par10 of a<br/>
-        solver configuration over all its jobs, and the par10 of all results for an instance). 
+        solver configuration over all its jobs, and the par10 of all results for an instance).<br/>
+        All values are log10 scaled. This plot can be interpreted as follows:<br/>
+        A mostly vertical gradient from black to white indicates that the solver<br/>
+        configurations can be clearly distinguished in terms of their performance.<br/>
+        A mostly horizontal gradient indicates that the different solver configurations<br/>
+        perform similar on the instances.        
         </div>
         <form method="get" action="{{url_for('analysis.runtime_matrix_plot', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
