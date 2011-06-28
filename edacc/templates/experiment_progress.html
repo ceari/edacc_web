@@ -53,19 +53,19 @@
                 }
             });
 
-	    function updateExperimentStats() {
-			$.ajax({
-			    url: "{{url_for('frontend.experiment_stats_ajax', database=database, experiment_id=experiment.idExperiment)}}",
-			    dataType: 'json',
-			    success: function(data) {
-				$('#stats').html('finished: ' + data['num_jobs_finished'] + '/' + data['num_jobs_active'] + ' active (total: '+data['num_jobs']+')' +
-	                        ', not started: ' + data['num_jobs_not_started'] + ', running: ' +
-	                        data['num_jobs_running'] + ', crashed: ' + data['num_jobs_error'] +
-	                        ', ETA: ' + data['eta']
-	                        );
-			    }
-			});
-	    }
+		    function updateExperimentStats() {
+				$.ajax({
+				    url: "{{url_for('frontend.experiment_stats_ajax', database=database, experiment_id=experiment.idExperiment)}}",
+				    dataType: 'json',
+				    success: function(data) {
+					$('#stats').html('finished: ' + data['num_jobs_finished'] + '/' + data['num_jobs_active'] + ' active (total: '+data['num_jobs']+')' +
+		                        ', not started: ' + data['num_jobs_not_started'] + ', running: ' +
+		                        data['num_jobs_running'] + ', crashed: ' + data['num_jobs_error'] +
+		                        ', ETA: ' + data['eta']
+		                        );
+				    }
+				});
+		    }
 
             $('#refresh').click(function() {
                 oTable.fnReloadAjax();
@@ -161,7 +161,7 @@
                 }
             });
 
-	    updateExperimentStats();
+	    	updateExperimentStats();
         });
         /* ]]> */
     </script>
