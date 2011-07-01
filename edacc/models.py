@@ -214,7 +214,7 @@ class EDACCDatabase(object):
                 if self.CPUTimeLimit == -1:
                     return float('inf')
                 else:
-                    return self.resultTime * p_factor
+                    return self.CPUTimeLimit * p_factor
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name.
