@@ -627,7 +627,6 @@ class BilevelMultinomialModel(object):
 class CategoryData(object):
     """Data for a category."""
     
-    @synchronized
     def fit(self, runs, budget_interval=100, budget_count=61):
         """ Fit data for a category.
             runs is expected to be a list of tuples of the format
@@ -723,8 +722,9 @@ class CategoryData(object):
                 rn_SK = numpy.sum(self.model._tclass_res_LN[:, n][:, None, None] * self.model._tclass_LSK, axis = 0)
 
                 self.similarity_NN[m, n] = numpy.sum(rm_SK * numpy.log(rm_SK / rn_SK))
-
-        print self.similarity_NN
-        self.projection_N2 = numpy.array(rpy2.robjects.r["cmdscale"](1.0 - self.similarity_NN))
+        
+        @synchronized
+        def set_projection(): 
+            self.projection_N2 = numpy.array(rpy2.robjects.r["cmdscale"](1.0 - self.similarity_NN))
 
         return self
