@@ -58,6 +58,7 @@ def borg_explorer_data(database, experiment_id):
     if type == 'categories.json':
         return json_dumps([{"path": experiment.name, "name": experiment.name}])
     
+    @synchronized
     @cache.memoize(600)
     def get_data(database, experiment_id):
         runs = db.session.query(db.ExperimentResult) \
@@ -723,8 +724,6 @@ class CategoryData(object):
 
                 self.similarity_NN[m, n] = numpy.sum(rm_SK * numpy.log(rm_SK / rn_SK))
         
-        @synchronized
-        def set_projection(): 
-            self.projection_N2 = numpy.array(rpy2.robjects.r["cmdscale"](1.0 - self.similarity_NN))
+        self.projection_N2 = numpy.array(rpy2.robjects.r["cmdscale"](1.0 - self.similarity_NN))
 
         return self
