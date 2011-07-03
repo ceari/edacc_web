@@ -101,6 +101,7 @@
     <a href="{{url_for('analysis.scatter_1solver_result_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Two result properties of a solver (e.g. CPU time vs. Memory)</a><br/>
     <a href="{{url_for('analysis.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Result property against instance property (e.g. CPU Time against Number of Atoms)</a><br/>
     <a href="{{url_for('analysis.runtime_matrix_plot', database=database, experiment_id=experiment.idExperiment)}}">Runtime matrix plot</a><br/>
+    <a href="{{url_for('borgexplorer.borg_explorer', database=database, experiment_id=experiment.idExperiment)}}">Borg explorer visualization</a><br/>
     {% if not db.is_competition() or db.competition_phase() in ANALYSIS1 %}
     <a href="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">Cactus plot - Number of solved instances within a given amount of a property (e.g. time, memory, ...)</a><br/>
     {% endif %}

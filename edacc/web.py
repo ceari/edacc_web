@@ -15,6 +15,7 @@ import uuid, datetime
 from jinja2 import FileSystemBytecodeCache
 from werkzeug import ImmutableDict
 from flask import Flask, Request, g
+from flaskext.cache import Cache
 from edacc import config, models, utils
 
 Flask.jinja_options = ImmutableDict({
@@ -24,7 +25,7 @@ Flask.jinja_options = ImmutableDict({
 })
 app = Flask(__name__)
 app.Debug = config.DEBUG
-
+cache = Cache()
 
 if config.LOGGING:
     # set up logging if configured
@@ -50,8 +51,11 @@ class LimitedRequest(Request):
 app.request_class = LimitedRequest
 app.config.update(
     SECRET_KEY = config.SECRET_KEY,
-    PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=1)
+    PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=1),
+    CACHE_TYPE='filesystem',
+    CACHE_DIR=config.TEMP_DIR,
 )
+cache.init_app(app)
 
 # register view modules
 from edacc.views.admin import admin
@@ -67,6 +71,9 @@ app.register_module(frontend)
 app.register_module(analysis)
 app.register_module(plot)
 app.register_module(api)
+
+from edacc.plugins.borgexplorer import borgexplorer
+app.register_module(borgexplorer)
 
 app.jinja_env.filters['download_size'] = utils.download_size
 app.jinja_env.filters['job_status_color'] = utils.job_status_color
