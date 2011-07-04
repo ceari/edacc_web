@@ -16,6 +16,20 @@
 <script type="text/javascript" src="{{url_for('static', filename='js/d3/d3.geom.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='js/d3/d3.layout.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='borgexplorer/sprintf-0.7-beta1.js')}}"></script>
+{% if g.PIWIK_URL %}
+<!-- Piwik -->
+<script type="text/javascript">
+var pkBaseURL = (("https:" == document.location.protocol) ? "https://{{g.PIWIK_URL}}" : "http://{{g.PIWIK_URL}}");
+document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script type="text/javascript">
+try {
+var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 1);
+piwikTracker.trackPageView();
+piwikTracker.enableLinkTracking();
+} catch( err ) {}
+</script>
+<!-- End Piwik Tag -->
+{% endif %}
 <script type="text/javascript">
 {% include "borgexplorer/borgview.js" %}
 </script>
