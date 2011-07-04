@@ -21,7 +21,7 @@ except:
 from flask import Module, abort, request
 from flask import render_template as render
 
-from edacc import config, models
+from edacc import models
 from edacc.web import cache
 
 from threading import Lock
@@ -63,7 +63,7 @@ def borg_explorer_data(database, experiment_id):
     def get_data(database, experiment_id):
         runs = db.session.query(db.ExperimentResult) \
                                 .filter(db.ExperimentResult.Experiment_idExperiment==experiment_id) \
-                                .filter(db.ExperimentResult.resultCode.like('1%')).all()
+                                .filter(db.ExperimentResult.resultCode.like('1%')).order_by('idJob').all()
         return CategoryData().fit([(0, r.instance.name, r.result_code.description, r.resultTime, 0, r.solver_configuration.name, 0) for r in runs])
     
     data = get_data(database, experiment_id)
@@ -619,7 +619,7 @@ class BilevelMultinomialModel(object):
 
         # compute posterior probabilities
         tclass_post_rates_LSB = numpy.sum(conditional_LSK[..., None] * self._rclass_SKB[None, ...], axis = -2)
-        _ = numpy.sum(tclass_post_weights_L[:, None, None] * tclass_post_rates_LSB, axis = 0)
+        #_ = numpy.sum(tclass_post_weights_L[:, None, None] * tclass_post_rates_LSB, axis = 0)
 
         return (tclass_post_weights_L, tclass_post_rates_LSB)
 

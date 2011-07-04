@@ -18,7 +18,7 @@ from sqlalchemy.orm import joinedload
 
 from flask import Module
 from flask import render_template as render
-from flask import abort, request, jsonify, Response, make_response
+from flask import abort, request, jsonify, Response
 from werkzeug import Headers, secure_filename
 
 from edacc import models, forms, ranking, statistics

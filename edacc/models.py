@@ -11,8 +11,6 @@
     :license: MIT, see LICENSE for details.
 """
 
-import base64
-
 from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred

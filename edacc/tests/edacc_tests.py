@@ -10,10 +10,7 @@
 """
 
 import unittest
-import sys
 import struct
-
-from sqlalchemy import func
 
 from edacc.tests import fixtures
 from edacc import config
@@ -36,7 +33,6 @@ def float_eq(x, y, eps=1e-10):
 
 class DatabaseConnectionTestCase(unittest.TestCase):
     def setUp(self):
-        from edacc.web import app
         from edacc import models
         self.db = models.add_database("edacc", "edaccteam", TEST_DATABASE, TEST_DATABASE)
 

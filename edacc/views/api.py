@@ -27,7 +27,6 @@ from sqlalchemy import func
 from flask import abort, Module
 
 from edacc import models
-from edacc.views.helpers import require_admin
 
 api = Module(__name__)
 

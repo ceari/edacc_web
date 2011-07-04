@@ -27,20 +27,18 @@ import tarfile
 import Image
 import time
 import os
-from collections import namedtuple
 
 from flask import Module
 from flask import render_template as render
 from flask import Response, abort, g, request, redirect, url_for
 from werkzeug import Headers, secure_filename
-from werkzeug.wsgi import wrap_file
 
 from edacc import utils, models
 from sqlalchemy.orm import joinedload, joinedload_all
 from sqlalchemy import func, text as sqla_text
 from edacc.constants import *
 from edacc.views.helpers import require_phase, require_competition
-from edacc.views.helpers import require_login, is_admin, require_admin
+from edacc.views.helpers import require_login, is_admin
 from edacc import forms
 from edacc.forms import EmptyQuery
 from edacc import monitor, clientMonitor

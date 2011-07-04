@@ -8,7 +8,7 @@
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
-import sys, os, math
+import os, math
 
 from functools import wraps
 from rpy2 import robjects
@@ -571,10 +571,8 @@ def kerneldensity(data, filename, property_name, log_property, format='png'):
 
     if log_property:
         log = 'x'
-        min_x = min(data or [0.1])
     else:
         log = ''
-        min_x = 0
 
     if len(data) > 0:
         robjects.r('d <- npudens(c(' + ",".join(map(str, data + [max(data or [0]) + 0.00001])) + '))')

@@ -27,7 +27,7 @@ from werkzeug import Headers, secure_filename
 from edacc import plots, config, models
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
-from edacc.constants import ANALYSIS1, ANALYSIS2, STATUS_PROCESSING
+from edacc.constants import ANALYSIS1, ANALYSIS2
 
 plot = Module(__name__)
 
