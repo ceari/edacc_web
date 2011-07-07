@@ -24,6 +24,7 @@ from sqlalchemy import not_
 
 from edacc import models
 from edacc.web import cache
+from edacc.constants import STATUS_PROCESSING
 
 from threading import Lock
 global_lock = Lock()
