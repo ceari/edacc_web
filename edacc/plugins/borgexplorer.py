@@ -1,8 +1,8 @@
 """
     Borg code by Bryan Silverthorn <bcs@cargo-cult.org>
-    see borgexplorer_LICENSE
+    see LICENSE_borgexplorer
     http://nn.cs.utexas.edu/pages/research/borg/
-    
+
     Adapted for the EDACC Web Frontend by Daniel Diepold.
 """
 
@@ -46,18 +46,18 @@ borgexplorer = Module(__name__)
 def borg_explorer(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    
+
     return render('borgexplorer/index.html', db=db, database=database, experiment=experiment)
 
 @borgexplorer.route('/<database>/experiment/<int:experiment_id>/borg-explorer-data/')
 def borg_explorer_data(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    
+
     type = request.args.get('type')
     if type == 'categories.json':
         return json_dumps([{"path": experiment.name, "name": experiment.name}])
-    
+
     @synchronized
     @cache.memoize(600)
     def get_data(database, experiment_id):
@@ -65,9 +65,9 @@ def borg_explorer_data(database, experiment_id):
                                 .filter(db.ExperimentResult.Experiment_idExperiment==experiment_id) \
                                 .filter(db.ExperimentResult.resultCode.like('1%')).order_by('idJob').all()
         return CategoryData().fit([(0, r.instance.name, r.result_code.description, r.resultTime, 0, r.solver_configuration.name, 0) for r in runs])
-    
+
     data = get_data(database, experiment_id)
-    
+
     if type == 'runs.json':
         return json_dumps(data.table)
     elif type == 'solvers.json':
@@ -413,8 +413,8 @@ def fit_multinomial_mixture(successes, attempts, K):
 
     # expectation maximization
     previous_ll = -numpy.inf
-    prior_alpha = 1.0 + 1e-2 
-    prior_beta = 1.0 + 1e-1 
+    prior_alpha = 1.0 + 1e-2
+    prior_beta = 1.0 + 1e-1
     prior_upper = prior_alpha - 1.0
     prior_lower = B * prior_alpha + prior_beta - B - 1.0
     initial_n_K = numpy.random.randint(N, size = K)
@@ -627,7 +627,7 @@ class BilevelMultinomialModel(object):
 
 class CategoryData(object):
     """Data for a category."""
-    
+
     def fit(self, runs, budget_interval=100, budget_count=61):
         """ Fit data for a category.
             runs is expected to be a list of tuples of the format
@@ -723,7 +723,7 @@ class CategoryData(object):
                 rn_SK = numpy.sum(self.model._tclass_res_LN[:, n][:, None, None] * self.model._tclass_LSK, axis = 0)
 
                 self.similarity_NN[m, n] = numpy.sum(rm_SK * numpy.log(rm_SK / rn_SK))
-        
+
         self.projection_N2 = numpy.array(rpy2.robjects.r["cmdscale"](1.0 - self.similarity_NN))
 
         return self
