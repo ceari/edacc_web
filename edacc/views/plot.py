@@ -204,7 +204,7 @@ def scatter_2solver_1property(database, experiment_id):
         for j in xrange(len(points)):
             pts2 += [(pts[j][i][0], pts[j][i][1], points[j][i][0], points[j][i][1], points[j][i][2]) for i in xrange(len(points[j]))]
         if request.args.has_key('imagemap'):
-            return render('/analysis/imagemap_2solver_1property.html', database=database, points=pts2, sc1=sc1, sc2=sc2)
+            return render('/analysis/imagemap_2solver_1property.html', database=database, experiment=exp, points=pts2, sc1=sc1, sc2=sc2)
         else:
             response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
@@ -349,7 +349,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
         for j in xrange(len(points)):
             pts2 += [(pts[j][i][0], pts[j][i][1], points[j][i][0], points[j][i][1], points[j][i][2]) for i in xrange(len(points[j]))]
         if request.args.has_key('imagemap'):
-            return render('/analysis/imagemap_instance_vs_result.html', database=database, points=pts2, sc=solver_config)
+            return render('/analysis/imagemap_instance_vs_result.html', database=database, experiment=exp, points=pts2, sc=solver_config)
         else:
             response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
@@ -499,7 +499,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
         for j in xrange(len(points)):
             pts2 += [(pts[j][i][0], pts[j][i][1], points[j][i][0], points[j][i][1], points[j][i][2]) for i in xrange(len(points[j]))]
         if request.args.has_key('imagemap'):
-            return render('/analysis/imagemap_result_vs_result.html', database=database, points=pts2, sc=solver_config)
+            return render('/analysis/imagemap_result_vs_result.html', database=database, experiment=exp, points=pts2, sc=solver_config)
         else:
             response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
         os.remove(filename)
