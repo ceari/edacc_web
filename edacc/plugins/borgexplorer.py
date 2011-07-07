@@ -64,7 +64,7 @@ def borg_explorer_data(database, experiment_id):
     def get_data(database, experiment_id):
         runs = db.session.query(db.ExperimentResult) \
                                 .filter(db.ExperimentResult.Experiment_idExperiment==experiment_id) \
-                                .filter(not_(db.ExperimentResult.statusCode.in_(STATUS_PROCESSING))).order_by('idJob').all()
+                                .filter(not_(db.ExperimentResult.status.in_(STATUS_PROCESSING))).order_by('idJob').all()
         return CategoryData().fit([(0, r.instance.name, r.result_code.description, r.resultTime, 0, r.solver_configuration.name, 0) for r in runs])
 
     data = get_data(database, experiment_id)
