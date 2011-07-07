@@ -20,6 +20,7 @@ except:
 
 from flask import Module, abort, request
 from flask import render_template as render
+from sqlalchemy import not_
 
 from edacc import models
 from edacc.web import cache
@@ -63,7 +64,7 @@ def borg_explorer_data(database, experiment_id):
     def get_data(database, experiment_id):
         runs = db.session.query(db.ExperimentResult) \
                                 .filter(db.ExperimentResult.Experiment_idExperiment==experiment_id) \
-                                .filter(db.ExperimentResult.resultCode.like('1%')).order_by('idJob').all()
+                                .filter(not_(db.ExperimentResult.statusCode.in_(STATUS_PROCESSING))).order_by('idJob').all()
         return CategoryData().fit([(0, r.instance.name, r.result_code.description, r.resultTime, 0, r.solver_configuration.name, 0) for r in runs])
 
     data = get_data(database, experiment_id)
