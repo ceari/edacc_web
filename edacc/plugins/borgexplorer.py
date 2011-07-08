@@ -11,7 +11,7 @@ import scikits.learn.linear_model
 import numpy
 import os
 import rpy2.robjects
-import rpy2.robjects.numpy2ri
+from rpy2.robjects.numpy2ri import numpy2ri
 from functools import wraps
 try: from cjson import encode as json_dumps
 except:
@@ -726,6 +726,6 @@ class CategoryData(object):
 
                 self.similarity_NN[m, n] = numpy.sum(rm_SK * numpy.log(rm_SK / rn_SK))
 
-        self.projection_N2 = numpy.array(rpy2.robjects.r["cmdscale"](1.0 - self.similarity_NN))
+        self.projection_N2 = numpy.array(rpy2.robjects.r["cmdscale"](numpy2ri(1.0 - self.similarity_NN)))
 
         return self
