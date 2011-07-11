@@ -75,7 +75,9 @@
     {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}
     <h2 style="clear:both;">Progress</h2>
     <div><div id="progressbar" class="progress"></div></div>
-    <div style="padding-top: 10px; clear: both;"><a href="{{url_for('frontend.experiment_progress', database=database, experiment_id=experiment.idExperiment)}}">Live information about experiment progress</a></div>
+    <div style="padding-top: 10px; clear: both;">
+    	<a href="{{url_for('frontend.experiment_progress', database=database, experiment_id=experiment.idExperiment)}}">Live information about experiment progress</a>
+    </div>
     {% endif %}
 
     <h2>Information about solvers and instances</h2>

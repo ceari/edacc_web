@@ -182,7 +182,7 @@
     </div>
     <h2>Experiment progress</h2>
     <div style="font-weight: bold; margin-bottom: 5px;"><span id="stats">&nbsp;</span></div>
-    <a id="get_csv" href="#">Download as CSV</a> | <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
+    <a href="{{url_for('frontend.experiment_results_csv', database=database, experiment_id=experiment.idExperiment)}}">Download all data as CSV file</a> | <a id="get_csv" href="#">Download filtered data as CSV file</a> | <a id="refresh" href="#">Refresh Data</a> <strong>Refresh Interval:</strong>
     <select id="refresh_interval"><option value="-" selected="selected">-</option><option value="2">2s</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select><br/>
     <div style="max-width: 98%">
     <table id="table_jobs" class="display">

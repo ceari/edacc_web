@@ -593,6 +593,85 @@ def experiment_stats_ajax(database, experiment_id):
         'eta': str(timeleft),
     })
 
+@frontend.route('/<database>/experiment/<int:experiment_id>/experiment-results-csv/')
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
+@require_login
+def experiment_results_csv(database, experiment_id):
+    """ CSV download of all job data of an experiment """
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    result_properties = db.get_result_properties()
+    instance_properties = db.get_instance_properties()
+
+    # build the query part for result properties
+    prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
+                             prop.name+"_value`.value END" for prop in result_properties])
+    prop_joins = ""
+    for prop in result_properties:
+        prop_joins += """LEFT JOIN ExperimentResult_has_Property as `%s_hasP` ON
+                         `%s_hasP`.idExperimentResults= idJob AND
+                         `%s_hasP`.idProperty = %d
+                      """ % (prop.name, prop.name, prop.name, prop.idProperty)
+        prop_joins += """LEFT JOIN ExperimentResult_has_PropertyValue as `%s_value` ON
+                        `%s_value`.idExperimentResult_has_Property = `%s_hasP`.idExperimentResult_has_Property
+                      """ % (prop.name, prop.name, prop.name)
+
+    # build the query part for instance properties
+    inst_prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
+                             prop.name+"_value`.value END" for prop in instance_properties])
+    inst_prop_joins = ""
+    for prop in instance_properties:
+        inst_prop_joins += """LEFT JOIN Instance_has_Property as `%s_value` ON
+                        (`%s_value`.idInstance = Instances.idInstance
+                        AND `%s_value`.idProperty = %d)
+                      """ % (prop.name, prop.name, prop.name, prop.idProperty)
+
+    conn = db.session.connection()
+    res = conn.execute("""SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
+                       SolverConfig.name, Instances.name,
+                       ExperimentResults.run, ExperimentResults.resultTime,
+                       ExperimentResults.seed, ExperimentResults.status,
+                       ExperimentResults.resultCode,
+                       StatusCodes.description, ResultCodes.description,
+                       CASE
+                           WHEN status=0 THEN TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW())
+                           ELSE 0
+                       END as runningTime,
+                       ExperimentResults.CPUTimeLimit, ExperimentResults.wallClockTimeLimit, ExperimentResults.memoryLimit,
+                       ExperimentResults.stackSizeLimit, ExperimentResults.outputSizeLimitFirst, ExperimentResults.outputSizeLimitLast,
+                       ExperimentResults.computeNode, ExperimentResults.computeNodeIP, ExperimentResults.priority,
+                       gridQueue.name
+                       """ + (',' if prop_columns else '') + prop_columns + """
+                       """ + (',' if inst_prop_columns else '') + inst_prop_columns + """
+                 FROM ExperimentResults
+                    LEFT JOIN ResultCodes ON ExperimentResults.resultCode=ResultCodes.resultCode
+                    LEFT JOIN StatusCodes ON ExperimentResults.status=StatusCodes.statusCode
+                    LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
+                    LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
+                    LEFT JOIN gridQueue ON gridQueue.idgridQueue=ExperimentResults.computeQueue
+                    """+prop_joins+""" """ + inst_prop_joins + """ 
+                 WHERE ExperimentResults.Experiment_idExperiment = %s """, (experiment_id, ))
+
+    jobs = res.fetchall()
+
+    # if competition db, show only own solvers unless phase is 6 or 7
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+        jobs = filter(lambda j: db.session.query(db.SolverConfiguration).get(j[1]).solver.user == g.User, jobs)
+
+    csv_response = StringIO.StringIO()
+    csv_writer = csv.writer(csv_response)
+    csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'status code', 'result code', 'Status'] +
+                        ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
+                        ['stackSizeLimit', 'outputSizeLimitFirst', 'outputSizeLimitLast', 'computeNode', 'computeNodeIP',
+                         'priority', 'computeQueue ID'] +
+                        [p.name for p in result_properties] + [p.name for p in instance_properties])
+    csv_writer.writerows(jobs)
+    csv_response.seek(0)
+    headers = Headers()
+    headers.add('Content-Type', 'text/csv')
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename(experiment.name) + "_data.csv")
+    return Response(response=csv_response.read(), headers=headers)
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/progress-ajax/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
