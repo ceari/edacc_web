@@ -605,27 +605,27 @@ def experiment_results_csv(database, experiment_id):
     instance_properties = db.get_instance_properties()
 
     # build the query part for result properties
-    prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
-                             prop.name+"_value`.value END" for prop in result_properties])
+    prop_columns = ','.join(["CASE WHEN `"+prop.name.replace("%", "%%")+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
+                             prop.name.replace("%", "%%")+"_value`.value END" for prop in result_properties])
     prop_joins = ""
     for prop in result_properties:
         prop_joins += """LEFT JOIN ExperimentResult_has_Property as `%s_hasP` ON
                          `%s_hasP`.idExperimentResults= idJob AND
                          `%s_hasP`.idProperty = %d
-                      """ % (prop.name, prop.name, prop.name, prop.idProperty)
+                      """ % (prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.idProperty)
         prop_joins += """LEFT JOIN ExperimentResult_has_PropertyValue as `%s_value` ON
                         `%s_value`.idExperimentResult_has_Property = `%s_hasP`.idExperimentResult_has_Property
-                      """ % (prop.name, prop.name, prop.name)
+                      """ % (prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.name.replace("%", "%%"))
 
     # build the query part for instance properties
-    inst_prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
-                             prop.name+"_value`.value END" for prop in instance_properties])
+    inst_prop_columns = ','.join(["CASE WHEN `"+prop.name.replace("%", "%%")+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
+                             prop.name.replace("%", "%%")+"_value`.value END" for prop in instance_properties])
     inst_prop_joins = ""
     for prop in instance_properties:
         inst_prop_joins += """LEFT JOIN Instance_has_Property as `%s_value` ON
                         (`%s_value`.idInstance = Instances.idInstance
                         AND `%s_value`.idProperty = %d)
-                      """ % (prop.name, prop.name, prop.name, prop.idProperty)
+                      """ % (prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.idProperty)
 
     conn = db.session.connection()
     res = conn.execute("""SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
@@ -703,21 +703,21 @@ def experiment_progress_ajax(database, experiment_id):
                "ExperimentResults.outputSizeLimitLast",
                "ExperimentResults.computeNode", "ExperimentResults.computeNodeIP",
                "ExperimentResults.priority", "gridQueue.name"] + \
-              ["`"+prop.name+"_value`.value" for prop in result_properties] + \
-              ["`"+iprop.name+"_value`.value" for iprop in instance_properties]
+              ["`"+prop.name.replace("%", "%%")+"_value`.value" for prop in result_properties] + \
+              ["`"+iprop.name.replace("%", "%%")+"_value`.value" for iprop in instance_properties]
 
     # build the query part for the result properties that should be included
-    prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
-                             prop.name+"_value`.value END" for prop in result_properties])
+    prop_columns = ','.join(["CASE WHEN `"+prop.name.replace("%", "%%")+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
+                             prop.name.replace("%", "%%")+"_value`.value END" for prop in result_properties])
     prop_joins = ""
     for prop in result_properties:
         prop_joins += """LEFT JOIN ExperimentResult_has_Property as `%s_hasP` ON
                          `%s_hasP`.idExperimentResults= idJob AND
                          `%s_hasP`.idProperty = %d
-                      """ % (prop.name, prop.name, prop.name, prop.idProperty)
+                      """ % (prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.idProperty)
         prop_joins += """LEFT JOIN ExperimentResult_has_PropertyValue as `%s_value` ON
                         `%s_value`.idExperimentResult_has_Property = `%s_hasP`.idExperimentResult_has_Property
-                      """ % (prop.name, prop.name, prop.name)
+                      """ % (prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.name.replace("%", "%%"))
 
     # build the query part for the instance properties that should be included
     #inst_prop_columns = ','.join(["CASE WHEN `"+prop.name+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
