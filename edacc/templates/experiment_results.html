@@ -84,7 +84,7 @@
                 <th>Instance</th>
                 <th>Best time</th>
                 {% for sc in solver_configs  %}
-                    <th style="max-width:80px">
+                    <th>
                         <a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.idSolverConfig}}">
                         {{solver_configs_dict[sc.idSolverConfig].get_name()}}
                         </a>
