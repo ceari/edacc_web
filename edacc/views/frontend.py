@@ -1155,7 +1155,7 @@ def ajax_monitor_tabelle(database):
     expID = map(int, request.args.getlist('e'))
     expID2 = map(int, request.args.getlist('amp;e'))
     for eID in expID2:
-     expID.append(eID)
+        expID.append(eID)
     m = monitor.Monitor(database, status, expID)    
     table = m.getTable()
     return json_dumps(table)
