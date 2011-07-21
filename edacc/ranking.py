@@ -124,6 +124,11 @@ def number_of_solved_instances_ranking(db, experiment, instances):
     query_results = db.session.connection().execute(s)
     for row in query_results:
         results[row[0]] = (row[1], row[2])
+        
+    def sgn(x):
+        if x > 0: return 1
+        elif x < 0: return -1
+        else: return 0
 
     def comp(s1, s2):
         num_solved_s1, num_solved_s2 = 0, 0
@@ -137,7 +142,7 @@ def number_of_solved_instances_ranking(db, experiment, instances):
         else:
             # break ties by cumulative CPU time over all solved instances
             if results.has_key(s1.idSolverConfig) and results.has_key(s2.idSolverConfig):
-                return int(results[s1.idSolverConfig][0] - results[s2.idSolverConfig][0])
+                return sgn(results[s1.idSolverConfig][0] - results[s2.idSolverConfig][0])
             else:
                 return 0
 
