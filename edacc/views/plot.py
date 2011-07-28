@@ -31,6 +31,18 @@ from edacc.constants import ANALYSIS1, ANALYSIS2
 
 plot = Module(__name__)
 
+def make_plot_response(function, *args, **kwargs):
+    if request.args.has_key('pdf'): type = 'pdf'; mime='application/pdf'
+    elif request.args.has_key('eps'): type = 'eps'; mime='application/eps'
+    elif request.args.has_key('rscript'): type = 'rscript'; mime = 'text/plain'
+    else: type = 'png'; mime = 'image/png'
+    filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.' + type
+    function(*args, filename=filename, format=type, **kwargs)
+    headers = Headers()
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename('data.' + type))
+    response = Response(response=open(filename, 'rb').read(), mimetype=mime, headers=headers)
+    os.remove(filename)
+    return response
 
 def filter_results(l1, l2):
     """Filter the lists l1 and l2 pairwise for None elements in either
@@ -622,36 +634,9 @@ def cactus_plot(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_cactus.csv"))
         return Response(response=csv_response.read(), headers=headers)
-    elif request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.pdf'
-        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_property, flip_axes, ylabel, title, filename, format='pdf')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + '_cactus.pdf'))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    elif request.args.has_key('eps'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.eps'
-        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_property, flip_axes, ylabel, title, filename, format='eps')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + '_cactus.eps'))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
-        os.remove(filename)
-        return response
-    elif request.args.has_key('rscript'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.txt'
-        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_property, flip_axes, ylabel, title, filename, format='rscript')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + '_cactus.txt'))
-        response = Response(response=open(filename, 'rb').read(), mimetype='text/plain', headers=headers)
-        os.remove(filename)
-        return response
     else:
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'cactus.png'
-        plots.cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y, min_y, log_property, flip_axes, ylabel, title, filename)
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response
+        return make_plot_response(plots.cactus, solvers, instance_groups_count, colored_instance_groups,
+                                  max_x, max_y, min_y, log_property, flip_axes, ylabel, title)
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/rp-comparison-plot/')
@@ -699,28 +684,9 @@ def result_property_comparison_plot(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(s1) + "_" + str(s2) + "result_comparison.csv"))
         return Response(response=csv_response.read(), headers=headers)
-    elif request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.pdf'
-        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, log_property, filename, format='pdf', dim=dim)
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(s1) + "_" + str(s2) + "result_comparison.pdf"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    elif request.args.has_key('eps'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.eps'
-        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, log_property, filename, format='eps', dim=dim)
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(s1) + "_" + str(s2) + "result_comparison.eps"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
-        os.remove(filename)
-        return response
     else:
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtdcomp.png'
-        plots.result_property_comparison(results1, results2, str(s1), str(s2), result_property_name, log_property, filename, 'png', dim=dim)
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response
+        return make_plot_response(plots.result_property_comparison, results1, results2, str(s1), str(s2),
+                                  result_property_name, log_property, dim)
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/rps-plot/')
@@ -760,28 +726,8 @@ def property_distributions_plot(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_rtds.csv"))
         return Response(response=csv_response.read(), headers=headers)
-    elif request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
-        plots.property_distributions(results, filename, result_property_name, log_property, 'pdf')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_rtds.pdf"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    elif request.args.has_key('eps'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.eps'
-        plots.property_distributions(results, filename, result_property_name, log_property, 'eps')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_rtds.eps"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
-        os.remove(filename)
-        return response
     else:
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtds.png'
-        plots.property_distributions(results, filename, result_property_name, log_property, 'png')
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response
+        return make_plot_response(plots.property_distributions, results, result_property_name, log_property)
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/rp-plot/')
@@ -819,29 +765,8 @@ def property_distribution(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.csv"))
         return Response(response=csv_response.read(), headers=headers)
-    elif request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.pdf'
-        plots.property_distribution(results, filename, result_property_name, log_property, 'pdf')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.pdf"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    elif request.args.has_key('eps'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.eps'
-        plots.property_distribution(results, filename, result_property_name, log_property, 'eps')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.eps"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
-        os.remove(filename)
-        return response
     else:
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rtd.png'
-        plots.property_distribution(results, filename, result_property_name, log_property, 'png')
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response
-
+        return make_plot_response(plots.property_distribution, results, result_property_name, log_property)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/kerneldensity-plot/')
 @require_phase(phases=ANALYSIS2)
@@ -878,28 +803,8 @@ def kerneldensity(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_kerneldensity.csv"))
         return Response(response=csv_response.read(), headers=headers)
-    elif request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.pdf'
-        plots.kerneldensity(results, filename, result_property_name, log_property, 'pdf')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_kerneldensity.pdf"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    elif request.args.has_key('eps'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.eps'
-        plots.kerneldensity(results, filename, result_property_name, log_property, 'eps')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_kerneldensity.eps"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
     else:
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'kerneldens.png'
-        plots.kerneldensity(results, filename, result_property_name, log_property, 'png')
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response
+        return make_plot_response(plots.kerneldensity, results, result_property_name, log_property)
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/box-plots-plot/')
@@ -937,39 +842,15 @@ def box_plots(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_box_plots.csv"))
         return Response(response=csv_response.read(), headers=headers)
-    elif request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.pdf'
-        plots.box_plot(results, filename, result_property_name, 'pdf')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_box_plots.pdf"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    elif request.args.has_key('eps'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.eps'
-        plots.box_plot(results, filename, result_property_name, 'eps')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_box_plots.eps"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
-        os.remove(filename)
-        return response
     else:
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'boxplot.png'
-        plots.box_plot(results, filename, result_property_name, 'png')
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response
+        return make_plot_response(plots.box_plot, results, result_property_name)
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/barplot/<int:gt>/<int:eq>/<int:lt>')
 @require_phase(phases=ANALYSIS2)
 @require_login
 def barplot(database, experiment_id, gt, eq, lt):
-    filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'barplot.png'
-    plots.barplot([gt, eq, lt], filename, 'png')
-    response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-    os.remove(filename)
-    return response
+    return make_plot_response(plots.barplot, [gt, eq, lt])
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/runtime-matrix-plot-img/')
@@ -1074,25 +955,6 @@ def runtime_matrix_plot(database, experiment_id):
         headers.add('Content-Type', 'text/csv')
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_runtime_matrix.csv"))
         return Response(response=csv_response.read(), headers=headers)
-    elif request.args.has_key('pdf'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.pdf'
-        plots.runtime_matrix_plot(flattened_rt_matrix, sorted_solver_configs, sorted_instances, measure, filename, 'pdf')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "rt_matrix.pdf"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/pdf', headers=headers)
-        os.remove(filename)
-        return response
-    elif request.args.has_key('eps'):
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.eps'
-        plots.runtime_matrix_plot(flattened_rt_matrix, sorted_solver_configs, sorted_instances, measure, filename, 'eps')
-        headers = Headers()
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "rt_matrix.eps"))
-        response = Response(response=open(filename, 'rb').read(), mimetype='application/eps', headers=headers)
-        os.remove(filename)
-        return response
     else:
-        filename = os.path.join(config.TEMP_DIR, g.unique_id) + 'rt_matrix.png'
-        plots.runtime_matrix_plot(flattened_rt_matrix, sorted_solver_configs, sorted_instances, measure, filename, 'png')
-        response = Response(response=open(filename, 'rb').read(), mimetype='image/png')
-        os.remove(filename)
-        return response
+        return make_plot_response(plots.runtime_matrix_plot, flattened_rt_matrix, sorted_solver_configs, sorted_instances,
+                                  measure)

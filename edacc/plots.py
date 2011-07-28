@@ -338,8 +338,8 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
 
 
 @synchronized
-def result_property_comparison(results1, results2, solver1, solver2, result_property_name, log_property,
-                               filename, format='png', dim=700):
+def result_property_comparison(results1, results2, solver1, solver2, result_property_name, log_property, dim=700,
+                               filename='', format='png'):
     """Result property distribution comparison.
     Plots an cumulative empirical distribution function for the result vectors
     results1 and results2 in the same diagram with 2 different colors.
@@ -404,7 +404,7 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
 
 
 @synchronized
-def property_distributions(results, filename, property_name, log_property, format='png'):
+def property_distributions(results, property_name, log_property, filename, format='png'):
     """Runtime distribution plots for multiple result vectors.
     results is expected to be a list of tuples (sc, data)
     where data is the result vector of the solver configuration sc.
@@ -472,7 +472,7 @@ def property_distributions(results, filename, property_name, log_property, forma
 
 
 @synchronized
-def box_plot(data, filename, property_label, format='png'):
+def box_plot(data, property_label, filename, format='png'):
     """Box plot for multiple result vectors.
 
     :param data: data dictionary with one entry for each result vector, the
@@ -506,7 +506,7 @@ def box_plot(data, filename, property_label, format='png'):
 
 
 @synchronized
-def property_distribution(results, filename, property_name, log_property, format='png'):
+def property_distribution(results, property_name, log_property, filename, format='png'):
     """Plot of a single property distribution.
 
     :param results: result vector
@@ -556,7 +556,7 @@ def property_distribution(results, filename, property_name, log_property, format
 
 
 @synchronized
-def kerneldensity(data, filename, property_name, log_property, format='png'):
+def kerneldensity(data, property_name, log_property, filename, format='png'):
     """Non-parametric kernel density estimation plot of a result vector.
 
     :param data: result vector
