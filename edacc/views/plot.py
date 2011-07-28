@@ -984,29 +984,30 @@ def runtime_matrix_plot(database, experiment_id):
     solver_configs = sorted(exp.solver_configurations, key=lambda sc: sc.idSolverConfig)
     instances = sorted(exp.instances, key=lambda i: i.idInstance)
 
-    solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
-
-    results = db.session.query(db.ExperimentResult).filter_by(experiment=exp).all()
-
+    solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs) 
+    
     results_by_instance = {}
-    for r in results:
+    for r in db.session.query(db.ExperimentResult).filter_by(experiment=exp).yield_per(1000):
+        if measure == 'par10':
+            time = r.get_time() if str(r.resultCode).startswith('1') else r.get_penalized_time(10)
+        else:
+            time = r.get_time()
         if r.Instances_idInstance not in results_by_instance:
-            results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [r]}
+            results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [time]}
         else:
             rs = results_by_instance[r.Instances_idInstance]
             if r.SolverConfig_idSolverConfig not in rs:
-                rs[r.SolverConfig_idSolverConfig] = [r]
+                rs[r.SolverConfig_idSolverConfig] = [time]
             else:
-                rs[r.SolverConfig_idSolverConfig].append(r)
-
+                rs[r.SolverConfig_idSolverConfig].append(time)
+    
     solver_score = dict((sc_id, None) for sc_id in solver_configs_dict.iterkeys())
     for solver_config in solver_configs:
         jobs = []
         for instance in instances:
             jobs += results_by_instance.get(instance.idInstance, {}).get(solver_config.idSolverConfig, [])
             
-        runtimes = [j.get_time() for j in jobs]
-        runtimes = filter(lambda r: r is not None, runtimes)
+        runtimes = filter(lambda r: r is not None, jobs)
         time_measure = None
         if len(runtimes) > 0:
             if measure == 'mean': time_measure = numpy.average(runtimes)
@@ -1014,7 +1015,7 @@ def runtime_matrix_plot(database, experiment_id):
             elif measure == 'min': time_measure = min(runtimes)
             elif measure == 'max': time_measure = max(runtimes)
             elif measure == 'par10' or measure is None:
-                time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else j.get_penalized_time(10)) for j in jobs] or [0])
+                time_measure = numpy.average(jobs or [0])
         solver_score[solver_config.idSolverConfig] = time_measure
     
     instance_hardness = dict((i.idInstance, None) for i in instances)
@@ -1025,8 +1026,7 @@ def runtime_matrix_plot(database, experiment_id):
             for jobs_by_solver in jobs_by_instance.itervalues():
                 jobs += jobs_by_solver
         
-        runtimes = [j.get_time() for j in jobs]
-        runtimes = filter(lambda r: r is not None, runtimes)
+        runtimes = filter(lambda r: r is not None, jobs)
         time_measure = None
         if len(runtimes) > 0:
             if measure == 'mean': time_measure = numpy.average(runtimes)
@@ -1034,10 +1034,10 @@ def runtime_matrix_plot(database, experiment_id):
             elif measure == 'min': time_measure = min(runtimes)
             elif measure == 'max': time_measure = max(runtimes)
             elif measure == 'par10' or measure is None:
-                time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else j.get_penalized_time(10)) for j in jobs] or [0])
+                time_measure = numpy.average(jobs or [0])
         instance_hardness[instance.idInstance] = time_measure
     
-    sorted_solver_configs = sorted(solver_configs, key=lambda sc: solver_score[sc.idSolverConfig], reverse=True)
+    sorted_solver_configs = sorted(solver_configs, key=lambda sc: solver_score[sc.idSolverConfig])
     sorted_instances = sorted(instances, key=lambda i: instance_hardness[i.idInstance])
     
     rt_matrix = dict((sc.idSolverConfig, dict((i.idInstance, None) for i in instances)) for sc in solver_configs)
@@ -1046,10 +1046,8 @@ def runtime_matrix_plot(database, experiment_id):
         if instance.idInstance not in results_by_instance: continue
         rs = results_by_instance[instance.idInstance]
         for solver_config in sorted_solver_configs:
-            idSolverConfig = solver_config.idSolverConfig
-            jobs = rs.get(idSolverConfig, [])
-            runtimes = [j.get_time() for j in jobs]
-            runtimes = filter(lambda r: r is not None, runtimes)
+            jobs = rs.get(solver_config.idSolverConfig, [])
+            runtimes = filter(lambda r: r is not None, jobs)
             time_measure = None
             if len(runtimes) > 0:
                 if measure == 'mean': time_measure = numpy.average(runtimes)
@@ -1057,8 +1055,8 @@ def runtime_matrix_plot(database, experiment_id):
                 elif measure == 'min': time_measure = min(runtimes)
                 elif measure == 'max': time_measure = max(runtimes)
                 elif measure == 'par10' or measure is None:
-                    time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else j.get_penalized_time(10)) for j in jobs] or [0])
-            rt_matrix[solver_config.idSolverConfig][instance.idInstance] = time_measure
+                    time_measure = numpy.average(jobs or [0])
+            if request.args.has_key('csv'): rt_matrix[solver_config.idSolverConfig][instance.idInstance] = time_measure
             flattened_rt_matrix.append(time_measure)
     
     if request.args.has_key('csv'):

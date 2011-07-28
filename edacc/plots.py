@@ -621,8 +621,8 @@ def runtime_matrix_plot(flattened_rtmatrix, sorted_solver_configs, sorted_instan
         grdevices.dev_off()
         return
 
-    m = robjects.r.matrix(robjects.FloatVector(flattened_rtmatrix), nrow=len(sorted_instances))
-    m = robjects.r.log10(m)
+    m = robjects.r.matrix(robjects.FloatVector(flattened_rtmatrix), nrow=len(sorted_solver_configs))
+    m = robjects.r.t(robjects.r.log10(m))
     
     min_val = math.log10(min(flattened_rtmatrix))
     max_val = math.log10(max(flattened_rtmatrix))
@@ -638,8 +638,7 @@ def runtime_matrix_plot(flattened_rtmatrix, sorted_solver_configs, sorted_instan
     robjects.r.par(mar = robjects.FloatVector([5,5,2.5,3]))
 
     robjects.r.image(robjects.IntVector(range(1, len(sorted_instances)+1)), robjects.IntVector(range(1, len(sorted_solver_configs)+1)),
-                     m, col=color_ramp, xlab="", ylab="", ylim=robjects.FloatVector([len(sorted_solver_configs), 1]), # invert y axis
-                     xlim=robjects.FloatVector([1, len(sorted_instances)]),
+                     m, col=color_ramp, xlab="", ylab="", ylim=robjects.IntVector([len(sorted_solver_configs), 1]),
                      zlim=robjects.FloatVector([min_val, max_val]))
     
     robjects.r.mtext("instance (sorted by %s)" % (measure,), side=1, line=3, cex=1.2) # bottom axis label
