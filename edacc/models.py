@@ -271,6 +271,9 @@ class EDACCDatabase(object):
 
         class GridQueue(object):
             pass
+        
+        class ConfigurationScenario(object): pass
+        class ConfigurationScenarioParameter(object): pass
 
         # competition tables
 
@@ -358,6 +361,8 @@ class EDACCDatabase(object):
         self.SolverBinary = SolverBinary
         self.Client = Client
         self.Experiment_has_Client = Experiment_has_Client
+        self.ConfigurationScenario = ConfigurationScenario
+        self.ConfigurationScenarioParameter = ConfigurationScenarioParameter
 
         self.User = User
         self.DBConfiguration = DBConfiguration
@@ -420,6 +425,16 @@ class EDACCDatabase(object):
                 'experiment': relation(Experiment),
             }
         )
+        mapper(ConfigurationScenarioParameter, metadata.tables['ConfigurationScenario_has_Parameters'],
+            properties = {
+                'parameter': relation(Parameter)
+            }
+        )
+        mapper(ConfigurationScenario, metadata.tables['ConfigurationScenario'],
+            properties = {
+                'parameters': relation(ConfigurationScenarioParameter)
+            }
+        )
         mapper(Experiment, metadata.tables['Experiment'],
             properties = {
                 'instances': relationship(Instance,
@@ -428,6 +443,7 @@ class EDACCDatabase(object):
                 'grid_queue': relationship(GridQueue,
                     secondary=metadata.tables['Experiment_has_gridQueue']),
                 'results': relation(ExperimentResult),
+                'configuration_scenario': relation(ConfigurationScenario, uselist=False),
             }
         )
         mapper(StatusCodes, metadata.tables['StatusCodes'])
