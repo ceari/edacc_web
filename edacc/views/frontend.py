@@ -315,13 +315,15 @@ def experiment_results(database, experiment_id):
                     filename=secure_filename(experiment.name + "_results.csv"))
         return Response(response=csv_response.read(), headers=headers)
 
+    base_result_details_url = url_for('frontend.experiment_result', database=database, experiment_id=experiment_id, result_id=0)
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     solver_configs_dict=solver_configs_dict,
                     instance_properties=db.get_instance_properties(),
                     instances_dict=instances_dict, best_sc_by_instance_id=best_sc_by_instance_id,
                     results=results, database=database, db=db, form=form,
-                    sum_by_solver=sum_by_solver, avg_by_solver=avg_by_solver)
+                    sum_by_solver=sum_by_solver, avg_by_solver=avg_by_solver,
+                    base_result_details_url=base_result_details_url)
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
@@ -923,14 +925,14 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
                   experiment=experiment)
 
 
-@frontend.route('/<database>/experiment/<int:experiment_id>/result/<int:result_id>')
+@frontend.route('/<database>/experiment/<int:experiment_id>/result/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
-def experiment_result(database, experiment_id, result_id):
+def experiment_result(database, experiment_id):
     """ Displays information about a single result (job) """
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
+    result = db.session.query(db.ExperimentResult).get(request.args.get('id', 0)) or abort(404)
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         if result.solver_configuration.solver.user != g.User: abort(401)
