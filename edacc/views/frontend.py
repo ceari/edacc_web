@@ -223,19 +223,8 @@ def experiment_results(database, experiment_id):
 
     instances_dict = dict((i.idInstance, i) for i in instances)
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
-
-    query = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).all()
-
-    results_by_instance = {}
-    for r in query:
-        if r.Instances_idInstance not in results_by_instance:
-            results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [r]}
-        else:
-            rs = results_by_instance[r.Instances_idInstance]
-            if r.SolverConfig_idSolverConfig not in rs:
-                rs[r.SolverConfig_idSolverConfig] = [r]
-            else:
-                rs[r.SolverConfig_idSolverConfig].append(r)
+    
+    results_by_instance, S, C = experiment.get_result_matrix(db, solver_configs, instances)
 
     times_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
     results = []
@@ -251,11 +240,9 @@ def experiment_results(database, experiment_id):
             idSolverConfig = solver_config.idSolverConfig
             jobs = rs.get(idSolverConfig, [])
 
-            completed = len(filter(lambda j: j.status not in STATUS_PROCESSING, jobs))
-            #jobs = filter(lambda j: j.status not in STATUS_PROCESSING, jobs)
-            successful = len(filter(lambda j: str(j.resultCode).startswith('1'), jobs))
-            runtimes = [j.get_time() for j in jobs]
-            runtimes = filter(lambda r: r is not None, runtimes)
+            completed = C[idInstance][idSolverConfig]
+            successful = S[idInstance][idSolverConfig]
+            runtimes = [j.time for j in jobs if j.time is not None]
 
             time_measure = None
             if len(runtimes) > 0:
@@ -268,13 +255,13 @@ def experiment_results(database, experiment_id):
                 elif form.display_measure.data == 'max':
                     time_measure = max(runtimes)
                 elif form.display_measure.data == 'par10' or form.display_measure.data is None:
-                    time_measure = numpy.average([(j.get_time() if str(j.resultCode).startswith('1') else j.get_penalized_time(10)) for j in jobs] or [0])
+                    time_measure = numpy.average([j.penalized_time10 for j in jobs] or [0])
 
                 times_by_solver[idSolverConfig].append(time_measure)
 
             if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and successful > 0:
                 best_sc_time = time_measure
-                best_sc_by_instance_id[idInstance] = solver_config
+                best_sc_by_instance_id[idInstance] = solver_config.idSolverConfig
 
             if completed > 0:
                 red = (1.0, 0, 0.0)

@@ -102,7 +102,7 @@
                 <td nowrap="nowrap"><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{row.instance.idInstance}}">{{row.instance.name}}</a></td>
                 {% if best_sc_by_instance_id[row.instance.idInstance] %}
                     {% for job in row.times %}
-                        {% if job.solver_config == best_sc_by_instance_id[row.instance.idInstance] %}
+                        {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
                         <td style="text-align: center;"><a style="color: black;" href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
                                 solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">{% if job.time_measure != None %}{{job.time_measure|round(2)}}{% endif %}</a></td>
                         {% endif %}
@@ -112,7 +112,7 @@
                 {% endif %}
                 {% for job in row.times %}
                     {% if job.total > 1 %}
-                        {% if job.solver_config == best_sc_by_instance_id[row.instance.idInstance] %}
+                        {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
                             <td style="text-align: center; background-color: yellow;">
                         {% else %}
                             <td style="text-align: center; background-color: #{{job.bg_color}}">
@@ -123,7 +123,7 @@
                             </a>
                         </td>
                     {% elif job.total == 1 %}
-                        {% if job.solver_config == best_sc_by_instance_id[row.instance.idInstance] %}
+                        {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
                             <td style="text-align: center; background-color: yellow;">
                         {% else %}
                             <td style="text-align: center; background-color: {{job.first_job.resultCode|job_result_code_color}}">

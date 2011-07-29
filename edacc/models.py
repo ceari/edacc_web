@@ -11,6 +11,8 @@
     :license: MIT, see LICENSE for details.
 """
 
+from collections import namedtuple
+
 from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
@@ -189,7 +191,23 @@ class EDACCDatabase(object):
                               c_id.in_(instance_ids)).select_from(table)).fetchall()
                 total_size = sum(i[0] for i in instance_sizes or [(0,)])
                 return total_size
-
+            
+            def get_result_matrix(self, db, solver_configs, instances):
+                """ Returns the results as matrix of lists of result tuples, i.e.
+                    Dict<idInstance, Dict<idSolverConfig, List of runs>> """
+                num_successful = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
+                num_completed = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
+                M = dict((i.idInstance, dict((sc.idSolverConfig, list()) for sc in solver_configs)) for i in instances)
+                Run = namedtuple('Run', ['idJob', 'result_code', 'resultCode', 'time', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance'])
+                for r in db.session.query(db.ExperimentResult).filter_by(experiment=self).yield_per(10000):
+                    num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1 if str(r.resultCode).startswith('1') else 0
+                    num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1 if r.status not in STATUS_PROCESSING else 0
+                    M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
+                        Run(r.idJob, r.result_code, r.resultCode, r.get_time(), str(r.resultCode).startswith('1'),
+                            r.get_time() if str(r.resultCode).startswith('1') else r.get_penalized_time(10),
+                            r.SolverConfig_idSolverConfig, r.Instances_idInstance))
+                return M, num_successful, num_completed
+                    
         class ExperimentResult(object):
             """ Maps the ExperimentResult table. Provides a function
                 to obtain a result property of a job.
