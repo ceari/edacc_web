@@ -199,6 +199,17 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         if not runs_by_solver_and_instance[run.SolverConfig_idSolverConfig].has_key(run.Instances_idInstance):
             runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance] = []
         runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance].append(run)
+    
+    if calculate_par10:
+        failed_runs_by_solver = dict((sc.idSolverConfig, list()) for sc in ranked_solvers)
+        failed_runs = db.session.query(db.ExperimentResult) \
+                                .filter_by(experiment=experiment) \
+                                .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
+                                .filter(or_(db.ExperimentResult.status != 1,
+                                            not_(db.ExperimentResult.resultCode.like(u'1%')))) \
+                                .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
+        for run in failed_runs:
+            failed_runs_by_solver[run.SolverConfig_idSolverConfig].append(run)
 
     for solver in ranked_solvers:
         if runs_by_solver_and_instance.has_key(solver.idSolverConfig):
@@ -210,18 +221,12 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
         penalized_average_runtime = 0.0
         if calculate_par10:
-            failed_runs = db.session.query(db.ExperimentResult) \
-                                    .filter_by(experiment=experiment, solver_configuration=solver) \
-                                    .filter(or_(db.ExperimentResult.status != 1,
-                                                not_(db.ExperimentResult.resultCode.like(u'1%')))) \
-                                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
-
-            if len(successful_runs) + len(failed_runs) == 0:
+            if len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]) == 0:
                 # this should mean there are no jobs of this solver yet
                 penalized_average_runtime = 0.0
             else:
-                penalized_average_runtime = (sum([j.get_penalized_time(10) for j in failed_runs]) + successful_runs_sum) \
-                                            / (len(successful_runs) + len(failed_runs))
+                penalized_average_runtime = (sum([j.get_penalized_time(10) for j in failed_runs_by_solver[solver.idSolverConfig]]) + successful_runs_sum) \
+                                            / (len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]))
 
         avg_stddev_runtime = 0.0
         if calculate_avg_stddev:
