@@ -222,6 +222,7 @@ class EDACCDatabase(object):
                     return None
 
                 if self.status in (STATUS_FINISHED, 21):
+                    if self.resultTime == 0.0: return 1e-3
                     return self.resultTime
 
                 return None
