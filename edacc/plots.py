@@ -35,7 +35,7 @@ global_lock = Lock()
 colors = [
     'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
     'darkorchid', 'deeppink', 'darkgreen', 'blue4'
-] * 10
+] * 1000
 
 def synchronized(f):
     """Thread synchronization decorator. Only allows exactly one thread
@@ -128,13 +128,13 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
 
         # plot running times
         robjects.r.plot(robjects.FloatVector(ig_xs), robjects.FloatVector(ig_ys),
-                        type='p', col=colors[col], las = 1,
+                        type='p', col=colors[col % len(colors)], las = 1,
                         xlim=robjects.r.c(min_v,max_x), ylim=robjects.r.c(min_v,max_y),
                         xaxs='i', yaxs='i', log=log,
                         xlab='', ylab='', pch=pch, tck=0.015,
                         **{'cex.axis': 1.2, 'cex.main': 1.5})
         robjects.r.par(new=1)
-        legend_colors.append(colors[col])
+        legend_colors.append(colors[col % len(colors)])
         legend_point_styles.append(pch)
         legend_strs.append('Group %d' % (col))
         col += 1
@@ -233,7 +233,7 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
 
     if colored_instance_groups:
         point_styles = {}
-        color_styles = dict((i, colors[i]) for i in xrange(instance_groups_count))
+        color_styles = dict((i, colors[i % len(colors)]) for i in xrange(instance_groups_count))
         point_style = 0
         for s in solvers:
             if not s['name'] in point_styles:
@@ -245,7 +245,7 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
         i = 0
         for s in solvers:
             if not s['name'] in color_styles:
-                color_styles[s['name']] = colors[i]
+                color_styles[s['name']] = colors[i % len(colors)]
                 i += 1
 
     for s in solvers:
@@ -446,7 +446,7 @@ def property_distributions(results, property_name, log_property, filename, forma
     for res in results:
         if len(res[1]) > 0:
             robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(res[1])),
-                            main='', col=colors[point_style], pch=point_style, log=log,
+                            main='', col=colors[point_style % len(colors)], pch=point_style, log=log,
                             xlab='', ylab='', xaxs='i', yaxs='i', las=1,
                             xaxt='n', yaxt='n',
                             xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(-0.05, 1.05))

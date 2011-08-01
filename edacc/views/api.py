@@ -45,6 +45,16 @@ def get_experiment_results(database, experiment_id):
         "experiment_id": experiment_id,
         "results": [j.to_json() for j in results]
     })
+    
+@api.route('/api/<database>/statistics/<int:experiment_id>')
+def experiment_statistics(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    total_time = db.session.query(func.sum(db.ExperimentResult.resultTime)).filter_by(experiment=exp).first()[0]
+    return json_dumps({
+        'total_time': total_time,
+        'total_time_hours': total_time / 60 / 60,
+    })
 
 @api.route('/api/<database>/statistics/')
 def statistics(database):
