@@ -474,7 +474,7 @@ def probabilistic_domination(database, experiment_id):
         sc2 = form.solver_config2.data
 
         query = db.session.query(db.ExperimentResult)
-        query.enable_eagerloads(True).options(joinedload(db.ExperimentResult.properties))
+        query = query.enable_eagerloads(True).options(joinedload(db.ExperimentResult.properties))
 
         sc1_results_by_instance_id = {}
         sc2_results_by_instance_id = {}

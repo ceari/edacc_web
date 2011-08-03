@@ -243,11 +243,9 @@ class EDACCDatabase(object):
                     return self.get_time()
                 else:
                     try:
-                        property = db.session.query(db.Property).get(int(property))
-                        pv = db.session.query(db.ExperimentResultProperty) \
-                                .filter_by(property=property,
-                                           experiment_result=self).first()
-                        return pv.get_value()
+                        for pv in self.properties:
+                            if pv.idProperty == int(property):
+                                return pv.get_value() 
                     except:
                         return None
 
@@ -500,8 +498,8 @@ class EDACCDatabase(object):
         mapper(PropertyValueType, metadata.tables['PropertyValueType'])
         mapper(ExperimentResultProperty, metadata.tables['ExperimentResult_has_Property'],
             properties = {
-                'property': relationship(Property, backref='experiment_results'),
-                'values': relation(ResultPropertyValue, backref='experiment_result_property')
+                'property': relationship(Property, backref='experiment_results', lazy='joined'),
+                'values': relation(ResultPropertyValue, backref='experiment_result_property', lazy='joined')
             }
         )
         mapper(ResultPropertyValue, metadata.tables['ExperimentResult_has_PropertyValue'])
