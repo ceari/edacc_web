@@ -679,21 +679,22 @@ def experiment_progress_ajax(database, experiment_id):
         return json_dumps({'aaData': []})
 
     result_properties = db.get_result_properties()
-    instance_properties = db.get_instance_properties()
+    #instance_properties = db.get_instance_properties()
 
     # list of columns of the SQL query
     # dummy column ("") in the middle for correct indexing in the ORDER part since
     # that column is hidden in the jquery table
-    columns = ["ExperimentResults.idJob", "SolverConfig.idSolverConfig", "Instances.name",
+    columns = ["ExperimentResults.idJob", "SolverConfig.name", "Instances.name",
                "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
-               "StatusCodes.description", "runningTime", "ResultCodes.description", "ExperimentResults.status",
+               "ExperimentResults.status", "StatusCodes.description", "ResultCodes.description",
+               "runningTime", 
                "ExperimentResults.CPUTimeLimit", "ExperimentResults.wallClockTimeLimit",
-               "ExperimentResults.memoryLimit", "ExperimentResults.outputSizeLimitFirst",
+               "ExperimentResults.memoryLimit", "ExperimentResults.stackSizeLimit", "ExperimentResults.outputSizeLimitFirst",
                "ExperimentResults.outputSizeLimitLast",
                "ExperimentResults.computeNode", "ExperimentResults.computeNodeIP",
                "ExperimentResults.priority", "gridQueue.name"] + \
-              ["`"+prop.name.replace("%", "%%")+"_value`.value" for prop in result_properties] + \
-              ["`"+iprop.name.replace("%", "%%")+"_value`.value" for iprop in instance_properties]
+              ["`"+prop.name.replace("%", "%%")+"_value`.value" for prop in result_properties]
+    #["`"+iprop.name.replace("%", "%%")+"_value`.value" for iprop in instance_properties]
 
     # build the query part for the result properties that should be included
     prop_columns = ','.join(["CASE WHEN `"+prop.name.replace("%", "%%")+"_value`.value IS NULL THEN 'not yet calculated' ELSE `"+
