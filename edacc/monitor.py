@@ -9,7 +9,7 @@
     :license: MIT, see LICENSE for details.
 """
 
-import pygame
+import pygame, time
 from pygame import gfxdraw
 pygame.font.init()
 from math import *
@@ -77,7 +77,6 @@ class Canvas(object):
         if x2 is not None:
             pygame.draw.line(self.surf, pygame.Color("black"), (fr, to), (x2[0], x2[1]))
         else:
-            print fr, to
             pygame.draw.line(self.surf, pygame.Color("black"), fr, to)
             
     def create_oval(self, xy, fill="white"):
@@ -86,14 +85,22 @@ class Canvas(object):
         pygame.draw.ellipse(self.surf, pygame.Color("black"), pygame.Rect(x1, y1, x2-x1, y2-y1), 1)
     
     def create_arc(self, xy, start, extent, fill):
-        x1, y1, x2, y2 = map(int, xy)
+        if len(xy) == 3: # centerX, centerY, radius format
+            x1 = xy[0]
+            y1 = xy[1]
+            x2, y2 = xy[2] * 2, xy[2] * 2
+        else:
+            x1, y1, x2, y2 = map(int, xy)
         img = Image.new('RGB', ((x2-x1),(y2-y1)))
         draw = ImageDraw.Draw(img)
         draw.rectangle((0,0,x2-x1,y2-y1), outline=(255,105,180), fill=(255,105,180))
         draw.pieslice((0,0,x2-x1,y2-y1), int(start), int(start+extent) , outline=fill, fill=fill)
         srf = pygame.image.fromstring(img.tostring(), img.size, img.mode)
         srf.set_colorkey((255,105,180))
-        self.surf.blit(srf, (x1, y1))
+        if len(xy) == 3:
+            self.surf.blit(srf, (x1 + xy[2] / 2, y1 + xy[2] / 2))
+        else:
+            self.surf.blit(srf, (x1, y1))
     
     def pack(self, *args, **kwargs): pass
     
@@ -106,7 +113,6 @@ class Monitor(Canvas):
     def __init__(self, database, status, expID, **config):
         self.config(height = winHeight, width = winWidth)
         db = models.get_database(database) or abort(404)     
-     
  
         radiusDiagram = 0
         maxRadiusDiagram = 50
@@ -137,19 +143,17 @@ class Monitor(Canvas):
         #all database queries
         JOB_STATUS = dict((s.statusCode, s.description) for s in db.session.query(db.StatusCodes).all())
         gridQueue =  dict((g.idgridQueue, g.location) for g in db.session.query(db.GridQueue).all())
-
+        
         for eID in expID:
             expName[eID] = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == eID).first()
             for cQueue in db.session.query(db.ExperimentResult.computeQueue).filter(db.ExperimentResult.Experiment_idExperiment==eID).distinct():                
-                if (int(cQueue[0]) not in cluster):    
+                if (cQueue[0] is not None and int(cQueue[0]) not in cluster):    
                     if (cQueue[0] is not None) and (cQueue[0] != 0):
                         cluster.append(cQueue[0])
         if len(cluster) == 1:
             numCluster = 2.0
         else:
             numCluster = float(len(cluster)) 
-        
-
         #Legend       
         if status == ['pm']: 
             problemStatus = [-2, -1, 0]  
@@ -200,6 +204,7 @@ class Monitor(Canvas):
                             clientExpName.append(name[0])
                             clientExpID.append(eID)
             numClients = float(len(clientID))
+            
             for cID, eID in zip(clientID, clientExpID):
                 clientStatusTable = {}
                 numClientStatus = []                
@@ -223,18 +228,19 @@ class Monitor(Canvas):
                 if status == ['pm']:
                     problemCount = []
                     #TODO: dbAbfrage, Problemmodus, Statusanzeige
+                    
                     crashed = db.session.query(db.ExperimentResult.status).filter(db.ExperimentResult.status<-1).filter(db.ExperimentResult.computeNode == eID).count()
                     problemCount.append(crashed)
                     blocked = db.session.query(db.ExperimentResult.status).filter(db.ExperimentResult.status==-1).filter(db.ExperimentResult.priority < 0).filter(db.ExperimentResult.computeNode == eID).count() 
                     problemCount.append(blocked)
-                   
+                    
                     foreverRunning = db.session.query(db.ExperimentResult.status) \
                         .filter(db.ExperimentResult.status==0).filter(
                             func.timestampdiff(text("SECOND"), db.ExperimentResult.startTime, func.now()) \
                                 > db.ExperimentResult.CPUTimeLimit + 20) \
                         .filter(db.ExperimentResult.computeNode==cID).count()
                     problemCount.append(foreverRunning)
-
+                    
                     for pC in problemCount:
                           numClientJobs += pC
                     p=0
@@ -253,7 +259,7 @@ class Monitor(Canvas):
                 else:
                     for s in status:
                         #TODO: db Abfrage, Gesamtanzahl der Clients//
-                        numClientJobs = numClientJobs + db.session.query(db.ExperimentResult.status).filter(db.ExperimentResult.computeNode==cID).filter(db.ExperimentResult.status==s).count()  
+                        numClientJobs = numClientJobs + db.session.query(db.ExperimentResult.status).filter(db.ExperimentResult.computeNode==cID).filter(db.ExperimentResult.status==s).count()
                     for s in status:
                         #TODO: db Abfrage, Anzahl der Clients
                         count =  float(db.session.query(db.ExperimentResult.status).filter(db.ExperimentResult.status==s).filter(db.ExperimentResult.computeNode==cID).count())
@@ -283,7 +289,7 @@ class Monitor(Canvas):
             if status == ['pm']: clusterStatus = problemStatus 
             else: clusterStatus = status
             if c in gridQueue:
-                location = str(gridQueue[c])
+                location = gridQueue[c]
             else:
                 location = str(c)        
             self.circleDiagram(xy, clusterStatus, numClusterStatus, location, clusterRadiusDiagram)
@@ -305,7 +311,7 @@ class Monitor(Canvas):
             clusterStatusTable['table'] = clusterSTable
 
             if c in gridQueue:
-                location = str(gridQueue[c])
+                location = gridQueue[c]
             else:
                 location = str(c)
                 
@@ -350,7 +356,7 @@ class Monitor(Canvas):
         for e, c in zip(extentStatus, status):
             if e == 360.0:
                 self.create_oval(xy, fill=constants.JOB_STATUS_COLOR[c]) 
-            else:            
+            else:
                 id = self.create_arc(xy, start=s, extent=e, fill=constants.JOB_STATUS_COLOR[c])
                 s = s + e
         self.create_text(xy[0]+radius, xy[1]+radius, text = location)

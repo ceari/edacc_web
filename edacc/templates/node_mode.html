@@ -6,21 +6,22 @@
     <script src="{{url_for('static', filename='js/jquery.timers-1.2.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         var idMap = new Array();
-
+        var idMapTemp = new Array();
         $(document).ready(function() {
             $("map > area").click(function(elem) {
                 id = ($(this).attr("href"));
-                coords = $(this).attr("coords").split(",");
-                 
+                coords = $(this).attr("coords").split(",");  
                 if(idMap[0]){
- 
-                    if(idMap.indexOf(id) != -1){idMap.splice(idMap.indexOf(id), 1);
-                        x = parseFloat(coords[0]); y = parseFloat(coords[1]);
+                    if(idMap.indexOf(id) != -1){                        
                         $('#' + id.replace(/\./g, "\\.")).remove();
+                        // etwas anderes fuer splice finden
+                        idMap.splice(idMap.indexOf(id), 1);
+                        document.cookie = idMap;
                     }
                     else {
                         idMap.push(id);
-                        x = parseFloat(coords[0]); y = parseFloat(coords[1]);
+                        document.cookie = idMap;                                        
+                        x = parseFloat(coords[0]-coords[2]); y = parseFloat(coords[1]-coords[2]/2);
                         $.ajax({
                             url: "{{url_for('frontend.ajax_monitor_tabelle', database = database)}}?{{url_param}}&id="+id, 
                             dataType: 'json',
@@ -33,18 +34,19 @@
                         });
                 }
                     }
-                //kommt bei diagramm view zum einsatz
+                }
+                //kommt bei 1. aufruf einer Tabelle in der diagramm view zum einsatz
                 else {
-                    idMap[0]=id;
-                  
-                    x = parseFloat(coords[0]); y = parseFloat(coords[1]);
+                    idMap[0]=id;  
+                    document.cookie = idMap;             
+                    x = parseFloat(coords[0]-coords[2]); y = parseFloat(coords[1]-coords[2]/2);
                     $.ajax({
                         url: "{{url_for('frontend.ajax_monitor_tabelle', database = database)}}?{{url_param}}&id="+id, 
                         dataType: 'json',
                         timeout: 10000,
                         success: function(data){
                             txt = "" + id + "<br/>" + "Exp = " + data[id]["expID"] + "<br/>";                         
-                            for (i in data[id]["table"]) txt += data[id]["table"][i]["name"] + " = " + data[id]["table"][i]["val"]+ " / " + data[id]["table"][i]["perc"] + "<br/>";
+                            for (i in data[id]["table"]) txt += data[id]["table"][i]["name"] + " = " + data[id]["table"][i]["val"]+ "/" + data[id]["table"][i]["perc"] + "<br/>";
                             $('#monitor').append('<div style="background-color:white; position:absolute; top:'+y+'px; left:'+x+'px;" id="'+ id +'">'+txt+ '</div>');
                         }
                     });
@@ -57,21 +59,57 @@
                     $.ajax({
                         url: "{{url_for('frontend.ajax_monitor_tabelle', database = database)}}?{{url_param}}", 
                         dataType: 'json',
-                        timeout: 10000,
-                        success: function(data){
-                            
+                        success: function(data){                            
                             $('map > area').each(function(elem) {
                                 id = ($(this).attr("href"));
                                 coords = $(this).attr("coords").split(",");
                                 idMap.push(id);
-                                x = parseFloat(coords[0]); y = parseFloat(coords[1]);
+                                document.cookie = idMap
+                                x = parseFloat(coords[0]-coords[2]); y = parseFloat(coords[1]-coords[2]/2);
                                 txt = "" + id + "<br/>" + "Exp = " + data[id]["expID"] + "<br/>";                         
-                                for (i in data[id]["table"]) txt += data[id]["table"][i]["name"] + " = " + data[id]["table"][i]["val"]+ " / " + data[id]["table"][i]["perc"] + "<br/>";
+                                for (i in data[id]["table"]) txt += data[id]["table"][i]["name"] + " = " + data[id]["table"][i]["val"]+ "/" + data[id]["table"][i]["perc"] + "<br/>";
                                 $('#monitor').append('<div style="background-color:white; position:absolute; top:'+y+'px; left:'+x+'px;" id="'+ id +'">'+txt+ '</div>');
-                            
-                            });
-
+                            });                    
+                        }
+                    });
+                $(this).everyTime(5000, function() {
+                    //TODO: refresh rate aehnlich wie in experiment_progress.html machen
+                });
+            {% endif %}
+            {% if refresh %}
+                    idMapTemp = document.cookie;
                     
+                    var j = 0;
+                    $.ajax({
+                        url: "{{url_for('frontend.ajax_monitor_tabelle', database = database)}}?{{url_param}}", 
+                        dataType: 'json',
+                        success: function(data){                            
+                            $('map > area').each(function(elem) {
+                                id = ($(this).attr("href"));
+                                coords = $(this).attr("coords").split(",");                                
+                                index1 = 0;
+                                index2 = idMapTemp.indexOf(',');
+                                table = 0;
+                                if (index2 == -1) {temp = idMapTemp.substring(index1, idMapTemp.length);
+                                    if (temp == id) {table = 1; idMap[0] = temp;}
+                                }    
+                                else{
+                                    do{
+                                        temp = idMapTemp.substring(index1, index2);
+                                       if (temp == id) {table = 1; idMap[j] = temp; j = j+1;}   
+                                        index1 = index2 + 1; 
+                                        index2 = idMapTemp.indexOf(',', index1); 
+                                    }while(index2 != -1 && temp != id);
+                                    temp = idMapTemp.substring(index1, idMapTemp.length);
+                                    if (temp == id) {table = 1; idMap[j] = temp; j = j+1;}
+                                } 
+                                if (table == 1){
+                                    x = parseFloat(coords[0]-coords[2]); y = parseFloat(coords[1]-coords[2]/2);
+                                    txt = "" + id + "<br/>" + "Exp = " + data[id]["expID"] + "<br/>";                         
+                                    for (i in data[id]["table"]) txt += data[id]["table"][i]["name"] + " = " + data[id]["table"][i]["val"]+ "/" + data[id]["table"][i]["perc"] + "<br/>";
+                                    $('#monitor').append('<div style="background-color:white; position:absolute; top:'+y+'px; left:'+x+'px;" id="'+ id +'">'+txt+ '</div>');
+                                }
+                            });                    
                         }
                     });
 
@@ -85,16 +123,22 @@
 {% endblock %}
 {% block content %}
     <div class="navigation">
-        » <a href="{{url_for('frontend.choose_monitor_mode', database=database)}}">Monitor</a> ::
-        Nodes
+        » <a href="{{url_for('frontend.choose_monitor_mode', database=database)}}">Monitor</a> :: Nodes
     </div>
     <div style="float:left;">
     <form  method="post" action="{{url_for('frontend.monitor_formular', database = database)}}">
 		<table>
            
 			{{render_field(form.experiments)}}
-			{{render_field(form.status, explanation='Hold Ctrl to select multiple instances.')}}
-			<tr><td colspan="4"><input type="submit" name="submit" value="diagram view"/><input type="submit" name="submit" value="table view"/><input type="submit" name="submit" value="problem mode"/><input type="submit" name="submit" value="refresh"/>  </td></tr>
+            <tr><td colspan="4">
+            <!-- Modus abfragen if vbla  -->
+                <input type="submit" name="submit" value="status mode"/>
+                <input type="submit" name="submit" value="problem mode"/> </td></tr>
+            {{render_field(form.status, explanation='Hold Ctrl to select multiple instances.')}} 
+			<tr><td colspan="4">
+                <input type="submit" name="submit" value="diagram view"/>
+                <input type="submit" name="submit" value="table view"/>
+                <input type="submit" name="submit" value="refresh"/>  </td></tr>
 		</table>
 	</form>
     </div>

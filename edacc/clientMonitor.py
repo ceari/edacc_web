@@ -1,9 +1,9 @@
 """
-    edacc.monitor
+    edacc.clientMonitor
     --------------------
 
     This module defines the monitor which shows experiment details.
-    It's a choice between normal mode and problem mode.
+    The Client Monitor shows which client are active and link the clients with the progress table.
 
     :copyright: (c) 2011 by Melanie Handel.
     :license: MIT, see LICENSE for details.
@@ -14,7 +14,7 @@ from math import *
 from sqlalchemy import text, func
 
 from edacc import utils, models, constants
-from monitor import Canvas
+from edacc.monitor import Canvas
 
 NW = True
 

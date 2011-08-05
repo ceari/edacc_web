@@ -1,0 +1,99 @@
+{% from "_formhelpers.html" import render_field %}
+{% extends "base.html" %}
+{% block title %}Configurator Visualisation{% endblock %}
+{% block head %}
+    {{ super() }}
+        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.common.core.js')}}" ></script>
+        
+        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.common.adjusting.js')}}" ></script>   <!-- Just needed for adjusting -->
+        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.common.annotate.js')}}" ></script>    <!-- Just needed for annotating -->
+        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.common.context.js')}}" ></script>     <!-- Just needed for context menus -->
+        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.common.resizing.js')}}" ></script>    <!-- Just needed for resizing -->
+        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.common.tooltips.js')}}" ></script>    <!-- Just needed for tooltips -->
+        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.common.zoom.js')}}" ></script>        <!-- Just needed for zoom -->
+        
+        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.line.js')}}" ></script>               <!-- Just needed for line graphs -->
+
+<script>
+    
+    window.onload = function (e)
+    {
+        var line = new RGraph.Line('configurator', [10, 10, 10, 10, 10, 10],[2,4,10,3.47, 0,0], [2.15,4,1,3.47, 0, 0], [2.15,4,10,4, 0, 0], [2.15, 4, 10, 4.5, 0, 0], [2.15, 5, 10, 3.47, 0, 0]);
+        
+        line.Set('chart.labels', ['c1','c2','c3','ps', 'confidence', 'perfomance']);
+        line.Set('chart.labels.ingraph', [['10',,,,-0],['10',,,,-0],['100000',,,,-0],['1',,,,-0 ],['1',,,,-0],['1',,,,-0]]);
+		line.Set('chart.gutter.top', 80);
+		line.Set('chart.gutter.bottom', 50);
+        line.Set('chart.gutter.right', 50);
+        //line.Set('chart.colors', ['rgba(255,0,0,1)']);
+        line.Set('chart.linewidth', 3);
+		line.Set('chart.background.grid.hsize', 25);
+		line.Set('chart.background.grid.vsize', 28.75);
+        //line.Set('chart.adjustable', true);
+		line.Set('chart.ylabels', false);
+        line.Set('chart.title', '{{configuration['expName']}}');        		
+        line.Draw();
+        
+        //RGraph.AddCustomEventListener(line, 'onadjustend', function (obj) {p(RGraph.Registry.Get('chart.adjusting.line.configurator'));});
+    }
+
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div style="float:left;">
+    <canvas id="configurator" width="650" height="380">[No canvas support]</canvas>
+</div>
+ 
+<div style="position: relative; float: left;">
+ <form  method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
+    <table border="2">
+        <tr>
+        <th>Parameter</th>
+        {%for c in configuration['paramAttribute']%}
+            <th>{{c}}</th>
+        {%endfor%}
+        </tr>
+      <tr>
+        <th>maximum</th>        
+        {%for c in configuration['paramAttribute']%}
+            <td><p><br><input name="max1" type="zahl" size="5" maxlength="5" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
+        {%endfor%}
+      </tr>
+      <tr>
+        <th>minimum</th>
+        {%for c in configuration['paramAttribute']%}
+            <td><p><br><input name="min1" type="zahl" size="5" maxlength="5" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
+        {%endfor%}
+      </tr>
+      <tr>
+        <th>move down</th><p> 
+        {%for c in configuration['paramAttribute']%}
+            <td><input type="checkbox" name="turn1" value="1"><br></td>
+        {%endfor%}
+         </p>
+      </tr>
+      <tr>
+        <th>hide</th>
+        <p> 
+        {%for c in configuration['paramAttribute']%}
+            <td><input type="checkbox" name="hide1" value="1"><br></td>
+        {%endfor%}        
+        </p>
+      </tr>
+      <tr>
+        <th >position</th>
+       
+        <p>
+            {%for c in configuration['paramAttribute']%}
+                    <td><input type="radio" name="position1" value="1">1<br></td>
+            {%endfor%}        
+        </p>
+        </tr>
+        
+
+    </table>
+    <input type="submit" name="submit" value=" refresh ">
+</div></form>
+{% endblock %}

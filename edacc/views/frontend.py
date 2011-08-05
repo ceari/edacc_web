@@ -43,6 +43,7 @@ from edacc import forms
 from edacc.forms import EmptyQuery
 from edacc import monitor, clientMonitor
 from edacc import config
+from edacc import config_visualisation
 
 frontend = Module(__name__)
 
@@ -1107,7 +1108,7 @@ def monitor_formular(database):
     form = forms.MonitorForm()
     db = models.get_database(database) or abort(404)
     form.experiments.query = db.session.query(db.Experiment).all() or EmptyQuery()
-    form.status.query = db.session.query(db.StatusCodes).join(db.ExperimentResult) or EmptyQuery()
+    form.status.query = db.session.query(db.StatusCodes) or EmptyQuery()
     if form.experiments.data:
         exp_param = "&".join(['e=' + str(exp.idExperiment) for exp in form.experiments.data])
         if request.form.get("submit") == "problem mode": stat_param = 's=pm' 
@@ -1125,7 +1126,11 @@ def monitor_formular(database):
         tableview = False
         if request.form.get("submit") == "table view":
             tableview = True
-        return render('node_mode.html', database = database, db = db, form = form, url_param = url_param, coordinates = coordinates, tableview=tableview)
+        refresh = False
+        if request.form.get("submit") == "refresh":
+            refresh = True
+
+        return render('node_mode.html', database = database, db = db, form = form, url_param = url_param, coordinates = coordinates, tableview=tableview, refresh=refresh)
     return render('node_mode.html', database = database, db = db, form = form)
 
 @frontend.route('/<database>/monitor_pic')
@@ -1149,3 +1154,17 @@ def ajax_monitor_tabelle(database):
     m = monitor.Monitor(database, status, expID)    
     table = m.getTable()
     return json_dumps(table)
+
+@frontend.route('/<database>/experiment/<int:experiment_id>/configurator_visualisation', methods = ['GET', 'POST'])
+@require_login
+def configurator_visualisation(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    cv = config_visualisation.config_vis(database, experiment_id)
+    configuration = cv.getConfiguration()
+    if request.method == 'GET':
+        pass
+    else:
+        pass
+    return render('configurator_visualisation.html', experiment=experiment, database=database, db=db, configuration = configuration)
+        
