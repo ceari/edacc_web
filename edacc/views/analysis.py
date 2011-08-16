@@ -54,7 +54,6 @@ def solver_ranking(database, experiment_id):
         ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data)
         ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                 form.penalized_average_runtime.data, form.calculate_average_dev.data)
-        
             
         if 'csv' in request.args:
             head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
