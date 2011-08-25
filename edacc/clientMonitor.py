@@ -20,6 +20,8 @@ from edacc.monitor import Canvas
 
 NW = True
 
+#test
+
 #screensize
 winWidth = 820
 winHeight = 600
