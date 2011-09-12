@@ -29,6 +29,7 @@ URLs are mapped to python functions that handle requests and return HTTP respons
     .. autofunction:: property_distribution(database, experiment_id)
     .. autofunction:: probabilistic_domination(database, experiment_id)
     .. autofunction:: box_plots(database, experiment_id)
+    .. autofunction:: runtime_matrix_plot(database, experiment_id)
 
 .. automodule:: edacc.views.frontend
 
@@ -55,6 +56,7 @@ URLs are mapped to python functions that handle requests and return HTTP respons
     .. autofunction:: launcher_output_download(database, experiment_id, result_id)
     .. autofunction:: watcher_output_download(database, experiment_id, result_id)
     .. autofunction:: verifier_output_download(database, experiment_id, result_id)
+    .. autofunction:: power(database)
 
 .. automodule:: edacc.views.plot
 
@@ -70,3 +72,5 @@ URLs are mapped to python functions that handle requests and return HTTP respons
     .. autofunction:: property_distribution(database, experiment_id)
     .. autofunction:: kerneldensity(database, experiment_id)
     .. autofunction:: box_plots(database, experiment_id)
+    .. autofunction:: barplot(database, experiment_id, gt, eq, lt)
+    .. autofunction:: runtime_matrix_plot(database, experiment_id)

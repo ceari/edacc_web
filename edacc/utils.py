@@ -18,6 +18,9 @@ import pylzma
 from edacc.constants import JOB_STATUS_COLOR, JOB_RESULT_CODE_COLOR
 
 def newline_split_string(s, n):
+    """ Splits the string s up into parts of size n and returns
+        the concatenation of these parts separated by newline characters
+        as result. """
     if n == 0: return s
     return '\n'.join([s[i:i+n] for i in range(0, len(s), n)])
 
@@ -60,6 +63,8 @@ def parameter_string(solver_config):
     return " ".join(args)
 
 def result_time(time):
+    """ Returns a representation of the time value. If time is None
+        a dash character is returned, otherwise the time is returned """
     if time is None:
         return '-'
     else:
