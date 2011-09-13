@@ -142,8 +142,10 @@ def experiment_solver_configurations(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    solver_configurations = experiment.solver_configurations
-
+    solver_configurations = db.session.query(db.SolverConfiguration) \
+                                .options(joinedload_all('parameter_instances.parameter')) \
+                                .filter_by(experiment=experiment).all()
+    
     # if competition db, show only own solvers if the phase is in OWN_RESULTS
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configurations = filter(lambda sc: sc.solver.user == g.User, solver_configurations)
