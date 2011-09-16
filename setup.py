@@ -22,5 +22,6 @@ setup(
         "scipy>=0.9.0",
         "scikits.learn==0.8.1",
         "numpy>=1.5.1",
+        "lxml>=2.3",
     ]
 )
