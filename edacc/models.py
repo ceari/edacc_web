@@ -12,6 +12,8 @@
 """
 
 from collections import namedtuple
+from lxml import etree
+from cStringIO import StringIO
 
 from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
@@ -289,8 +291,25 @@ class EDACCDatabase(object):
         class GridQueue(object):
             pass
         
-        class ConfigurationScenario(object): pass
+        class ConfigurationScenario(object):
+            def get_parameter_domain(self, parameter_name):
+                """ Returns the domain name of a parameter. This can
+                    be one of the following:
+                    realDomain, flagDomain, categoricalDomain, ordinalDomain,
+                    integerDomain, mixedDomain, optionalDomain.
+                """
+                pgraph = self.solver_binary.solver.parameter_graph[0].serializedGraph
+                if pgraph is None: return None
+                tree = etree.parse(StringIO(pgraph))
+                if tree is None: return None
+                root = tree.getroot()
+                for node in root:
+                    if node.tag == "parameters":
+                        return node[0].attrib.values()[0]
+            
         class ConfigurationScenarioParameter(object): pass
+
+        class ParameterGraph(object): pass
 
         # competition tables
 
@@ -391,6 +410,7 @@ class EDACCDatabase(object):
         self.ExperimentResultProperty = ExperimentResultProperty
         self.ResultPropertyValue = ResultPropertyValue
         self.InstanceProperties = InstanceProperties
+        self.ParameterGraph = ParameterGraph
 
         metadata.reflect()
 
@@ -422,7 +442,8 @@ class EDACCDatabase(object):
                 'competition_categories': relationship(
                     CompetitionCategory,
                     backref='solvers',
-                    secondary=metadata.tables['Solver_has_CompetitionCategory'])
+                    secondary=metadata.tables['Solver_has_CompetitionCategory']),
+                'parameter_graph': relation(ParameterGraph),
             }
         )
         mapper(SolverBinary, metadata.tables['SolverBinaries'],
@@ -442,6 +463,7 @@ class EDACCDatabase(object):
                 'experiment': relation(Experiment),
             }
         )
+        mapper(ParameterGraph, metadata.tables['ParameterGraph'])
         mapper(ConfigurationScenarioParameter, metadata.tables['ConfigurationScenario_has_Parameters'],
             properties = {
                 'parameter': relation(Parameter)
@@ -449,7 +471,8 @@ class EDACCDatabase(object):
         )
         mapper(ConfigurationScenario, metadata.tables['ConfigurationScenario'],
             properties = {
-                'parameters': relation(ConfigurationScenarioParameter)
+                'parameters': relation(ConfigurationScenarioParameter),
+                'solver_binary': relation(SolverBinary),
             }
         )
         mapper(Experiment, metadata.tables['Experiment'],
