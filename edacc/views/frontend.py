@@ -1163,8 +1163,8 @@ def configurator_visualisation(database, experiment_id):
     cv = config_visualisation.config_vis(database, experiment_id)
     configuration = cv.getConfiguration()
     if request.method == 'GET':
-        pass
-    else:
-        pass
+        print "GET"
+    if request.method == 'POST':
+        print request.form
     return render('configurator_visualisation.html', experiment=experiment, database=database, db=db, configuration = configuration)
         
