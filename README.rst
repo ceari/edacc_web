@@ -42,6 +42,7 @@ Dependencies
 - PIL 1.1.7
 - numpy 1.5.1
 - pygame 1.9
+- lxml 2.3
 - scikits.learn (borgexplorer plugin dependency)
 - scipy (borgexplorer plugin dependency)
 - R 2.11 (language for statistical computing and graphics)
@@ -146,7 +147,7 @@ same machine that the EDACC database runs on::
     > source /srv/edacc_web/env/bin/activate
     > pip install mysql-python
     > pip install rpy2
-    > pip install flask flask-wtf flask-actions
+    > pip install flask flask-wtf flask-actions lxml
     > pip install sqlalchemy pylzma
 
     - Install R libraries ("R" launches the R interpreter):

@@ -9,3 +9,4 @@ client_libs/
 er_model.mwb.bak
 edacc.komodoproject
 edacc/local_config.py
+.idea/
