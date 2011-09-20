@@ -86,7 +86,7 @@
                             <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{result.0.idInstance}}">{{ result.0.name }}</a>
                         </td>
 	                    {% for prop in instance_properties %}
-	                    <td>{{result.0.instance.get_property_value(prop.idProperty, db)}}</td>
+	                    <td>{{result.0.get_property_value(prop.idProperty, db)}}</td>
 	                    {% endfor %}
                         {% for run in result.1 %}
                             {% if run == None %}<td></td>
