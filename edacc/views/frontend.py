@@ -354,7 +354,7 @@ def experiment_results_by_solver(database, experiment_id):
                                     database=database, experiment_id=experiment.idExperiment,
                                     solver_configuration_id=solver_config.idSolverConfig))
 
-        ers = db.session.query(db.ExperimentResult).options(joinedload('instance')) \
+        ers = db.session.query(db.ExperimentResult).options(joinedload_all('instance.properties')) \
                                 .filter_by(experiment=experiment,
                                     solver_configuration=solver_config) \
                                 .order_by('Instances_idInstance', 'run').all()
@@ -414,11 +414,13 @@ def experiment_results_by_solver(database, experiment_id):
 
         return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
-                  form=form, results=results, par10_by_instance=par10_by_instance, num_runs=num_runs)
+                  form=form, results=results, par10_by_instance=par10_by_instance, num_runs=num_runs,
+                  instance_properties=db.get_instance_properties())
 
     return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
-                  form=form, results=results, num_runs=num_runs)
+                  form=form, results=results, num_runs=num_runs,
+                  instance_properties=db.get_instance_properties())
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-instance')
