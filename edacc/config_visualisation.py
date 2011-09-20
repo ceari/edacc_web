@@ -14,18 +14,21 @@ configuration = {}
 
 class config_vis(object):
     
-    def __init__(self, database, expID):
+    def __init__(self, database, expID, configForm):
         db = models.get_database(database) or abort(404)   
         experiment = db.session.query(db.Experiment).get(expID) or abort(404)
-##        if experiment.configurationExp == False: return # kein Konfiguratorexperiment
-##        print experiment.configuration_scenario.get_parameter_domain("ps")
+        if experiment.configurationExp == False: return # kein Konfiguratorexperiment
         solverConfig = {}
         paramAttribute = {}
         paramList = []
         numValue = 0
         paramList.append('confidence')
         paramList.append('perfomance')
-        
+##        if configForm != None:
+##            for cf in configForm:
+##                print cf, ": ", configForm[cf]
+##            print configForm.keys()
+##            print configForm.values()
         name = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == expID).first()
         configuration['expName'] = str(name[0])
         solverConfigName =  dict((s.idSolverConfig, s.name) 
@@ -89,31 +92,41 @@ class config_vis(object):
                     value.append(0)
                     
             #TODO: Wertetyp hier noch wichtig
-            value = map(float, value)
-            if max(value) > 0:
-                j = 0
-                tmp = 10/max(value)
-                for v in value:
-                    value[j] = v * tmp
-                    j += 1 
-                    
-            #TODO: was passiert bei Strings?
-            if len(valueList): 
-                minValue = float(valueList[0])
-                maxValue = float(valueList[0])
-                for vl in valueList:
-                    if float(vl) < minValue:
-                        minValue = float(vl)
-                    if float(vl) > maxValue:
-                        maxValue = float(vl)
+            
+            
+            if experiment.configuration_scenario.get_parameter_domain("ps") == "realDomain" or experiment.configuration_scenario.get_parameter_domain("ps") == "integerDomain":  
+                if experiment.configuration_scenario.get_parameter_domain("ps") == "realDomain":
+                    value = map(float, value)
+                    valueList = map(float, valueList)                    
+                elif experiment.configuration_scenario.get_parameter_domain("ps") == "integerDomain":
+                    value = map(int, value)
+                    valueList = map(int, valueList)                
+                if max(value) > 0:
+                    j = 0
+                    tmp = 10/max(value)
+                    for v in value:
+                        value[j] = v * tmp
+                        j += 1 
+                        
+                if len(valueList): 
+                    minValue = valueList[0]
+                    maxValue = valueList[0]                    
+                    for vl in valueList:
+                        if vl < minValue:
+                            minValue = vl
+                        if vl > maxValue:
+                            maxValue = vl
             
             if numValue < len(value):
                 numValue = len(value)    
             if (pl not in paramAttribute):
                 i += 1
-            #valueName = ['min' + str(i), 'max' + str(i), 'turn' + str(i), 'hide' + str(i), 'position' + str(i)]
-           
-            paramAttribute[i] = {'value': value,'min': minValue, 'max': maxValue, 'name': pl}
+            position = []
+            length = len(paramList)
+            for p in range(length):
+                pos = (p + i -1) % length
+                position.append(pos+1)
+            paramAttribute[i] = {'value': value,'min': minValue, 'max': maxValue, 'name': pl, 'hide': False, 'position': position}
         
         list = []
         for i in range(numValue):
@@ -128,5 +141,5 @@ class config_vis(object):
     
 class setParamAttribute(object):
     def _init_(self, table):
-        return configuration
+        return table
     

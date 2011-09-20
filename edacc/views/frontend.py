@@ -1162,11 +1162,12 @@ def ajax_monitor_tabelle(database):
 def configurator_visualisation(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    cv = config_visualisation.config_vis(database, experiment_id)
-    configuration = cv.getConfiguration()
-    if request.method == 'GET':
-        print "GET"
     if request.method == 'POST':
-        print request.form
+        cv = config_visualisation.config_vis(database, experiment_id, request.form)
+        configuration = cv.getConfiguration()
+    else:
+        cv = config_visualisation.config_vis(database, experiment_id, None)
+        configuration = cv.getConfiguration()
+    
     return render('configurator_visualisation.html', experiment=experiment, database=database, db=db, configuration = configuration)
         

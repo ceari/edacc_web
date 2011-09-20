@@ -25,7 +25,7 @@
 		line.Set('chart.gutter.bottom', 170);
         line.Set('chart.gutter.left', 80);
         line.Set('chart.gutter.right', 50);
-        //line.Set('chart.colors', ['rgba(255,0,0,1)']);
+        line.Set('chart.colors.alternate', true);
         line.Set('chart.linewidth', 3);
 		line.Set('chart.background.grid.hsize', 25);
 		line.Set('chart.background.grid.vsize', 25);
@@ -76,11 +76,11 @@
         {%endfor%}        
         </p></tr>
       <tr><th>position</th><p>
-            {%for c in configuration['paramAttribute']%}
+            {%for co in configuration['paramAttribute']%}
                 <td> <p>
-                     <select>
-                       {%for c in configuration['paramAttribute']%} 
-                            <option value="Position">{{c}}
+                     <select name = {{co}}>
+                       {%for c in configuration['paramAttribute'][co]['position']%} 
+                            <option value="{{c}}">{{c}}
                         {%endfor%}
                      </select>
                 </p></td>
