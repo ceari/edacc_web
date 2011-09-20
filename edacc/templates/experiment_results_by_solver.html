@@ -51,7 +51,13 @@
             });
 
             $('#th_par10').tooltip();
-            new FixedHeader(oTable);
+            var fixed_header = new FixedHeader(oTable);
+            
+            $(this).everyTime(v * 1000, function() {
+            	fixed_header.fnUpdate();
+            });
+            
+            
         });
     </script>
 {% endblock %}
