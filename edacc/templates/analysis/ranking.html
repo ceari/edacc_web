@@ -124,15 +124,15 @@
                 <td>{{loop.index1}}</td>
                 <td>{% if loop.index0 > 0 %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}">{{sc.0.get_name()}}</a>{% else %}{{sc.0}}{% endif %}</td>
                 <td>{{sc.1}}</td>
-                <td>{{(sc.2 * 100.0)|round(2)}} %</td>
-                <td>{{(sc.3 * 100.0)|round(2)}} %</td>
-                <td>{{sc.4|round(2)}}</td>
-                <td>{{sc.5|round(2)}}</td>
+                <td>{{(sc.2 * 100.0)|round(4)}} %</td>
+                <td>{{(sc.3 * 100.0)|round(4)}} %</td>
+                <td>{{sc.4|round(4)}}</td>
+                <td>{{sc.5|round(4)}}</td>
                 {% if form.calculate_average_dev.data %}
-                <td>{{sc.6|round(2)}}</td>
+                <td>{{sc.6|round(4)}}</td>
                 {% endif %}
                 {% if form.penalized_average_runtime.data %}
-                <td>{{sc.7|round(2)}}</td>
+                <td>{{sc.7|round(4)}}</td>
                 {% endif %}
             </tr>
         {% endfor %}
