@@ -124,8 +124,8 @@
                 <td>{{loop.index1}}</td>
                 <td>{% if loop.index0 > 0 %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}">{{sc.0.get_name()}}</a>{% else %}{{sc.0}}{% endif %}</td>
                 <td>{{sc.1}}</td>
-                <td>{{(sc.2 * 100.0)|round(4)}} %</td>
-                <td>{{(sc.3 * 100.0)|round(4)}} %</td>
+                <td>{{(sc.2 * 100.0)|round(2)}} %</td>
+                <td>{{(sc.3 * 100.0)|round(2)}} %</td>
                 <td>{{sc.4|round(4)}}</td>
                 <td>{{sc.5|round(4)}}</td>
                 {% if form.calculate_average_dev.data %}
