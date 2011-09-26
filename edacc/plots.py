@@ -606,10 +606,10 @@ def barplot(values, filename, format='png'):
     grdevices.dev_off()
     
 @synchronized
-def runtime_matrix_plot(flattened_rtmatrix, sorted_solver_configs, sorted_instances, measure, filename, format='png'):
+def runtime_matrix_plot(flattened_rtmatrix, num_sorted_solver_configs, num_sorted_instances, measure, filename, format='png'):
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=600,
-                      height=500, type="cairo")
+        grdevices.png(file=filename, units="px", width=840,
+                      height=700, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
@@ -621,7 +621,7 @@ def runtime_matrix_plot(flattened_rtmatrix, sorted_solver_configs, sorted_instan
         grdevices.dev_off()
         return
 
-    m = robjects.r.matrix(robjects.FloatVector(flattened_rtmatrix), nrow=len(sorted_solver_configs))
+    m = robjects.r.matrix(robjects.FloatVector(flattened_rtmatrix), nrow=num_sorted_solver_configs)
     m = robjects.r.t(robjects.r.log10(m))
     
     min_val = math.log10(min(flattened_rtmatrix))
@@ -637,8 +637,8 @@ def runtime_matrix_plot(flattened_rtmatrix, sorted_solver_configs, sorted_instan
     
     robjects.r.par(mar = robjects.FloatVector([5,5,2.5,3]))
 
-    robjects.r.image(robjects.IntVector(range(1, len(sorted_instances)+1)), robjects.IntVector(range(1, len(sorted_solver_configs)+1)),
-                     m, col=color_ramp, xlab="", ylab="", ylim=robjects.IntVector([len(sorted_solver_configs), 1]),
+    robjects.r.image(robjects.IntVector(range(1, num_sorted_instances+1)), robjects.IntVector(range(1, num_sorted_solver_configs+1)),
+                     m, col=color_ramp, xlab="", ylab="", ylim=robjects.IntVector([num_sorted_solver_configs, 1]),
                      zlim=robjects.FloatVector([min_val, max_val]))
     
     robjects.r.mtext("instance (sorted by %s)" % (measure,), side=1, line=3, cex=1.2) # bottom axis label

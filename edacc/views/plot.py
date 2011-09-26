@@ -25,6 +25,7 @@ from flask import Response, abort, request, g
 from werkzeug import Headers, secure_filename
 
 from edacc import plots, config, models
+from edacc.web import cache
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
 from edacc.constants import ANALYSIS1, ANALYSIS2
@@ -865,69 +866,32 @@ def runtime_matrix_plot(database, experiment_id):
     solver_configs = sorted(exp.solver_configurations, key=lambda sc: sc.idSolverConfig)
     instances = sorted(exp.instances, key=lambda i: i.idInstance)
 
-    solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs) 
-    
-    results_by_instance = {}
-    for r in db.session.query(db.ExperimentResult).filter_by(experiment=exp).yield_per(1000):
-        if measure == 'par10':
-            time = r.get_time() if str(r.resultCode).startswith('1') else r.get_penalized_time(10)
-        else:
-            time = r.get_time()
-        if r.Instances_idInstance not in results_by_instance:
-            results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [time]}
-        else:
-            rs = results_by_instance[r.Instances_idInstance]
-            if r.SolverConfig_idSolverConfig not in rs:
-                rs[r.SolverConfig_idSolverConfig] = [time]
+    solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
+
+    print measure
+    @cache.memoize(timeout=14*24*60*60)
+    def get_rtm_data(experiment_id, num_finished_jobs, measure):
+        results_by_instance = {}
+        for r in db.session.query(db.ExperimentResult).filter_by(experiment=exp).yield_per(10000):
+            if measure == 'par10':
+                time = r.get_time() if str(r.resultCode).startswith('1') else r.get_penalized_time(10)
             else:
-                rs[r.SolverConfig_idSolverConfig].append(time)
-    
-    solver_score = dict((sc_id, None) for sc_id in solver_configs_dict.iterkeys())
-    for solver_config in solver_configs:
-        jobs = []
-        for instance in instances:
-            jobs += results_by_instance.get(instance.idInstance, {}).get(solver_config.idSolverConfig, [])
-            
-        runtimes = filter(lambda r: r is not None, jobs)
-        time_measure = None
-        if len(runtimes) > 0:
-            if measure == 'mean': time_measure = numpy.average(runtimes)
-            elif measure == 'median': time_measure = numpy.median(runtimes)
-            elif measure == 'min': time_measure = min(runtimes)
-            elif measure == 'max': time_measure = max(runtimes)
-            elif measure == 'par10' or measure is None:
-                time_measure = numpy.average(jobs or [0])
-        solver_score[solver_config.idSolverConfig] = time_measure
-    
-    instance_hardness = dict((i.idInstance, None) for i in instances)
-    for instance in instances:
-        jobs_by_instance = results_by_instance.get(instance.idInstance, None)
-        jobs = []
-        if jobs_by_instance:
-            for jobs_by_solver in jobs_by_instance.itervalues():
-                jobs += jobs_by_solver
-        
-        runtimes = filter(lambda r: r is not None, jobs)
-        time_measure = None
-        if len(runtimes) > 0:
-            if measure == 'mean': time_measure = numpy.average(runtimes)
-            elif measure == 'median': time_measure = numpy.median(runtimes)
-            elif measure == 'min': time_measure = min(runtimes)
-            elif measure == 'max': time_measure = max(runtimes)
-            elif measure == 'par10' or measure is None:
-                time_measure = numpy.average(jobs or [0])
-        instance_hardness[instance.idInstance] = time_measure
-    
-    sorted_solver_configs = sorted(solver_configs, key=lambda sc: solver_score[sc.idSolverConfig])
-    sorted_instances = sorted(instances, key=lambda i: instance_hardness[i.idInstance])
-    
-    rt_matrix = dict((sc.idSolverConfig, dict((i.idInstance, None) for i in instances)) for sc in solver_configs)
-    flattened_rt_matrix = []
-    for instance in sorted_instances:
-        if instance.idInstance not in results_by_instance: continue
-        rs = results_by_instance[instance.idInstance]
-        for solver_config in sorted_solver_configs:
-            jobs = rs.get(solver_config.idSolverConfig, [])
+                time = r.get_time()
+            if r.Instances_idInstance not in results_by_instance:
+                results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [time]}
+            else:
+                rs = results_by_instance[r.Instances_idInstance]
+                if r.SolverConfig_idSolverConfig not in rs:
+                    rs[r.SolverConfig_idSolverConfig] = [time]
+                else:
+                    rs[r.SolverConfig_idSolverConfig].append(time)
+
+        solver_score = dict((sc_id, None) for sc_id in solver_configs_dict.iterkeys())
+        for solver_config in solver_configs:
+            jobs = []
+            for instance in instances:
+                jobs += results_by_instance.get(instance.idInstance, {}).get(solver_config.idSolverConfig, [])
+
             runtimes = filter(lambda r: r is not None, jobs)
             time_measure = None
             if len(runtimes) > 0:
@@ -937,8 +901,53 @@ def runtime_matrix_plot(database, experiment_id):
                 elif measure == 'max': time_measure = max(runtimes)
                 elif measure == 'par10' or measure is None:
                     time_measure = numpy.average(jobs or [0])
-            if request.args.has_key('csv'): rt_matrix[solver_config.idSolverConfig][instance.idInstance] = time_measure
-            flattened_rt_matrix.append(time_measure)
+            solver_score[solver_config.idSolverConfig] = time_measure
+
+        instance_hardness = dict((i.idInstance, None) for i in instances)
+        for instance in instances:
+            jobs_by_instance = results_by_instance.get(instance.idInstance, None)
+            jobs = []
+            if jobs_by_instance:
+                for jobs_by_solver in jobs_by_instance.itervalues():
+                    jobs += jobs_by_solver
+
+            runtimes = filter(lambda r: r is not None, jobs)
+            time_measure = None
+            if len(runtimes) > 0:
+                if measure == 'mean': time_measure = numpy.average(runtimes)
+                elif measure == 'median': time_measure = numpy.median(runtimes)
+                elif measure == 'min': time_measure = min(runtimes)
+                elif measure == 'max': time_measure = max(runtimes)
+                elif measure == 'par10' or measure is None:
+                    time_measure = numpy.average(jobs or [0])
+            instance_hardness[instance.idInstance] = time_measure
+
+        sorted_solver_configs = sorted(solver_configs, key=lambda sc: solver_score[sc.idSolverConfig])
+        sorted_instances = sorted(instances, key=lambda i: instance_hardness[i.idInstance])
+
+        rt_matrix = dict((sc.idSolverConfig, dict((i.idInstance, None) for i in instances)) for sc in solver_configs)
+        flattened_rt_matrix = []
+        for instance in sorted_instances:
+            if instance.idInstance not in results_by_instance: continue
+            rs = results_by_instance[instance.idInstance]
+            for solver_config in sorted_solver_configs:
+                jobs = rs.get(solver_config.idSolverConfig, [])
+                runtimes = filter(lambda r: r is not None, jobs)
+                time_measure = None
+                if len(runtimes) > 0:
+                    if measure == 'mean': time_measure = numpy.average(runtimes)
+                    elif measure == 'median': time_measure = numpy.median(runtimes)
+                    elif measure == 'min': time_measure = min(runtimes)
+                    elif measure == 'max': time_measure = max(runtimes)
+                    elif measure == 'par10' or measure is None:
+                        time_measure = numpy.average(jobs or [0])
+                if request.args.has_key('csv'): rt_matrix[solver_config.idSolverConfig][instance.idInstance] = time_measure
+                flattened_rt_matrix.append(time_measure)
+        return flattened_rt_matrix, len(sorted_solver_configs), len(sorted_instances)
+
+    num_jobs_finished = db.session.query(db.ExperimentResult) \
+            .filter_by(experiment=exp).filter(or_(db.ExperimentResult.status>=1, db.ExperimentResult.status<-1)).count()
+    flattened_rt_matrix, num_sorted_solver_configs, num_sorted_instances = get_rtm_data(experiment_id, num_jobs_finished, measure)
     
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
@@ -956,5 +965,5 @@ def runtime_matrix_plot(database, experiment_id):
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_runtime_matrix.csv"))
         return Response(response=csv_response.read(), headers=headers)
     else:
-        return make_plot_response(plots.runtime_matrix_plot, flattened_rt_matrix, sorted_solver_configs, sorted_instances,
+        return make_plot_response(plots.runtime_matrix_plot, flattened_rt_matrix, num_sorted_solver_configs, num_sorted_instances,
                                   measure)
