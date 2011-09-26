@@ -868,8 +868,8 @@ def runtime_matrix_plot(database, experiment_id):
 
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
 
-    print measure
-    @cache.memoize(timeout=14*24*60*60)
+    CACHE_TIME = 14*24*60*60
+    @cache.memoize(timeout=CACHE_TIME)
     def get_rtm_data(experiment_id, num_finished_jobs, measure):
         results_by_instance = {}
         for r in db.session.query(db.ExperimentResult).filter_by(experiment=exp).yield_per(10000):
@@ -965,5 +965,8 @@ def runtime_matrix_plot(database, experiment_id):
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_runtime_matrix.csv"))
         return Response(response=csv_response.read(), headers=headers)
     else:
-        return make_plot_response(plots.runtime_matrix_plot, flattened_rt_matrix, num_sorted_solver_configs, num_sorted_instances,
+        @cache.memoize(timeout=CACHE_TIME)
+        def make_plot(experiment_id, num_finished_jobs, measure):
+            return make_plot_response(plots.runtime_matrix_plot, flattened_rt_matrix, num_sorted_solver_configs, num_sorted_instances,
                                   measure)
+        return make_plot(experiment_id, num_jobs_finished, measure)
