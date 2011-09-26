@@ -550,6 +550,7 @@ def runtime_matrix_plot(database, experiment_id):
     
     form = forms.RuntimeMatrixPlotForm(request.args)
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
-    
+    if request.args.get('measure') is None: GET_data += "&measure=par10"
+
     return render('/analysis/runtime_matrix_plot.html', database=database, db=db,
                   experiment=experiment, form=form, GET_data=GET_data)
