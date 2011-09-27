@@ -151,14 +151,14 @@ class config_vis(object):
 
             if experiment.configuration_scenario.get_parameter_domain(pl) == "categoricalDomain":
                 values = classify(values, valueList)
-                domain = categorical
+                domain = "categorical"
                 
             elif experiment.configuration_scenario.get_parameter_domain(pl) == "ordinalDomain": 
                 values = classify(values, valueList)
-                domain = ordinal
+                domain = "ordinal"
 
             elif experiment.configuration_scenario.get_parameter_domain(pl) == "realDomain":
-                domain = real
+                domain = "real"
                 values = map(float, values)
                 valueList = map(float, valueList)      
                 if i in turnList:
@@ -166,7 +166,7 @@ class config_vis(object):
                     values = turn(values)
                 
             elif experiment.configuration_scenario.get_parameter_domain(pl) == "integerDomain":
-                domain = integer
+                domain = "integer"
                 values = map(int, values)
                 valueList = map(int, valueList)                  
                 if i in turnList:
