@@ -13,14 +13,21 @@
     {
         var line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}'10',{%endfor%}] 
             {%for x in configuration['numValue']%}
-                ,[{%for c in configuration['paramAttribute']%}'{{configuration['paramAttribute'][c]['value'][x]}}',{%endfor%}]
+                ,[{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endif%}{%endfor%}]
             {%endfor%}
             );
         
-        line.Set('chart.labels', [{%for c in configuration['paramAttribute']%}'{{configuration['paramAttribute'][c]['name']}}',{%endfor%}]);
-        line.Set('chart.labels.ingraph', [{%for c in configuration['paramAttribute']%}
-                                                ['{{configuration['paramAttribute'][c]['max']}}',,,,-0],
-                                            {%endfor%}]);
+        line.Set('chart.labels', [{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}
+                                                '{{configuration['paramAttribute'][c]['name']}}',
+                                            {%endif%}{%endfor%}]);
+        line.Set('chart.labels.ingraph', [{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}
+                                                {%if configuration['paramAttribute'][c]['turn'] == False%}
+                                                    ['{{configuration['paramAttribute'][c]['max']}}',,,,-0],
+                                                {%endif%}
+                                                {%if configuration['paramAttribute'][c]['turn'] == True%}
+                                                    ['{{configuration['paramAttribute'][c]['min']}}',,,,-0],
+                                                {%endif%}
+                                            {%endif%}{%endfor%}]);
 		line.Set('chart.gutter.top', 80);
 		line.Set('chart.gutter.bottom', 170);
         line.Set('chart.gutter.left', 80);
@@ -41,54 +48,31 @@
 {% block content %}
 
 <div style="float:left;">
-    <canvas id="configurator" width="730" height="500">[No canvas support]</canvas>
+    <canvas id="configurator" width="1600" height="700">[No canvas support]</canvas>
 </div>
- 
+
+
 <div style="position: relative; float: left;">
  <form  method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
    <table border="2">
-        <tr><th>Parameter</th>
+        <tr><th>Parameter</th><th>minimum</th><th>maximum</th><th>move down</th><th>hide</th><th>position</th></tr>
         {%for c in configuration['paramAttribute']%}
+        <tr>
             <th>{{configuration['paramAttribute'][c]['name']}}</th>
-        {%endfor%}
-        </tr>
-      <tr>
-        <th>maximum</th>        
-        {%for c in configuration['paramAttribute']%}
-            <td><p><br><input name="max" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
-        {%endfor%}
-      </tr>
-      <tr>
-        <th>minimum</th>
-        {%for c in configuration['paramAttribute']%}
             <td><p><br><input name="min" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}"></p></td>
-        {%endfor%}
-      </tr>
-      <tr>
-        <th>move down</th><p> 
-        {%for c in configuration['paramAttribute']%}
+            <td><p><br><input name="max" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
             <td><input type="checkbox" name="turn" value={{c}} ><br></td>
-        {%endfor%}
-      </p> </tr>
-      <tr><th>hide</th> <p> 
-        {%for c in configuration['paramAttribute']%}
             <td><input type="checkbox" name="hide" value="{{c}}"><br></td>
+            <td><select name = {{co}}>
+               {%for co in configuration['paramAttribute'][c]['position']%} 
+                    <option value="{{co}}">{{co}}
+                {%endfor%}
+            </select></td>
+        </tr>
         {%endfor%}        
-        </p></tr>
-      <tr><th>position</th><p>
-            {%for co in configuration['paramAttribute']%}
-                <td> <p>
-                     <select name = {{co}}>
-                       {%for c in configuration['paramAttribute'][co]['position']%} 
-                            <option value="{{c}}">{{c}}
-                        {%endfor%}
-                     </select>
-                </p></td>
-            {%endfor%}        
-        </p></tr>
+        
     </table>   
-    <input type="submit" name="submit" value=" refresh ">
+    <input type="submit" name="submit" value="refresh">
 </form></div>
-
 
 {% endblock %}

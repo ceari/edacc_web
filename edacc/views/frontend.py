@@ -1168,6 +1168,9 @@ def configurator_visualisation(database, experiment_id):
     else:
         cv = config_visualisation.config_vis(database, experiment_id, None)
         configuration = cv.getConfiguration()
-    
-    return render('configurator_visualisation.html', experiment=experiment, database=database, db=db, configuration = configuration)
+    #start = time.clock()
+    render_res = render('configurator_visualisation.html', experiment=experiment, database=database, db=db, configuration = configuration)
+    #print "render:", time.clock() - start, "sec"
+    return render_res
+ 
         
