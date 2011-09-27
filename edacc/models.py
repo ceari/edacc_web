@@ -498,6 +498,8 @@ class EDACCDatabase(object):
                 'instance': relation(Instance, backref='results'),
                 'status_code': relation(StatusCodes, uselist=False),
                 'result_code': relation(ResultCodes, uselist=False),
+                'computeNode': deferred(metadata.tables['ExperimentResults'].c.computeNode),
+                'computeNodeIP': deferred(metadata.tables['ExperimentResults'].c.computeNodeIP),
                 'client': relation(Client),
             }
         )
