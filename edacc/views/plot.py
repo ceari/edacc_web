@@ -863,13 +863,10 @@ def runtime_matrix_plot(database, experiment_id):
     measure = request.args.get('measure', 'par10') or abort(404)
     num_jobs_finished = db.session.query(db.ExperimentResult) \
             .filter_by(experiment=exp).filter(or_(db.ExperimentResult.status>=1, db.ExperimentResult.status<-1)).count()
-
-    
-    print experiment_id, num_jobs_finished, measure, request.args.has_key('csv')
     
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def make_rtm_response(experiment_id, num_finished_jobs, measure, csv=False):
+    def make_rtm_response(experiment_id, num_finished_jobs, measure, csv=False, type='png'):
         solver_configs = sorted(exp.solver_configurations, key=lambda sc: sc.idSolverConfig)
         instances = sorted(exp.instances, key=lambda i: i.idInstance)
         solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
@@ -965,5 +962,9 @@ def runtime_matrix_plot(database, experiment_id):
         else:
             return make_plot_response(plots.runtime_matrix_plot, flattened_rt_matrix, len(sorted_solver_configs), len(sorted_instances),
                                   measure)
-
-    return make_rtm_response(experiment_id, num_jobs_finished, measure, request.args.has_key('csv'))
+            
+    if request.args.has_key('pdf'): type = 'pdf'
+    elif request.args.has_key('eps'): type = 'eps'
+    elif request.args.has_key('rscript'): type = 'rscript'
+    else: type = 'png'
+    return make_rtm_response(experiment_id, num_jobs_finished, measure, request.args.has_key('csv'), type)
