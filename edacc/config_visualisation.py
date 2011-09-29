@@ -50,6 +50,7 @@ class config_vis(object):
         db = models.get_database(database) or abort(404)   
         experiment = db.session.query(db.Experiment).get(expID) or abort(404)
         if experiment.configurationExp == False: return # kein Konfiguratorexperiment
+        
         solverConfig = {}
         paramAttribute = {}
         parameterValue = {}
@@ -58,11 +59,12 @@ class config_vis(object):
         numValue = 0
         minList = []
         maxList = []
+        selectValueList = []
         turnList = []
         hideList = [] 
         domain = None       
         
-        #start1 = time.clock()            
+        #db Queries for configuration visualisation
         name = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == expID).first()
         configuration['expName'] = str(name[0])
         solverConfigName =  dict((s.idSolverConfig, s.name) 
@@ -72,38 +74,38 @@ class config_vis(object):
         parameterName  =  dict((p.idParameter, p.name) 
                         for p in db.session.query(db.Parameter).
                             filter(db.Parameter.idParameter.in_(configurable)).distinct())
-        solverConfigCosts = dict((s.idSolverConfig, s.cost) 
-                        for s in db.session.query(db.SolverConfiguration).
-                            filter(db.SolverConfiguration.Experiment_idExperiment == expID)) 
-        #print time.clock() - start1, "sec db1" 
-        
-        #start = time.clock()
+        start = time.clock()
+        solverConfigCosts = dict((s.idSolverConfig, s.cost) for s in experiment.solver_configurations) 
+        print time.clock() - start, "sec cost"
+        print "costs", solverConfigCosts
+        ##TODO: query optimieren
         for scn in solverConfigName:
             parameterValue[scn] = dict((pv.Parameters_idParameter, pv.value) 
                             for pv in db.session.query(db.ParameterInstance).
                                 filter(db.ParameterInstance.SolverConfig_idSolverConfig == scn).
                                 filter(db.ParameterInstance.Parameters_idParameter.in_(parameterName.keys())).
-                                filter(db.ParameterInstance.value != ''))
- 
+                                filter(db.ParameterInstance.value != '')) 
         for scn in solverConfigName:
             confidence[scn] = int(db.session.query(db.ExperimentResult.idJob).
                             filter(db.ExperimentResult.SolverConfig_idSolverConfig == scn).count())
-       # print time.clock() - start, "sec db2"            
+                   
 
         paramList.append('confidence')
-        paramList.append('perfomance')
+        paramList.append('performance')
         
+        #maps the web formular in lists
         if configForm != None:
-            minList = map(str, configForm.getlist('min'))
-            maxList = map(str, configForm.getlist('max'))
+            if 'min' in configForm.keys():
+                domain = 'num'
+                minList = map(str, configForm.getlist('min'))
+            if 'max' in configForm.keys():
+                maxList = map(str, configForm.getlist('max'))
             if 'turn' in configForm.keys():
                 turnList =  map(int, configForm.getlist('turn'))
             if 'hide' in configForm.keys():
-                hideList = map(int, configForm.getlist('hide'))
-                
+                hideList = map(int, configForm.getlist('hide'))          
         
-          
-        
+        print "form", configForm
         for scn in solverConfigName:
             parameterInstance = {} 
             parameter = {}
@@ -111,13 +113,26 @@ class config_vis(object):
             parameterInstance['name'] = str(solverConfigName[scn])
             
             for p in parameterValue[scn]:
-                parameter[str(parameterName[p])]= str(parameterValue[scn][p])
+                ##TODO: Werteauswahl nach Domain und einschraenkungen
+                ##TODO: category stimmt so noch nicht
+                print experiment.configuration_scenario.get_parameter_domain(str(parameterValue[scn][p]))
+                if configForm != None:
+                    if 'str(parameterValue[scn][p]' in configForm.keys():
+                        print "CAT"
+                        domain = 'cat'
+                        selectValueList =  map(str, configForm.getlist('str(parameterValue[scn][p]'))
+
+                        parameter[str(parameterName[p])]= str(parameterValue[scn][p])
+                if domain == 'num':
+                    parameter[str(parameterName[p])]= str(parameterValue[scn][p])
+                else:
+                    parameter[str(parameterName[p])]= str(parameterValue[scn][p])
                 if str(parameterName[p]) not in paramList:
                     paramList.append(str(parameterName[p]))
 
             parameter['confidence'] = confidence[scn]
             
-            ##TODO: nochmal genauer anschauen
+
             if solverConfigCosts[scn] != None:
                 parameter['performance'] = solverConfigCosts[scn]
             else:
@@ -125,7 +140,7 @@ class config_vis(object):
    
             parameterInstance['parameter']= parameter 
             solverConfig[scn]= parameterInstance
-        
+
         i=0
         for pl in paramList:
             values = []
@@ -141,24 +156,20 @@ class config_vis(object):
                 if (pl in solverConfig[scn]['parameter']):
                     if (solverConfig[scn]['parameter'][pl] not in values):
                         valueList.append(solverConfig[scn]['parameter'][pl])
-                    #if configForm == None:
                     values.append(solverConfig[scn]['parameter'][pl])
-##                    else:
-##                        if solverConfig[scn]['parameter'][pl] <= maxList[i] and solverConfig[scn]['parameter'][pl] >= minList[i]:
-##                            value.append(solverConfig[scn]['parameter'][pl])
                 else:
                     values.append(0)        
-
+                    
             if experiment.configuration_scenario.get_parameter_domain(pl) == "categoricalDomain":
                 values = classify(values, valueList)
-                domain = "categorical"
+                domain = 'cat'
                 
             elif experiment.configuration_scenario.get_parameter_domain(pl) == "ordinalDomain": 
                 values = classify(values, valueList)
-                domain = "ordinal"
+                domain = 'cat'
 
             elif experiment.configuration_scenario.get_parameter_domain(pl) == "realDomain":
-                domain = "real"
+                domain = 'num'
                 values = map(float, values)
                 valueList = map(float, valueList)      
                 if i in turnList:
@@ -166,7 +177,7 @@ class config_vis(object):
                     values = turn(values)
                 
             elif experiment.configuration_scenario.get_parameter_domain(pl) == "integerDomain":
-                domain = "integer"
+                domain = 'num'
                 values = map(int, values)
                 valueList = map(int, valueList)                  
                 if i in turnList:
@@ -174,26 +185,28 @@ class config_vis(object):
                     values = turn(values) 
             
             values = project(values)
-                        
-            ##Todo: muss noch fuer die Domain individualisiert werden
-            if len(valueList): 
-                minValue = min(valueList)
-                maxValue = max(valueList)                   
-            
-            if numValue < len(values):
-                numValue = len(values)    
             
             hide = False
             if len(hideList)>0 and (i in hideList):
                 hide = True
-                
+            
             position = []
             length = len(paramList)
             for p in range(length):
                 pos = (p + i -1) % length
-                position.append(pos+1)
-            ##TODO: muss noch nach Domains geordnet werden
-            paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue, 'name': pl, 'hide': hide, 'turn': turn, 'position': position, 'domain': domain}
+                position.append(pos+1)   
+            
+            if numValue < len(values):
+                numValue = len(values)    
+                         
+            if domain == 'num':
+                if len(valueList): 
+                    minValue = min(valueList)
+                    maxValue = max(valueList)
+                paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue, 'name': pl, 'hide': hide, 'turn': turn, 'position': position, 'domain': domain}
+        
+            elif domain == 'cat':
+                paramAttribute[i] = {'values': values,'valueList': valueList, 'name': pl, 'hide': hide, 'turn': turn, 'position': position, 'domain': domain}
         
         list = []
         for i in range(numValue):
