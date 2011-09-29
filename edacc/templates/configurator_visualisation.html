@@ -21,18 +21,22 @@
                                                 '{{configuration['paramAttribute'][c]['name']}}',
                                             {%endif%}{%endfor%}]);
         line.Set('chart.labels.ingraph', [{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}
+                                            {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
                                                 {%if configuration['paramAttribute'][c]['turn'] == False%}
                                                     ['{{configuration['paramAttribute'][c]['max']}}',,,,-0],
                                                 {%endif%}
                                                 {%if configuration['paramAttribute'][c]['turn'] == True%}
                                                     ['{{configuration['paramAttribute'][c]['min']}}',,,,-0],
                                                 {%endif%}
+                                            {%endif%}
                                             {%endif%}{%endfor%}]);
 		line.Set('chart.gutter.top', 80);
 		line.Set('chart.gutter.bottom', 170);
         line.Set('chart.gutter.left', 80);
         line.Set('chart.gutter.right', 50);
-        line.Set('chart.colors.alternate', true);
+        line.Set('chart.colors', ['rgba(0,0,0,0)', {%for x in configuration['numValue']%}
+                'rgba(0,0,0,255)',
+            {%endfor%}]);
         line.Set('chart.linewidth', 3);
 		line.Set('chart.background.grid.hsize', 25);
 		line.Set('chart.background.grid.vsize', 25);
@@ -55,15 +59,24 @@
 <div style="position: relative; float: left;">
  <form  method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
    <table border="2">
-        <tr><th>Parameter</th><th>minimum</th><th>maximum</th><th>move down</th><th>hide</th><th>position</th></tr>
+        <tr><th>parameter</th><th>values</th><th>move down</th><th>hide</th><th>position</th></tr>
         {%for c in configuration['paramAttribute']%}
         <tr>
             <th>{{configuration['paramAttribute'][c]['name']}}</th>
-            <td><p><br><input name="min" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}"></p></td>
-            <td><p><br><input name="max" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
-            <td><input type="checkbox" name="turn" value={{c}} ><br></td>
+            {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
+                <td><p><br><input name="min" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}">min
+                <input name="max" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}">max</p></td>
+            {%endif%}
+            {%if configuration['paramAttribute'][c]['domain'] == 'cat'%}
+                <td><p><br><select name="{{configuration['paramAttribute'][c]['name']}}" size="{{configuration['paramAttribute'][c]['valueList']|length}}" multiple>
+                {%for vl in configuration['paramAttribute'][c]['valueList']%}
+                  <option value="{{vl}}">{{vl}}</option>
+                {%endfor%}
+                </select></p></td>                
+            {%endif%}
+            <td><input type="checkbox" name="turn" value="{{c}}"><br></td>
             <td><input type="checkbox" name="hide" value="{{c}}"><br></td>
-            <td><select name = {{co}}>
+            <td><select name = {{c}}>
                {%for co in configuration['paramAttribute'][c]['position']%} 
                     <option value="{{co}}">{{co}}
                 {%endfor%}
