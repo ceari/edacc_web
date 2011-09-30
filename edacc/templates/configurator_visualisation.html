@@ -37,7 +37,7 @@
         line.Set('chart.colors', ['rgba(0,0,0,0)', {%for x in configuration['numValue']%}
                 'rgba(0,0,0,255)',
             {%endfor%}]);
-        line.Set('chart.linewidth', 3);
+        line.Set('chart.linewidth', 0.5);
 		line.Set('chart.background.grid.hsize', 25);
 		line.Set('chart.background.grid.vsize', 25);
 		line.Set('chart.ylabels', false);
@@ -69,13 +69,13 @@
             {%endif%}
             {%if configuration['paramAttribute'][c]['domain'] == 'cat'%}
                 <td><p><br><select name="{{configuration['paramAttribute'][c]['name']}}" size="{{configuration['paramAttribute'][c]['valueList']|length}}" multiple>
-                {%for vl in configuration['paramAttribute'][c]['valueList']%}
-                  <option value="{{vl}}">{{vl}}</option>
+                {%for vl in configuration['paramAttribute'][c]['valueList']%}    
+                    <option value="{{vl}}">{{vl}}</option>
                 {%endfor%}
                 </select></p></td>                
             {%endif%}
-            <td><input type="checkbox" name="turn" value="{{c}}"><br></td>
-            <td><input type="checkbox" name="hide" value="{{c}}"><br></td>
+            <td><input type="checkbox" name="turn" value="{{c}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
+            <td><input type="checkbox" name="hide" value="{{c}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
             <td><select name = {{c}}>
                {%for co in configuration['paramAttribute'][c]['position']%} 
                     <option value="{{co}}">{{co}}
