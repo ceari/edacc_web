@@ -691,8 +691,9 @@ def experiment_progress_ajax(database, experiment_id):
     # that column is hidden in the jquery table
     columns = ["ExperimentResults.idJob", "SolverConfig.name", "Instances.name",
                "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
-               "ExperimentResults.status", "StatusCodes.description", "ResultCodes.description",
-               "runningTime", 
+               "StatusCodes.description",
+               "runningTime",
+               "ResultCodes.description", "ExperimentResults.status",
                "ExperimentResults.CPUTimeLimit", "ExperimentResults.wallClockTimeLimit",
                "ExperimentResults.memoryLimit", "ExperimentResults.stackSizeLimit", "ExperimentResults.outputSizeLimitFirst",
                "ExperimentResults.outputSizeLimitLast",
@@ -754,7 +755,7 @@ def experiment_progress_ajax(database, experiment_id):
             if direction in ('asc', 'desc'):
                 order += direction + ", "
         order = order[:-2]
-
+    print order
     limit = ""
     if request.args.get('iDisplayStart', '') != '' and int(request.args.get('iDisplayLength', -1)) != -1:
         limit = "LIMIT %s, %s"
@@ -765,12 +766,13 @@ def experiment_progress_ajax(database, experiment_id):
     res = conn.execute("""SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
                        SolverConfig.name, Instances.name,
                        ExperimentResults.run, ExperimentResults.resultTime,
-                       ExperimentResults.seed, ExperimentResults.status,
-                       StatusCodes.description, ResultCodes.description,
+                       ExperimentResults.seed,
+                       StatusCodes.description,
                        CASE
                            WHEN status=0 THEN TIMESTAMPDIFF(SECOND, ExperimentResults.startTime, NOW())
                            ELSE 0
                        END as runningTime,
+                       ResultCodes.description, ExperimentResults.status,
                        ExperimentResults.CPUTimeLimit, ExperimentResults.wallClockTimeLimit, ExperimentResults.memoryLimit,
                        ExperimentResults.stackSizeLimit, ExperimentResults.outputSizeLimitFirst, ExperimentResults.outputSizeLimitLast,
                        ExperimentResults.computeNode, ExperimentResults.computeNodeIP, ExperimentResults.priority,
@@ -800,13 +802,13 @@ def experiment_progress_ajax(database, experiment_id):
 
     aaData = []
     for job in jobs:
-        if job[6] == 0: # status == running
-            running = str(datetime.timedelta(seconds=job[9]))
+        if job.status == 0: # status == running
+            running = job.runningTime
         else:
             running = "not running"
 
         aaData.append([job.idJob, job[1], job[2], job[3],
-                job[4], job[5], job[7], running , job[8], job[6], \
+                job[4], job[5], job[6], running, job[8], job[9], \
                 job[10], job[11], job[12], job[13], job[14], job[15], job[16], job[17], job[18], job[19] ] \
                 + [job[i] for i in xrange(20, 20+len(result_properties))]
                 #+ [job[i] for i in xrange(20+len(result_properties), 19+len(result_properties)+len(instance_properties))]
