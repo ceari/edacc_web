@@ -304,7 +304,7 @@ class EDACCDatabase(object):
                 if tree is None: return None
                 root = tree.getroot()
                 for node in root:
-                    if node.tag == "parameters":
+                    if node.tag == "parameters" and node[1].text == parameter_name:
                         return node[0].attrib.values()[0]
             
         class ConfigurationScenarioParameter(object): pass
