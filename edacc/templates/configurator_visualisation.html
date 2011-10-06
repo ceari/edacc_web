@@ -68,16 +68,22 @@
                 <input name="max" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}">max</p></td>
             {%endif%}
             {%if configuration['paramAttribute'][c]['domain'] == 'cat'%}
-                <td><p><br><select name="{{configuration['paramAttribute'][c]['name']}}" size="{{configuration['paramAttribute'][c]['valueList']|length}}" multiple>
+                <td><p><br><select name="{{configuration['paramAttribute'][c]['name']}}" 
+                        size="{% if configuration['paramAttribute'][c]['valueList']|length < 6 %}
+                                {{configuration['paramAttribute'][c]['valueList']|length }}
+                                {%else%} 5 {%endif%}" 
+                        multiple>
                 {%for vl in configuration['paramAttribute'][c]['valueList']%}    
-                    <option value="{{vl}}">{{vl}}</option>
+                    <option {%for svl in configuration['paramAttribute'][c]['selectValueList'][c]%}{%if svl == vl%}
+                            selected=selected 
+                        {%endif%}{%endfor%} value="{{vl}}">{{vl}}</option>
                 {%endfor%}
                 </select></p></td>                
             {%endif%}
             <td><input type="checkbox" name="turn" value="{{c}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
             <td><input type="checkbox" name="hide" value="{{c}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
             <td><select name = {{c}}>
-               {%for co in configuration['paramAttribute'][c]['position']%} 
+               {%for co in configuration['paramAttribute'][c]['positionList']%} 
                     <option value="{{co}}">{{co}}
                 {%endfor%}
             </select></td>
