@@ -15,7 +15,7 @@ import StringIO
 import csv
 
 from sqlalchemy.orm import joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 from flask import Module
 from flask import render_template as render
@@ -54,7 +54,7 @@ def solver_ranking(database, experiment_id):
     if form.i.data:
         CACHE_TIME = 14*24*60*60
         @cache.memoize(timeout=CACHE_TIME)
-        def cached_ranking(database, experiment_id, num_finished_jobs, form_i_data, form_par, form_avg_dev, csv=False, latex=False):
+        def cached_ranking(database, experiment_id, last_modified_job, form_i_data, form_par, form_avg_dev, csv=False, latex=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data)
             ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
@@ -106,9 +106,10 @@ def solver_ranking(database, experiment_id):
                           experiment=experiment, ranked_solvers=ranked_solvers,
                           data=ranking_data, form=form, instance_properties=db.get_instance_properties())
 
-        num_jobs_finished = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=experiment).filter(or_(db.ExperimentResult.status>=1, db.ExperimentResult.status<-1)).count()
-        return cached_ranking(database, experiment_id, num_jobs_finished, [i.idInstance for i in form.i.data],
+        last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
+                                .filter_by(experiment=experiment).first()
+
+        return cached_ranking(database, experiment_id, last_modified_job, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               'csv' in request.args, 'latex' in request.args)
 
