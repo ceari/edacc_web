@@ -318,12 +318,15 @@ class config_vis(object):
                     selectedConfigs[d].append(1)
                 else:
                     selectedConfigs[d].append(0)
-                d += 1
-            print configList   
+                d += 1  
             configuration['solverConfigs'] = selectedConfigs
         else:
-            configuration['solverConfigs'] = solverConfigName.values()
+            tmpList = []
+            for scn in solverConfigName:
+                tmpList.append([scn, solverConfigName[scn], 0])
+            configuration['solverConfigs'] = tmpList
        
     def getConfiguration(self):
+        print configuration
         return configuration
     

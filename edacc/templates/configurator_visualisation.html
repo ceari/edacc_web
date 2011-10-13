@@ -63,10 +63,9 @@
 
 
 
-<div style="position: relative; float: left">
- <form  method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
-    <input type="submit" name="submit" value="refresh">
-  
+
+<form  method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
+<input type="submit" name="submit" value="refresh"><input type="submit" name="submit" value="reset">
 <table border="0" cellpadding="0" cellspacing="0" width="100%" >
     <td><table border="2" cellpadding="5" cellspacing="0" width="100%">        
         {%for c in configuration['paramAttribute']%}
@@ -100,14 +99,15 @@
         {%endfor%} 
            
     </table></td>
-<td align="center" valign="top"><p>solver configuration<select name="solverConfigs"
-                        size="{% if configuration['solverConfigs']|length < configuration['paramAttribute']|length %} {{configuration['solverConfigs']|length}}{%else%}configuration['paramAttribute']|length{%endif%}" 
-                        multiple>
-            {%for sc in configuration['solverConfigs']%}    
-                <option {%if sc[2] == 1%} selected= selected {%endif%} value="{{sc[0]}}">{{sc[1]}}</option>
-            {%endfor%}
-        </select>
+<td align="center" valign="top">
+    <p>solver configuration<select name="solverConfigs"
+            size="{% if configuration['solverConfigs']|length < configuration['paramAttribute']|length %} {{configuration['solverConfigs']|length}}{%else%}configuration['paramAttribute']|length{%endif%}" 
+            multiple>
+        {%for sc in configuration['solverConfigs']%}    
+            <option {%if sc[2] == 1%} selected= selected {%endif%} value="{{sc[0]}}">{{sc[1]}}</option>
+        {%endfor%}
+    </select>
 </td>
 </table>
-</form></div>
+</form>
 {% endblock %}
