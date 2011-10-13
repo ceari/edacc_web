@@ -8,9 +8,9 @@
         <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.line.js')}}" ></script>               <!-- Just needed for line graphs -->
 
 <script>
-    
     window.onload = function (e)
     {
+        document.getElementById("configurator").width = screen.width;
         var line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}'10',{%endfor%}] 
             {%for x in configuration['numValue']%}
                 ,[{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endif%}{%endfor%}]
@@ -34,8 +34,12 @@
 		line.Set('chart.gutter.bottom', 170);
         line.Set('chart.gutter.left', 80);
         line.Set('chart.gutter.right', 50);
-        line.Set('chart.colors', ['rgba(0,0,0,0)', {%for x in configuration['numValue']%}
+        line.Set('chart.colors', ['rgba(0,0,0,0)', {%for x in configuration['solverConfigs']%}
+            {%if x[2] == 1%}
+                'rgba(255,0,0,255)',
+            {%else%}
                 'rgba(0,0,0,255)',
+            {%endif%}
             {%endfor%}]);
         line.Set('chart.linewidth', 0.5);
 		line.Set('chart.background.grid.hsize', 25);
@@ -47,51 +51,63 @@
 }
 
 </script>
+
+
 {% endblock %}
 
 {% block content %}
 
 <div style="float:left;">
-    <canvas id="configurator" width="1600" height="700">[No canvas support]</canvas>
+    <canvas id="configurator" height="700">[No canvas support]</canvas>
 </div>
 
 
-<div style="position: relative; float: left;">
+
+<div style="position: relative; float: left">
  <form  method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
-   <table border="2">
-        <tr><th>parameter</th><th>values</th><th>move down</th><th>hide</th><th>position</th></tr>
+    <input type="submit" name="submit" value="refresh">
+  
+<table border="0" cellpadding="0" cellspacing="0" width="100%" >
+    <td><table border="2" cellpadding="5" cellspacing="0" width="100%">        
         {%for c in configuration['paramAttribute']%}
-        <tr>
+        <tr align="center" valign="middle">
             <th>{{configuration['paramAttribute'][c]['name']}}</th>
             {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                <td><p><br><input name="min" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}">min
-                <input name="max" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}">max</p></td>
+                <td><p><br>min<input name="min: {{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}">
+                max<input name="max: {{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
             {%endif%}
             {%if configuration['paramAttribute'][c]['domain'] == 'cat'%}
-                <td><p><br><select name="{{configuration['paramAttribute'][c]['name']}}" 
+                <td><p><br><select name="select: {{configuration['paramAttribute'][c]['name']}}" 
                         size="{% if configuration['paramAttribute'][c]['valueList']|length < 6 %}
                                 {{configuration['paramAttribute'][c]['valueList']|length }}
                                 {%else%} 5 {%endif%}" 
                         multiple>
                 {%for vl in configuration['paramAttribute'][c]['valueList']%}    
-                    <option {%for svl in configuration['paramAttribute'][c]['selectValueList'][c]%}{%if svl == vl%}
+                    <option {%for svl in configuration['paramAttribute'][c]['selectValueList']%}{%if svl == vl%}
                             selected=selected 
                         {%endif%}{%endfor%} value="{{vl}}">{{vl}}</option>
                 {%endfor%}
                 </select></p></td>                
             {%endif%}
-            <td><input type="checkbox" name="turn" value="{{c}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
-            <td><input type="checkbox" name="hide" value="{{c}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
-            <td><select name = {{c}}>
+            <td>move down<input type="checkbox" name="turn" value="{{configuration['paramAttribute'][c]['name']}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
+            <td>hide<input type="checkbox" name="hide" value="{{configuration['paramAttribute'][c]['name']}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
+            <td >position<select name = "{{configuration['paramAttribute'][c]['name']}}">
                {%for co in configuration['paramAttribute'][c]['positionList']%} 
-                    <option value="{{co}}">{{co}}
+                    <option value="{{c}}: {{co}}">{{co}}
                 {%endfor%}
             </select></td>
         </tr>
-        {%endfor%}        
-        
-    </table>   
-    <input type="submit" name="submit" value="refresh">
+        {%endfor%} 
+           
+    </table></td>
+<td align="center" valign="top"><p>solver configuration<select name="solverConfigs"
+                        size="{% if configuration['solverConfigs']|length < configuration['paramAttribute']|length %} {{configuration['solverConfigs']|length}}{%else%}configuration['paramAttribute']|length{%endif%}" 
+                        multiple>
+            {%for sc in configuration['solverConfigs']%}    
+                <option {%if sc[2] == 1%} selected= selected {%endif%} value="{{sc[0]}}">{{sc[1]}}</option>
+            {%endfor%}
+        </select>
+</td>
+</table>
 </form></div>
-
 {% endblock %}
