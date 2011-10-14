@@ -68,9 +68,15 @@ def experiments_index(database):
         experiments = []
     else:
         experiments = db.session.query(db.Experiment).all()
+        experiment_running = dict((r[0], r[1] > 0) for r in db.session.query(db.ExperimentResult.Experiment_idExperiment,
+                                                                         func.count(db.ExperimentResult)) \
+                .filter_by(status=STATUS_RUNNING) \
+                .filter(func.timestampdiff(sqla_text("SECOND"),
+                                        db.ExperimentResult.startTime, func.now()) < db.ExperimentResult.CPUTimeLimit + 100)
+                .filter(db.ExperimentResult.priority>=0).group_by(db.ExperimentResult.Experiment_idExperiment))
         experiments.sort(key=lambda e: e.date)
 
-    return render('experiments.html', experiments=experiments, db=db, database=database)
+    return render('experiments.html', experiments=experiments, experiment_running=experiment_running, db=db, database=database)
 
 
 @frontend.route('/<database>/categories')
