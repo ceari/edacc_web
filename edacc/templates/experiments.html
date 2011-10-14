@@ -16,6 +16,7 @@
                 <li>
                     <a title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ({{experiment.date|datetimeformat('%d.%m.%Y')}}, {{experiment.get_num_solver_configs(db)}} Solvers, {{experiment.get_num_instances(db)}} Instances, {{experiment.get_num_jobs(db)}} jobs)
                     {% if experiment_running[experiment.idExperiment] %}<img alt="There are jobs running in this experiment" title="There are jobs running in this experiment" src="{{url_for('static', filename='img/computing.gif')}}"/>{% endif %}
+                    {% if experiment_crashes[experiment.idExperiment] %}<img alt="There are crashed jobs in this experiment" title="There are crashed jobs in this experiment" src="{{url_for('static', filename='img/icon_alert.gif')}}"/>{% endif %}
                 </li>
             {% endfor %}
         {% else %}
