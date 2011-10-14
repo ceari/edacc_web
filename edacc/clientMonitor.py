@@ -81,7 +81,7 @@ class ClientMonitor(Canvas):
             clusterHasClient[clu]=cClient        
         
         #Dictionary which store the locationname for each grid
-        gridQueue =  dict((g.idgridQueue, g.location) for g in db.session.query(db.GridQueue).all())
+        gridQueue =  dict((g.idgridQueue, g.location or g.name) for g in db.session.query(db.GridQueue).all())
                 
         #returns a tuple out of ClientID, Timedifference in seconds
         timestampdiff = dict(db.session.query(db.Client.idClient, func.timestampdiff(text("SECOND"),db.Client.lastReport, func.now())).all())
