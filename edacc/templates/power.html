@@ -18,7 +18,7 @@
         <span style="font-weight: bold;">Total computation time:</span> {{(total_time / 60.0 / 60.0) | round(2)}} CPU hours ({{(total_time / 60.0 / 60.0 / 24.0 / 365.0) | round(1)}} years)<br/>
         <span style="font-weight: bold;">Power consumption:</span> {{power_consumed | round(2)}} kWh (at 30 W/h)<br/>
         <span style="font-weight: bold;">Cost:</span> {{cost | round(2)}} € (at 0.2 €/kWh)<br/>
-        <span style="font-weight: bold;">CO₂:</span> {{(power_consumed * 50 / 1000.0) | round(2)}} kg (at 50g/kWh)<br/>
+        <span style="font-weight: bold;">CO₂:</span> {{(power_consumed * 1000.0 / 1000.0) | round(2)}} kg (at 1000g/kWh)<br/>
     </div>
     <div style="padding: 10px;">
     {% if 100.0 <= power_consumed <= 250.0  %}
