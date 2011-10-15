@@ -54,13 +54,13 @@ def solver_ranking(database, experiment_id):
     if form.i.data:
         CACHE_TIME = 14*24*60*60
         @cache.memoize(timeout=CACHE_TIME)
-        def cached_ranking(database, experiment_id, last_modified_job, form_i_data, form_par, form_avg_dev, csv=False, latex=False):
+        def cached_ranking(database, experiment_id, last_modified_job, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data)
             ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data, form.calculate_average_dev.data)
 
-            if csv:
+            if csv_response:
                 head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
                                      'cumulated CPU time', 'avg. CPU time per successful run']
 
@@ -82,7 +82,7 @@ def solver_ranking(database, experiment_id):
                 headers.add('Content-Disposition', 'attachment',
                             filename=secure_filename(experiment.name + "_ranking.csv"))
                 return Response(response=csv_response.read(), headers=headers)
-            elif latex:
+            elif latex_response:
                 head = ['\\#', 'Solver', '\\# of successful runs', '\\% of all runs', '\\% of VBS runs',
                                      'cumulated CPU time', 'avg. CPU time per successful run']
 
