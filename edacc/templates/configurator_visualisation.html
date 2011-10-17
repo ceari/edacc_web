@@ -66,14 +66,14 @@
 
 <form  method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
 <input type="submit" name="submit" value="refresh"><input type="submit" name="submit" value="reset">
-<table border="0" cellpadding="0" cellspacing="0" width="100%" >
-    <td><table border="2" cellpadding="5" cellspacing="0" width="100%">        
+<table border="0" cellpadding="0" cellspacing="5" width="100%" >
+    <td><table border="2" cellpadding="0" cellspacing="0" width="100%">        
         {%for c in configuration['paramAttribute']%}
         <tr align="center" valign="middle">
             <th>{{configuration['paramAttribute'][c]['name']}}</th>
             {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                <td><p><br>min<input name="min: {{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}">
-                max<input name="max: {{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
+                <td><p>min<input name="min: {{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}">
+                <br>max<input name="max: {{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
             {%endif%}
             {%if configuration['paramAttribute'][c]['domain'] == 'cat'%}
                 <td><p><br><select name="select: {{configuration['paramAttribute'][c]['name']}}" 
@@ -88,9 +88,9 @@
                 {%endfor%}
                 </select></p></td>                
             {%endif%}
-            <td>move down<input type="checkbox" name="turn" value="{{configuration['paramAttribute'][c]['name']}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
-            <td>hide<input type="checkbox" name="hide" value="{{configuration['paramAttribute'][c]['name']}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
-            <td >position<select name = "{{configuration['paramAttribute'][c]['name']}}">
+            <td>move<br>down<br><input type="checkbox" name="turn" value="{{configuration['paramAttribute'][c]['name']}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
+            <td>hide<br><input type="checkbox" name="hide" value="{{configuration['paramAttribute'][c]['name']}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
+            <td >position<br><select name = "{{configuration['paramAttribute'][c]['name']}}">
                {%for co in configuration['paramAttribute'][c]['positionList']%} 
                     <option value="{{c}}: {{co}}">{{co}}
                 {%endfor%}
@@ -100,8 +100,8 @@
            
     </table></td>
 <td align="center" valign="top">
-    <p>solver configuration<select name="solverConfigs"
-            size="{% if configuration['solverConfigs']|length < configuration['paramAttribute']|length %} {{configuration['solverConfigs']|length}}{%else%}configuration['paramAttribute']|length{%endif%}" 
+    solver configuration<br><select name="solverConfigs"
+            size="{% if configuration['solverConfigs']|length < (configuration['paramAttribute']|length)*8 %} {{configuration['solverConfigs']|length}}{%else%}{{configuration['paramAttribute']|length}}{%endif%}" 
             multiple>
         {%for sc in configuration['solverConfigs']%}    
             <option {%if sc[2] == 1%} selected= selected {%endif%} value="{{sc[0]}}">{{sc[1]}}</option>

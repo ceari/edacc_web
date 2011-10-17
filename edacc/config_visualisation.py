@@ -75,7 +75,6 @@ class config_vis(object):
         maxDict = {}
         selectValueList = {}
         deselectedConfigs = []
-        selectedConfigs = []
         turnList = []
         hideList = []
         configList = [] 
@@ -83,7 +82,7 @@ class config_vis(object):
         parameterDomain = {}
         parameterPosition = {}
         
-
+        
         #db Queries for configuration visualisation
         name = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == expID).first()
         configuration['expName'] = str(name[0])
@@ -95,25 +94,22 @@ class config_vis(object):
                         for p in db.session.query(db.Parameter).
                             filter(db.Parameter.idParameter.in_(configurable)).distinct())
                             
-       # start = time.clock()
         for name in parameterName.values():
             parameterDomain[name] = experiment.configuration_scenario.get_parameter_domain(name)
 
-       # print time.clock() - start, "sec domain"
         solverConfigCosts = dict((s.idSolverConfig, s.cost) for s in experiment.solver_configurations) 
         
-        ##TODO: query optimieren
+
+        paramInstance = db.session.query(db.ParameterInstance).filter(db.ParameterInstance.SolverConfig_idSolverConfig.in_(solverConfigName.keys())).all()        
         for scn in solverConfigName:
-            parameterValue[scn] = dict((pv.Parameters_idParameter, pv.value) 
-                            for pv in db.session.query(db.ParameterInstance).
-                                filter(db.ParameterInstance.SolverConfig_idSolverConfig == scn).
-                                filter(db.ParameterInstance.Parameters_idParameter.in_(parameterName.keys())).
-                                filter(db.ParameterInstance.value != '')) 
+            parameterValue[scn] = dict((pv.Parameters_idParameter, pv.value) for pv in paramInstance if pv.SolverConfig_idSolverConfig == scn and pv.Parameters_idParameter in parameterName.keys() and pv.value != '')
+
         for scn in solverConfigName:
             confidence[scn] = int(db.session.query(db.ExperimentResult.idJob).
                             filter(db.ExperimentResult.SolverConfig_idSolverConfig == scn).count())
-                   
 
+                   
+        start = time.clock()
         paramList.append('confidence')
         paramList.append('performance')
         domain['confidence']='num'
@@ -146,7 +142,7 @@ class config_vis(object):
                     if index in configForm.keys():                    
                         select = map(str, configForm.getlist(index))
                         selectValueList[pm]=select
-                        
+
             if "confidence" in configForm.keys():
                 parameterPosition["confidence"] = mapPosition(configForm.getlist("confidence"))
             if "performance" in configForm.keys():
@@ -163,7 +159,7 @@ class config_vis(object):
                 minDict['performance']=minList[0]
             if "max: performance" in configForm.keys():
                 maxList = map(str, configForm.getlist('max: performance'))
-                maxDict['performance']=maxList[0] 
+                maxDict['performance']=maxList[0]
                 
             if 'turn' in configForm.keys():
                 turnList =  map(str, configForm.getlist('turn'))
@@ -172,7 +168,7 @@ class config_vis(object):
                 
             if 'solverConfigs' in configForm.keys():
                 configList = map(str, configForm.getlist('solverConfigs'))
-
+            print minDict, maxDict
         #creates a dictionary with values of the parameters of each solverConfig
         for scn in solverConfigName:
             parameterInstance = {} 
@@ -192,33 +188,22 @@ class config_vis(object):
                     if "select: "+str(parameterName[p]) in configForm.keys():                 
                         if str(parameterValue[scn][p]) not in selectValueList[str(parameterName[p])]:
                             deselectedConfigs.append(scn)
-                        else:
-                            if [scn, solverConfigName[scn]] not in selectedConfigs[0]:
-                                selectedConfigs.append([scn, solverConfigName[scn]])
 
                 ##TODO: irgendwas stimmt noch im webfrontend mit min max eingabe noch nicht
                 elif configForm != None and domain[str(parameterName[p])] == 'num':
                     if float(parameterValue[scn][p]) < float(minDict[str(parameterName[p])]) or float(parameterValue[scn][p]) > float(maxDict[str(parameterName[p])]):
                         deselectedConfigs.append(scn)
-                    else:
-                        if [scn, solverConfigName[scn]] not in selectedConfigs:
-                            selectedConfigs.append([scn, solverConfigName[scn]])
+
                 n += 1
             
                        
             if len(minDict)>0:
                 if float(confidence[scn]) < float(minDict['confidence']) or float(confidence[scn]) > float(maxDict['confidence']):                       
                     deselectedConfigs.append(scn)
-                else:
-                    if [scn, solverConfigName[scn]] not in selectedConfigs:
-                        selectedConfigs.append([scn, solverConfigName[scn]])
                 if solverConfigCosts[scn] != None:
                     if float(solverConfigCosts[scn]) < float(minDict['performance']) or float(solverConfigCosts[scn]) > float(maxDict['performance']):
                         deselectedConfigs.append(scn)
-                    else:
-                        if [scn, solverConfigName[scn]] not in selectedConfigs:
-                            selectedConfigs.append([scn, solverConfigName[scn]])
-                           
+                    
             parameter['confidence'] = confidence[scn]
         
             if solverConfigCosts[scn] != None:
@@ -312,21 +297,21 @@ class config_vis(object):
             list.append(i)
         configuration['numValue'] = list
         if configForm != None:
-            d = 0
-            for sc in selectedConfigs:
-                if str(sc[0]) in configList:
-                    selectedConfigs[d].append(1)
-                else:
-                    selectedConfigs[d].append(0)
-                d += 1  
+            selectedConfigs = []
+            for scn in solverConfigName:
+                if scn not in deselectedConfigs:
+                    if str(scn) in configList:
+                        selectedConfigs.append([scn, solverConfigName[scn], 1])
+                    else:
+                        selectedConfigs.append([scn, solverConfigName[scn], 0])  
             configuration['solverConfigs'] = selectedConfigs
         else:
-            tmpList = []
+            selectedConfigs = []
             for scn in solverConfigName:
-                tmpList.append([scn, solverConfigName[scn], 0])
-            configuration['solverConfigs'] = tmpList
+                selectedConfigs.append([scn, solverConfigName[scn], 0])
+            configuration['solverConfigs'] = selectedConfigs
+
        
     def getConfiguration(self):
-        print configuration
         return configuration
     
