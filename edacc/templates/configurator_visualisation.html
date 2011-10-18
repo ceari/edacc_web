@@ -8,6 +8,7 @@
         <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.line.js')}}" ></script>               <!-- Just needed for line graphs -->
 
 <script>
+
     window.onload = function (e)
     {
         document.getElementById("configurator").width = screen.width;
@@ -32,8 +33,8 @@
                                             {%endif%}{%endfor%}]);
 		line.Set('chart.gutter.top', 80);
 		line.Set('chart.gutter.bottom', 170);
-        line.Set('chart.gutter.left', 80);
-        line.Set('chart.gutter.right', 50);
+        line.Set('chart.gutter.left', 100);
+        line.Set('chart.gutter.right', 100);
         line.Set('chart.colors', ['rgba(0,0,0,0)', {%for x in configuration['solverConfigs']%}
             {%if x[2] == 1%}
                 'rgba(255,0,0,255)',
@@ -61,19 +62,16 @@
     <canvas id="configurator" height="700">[No canvas support]</canvas>
 </div>
 
-
-
-
-<form  method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
+<form name="Formular" method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
 <input type="submit" name="submit" value="refresh"><input type="submit" name="submit" value="reset">
-<table border="0" cellpadding="0" cellspacing="5" width="100%" >
-    <td><table border="2" cellpadding="0" cellspacing="0" width="100%">        
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+    <td><table border="2" cellpadding="10" cellspacing="0" width="100%">        
         {%for c in configuration['paramAttribute']%}
         <tr align="center" valign="middle">
             <th>{{configuration['paramAttribute'][c]['name']}}</th>
             {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                <td><p>min<input name="min: {{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}">
-                <br>max<input name="max: {{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
+                <td><p>min<input name="min_{{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}">
+                <br>max<input name="max_{{configuration['paramAttribute'][c]['name']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
             {%endif%}
             {%if configuration['paramAttribute'][c]['domain'] == 'cat'%}
                 <td><p><br><select name="select: {{configuration['paramAttribute'][c]['name']}}" 

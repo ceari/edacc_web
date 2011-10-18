@@ -122,21 +122,22 @@ class config_vis(object):
                     domain[pd] = 'cat'
                                 
         #maps the web formular in lists
+        ##TODO: minDict und maxDict werden erstellt
         if configForm != None:
             for pm in parameterName.values(): 
                 if str(pm) in configForm.keys():
                     parameterPosition[pm] = mapPosition(configForm.getlist(pm))                    
                 if domain[pm] == "num":
-                    indexMin = "min: "+pm
+                    indexMin = "min_"+pm
                     minList = []
                     if indexMin in configForm.keys():                    
                         minList = map(str, configForm.getlist(indexMin))
-                    minDict[pm]=minList[0]
-                    indexMax = "max: "+pm
+                    minDict[pm]=minList[0].strip()
+                    indexMax = "max_"+pm
                     maxList = []
                     if indexMax in configForm.keys():                    
                         maxList = map(str, configForm.getlist(indexMax))
-                    maxDict[pm]=maxList[0]
+                    maxDict[pm]=maxList[0].strip()
                 elif domain[pm] == "cat":
                     index = "select: " +pm
                     if index in configForm.keys():                    
@@ -148,18 +149,18 @@ class config_vis(object):
             if "performance" in configForm.keys():
                 parameterPosition["performance"] = mapPosition(configForm.getlist("performance"))
                 
-            if "min: confidence" in configForm.keys():
-                minList = map(str, configForm.getlist('min: confidence'))
-                minDict['confidence']=minList[0]
-            if "max: confidence" in configForm.keys():
-                maxList = map(str, configForm.getlist('max: confidence'))
-                maxDict['confidence']=maxList[0] 
-            if "min: performance" in configForm.keys():
-                minList = map(str, configForm.getlist('min: performance'))
-                minDict['performance']=minList[0]
-            if "max: performance" in configForm.keys():
-                maxList = map(str, configForm.getlist('max: performance'))
-                maxDict['performance']=maxList[0]
+            if "min_confidence" in configForm.keys():
+                minList = map(str, configForm.getlist('min_confidence'))
+                minDict['confidence']=minList[0].strip()
+            if "max_confidence" in configForm.keys():
+                maxList = map(str, configForm.getlist('max_confidence'))
+                maxDict['confidence']=maxList[0].strip()
+            if "min_performance" in configForm.keys():
+                minList = map(str, configForm.getlist('min_performance'))
+                minDict['performance']=minList[0].strip()
+            if "max_performance" in configForm.keys():
+                maxList = map(str, configForm.getlist('max_performance'))
+                maxDict['performance']=maxList[0].strip()
                 
             if 'turn' in configForm.keys():
                 turnList =  map(str, configForm.getlist('turn'))
@@ -168,7 +169,24 @@ class config_vis(object):
                 
             if 'solverConfigs' in configForm.keys():
                 configList = map(str, configForm.getlist('solverConfigs'))
-            print minDict, maxDict
+            chkZ = 1;
+            minKeys = minDict.keys()
+            for mk in minKeys:
+                for md in minDict[mk]:          
+                    if not (md >= "0" and md <= "9" or md =="."):
+                        chkZ = -1;
+                if chkZ == -1:
+                    minDict[mk]=""
+            chkZ = 1;
+            maxKeys = maxDict.keys()
+            for mk in maxKeys:
+                for md in maxDict[mk]:          
+                    if not (md >= "0" and md <= "9" or md =="."):
+                        chkZ = -1;
+                if chkZ == -1:
+                    maxDict[mk]=""
+
+            
         #creates a dictionary with values of the parameters of each solverConfig
         for scn in solverConfigName:
             parameterInstance = {} 
@@ -189,20 +207,29 @@ class config_vis(object):
                         if str(parameterValue[scn][p]) not in selectValueList[str(parameterName[p])]:
                             deselectedConfigs.append(scn)
 
-                ##TODO: irgendwas stimmt noch im webfrontend mit min max eingabe noch nicht
                 elif configForm != None and domain[str(parameterName[p])] == 'num':
-                    if float(parameterValue[scn][p]) < float(minDict[str(parameterName[p])]) or float(parameterValue[scn][p]) > float(maxDict[str(parameterName[p])]):
-                        deselectedConfigs.append(scn)
-
+                    if len(minDict[str(parameterName[p])]) < 0:
+                        if float(parameterValue[scn][p]) < float(minDict[str(parameterName[p])]):
+                            deselectedConfigs.append(scn)
+                    if len(maxDict[str(parameterName[p])]) < 0:
+                        if float(parameterValue[scn][p]) > float(maxDict[str(parameterName[p])]):
+                            deselectedConfigs.append(scn)
                 n += 1
             
-                       
-            if len(minDict)>0:
-                if float(confidence[scn]) < float(minDict['confidence']) or float(confidence[scn]) > float(maxDict['confidence']):                       
-                    deselectedConfigs.append(scn)
-                if solverConfigCosts[scn] != None:
-                    if float(solverConfigCosts[scn]) < float(minDict['performance']) or float(solverConfigCosts[scn]) > float(maxDict['performance']):
+            if configForm != None:
+                if len(minDict['confidence'])>0:
+                    if float(confidence[scn]) < float(minDict['confidence']):                       
                         deselectedConfigs.append(scn)
+                if len(maxDict['confidence'])>0:
+                    if float(confidence[scn]) > float(maxDict['confidence']):                       
+                        deselectedConfigs.append(scn)
+                if solverConfigCosts[scn] != None:    
+                    if len(minDict['performance'])>0:                
+                        if float(solverConfigCosts[scn]) < float(minDict['performance']):
+                            deselectedConfigs.append(scn)
+                    if len(maxDict['performance'])>0:                
+                        if float(solverConfigCosts[scn]) > float(maxDict['performance']):
+                            deselectedConfigs.append(scn)
                     
             parameter['confidence'] = confidence[scn]
         
@@ -274,15 +301,22 @@ class config_vis(object):
                 numValue = len(values)    
                         
             if domain[pl] == 'num': 
-                if configForm != None and len(minDict[pl])>0 and float(minDict[pl])>=min(valueList) and float(minDict[pl])<=max(valueList):
-                    minValue = minDict[pl]
+                if configForm != None and len(minDict[pl])>0:
+                    if float(minDict[pl])>=min(valueList) and float(minDict[pl])<=max(valueList):
+                        minValue = minDict[pl]
+                    else:
+                        minValue = min(valueList)    
                 else:
                     minValue = min(valueList)
-                if configForm != None and len(maxDict[pl])>0 and float(maxDict[pl])>=min(valueList) and float(maxDict[pl])<=max(valueList):
-                    maxValue = maxDict[pl]
+                
+                if configForm != None and len(maxDict[pl])>0:
+                    if float(maxDict[pl])>=min(valueList) and float(maxDict[pl])<=max(valueList):
+                        maxValue = maxDict[pl]
+                    else:
+                        maxValue = max(valueList)
                 else:
                     maxValue = max(valueList)
-    
+
                 values = project(values)
                 paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue, 'name': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': domain[pl]}
 
