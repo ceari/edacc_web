@@ -32,7 +32,7 @@ def turnValue(values):
         k += 1
     return values
 
-#Projects the values to the range of the graph
+#Projects values to the range of the graph
 def project(values):
     values = map(float, values)
     if max(values) > 0:
@@ -43,6 +43,7 @@ def project(values):
             j += 1 
     return values
 
+#change position of the parameter
 def mapPosition(form):
     pos = map(str, form)
     list = []
@@ -68,7 +69,6 @@ class config_vis(object):
         solverConfig = {}
         paramAttribute = {}
         parameterValue = {}
-        confidence = {}
         paramList = []
         numValue = 0
         minDict = {}
@@ -83,6 +83,7 @@ class config_vis(object):
         parameterPosition = {}
         
         
+        start_db = time.clock() 
         #db Queries for configuration visualisation
         name = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == expID).first()
         configuration['expName'] = str(name[0])
@@ -93,27 +94,37 @@ class config_vis(object):
         parameterName  =  dict((p.idParameter, p.name) 
                         for p in db.session.query(db.Parameter).
                             filter(db.Parameter.idParameter.in_(configurable)).distinct())
-                            
-        for name in parameterName.values():
-            parameterDomain[name] = experiment.configuration_scenario.get_parameter_domain(name)
+                     
+        for id in parameterName.keys():
+            parameterDomain[id] = experiment.configuration_scenario.get_parameter_domain(parameterName[id])
 
         solverConfigCosts = dict((s.idSolverConfig, s.cost) for s in experiment.solver_configurations) 
         
-
-        paramInstance = db.session.query(db.ParameterInstance).filter(db.ParameterInstance.SolverConfig_idSolverConfig.in_(solverConfigName.keys())).all()        
+        ##TODO: vielleicht noch optimieren
         for scn in solverConfigName:
-            parameterValue[scn] = dict((pv.Parameters_idParameter, pv.value) for pv in paramInstance if pv.SolverConfig_idSolverConfig == scn and pv.Parameters_idParameter in parameterName.keys() and pv.value != '')
+            parameterValue[scn]= {'confidence': int(db.session.query(db.ExperimentResult.idJob).
+                            filter(db.ExperimentResult.SolverConfig_idSolverConfig == scn).count())}
+            if solverConfigCosts[scn] != None:
+                parameterValue[scn].update({'performance': solverConfigCosts[scn] })
+            else:
+                parameterValue[scn].update({'performance': 0.0 })
+        paramInstance = db.session.query(db.ParameterInstance).filter(db.ParameterInstance.SolverConfig_idSolverConfig.in_(solverConfigName.keys())).all()   
+        print time.clock() - start_db, "dbZeit"
 
-        for scn in solverConfigName:
-            confidence[scn] = int(db.session.query(db.ExperimentResult.idJob).
-                            filter(db.ExperimentResult.SolverConfig_idSolverConfig == scn).count())
-
-                   
-        start = time.clock()
+        parameterName.update({'confidence': 'confidence', 'performance': 'performance'})
         paramList.append('confidence')
         paramList.append('performance')
         domain['confidence']='num'
         domain['performance']='num'
+
+        for pv in paramInstance:
+            if pv.Parameters_idParameter not in parameterName.keys() or pv.value == "": continue
+            if pv.SolverConfig_idSolverConfig not in parameterValue: 
+                parameterValue[pv.SolverConfig_idSolverConfig] = {}
+            parameterValue[pv.SolverConfig_idSolverConfig].update({pv.Parameters_idParameter: pv.value})
+            if pv.Parameters_idParameter not in paramList:
+                paramList.append(pv.Parameters_idParameter)        
+
         for pd in parameterDomain.keys():
                 selectValueList[pd]= []
                 if parameterDomain[pd] == "realDomain" or parameterDomain[pd] == "integerDomain":
@@ -122,46 +133,27 @@ class config_vis(object):
                     domain[pd] = 'cat'
                                 
         #maps the web formular in lists
-        ##TODO: minDict und maxDict werden erstellt
         if configForm != None:
-            for pm in parameterName.values(): 
+            for pm in paramList: 
                 if str(pm) in configForm.keys():
-                    parameterPosition[pm] = mapPosition(configForm.getlist(pm))                    
+                    parameterPosition[pm] = mapPosition(configForm.getlist(str(pm)))                    
                 if domain[pm] == "num":
-                    indexMin = "min_"+pm
+                    indexMin = "min_"+str(pm)
                     minList = []
                     if indexMin in configForm.keys():                    
                         minList = map(str, configForm.getlist(indexMin))
                     minDict[pm]=minList[0].strip()
-                    indexMax = "max_"+pm
+                    indexMax = "max_"+str(pm)
                     maxList = []
                     if indexMax in configForm.keys():                    
                         maxList = map(str, configForm.getlist(indexMax))
                     maxDict[pm]=maxList[0].strip()
                 elif domain[pm] == "cat":
-                    index = "select: " +pm
+                    index = "select: "+str(pm)
                     if index in configForm.keys():                    
                         select = map(str, configForm.getlist(index))
                         selectValueList[pm]=select
 
-            if "confidence" in configForm.keys():
-                parameterPosition["confidence"] = mapPosition(configForm.getlist("confidence"))
-            if "performance" in configForm.keys():
-                parameterPosition["performance"] = mapPosition(configForm.getlist("performance"))
-                
-            if "min_confidence" in configForm.keys():
-                minList = map(str, configForm.getlist('min_confidence'))
-                minDict['confidence']=minList[0].strip()
-            if "max_confidence" in configForm.keys():
-                maxList = map(str, configForm.getlist('max_confidence'))
-                maxDict['confidence']=maxList[0].strip()
-            if "min_performance" in configForm.keys():
-                minList = map(str, configForm.getlist('min_performance'))
-                minDict['performance']=minList[0].strip()
-            if "max_performance" in configForm.keys():
-                maxList = map(str, configForm.getlist('max_performance'))
-                maxDict['performance']=maxList[0].strip()
-                
             if 'turn' in configForm.keys():
                 turnList =  map(str, configForm.getlist('turn'))
             if 'hide' in configForm.keys():
@@ -169,23 +161,28 @@ class config_vis(object):
                 
             if 'solverConfigs' in configForm.keys():
                 configList = map(str, configForm.getlist('solverConfigs'))
-            chkZ = 1;
+            #check if input is in the right form
+            minChk = 1;
+            maxChk = 1;
             minKeys = minDict.keys()
             for mk in minKeys:
-                for md in minDict[mk]:          
-                    if not (md >= "0" and md <= "9" or md =="."):
-                        chkZ = -1;
-                if chkZ == -1:
-                    minDict[mk]=""
-            chkZ = 1;
-            maxKeys = maxDict.keys()
-            for mk in maxKeys:
-                for md in maxDict[mk]:          
-                    if not (md >= "0" and md <= "9" or md =="."):
-                        chkZ = -1;
-                if chkZ == -1:
-                    maxDict[mk]=""
-
+                if minDict[mk] and maxDict[mk] != "":
+                    if float(minDict[mk])>float(maxDict[mk]):
+                        minDict[mk]=""
+                        maxDict[mk]=""
+                if minDict[mk] != "":
+                    for md in minDict[mk]:          
+                        if not (md >= "0" and md <= "9" or md =="."):
+                            minChk = -1;
+                    if minChk == -1:
+                        minDict[mk]=""
+                if maxDict[mk] != "":
+                    for md in maxDict[mk]:          
+                        if not (md >= "0" and md <= "9" or md =="."):
+                            maxChk = -1;
+                    if maxChk == -1:
+                        maxDict[mk]=""
+                 
             
         #creates a dictionary with values of the parameters of each solverConfig
         for scn in solverConfigName:
@@ -196,47 +193,22 @@ class config_vis(object):
             n = 2
             for p in parameterValue[scn]: 
                 #assigns the value to the parameter of the solverConfig
-                parameter[str(parameterName[p])]= str(parameterValue[scn][p])
-                #creates a list of parameters              
-                if str(parameterName[p]) not in paramList:
-                    paramList.append(str(parameterName[p]))
+                parameter[p]= str(parameterValue[scn][p])
                     
             #creates the list deselectedConfigs of solverConfigs which are deselected if the values are restricted
-                if configForm != None and domain[str(parameterName[p])] == 'cat':
-                    if "select: "+str(parameterName[p]) in configForm.keys():                 
-                        if str(parameterValue[scn][p]) not in selectValueList[str(parameterName[p])]:
+                if configForm != None and domain[p] == 'cat':
+                    if "select_"+str(p) in configForm.keys():                 
+                        if str(parameterValue[scn][p]) not in selectValueList[p]:
                             deselectedConfigs.append(scn)
 
-                elif configForm != None and domain[str(parameterName[p])] == 'num':
-                    if len(minDict[str(parameterName[p])]) < 0:
-                        if float(parameterValue[scn][p]) < float(minDict[str(parameterName[p])]):
+                elif configForm != None and domain[p] == 'num':
+                    if len(minDict[p]) < 0:
+                        if float(parameterValue[scn][p]) < float(minDict[p]):
                             deselectedConfigs.append(scn)
-                    if len(maxDict[str(parameterName[p])]) < 0:
-                        if float(parameterValue[scn][p]) > float(maxDict[str(parameterName[p])]):
+                    if len(maxDict[p]) < 0:
+                        if float(parameterValue[scn][p]) > float(maxDict[p]):
                             deselectedConfigs.append(scn)
                 n += 1
-            
-            if configForm != None:
-                if len(minDict['confidence'])>0:
-                    if float(confidence[scn]) < float(minDict['confidence']):                       
-                        deselectedConfigs.append(scn)
-                if len(maxDict['confidence'])>0:
-                    if float(confidence[scn]) > float(maxDict['confidence']):                       
-                        deselectedConfigs.append(scn)
-                if solverConfigCosts[scn] != None:    
-                    if len(minDict['performance'])>0:                
-                        if float(solverConfigCosts[scn]) < float(minDict['performance']):
-                            deselectedConfigs.append(scn)
-                    if len(maxDict['performance'])>0:                
-                        if float(solverConfigCosts[scn]) > float(maxDict['performance']):
-                            deselectedConfigs.append(scn)
-                    
-            parameter['confidence'] = confidence[scn]
-        
-            if solverConfigCosts[scn] != None:
-                parameter['performance'] = solverConfigCosts[scn]
-            else:
-                parameter['performance'] = 0.0          
                    
             parameterInstance['parameter']= parameter 
             solverConfig[scn]= parameterInstance
@@ -250,7 +222,6 @@ class config_vis(object):
                     del tmpList[tmpList.index(pl)] 
                     tmpList.insert(pos1, pl)
             paramList = tmpList[:]
-        
         i=0
         for pl in paramList:
             values = []
@@ -272,7 +243,6 @@ class config_vis(object):
                 else:
                     if scn not in deselectedConfigs:
                         values.append(0)        
-
             #maps the values of each parameter suitable for domains       
             if domain[pl] == "cat":
                 values = classify(values, valueList)
@@ -286,7 +256,6 @@ class config_vis(object):
                 values = turnValue(values)          
             
             #checks if a parameter is shielded
-            ##TODO: bei hide veraendert sich im webfrontend die max position noch nicht
             hide = False
             if len(hideList)>0 and (pl in hideList):
                 hide = True
@@ -318,12 +287,12 @@ class config_vis(object):
                     maxValue = max(valueList)
 
                 values = project(values)
-                paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue, 'name': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': domain[pl]}
+                paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue,'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'num'}
 
                 
             elif domain[pl] == 'cat':
                 values = project(values)
-                paramAttribute[i] = {'values': values,'valueList': valueList, 'selectValueList': selectValueList[pl], 'name': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': domain[pl]}
+                paramAttribute[i] = {'values': values,'valueList': valueList, 'selectValueList': selectValueList[pl],'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'cat'}
         
         configuration['paramAttribute'] = paramAttribute
         list = []
@@ -344,7 +313,6 @@ class config_vis(object):
             for scn in solverConfigName:
                 selectedConfigs.append([scn, solverConfigName[scn], 0])
             configuration['solverConfigs'] = selectedConfigs
-
        
     def getConfiguration(self):
         return configuration
