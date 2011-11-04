@@ -33,6 +33,7 @@ def turnValue(values):
     return values
 
 #Projects values to the range of the graph
+##TODO: was passiert, wenn die Werte kleiner Null?
 def project(values):
     values = map(float, values)
     if max(values) > 0:
@@ -53,7 +54,7 @@ def mapPosition(form):
     while pos[0][b]!= ':':
         pos1 += pos[0][b]
         b+=1
-    b += 2
+    b += 1
     while b < len(pos[0]):
         pos2 += pos[0][b]
         b+=1
@@ -82,7 +83,6 @@ class config_vis(object):
         parameterDomain = {}
         parameterPosition = {}
         
-        
         start_db = time.clock() 
         #db Queries for configuration visualisation
         name = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == expID).first()
@@ -97,7 +97,8 @@ class config_vis(object):
                      
         for id in parameterName.keys():
             parameterDomain[id] = experiment.configuration_scenario.get_parameter_domain(parameterName[id])
-
+        parameterDomain['confidence']= "integerDomain"
+        parameterDomain['performance']= "realDomain"
         solverConfigCosts = dict((s.idSolverConfig, s.cost) for s in experiment.solver_configurations) 
         
         ##TODO: vielleicht noch optimieren
@@ -114,8 +115,7 @@ class config_vis(object):
         parameterName.update({'confidence': 'confidence', 'performance': 'performance'})
         paramList.append('confidence')
         paramList.append('performance')
-        domain['confidence']='num'
-        domain['performance']='num'
+        
 
         for pv in paramInstance:
             if pv.Parameters_idParameter not in parameterName.keys() or pv.value == "": continue
@@ -149,7 +149,7 @@ class config_vis(object):
                         maxList = map(str, configForm.getlist(indexMax))
                     maxDict[pm]=maxList[0].strip()
                 elif domain[pm] == "cat":
-                    index = "select: "+str(pm)
+                    index = "select_"+str(pm)
                     if index in configForm.keys():                    
                         select = map(str, configForm.getlist(index))
                         selectValueList[pm]=select
@@ -161,27 +161,6 @@ class config_vis(object):
                 
             if 'solverConfigs' in configForm.keys():
                 configList = map(str, configForm.getlist('solverConfigs'))
-            #check if input is in the right form
-            minChk = 1;
-            maxChk = 1;
-            minKeys = minDict.keys()
-            for mk in minKeys:
-                if minDict[mk] and maxDict[mk] != "":
-                    if float(minDict[mk])>float(maxDict[mk]):
-                        minDict[mk]=""
-                        maxDict[mk]=""
-                if minDict[mk] != "":
-                    for md in minDict[mk]:          
-                        if not (md >= "0" and md <= "9" or md =="."):
-                            minChk = -1;
-                    if minChk == -1:
-                        minDict[mk]=""
-                if maxDict[mk] != "":
-                    for md in maxDict[mk]:          
-                        if not (md >= "0" and md <= "9" or md =="."):
-                            maxChk = -1;
-                    if maxChk == -1:
-                        maxDict[mk]=""
                  
             
         #creates a dictionary with values of the parameters of each solverConfig
@@ -248,16 +227,32 @@ class config_vis(object):
                 values = classify(values, valueList)
             
             elif domain[pl] == "num":
-                values = map(float, values)
-                valueList = map(float, valueList)     
+                iv = 0
+                for v in values:
+                    try:
+                        values[iv] = float(v)
+                        iv += 1
+                    except:
+                        ##TODO: im Fehlerfall hier vielleicht noch eine andere Loesung
+                        values[iv] = 0.0 
+                        iv += 1
+                ivl = 0
+                for vl in valueList:
+                    try:
+                        valueList[ivl] = float(vl)
+                        ivl += 1
+                    except:
+                        ##TODO: im Fehlerfall hier vielleicht noch eine andere Loesung
+                        valueList[ivl] = 0.0 
+                        ivl += 1
                  
-            if len(turnList)>0 and (pl in turnList):
+            if len(turnList)>0 and (str(pl) in turnList):
                 turn = True
                 values = turnValue(values)          
             
             #checks if a parameter is shielded
             hide = False
-            if len(hideList)>0 and (pl in hideList):
+            if len(hideList)>0 and (str(pl) in hideList):
                 hide = True
             
             positionList = []
@@ -285,10 +280,11 @@ class config_vis(object):
                         maxValue = max(valueList)
                 else:
                     maxValue = max(valueList)
-
+                if(parameterDomain[pl] == "integerDomain"):
+                    minValue = int(minValue)
+                    maxValue = int(maxValue)
                 values = project(values)
                 paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue,'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'num'}
-
                 
             elif domain[pl] == 'cat':
                 values = project(values)
