@@ -19,8 +19,7 @@
     function refresh(){
         //checks if input is correct
         var chkZ = 1;
-        {%for c in configuration['paramAttribute']%}
-            {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
+        {%for c in configuration['paramAttribute'] if configuration['paramAttribute'][c]['domain'] == 'num'%}
                 if (document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value == "") {
                     alert("Please enter a value!");
                     chkZ = 0;
@@ -62,7 +61,7 @@
                     alert("Minimum value is bigger than maximum value!");
                     document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.focus();
                 }*/
-            {%endif%}
+            
         {%endfor%}
         //if input was correct, it filters the choosen solverConfigs
         if (chkZ==1){
@@ -132,33 +131,6 @@
                 {%endif%}
             {%endfor%}
             
-            //#TODO: hide!
-            for (var i = 0; i < document.Formular.hide.length; i++){
-              if (document.Formular.hide[i].checked == false){  
-                    //#TODO: noch die rausfiltern, die nicht angezeigt werden sollen!
-                    line.original_data = [[{%for z in configuration['paramAttribute']%}'10',{%endfor%}] 
-                        {%for x in configuration['numValue']%}
-                            ,[{%for c in configuration['paramAttribute']%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endfor%}]
-                        {%endfor%}];
-                    line.Set('chart.labels', [{%for c in configuration['paramAttribute']%}
-                                                            '{{configuration['paramAttribute'][c]['name']}}',
-                                                        {%endfor%}]);
-                    line.Set('chart.labels.ingraph', [{%for c in configuration['paramAttribute']%}
-                                                        {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                                                            ['{{configuration['paramAttribute'][c]['max']}}',,,,-0],
-                                                        {%else%}
-                                                            ,
-                                                        {%endif%}
-                                                        {%endfor%}]);                                      
-                }
-                
-                //#TODO: turn 
-                if (document.Formular.turn[i].checked == false){
-                    //alert("turn " + document.Formular.turn[i].value);
-                    
-                }
-
-            }
             //#TODO: positionswechsel
             //alert(document.Formular.3.value); id muss noch in pos_id umgewandelt werden
             
@@ -167,7 +139,6 @@
             var selectConfig = new Array();
             configColor.push('rgba(0,0,0,0)');
             var configIndex = 0;
-            //##TODO das hier stimmt noch nicht, wenn nicht mehr alle Configs angezeigt werden !!!
             {%for x in configuration['numValue']%}
                 if(deselectConfigs[{{x}}]==0){ 
                     if (document.Formular.solverConfigs.options[configIndex].selected == true){
@@ -185,11 +156,32 @@
             //##TODO: daten fuer lineGraph
             //data for the line graph
             line.original_data = [];
-            line.original_data[0]=[{%for z in configuration['paramAttribute']%}'10',{%endfor%}];
+            zeroOrgData = new Array();
+            var zeroHideIndex = 0;
+            {%for z in configuration['paramAttribute']%}
+                if (document.Formular.hide[zeroHideIndex].checked == false){  
+                    zeroOrgData.push('10');
+                }
+                zeroHideIndex++;
+            {%endfor%}
+            line.original_data[0]= zeroOrgData;
             var index = 0;
             {%for x in configuration['numValue']%}
                 if (deselectConfigs[{{x}}]==0){
-                    line.original_data[index+1] = [{%for c in configuration['paramAttribute']%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endfor%}];                   
+                    var orgData = new Array();
+                    var hideIndex = 0;
+                    {%for c in configuration['paramAttribute']%} 
+                        if(document.Formular.hide[hideIndex].checked == false){ 
+                            var tmpValue = {{configuration['paramAttribute'][c]['values'][x]}};
+                            if(document.Formular.turn[hideIndex].checked == true){
+                                tmpValue = 10 - tmpValue; 
+                            }
+
+                            orgData.push(tmpValue);
+                        }
+                        hideIndex++;
+                    {%endfor%}
+                    line.original_data[index+1] = orgData;                   
                     if (selectConfig[index]==1){
                         newEntry = new Option("{{configuration['solverConfigs'][x][1]}}", {{configuration['solverConfigs'][x][0]}}, false, true);
                     }else{
@@ -198,17 +190,41 @@
                     document.Formular.solverConfigs.options[index] = newEntry;
                     index++;
                 } 
-            {%endfor%};
+            {%endfor%}
+            
+            var labels = new Array();
+            var labelsIngraph = new Array();
+            var hideIndex = 0
+            {%for c in configuration['paramAttribute']%}
+                if (document.Formular.hide[hideIndex].checked == false){  
+                    labels.push('{{configuration['paramAttribute'][c]['name']}}');
+                    {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
+                        if (document.Formular.turn[hideIndex].checked == false){  
+                            labelsIngraph.push(['{{configuration['paramAttribute'][c]['max']}}',,,,-0]);
+                        }else{
+                            labelsIngraph.push(['{{configuration['paramAttribute'][c]['min']}}',,,,-0]);
+                        }
+                    {%else%}
+                    //##TODO: noch testen
+                        labelsIngraph.push();
+                    {%endif%}    
+                } 
+                hideIndex++;
+            {%endfor%}     
+            line.Set('chart.labels', labels);
+            line.Set('chart.labels.ingraph', labelsIngraph);                                      
+                  
+            
             var len = document.Formular.solverConfigs.length;
             for (var i = index; i < len; i++){
                 document.Formular.solverConfigs.options[document.Formular.solverConfigs.length-1] = null;
             }   
             RGraph.Reset(line.canvas);
+            
             line.Set('chart.colors', configColor); 
             line.Draw(); 
         }
     }
-    
     
     //#TODO: geht das auch irgendwie so: RGraph.Register(object)?
     function resetAll(){
@@ -222,6 +238,8 @@
         line.Set('chart.labels.ingraph', [{%for c in configuration['paramAttribute']%}
                                             {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
                                                 ['{{configuration['paramAttribute'][c]['max']}}',,,,-0],
+                                            {%else%}
+                                                ,
                                             {%endif%}{%endfor%}]);                                            
         line.Set('chart.colors', ['rgba(0,0,0,0)', {%for x in configuration['solverConfigs']%}
                 'rgba(0,0,0,255)',
@@ -238,8 +256,12 @@
                     document.Formular.select_{{configuration['paramAttribute'][c]['id']}}.options[i].selected = false;
                 }
             {%endif%}
-            //#TODO: auch fuer hide, turn und position reset machen
+            //#TODO: auch fuer position reset machen
         {%endfor%}
+        for (var i = 0; i < document.Formular.hide.length; i++){
+            document.Formular.hide[i].checked = false;
+            document.Formular.turn[i].checked = false;
+        }
         var configIndex = 0
         {%for x in configuration['solverConfigs']%}
             newEntry = new Option("{{x[1]}}", {{x[0]}}, false, false);

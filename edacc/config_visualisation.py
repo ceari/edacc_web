@@ -116,7 +116,7 @@ class config_vis(object):
         paramList.append('confidence')
         paramList.append('performance')
         
-
+        start_pi = time.clock() 
         for pv in paramInstance:
             if pv.Parameters_idParameter not in parameterName.keys() or pv.value == "": continue
             if pv.SolverConfig_idSolverConfig not in parameterValue: 
@@ -124,7 +124,8 @@ class config_vis(object):
             parameterValue[pv.SolverConfig_idSolverConfig].update({pv.Parameters_idParameter: pv.value})
             if pv.Parameters_idParameter not in paramList:
                 paramList.append(pv.Parameters_idParameter)        
-
+        print time.clock() - start_pi, "piZeit"
+        
         for pd in parameterDomain.keys():
                 selectValueList[pd]= []
                 if parameterDomain[pd] == "realDomain" or parameterDomain[pd] == "integerDomain":
