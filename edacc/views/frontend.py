@@ -1178,7 +1178,7 @@ def configurator_visualisation(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
-    if request.method == 'POST' and request.form.get("submit") != "new":
+    if request.method == 'POST' and request.form.get("submit") != "reset":
         cv = config_visualisation.config_vis(database, experiment_id, request.form)
         configuration = cv.getConfiguration()
     else:

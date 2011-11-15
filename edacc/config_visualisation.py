@@ -101,7 +101,6 @@ class config_vis(object):
         parameterDomain['performance']= "realDomain"
         solverConfigCosts = dict((s.idSolverConfig, s.cost) for s in experiment.solver_configurations) 
         
-        ##TODO: vielleicht noch optimieren
         for scn in solverConfigName:
             parameterValue[scn]= {'confidence': int(db.session.query(db.ExperimentResult.idJob).
                             filter(db.ExperimentResult.SolverConfig_idSolverConfig == scn).count())}
@@ -117,6 +116,7 @@ class config_vis(object):
         paramList.append('performance')
         
         start_pi = time.clock() 
+
         for pv in paramInstance:
             if pv.Parameters_idParameter not in parameterName.keys() or pv.value == "": continue
             if pv.SolverConfig_idSolverConfig not in parameterValue: 
@@ -137,7 +137,8 @@ class config_vis(object):
         if configForm != None:
             for pm in paramList: 
                 if str(pm) in configForm.keys():
-                    parameterPosition[pm] = mapPosition(configForm.getlist(str(pm)))                    
+                    tmpList = mapPosition(configForm.getlist(str(pm))) 
+                    parameterPosition[tmpList[0]] = [pm, tmpList[1]]                  
                 if domain[pm] == "num":
                     indexMin = "min_"+str(pm)
                     minList = []
@@ -192,16 +193,21 @@ class config_vis(object):
                    
             parameterInstance['parameter']= parameter 
             solverConfig[scn]= parameterInstance
+            
         #chance the position
+        print configForm
         if configForm != None:
-            tmpList = paramList[:]
-            for pl in paramList:
-                pos0 = int(parameterPosition[pl][0])-1
-                pos1 = int(parameterPosition[pl][1])-1
-                if pos0 != pos1:
-                    del tmpList[tmpList.index(pl)] 
-                    tmpList.insert(pos1, pl)
-            paramList = tmpList[:]
+            formerPosition = []
+            for pp in parameterPosition:
+                #create a list with parameter id in the former order
+                formerPosition.append(parameterPosition[pp][0])
+            for pp in parameterPosition:
+                requestedPosition = parameterPosition[pp][1]
+                paramID = parameterPosition[pp][0]
+                if pp != requestedPosition:
+                    del formerPosition[formerPosition.index(paramID)] 
+                    formerPosition.insert((requestedPosition-1), paramID)
+            paramList = formerPosition[:]
         i=0
         for pl in paramList:
             values = []
@@ -234,7 +240,6 @@ class config_vis(object):
                         values[iv] = float(v)
                         iv += 1
                     except:
-                        ##TODO: im Fehlerfall hier vielleicht noch eine andere Loesung
                         values[iv] = 0.0 
                         iv += 1
                 ivl = 0
@@ -243,7 +248,6 @@ class config_vis(object):
                         valueList[ivl] = float(vl)
                         ivl += 1
                     except:
-                        ##TODO: im Fehlerfall hier vielleicht noch eine andere Loesung
                         valueList[ivl] = 0.0 
                         ivl += 1
                  

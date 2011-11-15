@@ -7,28 +7,19 @@
         <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.line.js')}}" ></script>               <!-- Just needed for line graphs -->
 
 <script>
-    var line;
-    function cutDecimal(number, decimalPlace){
-        var ten = Math.pow(10, decimalPlace);
-        var decimal = number;
-        decimal = decimal * ten;
-        decimal = Math.floor(decimal);
-        decimal = decimal / ten;
-        return decimal;
-    }
-    function refresh(){
+    function checkFormular(){
         //checks if input is correct
-        var chkZ = 1;
+        //##TODO: submit wert abfragen
         {%for c in configuration['paramAttribute'] if configuration['paramAttribute'][c]['domain'] == 'num'%}
                 if (document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value == "") {
                     alert("Please enter a value!");
-                    chkZ = 0;
                     document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.focus();
+                    return false;
                 }
                 if (document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value == "") {
                     alert("Please enter a value!");
-                    chkZ = 0;
                     document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.focus();
+                    return false;
                 } 
                 chkZMin = 1;
                 for (i = 0; i < document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value.length; ++i){
@@ -36,12 +27,12 @@
                         document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value.charAt(i) <= "9" || 
                         document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value.charAt(i) == ".")){
                         chkZMin = -1;
-                        chkZ = 0;
                     }
                 }
                 if (chkZMin == -1) {
-                        alert("Value is not a number!");
-                        document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.focus();
+                    alert("Value is not a number!");
+                    document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.focus();
+                    return false;
                 }
                 chkZMax = 1;
                 for (i = 0; i < document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value.length; ++i){
@@ -49,231 +40,19 @@
                         document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value.charAt(i) <= "9" || 
                         document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value.charAt(i) == ".")){
                         chkZMax = -1;
-                        chkZ = 0;
                     }
                 }
                 if (chkZMax == -1) {
                         alert("Value is not a number!");
                         document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.focus();
+                        return false;
                 }
-                //#TODO: der Vergleich klappt noch nicht
-                /*if (document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value > document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value){
-                    alert("Minimum value is bigger than maximum value!");
-                    document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.focus();
-                }*/
             
         {%endfor%}
-        //if input was correct, it filters the choosen solverConfigs
-        if (chkZ==1){
-            var deselectConfigs = new Array();
-            {%for x in configuration['numValue']%}
-                deselectConfigs.push(0);
-            {%endfor%}
-            //solverConfigs get filtered after choosen min/max
-            {%for c in configuration['paramAttribute']%}
-                {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                    var minFloat = false;
-                    var maxFloat = false;
-                    var convert = 10/{{configuration['paramAttribute'][c]['max']}};
-                    var min= document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value;
-                    min = min * convert;
-                    var minLen = String(min).length;
-                    if(String(min).indexOf('.') != -1){
-                        minLen = (minLen - (String(min).indexOf('.')+1));
-                        minFloat = true;
-                    }
-                    var max= document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value;
-                    max = max * convert;
-                    var maxLen = String(max).length;
-                    if(String(max).indexOf('.') != -1){
-                        maxFloat = true;
-                        maxLen = (maxLen - (String(max).indexOf('.')+1));
-                    }
-                    
-                    {%for x in configuration['numValue']%}
-                        var value = {{configuration['paramAttribute'][c]['values'][x]}};
-                        var valLen = String(value).length;
-                        if(String(value).indexOf('.') != -1)
-                            valLen = valLen - (String(value).indexOf('.')+1);
-                            if (valLen<minLen && minFloat){
-                                var tmpMin = cutDecimal(min, valLen);
-                                min = tmpMin;
-                            }
-                            if (valLen<maxLen && maxFloat){
-                                var tmpMax = cutDecimal(max, valLen);
-                                max = tmpMax;
-                            }
-                        if (value < min || value > max){
-                            deselectConfigs[{{x}}] = 1;  
-                        }  
-                    {%endfor%}
-                {%else%}
-                    var indexS = 0;
-                    var selectList = new Array();
-                    var lenValList = document.Formular.select_{{configuration['paramAttribute'][c]['id']}}.options.length;
-                    var classified = 10/lenValList;
-                    
-                    for (var i = 0; i < lenValList; i++){ 
-                        if(document.Formular.select_{{configuration['paramAttribute'][c]['id']}}.options[i].selected == false){
-                            selectList.push(i*classified);
-                        }
-                    }
-                    if (selectList.length != lenValList){
-                        {%for x in configuration['numValue']%}
-                            var value = {{configuration['paramAttribute'][c]['values'][x]}}
-                            for (var i = 0; i < selectList.length; i++){
-                                if (value == selectList[i]){
-                                    deselectConfigs[{{x}}] = 1; 
-                                }
-                            } 
-                        {%endfor%}
-                    }
-                {%endif%}
-            {%endfor%}
-            
-            //#TODO: positionswechsel
-            //alert(document.Formular.3.value); id muss noch in pos_id umgewandelt werden
-            
-            //selected Configs are drawn in red, else in black
-            var configColor = new Array();
-            var selectConfig = new Array();
-            configColor.push('rgba(0,0,0,0)');
-            var configIndex = 0;
-            {%for x in configuration['numValue']%}
-                if(deselectConfigs[{{x}}]==0){ 
-                    if (document.Formular.solverConfigs.options[configIndex].selected == true){
-                        configColor.push('rgba(255,0,0,255)');
-                        selectConfig.push(1);
-                        }
-                    else{
-                        configColor.push('rgba(0,0,0,255)');
-                        selectConfig.push(0);
-                    }
-                    configIndex++;
-                }
-            {%endfor%}
-               
-            //##TODO: daten fuer lineGraph
-            //data for the line graph
-            line.original_data = [];
-            zeroOrgData = new Array();
-            var zeroHideIndex = 0;
-            {%for z in configuration['paramAttribute']%}
-                if (document.Formular.hide[zeroHideIndex].checked == false){  
-                    zeroOrgData.push('10');
-                }
-                zeroHideIndex++;
-            {%endfor%}
-            line.original_data[0]= zeroOrgData;
-            var index = 0;
-            {%for x in configuration['numValue']%}
-                if (deselectConfigs[{{x}}]==0){
-                    var orgData = new Array();
-                    var hideIndex = 0;
-                    {%for c in configuration['paramAttribute']%} 
-                        if(document.Formular.hide[hideIndex].checked == false){ 
-                            var tmpValue = {{configuration['paramAttribute'][c]['values'][x]}};
-                            if(document.Formular.turn[hideIndex].checked == true){
-                                tmpValue = 10 - tmpValue; 
-                            }
-
-                            orgData.push(tmpValue);
-                        }
-                        hideIndex++;
-                    {%endfor%}
-                    line.original_data[index+1] = orgData;                   
-                    if (selectConfig[index]==1){
-                        newEntry = new Option("{{configuration['solverConfigs'][x][1]}}", {{configuration['solverConfigs'][x][0]}}, false, true);
-                    }else{
-                        newEntry = new Option("{{configuration['solverConfigs'][x][1]}}", {{configuration['solverConfigs'][x][0]}}, false, false);
-                    }
-                    document.Formular.solverConfigs.options[index] = newEntry;
-                    index++;
-                } 
-            {%endfor%}
-            
-            var labels = new Array();
-            var labelsIngraph = new Array();
-            var hideIndex = 0
-            {%for c in configuration['paramAttribute']%}
-                if (document.Formular.hide[hideIndex].checked == false){  
-                    labels.push('{{configuration['paramAttribute'][c]['name']}}');
-                    {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                        if (document.Formular.turn[hideIndex].checked == false){  
-                            labelsIngraph.push(['{{configuration['paramAttribute'][c]['max']}}',,,,-0]);
-                        }else{
-                            labelsIngraph.push(['{{configuration['paramAttribute'][c]['min']}}',,,,-0]);
-                        }
-                    {%else%}
-                    //##TODO: noch testen
-                        labelsIngraph.push();
-                    {%endif%}    
-                } 
-                hideIndex++;
-            {%endfor%}     
-            line.Set('chart.labels', labels);
-            line.Set('chart.labels.ingraph', labelsIngraph);                                      
-                  
-            
-            var len = document.Formular.solverConfigs.length;
-            for (var i = index; i < len; i++){
-                document.Formular.solverConfigs.options[document.Formular.solverConfigs.length-1] = null;
-            }   
-            RGraph.Reset(line.canvas);
-            
-            line.Set('chart.colors', configColor); 
-            line.Draw(); 
-        }
-    }
-    
-    //#TODO: geht das auch irgendwie so: RGraph.Register(object)?
-    function resetAll(){
-        line.original_data = [[{%for z in configuration['paramAttribute']%}'10',{%endfor%}] 
-            {%for x in configuration['numValue']%}
-                ,[{%for c in configuration['paramAttribute']%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endfor%}]
-            {%endfor%}];
-        line.Set('chart.labels', [{%for c in configuration['paramAttribute']%}
-                                                '{{configuration['paramAttribute'][c]['name']}}',
-                                            {%endfor%}]);
-        line.Set('chart.labels.ingraph', [{%for c in configuration['paramAttribute']%}
-                                            {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                                                ['{{configuration['paramAttribute'][c]['max']}}',,,,-0],
-                                            {%else%}
-                                                ,
-                                            {%endif%}{%endfor%}]);                                            
-        line.Set('chart.colors', ['rgba(0,0,0,0)', {%for x in configuration['solverConfigs']%}
-                'rgba(0,0,0,255)',
-            {%endfor%}]);
-        RGraph.Reset(line.canvas); 
-        line.Draw();
-        {%for c in configuration['paramAttribute']%}
-            {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value = {{configuration['paramAttribute'][c]['min']}};
-                document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value = {{configuration['paramAttribute'][c]['max']}};
-            {%else%}
-                var lenValList = document.Formular.select_{{configuration['paramAttribute'][c]['id']}}.options.length;
-                for (var i = 0; i < lenValList; i++){ 
-                    document.Formular.select_{{configuration['paramAttribute'][c]['id']}}.options[i].selected = false;
-                }
-            {%endif%}
-            //#TODO: auch fuer position reset machen
-        {%endfor%}
-        for (var i = 0; i < document.Formular.hide.length; i++){
-            document.Formular.hide[i].checked = false;
-            document.Formular.turn[i].checked = false;
-        }
-        var configIndex = 0
-        {%for x in configuration['solverConfigs']%}
-            newEntry = new Option("{{x[1]}}", {{x[0]}}, false, false);
-            document.Formular.solverConfigs.options[configIndex] = newEntry;
-            configIndex++;
-        {%endfor%}
-        
-    }
-
+   }
     window.onload = function (e){
         document.getElementById("configurator").width = screen.width;
-        line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}{%if configuration['paramAttribute'][z]['hide'] == False%}'10',{%endif%}{%endfor%}] 
+        var line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}{%if configuration['paramAttribute'][z]['hide'] == False%}'10',{%endif%}{%endfor%}] 
             {%for x in configuration['numValue']%}
                 ,[{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endif%}{%endfor%}]
             {%endfor%}
@@ -305,7 +84,7 @@
 		line.Set('chart.gutter.bottom', 170);
         line.Set('chart.gutter.left', 100);
         line.Set('chart.gutter.right', 100);
-        line.Set('chart.linewidth', 0.5);
+        line.Set('chart.linewidth', 0.6);
 		line.Set('chart.background.grid.hsize', 25);
 		line.Set('chart.background.grid.vsize', 25);
 		line.Set('chart.ylabels', false);
@@ -326,20 +105,21 @@
 </div>
 
 <form name="Formular" method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
-<input type="submit" name="submit" value="new">
-<input type="button" name="resetButton" value="reset" onclick= "resetAll()">
-<input type="button" name="refreshButton" value="refresh" onclick= "refresh()">
+<input type="submit" name="submit" value="refresh" onclick="return checkFormular()">
+<input type="submit" name="submit" value="reset">
+
 <table border="0" cellpadding="10" cellspacing="0" width="100%" valign="top">
-    <td><table border="2" cellpadding="10" cellspacing="0" width="100%">        
+    <td><table border="2" cellpadding="5" cellspacing="0" width="100%">  
+        <th></th><td>min</td><td>max</td><td colspan="3"></td>
         {%for c in configuration['paramAttribute']%}
         <tr align="center" valign="middle">
             <th>{{configuration['paramAttribute'][c]['name']}}</th>
             {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
-                <td><p>min<br><input name="min_{{configuration['paramAttribute'][c]['id']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}">
-                <br>max<br><input name="max_{{configuration['paramAttribute'][c]['id']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
+                <td><p><br><input name="min_{{configuration['paramAttribute'][c]['id']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['min']}}"></p></td>
+                <td><p><br><input name="max_{{configuration['paramAttribute'][c]['id']}}" type="zahl" size="7" maxlength="7" value="{{configuration['paramAttribute'][c]['max']}}"></p></td>
             {%endif%}
             {%if configuration['paramAttribute'][c]['domain'] == 'cat'%}
-                <td><p><br><select name="select_{{configuration['paramAttribute'][c]['id']}}" 
+                <td colspan="2"><p><br><select name="select_{{configuration['paramAttribute'][c]['id']}}" 
                         size="{% if configuration['paramAttribute'][c]['valueList']|length < 6 %}
                                 {{configuration['paramAttribute'][c]['valueList']|length }}
                                 {%else%} 5 {%endif%}" 
@@ -351,9 +131,9 @@
                 {%endfor%}
                 </select></p></td>                
             {%endif%}
-            <td>move<br>down<br><input type="checkbox" name="turn" value="{{configuration['paramAttribute'][c]['id']}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
-            <td>hide<br><input type="checkbox" name="hide" value="{{configuration['paramAttribute'][c]['id']}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
-            <td>position<br><select name = "{{configuration['paramAttribute'][c]['id']}}">
+            <td nowrap>reverse<input type="checkbox" name="turn" value="{{configuration['paramAttribute'][c]['id']}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
+            <td nowrap>hide<input type="checkbox" name="hide" value="{{configuration['paramAttribute'][c]['id']}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
+            <td nowrap>position<select name = "{{configuration['paramAttribute'][c]['id']}}">
                {%for co in configuration['paramAttribute'][c]['positionList']%} 
                     <option value="{{c}}:{{co}}">{{co}}
                 {%endfor%}
@@ -362,8 +142,8 @@
         {%endfor%} 
            
     </table></td>
-<td align="left" valign="top">
-    <br>solver configuration<br><select name="solverConfigs"
+<td div style="float:left;" align="left" valign="top">
+    solver configuration<select name="solverConfigs"
             size="{% if configuration['solverConfigs']|length < (configuration['paramAttribute']|length * 6) %} {{configuration['solverConfigs']|length}}{%else%}{{(configuration['paramAttribute']|length * 6)}}{%endif%}" 
             multiple>
         {%for sc in configuration['solverConfigs']%}    
