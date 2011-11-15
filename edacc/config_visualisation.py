@@ -216,8 +216,7 @@ class config_vis(object):
             maxValue = 0
             turn = False
             
-            if (pl not in paramAttribute):
-                i += 1
+            i += 1
             
             #creates a list of possible values (valueList) and an list of values for each parameter
             for scn in solverConfigName:

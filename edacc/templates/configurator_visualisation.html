@@ -92,14 +92,10 @@
         line.Set('chart.title', '{{configuration['expName']}}');     		
         line.Draw();
 }
-
 </script>
-
-
 {% endblock %}
 
 {% block content %}
-
 <div style="float:left;">
     <canvas id="configurator" height="700">[No canvas support]</canvas>
 </div>
@@ -107,7 +103,7 @@
 <form name="Formular" method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
 <input type="submit" name="submit" value="refresh" onclick="return checkFormular()">
 <input type="submit" name="submit" value="reset">
-
+<input type="submit" name="submit" value="standardize">
 <table border="0" cellpadding="10" cellspacing="0" width="100%" valign="top">
     <td><table border="2" cellpadding="5" cellspacing="0" width="100%">  
         <th></th><td>min</td><td>max</td><td colspan="3"></td>
