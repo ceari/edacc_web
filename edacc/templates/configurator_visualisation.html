@@ -107,6 +107,7 @@
 <table border="0" cellpadding="10" cellspacing="0" width="100%" valign="top">
     <td><table border="2" cellpadding="5" cellspacing="0" width="100%">  
         <th></th><td>min</td><td>max</td><td colspan="3"></td>
+        <input type="hidden" name="page" value="{{configuration['page']}}">
         {%for c in configuration['paramAttribute']%}
         <tr align="center" valign="middle">
             <th>{{configuration['paramAttribute'][c]['name']}}</th>
@@ -127,12 +128,14 @@
                 {%endfor%}
                 </select></p></td>                
             {%endif%}
-            <td nowrap>reverse<input type="checkbox" name="turn" value="{{configuration['paramAttribute'][c]['id']}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
-            <td nowrap>hide<input type="checkbox" name="hide" value="{{configuration['paramAttribute'][c]['id']}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
-            <td nowrap>position<select name = "{{configuration['paramAttribute'][c]['id']}}">
-               {%for co in configuration['paramAttribute'][c]['positionList']%} 
-                    <option value="{{c}}:{{co}}">{{co}}
-                {%endfor%}
+            {%if configuration['page'] > 0%}
+                <td nowrap>reverse<input type="checkbox" name="turn" value="{{configuration['paramAttribute'][c]['id']}}" {%if configuration['paramAttribute'][c]['turn'] == True%} checked="checked" {%endif%}><br></td>
+                <td nowrap>hide<input type="checkbox" name="hide" value="{{configuration['paramAttribute'][c]['id']}}" {%if configuration['paramAttribute'][c]['hide'] == True%} checked="checked" {%endif%}><br></td>
+                <td nowrap>position<select name = "{{configuration['paramAttribute'][c]['id']}}">
+                   {%for co in configuration['paramAttribute'][c]['positionList']%} 
+                        <option value="{{c}}:{{co}}">{{co}}
+                    {%endfor%}
+            {%endif%}
             </select></td>
         </tr>
         {%endfor%} 
