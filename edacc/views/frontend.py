@@ -336,7 +336,7 @@ def experiment_results(database, experiment_id):
                     filename=secure_filename(experiment.name + "_results.csv"))
         return Response(response=csv_response.read(), headers=headers)
 
-    base_result_details_url = url_for('frontend.experiment_result', database=database, experiment_id=experiment_id, result_id=0)
+    base_result_details_url = url_for('frontend.experiment_result', database=database, experiment_id=experiment_id)
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     solver_configs_dict=solver_configs_dict,
