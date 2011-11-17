@@ -70,71 +70,101 @@ class config_vis(object):
         solverConfig = {}
         paramAttribute = {}
         parameterValue = {}
+        parameterName = {}
         paramList = []
         numValue = 0
         minDict = {}
         maxDict = {}
         selectValueList = {}
         deselectedConfigs = []
+        choosenConfigs = []
         turnList = []
         hideList = []
         configList = [] 
         domain = {}
         parameterDomain = {}
         parameterPosition = {}
+        page = 0
         
         start_db = time.clock() 
         #db Queries for configuration visualisation
         name = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == expID).first()
         configuration['expName'] = str(name[0])
+        
+        if configForm == None:
+            configuration['page'] = page
+        else:
+            page = map(int, configForm.getlist("page"))[0]+1
+            configuration['page'] = page
+            minConf = map(str, configForm.getlist("min_confidence"))
+            maxConf = map(str, configForm.getlist("max_confidence"))   
+            minPerf = map(str, configForm.getlist("min_performance"))
+            maxPerf = map(str, configForm.getlist("max_performance"))   
+
+        paramList.append('confidence')
+        paramList.append('performance') 
+        
+        ##TODO: beim 1. Mal laden nur dass hier!
+        parameterDomain['confidence']= "integerDomain"
+        parameterDomain['performance']= "realDomain"
+        
+        solverConfigCosts = dict((s.idSolverConfig, s.cost) for s in experiment.solver_configurations)                 
         solverConfigName =  dict((s.idSolverConfig, s.name) 
                         for s in db.session.query(db.SolverConfiguration).
                             filter(db.SolverConfiguration.Experiment_idExperiment == expID))
-        configurable = [p.Parameters_idParameter for p in experiment.configuration_scenario.parameters if p.configurable and p.parameter.name not in ('instance', 'seed')]
-        parameterName  =  dict((p.idParameter, p.name) 
-                        for p in db.session.query(db.Parameter).
-                            filter(db.Parameter.idParameter.in_(configurable)).distinct())
-                     
-        for id in parameterName.keys():
-            parameterDomain[id] = experiment.configuration_scenario.get_parameter_domain(parameterName[id])
-        parameterDomain['confidence']= "integerDomain"
-        parameterDomain['performance']= "realDomain"
-        solverConfigCosts = dict((s.idSolverConfig, s.cost) for s in experiment.solver_configurations) 
-        
+                            
         for scn in solverConfigName:
-            parameterValue[scn]= {'confidence': int(db.session.query(db.ExperimentResult.idJob).
-                            filter(db.ExperimentResult.SolverConfig_idSolverConfig == scn).count())}
+            count = int(db.session.query(db.ExperimentResult.idJob).
+                            filter(db.ExperimentResult.SolverConfig_idSolverConfig == scn).count())
+            parameterValue[scn]= {'confidence': count}
+            
+            #deselect solverConfigs which aren't in the range of choosen confidence or performance
+            if page > 0:
+                if count < minConf or count > maxConf or solverConfigCosts[scn] < minPerf or solverConfigCosts[scn] > maxPerf:
+                    choosenConfigs.append(scn)   
+            
             if solverConfigCosts[scn] != None:
                 parameterValue[scn].update({'performance': solverConfigCosts[scn] })
             else:
                 parameterValue[scn].update({'performance': 0.0 })
-        paramInstance = db.session.query(db.ParameterInstance).filter(db.ParameterInstance.SolverConfig_idSolverConfig.in_(solverConfigName.keys())).all()   
         print time.clock() - start_db, "dbZeit"
+        
+        ##TODO: ab hier beim 2. Mal laden !  
+        
+        ##TODO: Fehler treten erst beim 2. Mal auf, also ueberall schauen wo configForm != None
+        if page > 0:
+            configurable = [p.Parameters_idParameter for p in experiment.configuration_scenario.parameters if p.configurable and p.parameter.name not in ('instance', 'seed')]
+            parameterName  =  dict((p.idParameter, p.name) 
+                            for p in db.session.query(db.Parameter).
+                                filter(db.Parameter.idParameter.in_(configurable)).distinct())
+            for id in parameterName.keys():
+                parameterDomain[id] = experiment.configuration_scenario.get_parameter_domain(parameterName[id])
 
+
+            paramInstance = db.session.query(db.ParameterInstance).filter(db.ParameterInstance.SolverConfig_idSolverConfig.in_(choosenConfigs)).all()   
+
+            start_pi = time.clock() 
+            for pv in paramInstance:
+                if pv.Parameters_idParameter not in parameterName.keys() or pv.value == "": continue
+                if pv.SolverConfig_idSolverConfig not in parameterValue: 
+                    parameterValue[pv.SolverConfig_idSolverConfig] = {}
+                parameterValue[pv.SolverConfig_idSolverConfig].update({pv.Parameters_idParameter: pv.value})
+                if pv.Parameters_idParameter not in paramList:
+                    paramList.append(pv.Parameters_idParameter)        
+            print time.clock() - start_pi, "piZeit"
+        
         parameterName.update({'confidence': 'confidence', 'performance': 'performance'})
-        paramList.append('confidence')
-        paramList.append('performance')
-        
-        start_pi = time.clock() 
-
-        for pv in paramInstance:
-            if pv.Parameters_idParameter not in parameterName.keys() or pv.value == "": continue
-            if pv.SolverConfig_idSolverConfig not in parameterValue: 
-                parameterValue[pv.SolverConfig_idSolverConfig] = {}
-            parameterValue[pv.SolverConfig_idSolverConfig].update({pv.Parameters_idParameter: pv.value})
-            if pv.Parameters_idParameter not in paramList:
-                paramList.append(pv.Parameters_idParameter)        
-        print time.clock() - start_pi, "piZeit"
-        
+               
         for pd in parameterDomain.keys():
                 selectValueList[pd]= []
                 if parameterDomain[pd] == "realDomain" or parameterDomain[pd] == "integerDomain":
                     domain[pd] = 'num'
                 else:
                     domain[pd] = 'cat'
-                                
+                       
         #maps the web formular in lists
-        if configForm != None:
+        ##TODO: die Listen werden erstellt !
+        if page > 1:
             for pm in paramList: 
                 if str(pm) in configForm.keys():
                     tmpList = mapPosition(configForm.getlist(str(pm))) 
@@ -177,12 +207,12 @@ class config_vis(object):
                 parameter[p]= str(parameterValue[scn][p])
                     
             #creates the list deselectedConfigs of solverConfigs which are deselected if the values are restricted
-                if configForm != None and domain[p] == 'cat':
+                if page > 1 and domain[p] == 'cat':
                     if "select_"+str(p) in configForm.keys():                 
                         if str(parameterValue[scn][p]) not in selectValueList[p]:
                             deselectedConfigs.append(scn)
 
-                elif configForm != None and domain[p] == 'num':
+                elif page > 1 and domain[p] == 'num':
                     if len(minDict[p]) < 0:
                         if float(parameterValue[scn][p]) < float(minDict[p]):
                             deselectedConfigs.append(scn)
@@ -193,10 +223,10 @@ class config_vis(object):
                    
             parameterInstance['parameter']= parameter 
             solverConfig[scn]= parameterInstance
-            
+    
         #chance the position
-        print configForm
-        if configForm != None:
+        ##TODO: positionswechsel
+        if page > 1:
             formerPosition = []
             for pp in parameterPosition:
                 #create a list with parameter id in the former order
@@ -209,15 +239,14 @@ class config_vis(object):
                     formerPosition.insert((requestedPosition-1), paramID)
             paramList = formerPosition[:]
         i=0
+
         for pl in paramList:
             values = []
             valueList = []
             minValue = 0
             maxValue = 0
             turn = False
-            
-            if (pl not in paramAttribute):
-                i += 1
+            i += 1
             
             #creates a list of possible values (valueList) and an list of values for each parameter
             for scn in solverConfigName:
@@ -253,9 +282,9 @@ class config_vis(object):
                  
             if len(turnList)>0 and (str(pl) in turnList):
                 turn = True
-                values = turnValue(values)          
+                values = turnValue(values)     
             
-            #checks if a parameter is shielded
+            #checks if a parameter is hidden
             hide = False
             if len(hideList)>0 and (str(pl) in hideList):
                 hide = True
@@ -270,19 +299,14 @@ class config_vis(object):
                 numValue = len(values)    
                         
             if domain[pl] == 'num': 
-                if configForm != None and len(minDict[pl])>0:
-                    if float(minDict[pl])>=min(valueList) and float(minDict[pl])<=max(valueList):
-                        minValue = minDict[pl]
-                    else:
-                        minValue = min(valueList)    
+                if page > 1 and len(minDict[pl])>0 and float(minDict[pl])>=min(valueList) and float(minDict[pl])<=max(valueList):
+                    minValue = minDict[pl]
+   
                 else:
                     minValue = min(valueList)
                 
-                if configForm != None and len(maxDict[pl])>0:
-                    if float(maxDict[pl])>=min(valueList) and float(maxDict[pl])<=max(valueList):
+                if page > 1 and len(maxDict[pl])>0 and float(maxDict[pl])>=min(valueList) and float(maxDict[pl])<=max(valueList):
                         maxValue = maxDict[pl]
-                    else:
-                        maxValue = max(valueList)
                 else:
                     maxValue = max(valueList)
                 if(parameterDomain[pl] == "integerDomain"):
@@ -300,7 +324,8 @@ class config_vis(object):
         for i in range(numValue):
             list.append(i)
         configuration['numValue'] = list
-        if configForm != None:
+        ##TODO: configs werden aussortiert !
+        if page > 1:
             selectedConfigs = []
             for scn in solverConfigName:
                 if scn not in deselectedConfigs:
