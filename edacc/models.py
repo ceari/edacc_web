@@ -202,6 +202,8 @@ class EDACCDatabase(object):
                 M = dict((i.idInstance, dict((sc.idSolverConfig, list()) for sc in solver_configs)) for i in instances)
                 Run = namedtuple('Run', ['idJob', 'result_code', 'resultCode', 'time', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance'])
                 for r in db.session.query(db.ExperimentResult).filter_by(experiment=self).yield_per(10000):
+                    if r.Instances_idInstance not in M: continue
+                    if r.SolverConfig_idSolverConfig not in M[r.Instances_idInstance]: continue
                     num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1 if str(r.resultCode).startswith('1') else 0
                     num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1 if r.status not in STATUS_PROCESSING else 0
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(

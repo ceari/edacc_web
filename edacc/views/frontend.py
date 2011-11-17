@@ -230,10 +230,17 @@ def experiment_results(database, experiment_id):
 
     form = forms.ResultsBySolverAndInstanceForm(request.args)
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.solver_configs.query = solver_configs or EmptyQuery()
+
     if form.i.data:
         instances = form.i.data
     else:
         instances = experiment.instances
+
+    if form.solver_configs.data:
+        solver_configs = form.solver_configs.data
+    else:
+        solver_configs = []
 
     instances_dict = dict((i.idInstance, i) for i in instances)
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
