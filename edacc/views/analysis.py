@@ -54,7 +54,7 @@ def solver_ranking(database, experiment_id):
     if form.i.data:
         CACHE_TIME = 14*24*60*60
         @cache.memoize(timeout=CACHE_TIME)
-        def cached_ranking(database, experiment_id, last_modified_job, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
+        def cached_ranking(database, experiment_id, sc_names, last_modified_job, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data)
             ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
@@ -109,7 +109,8 @@ def solver_ranking(database, experiment_id):
         last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
                                 .filter_by(experiment=experiment).first()
 
-        return cached_ranking(database, experiment_id, last_modified_job, [i.idInstance for i in form.i.data],
+        return cached_ranking(database, experiment_id, ''.join(sc.get_name() for sc in experiment.solver_configurations),
+                              last_modified_job, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               'csv' in request.args, 'latex' in request.args)
 
