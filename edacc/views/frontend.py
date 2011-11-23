@@ -230,10 +230,17 @@ def experiment_results(database, experiment_id):
 
     form = forms.ResultsBySolverAndInstanceForm(request.args)
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.solver_configs.query = solver_configs or EmptyQuery()
+
     if form.i.data:
         instances = form.i.data
     else:
         instances = experiment.instances
+
+    if form.solver_configs.data:
+        solver_configs = form.solver_configs.data
+    else:
+        solver_configs = []
 
     instances_dict = dict((i.idInstance, i) for i in instances)
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
@@ -329,7 +336,7 @@ def experiment_results(database, experiment_id):
                     filename=secure_filename(experiment.name + "_results.csv"))
         return Response(response=csv_response.read(), headers=headers)
 
-    base_result_details_url = url_for('frontend.experiment_result', database=database, experiment_id=experiment_id, result_id=0)
+    base_result_details_url = url_for('frontend.experiment_result', database=database, experiment_id=experiment_id)
     return render('experiment_results.html', experiment=experiment,
                     instances=instances, solver_configs=solver_configs,
                     solver_configs_dict=solver_configs_dict,

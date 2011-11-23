@@ -17,6 +17,13 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
 
 ERROR_REQUIRED = 'This field is required.'
 
+MAX_SC_LEN = 100 # maximum length of solver config names to display before truncating
+
+def truncate_name(s, l):
+    if len(s) > l:
+        return s[:l/2] + " [..] " + s[-l/2:]
+    return s
+
 class EmptyQuery(list):
     """ Helper class that extends the builtin list class to always evaluate to
         True.
@@ -108,14 +115,14 @@ class BenchmarkForm(Form):
             raise ValidationError(ERROR_REQUIRED)
 
 class ResultBySolverForm(Form):
-    solver_config = QuerySelectField('Solver Configuration')
+    solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
 
 class ResultByInstanceForm(Form):
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
 
 class TwoSolversOnePropertyScatterPlotForm(Form):
-    solver_config1 = QuerySelectField('First Solver Configuration')
-    solver_config2 = QuerySelectField('Second Solver Configuration')
+    solver_config1 = QuerySelectField('First Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
+    solver_config2 = QuerySelectField('Second Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     instance_filter = TextField('Filter Instances')
     result_property = SelectField('Property')
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
@@ -124,7 +131,7 @@ class TwoSolversOnePropertyScatterPlotForm(Form):
     run = SelectField('Plot for run')
 
 class OneSolverTwoResultPropertiesPlotForm(Form):
-    solver_config = QuerySelectField('Solver Configuration')
+    solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     result_property1 = SelectField('First Result Property')
     result_property2 = SelectField('Second Result Property')
     instance_filter = TextField('Filter Instances')
@@ -134,7 +141,7 @@ class OneSolverTwoResultPropertiesPlotForm(Form):
     run = SelectField('Plot for run')
 
 class OneSolverInstanceAgainstResultPropertyPlotForm(Form):
-    solver_config = QuerySelectField('Solver Configuration')
+    solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     result_property = SelectField('Result Property')
     instance_property = SelectField('Instance Property')
     instance_filter = TextField('Filter Instances')
@@ -153,22 +160,22 @@ class CactusPlotForm(Form):
     i = QuerySelectMultipleField('Instances (Group 0)', get_pk=lambda i: i.idInstance, allow_blank=True)
 
 class RTDComparisonForm(Form):
-    solver_config1 = QuerySelectField('First Solver Configuration')
-    solver_config2 = QuerySelectField('Second Solver Configuration')
+    solver_config1 = QuerySelectField('First Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
+    solver_config2 = QuerySelectField('Second Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     result_property = SelectField('Property')
     log_property = BooleanField("Logarithmic property-axis", default=True)
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
 class RTDPlotsForm(Form):
-    sc = QuerySelectMultipleField('Solver Configurations')
+    sc = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     result_property = SelectField('Property')
     log_property = BooleanField("Logarithmic property-axis", default=True)
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
 class RTDPlotForm(Form):
-    solver_config = QuerySelectField('Solver Configuration')
+    solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     result_property = SelectField('Property')
     log_property = BooleanField("Logarithmic property-axis", default=True)
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
@@ -176,13 +183,13 @@ class RTDPlotForm(Form):
 
 class ProbabilisticDominationForm(Form):
     result_property = SelectField('Property')
-    solver_config1 = QuerySelectField('First Solver Configuration')
-    solver_config2 = QuerySelectField('Second Solver Configuration')
+    solver_config1 = QuerySelectField('First Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
+    solver_config2 = QuerySelectField('Second Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     instance_filter = TextField('Filter Instances')
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
 
 class BoxPlotForm(Form):
-    solver_configs = QuerySelectMultipleField('Solver Configurations')
+    solver_configs = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     result_property = SelectField('Property')
     instances = QuerySelectMultipleField('Instances')
     instance_filter = TextField('Filter Instances')
@@ -195,6 +202,7 @@ class RankingForm(Form):
     instance_filter = TextField('Filter Instances')
 
 class ResultsBySolverAndInstanceForm(Form):
+    solver_configs = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     display_measure = SelectField('Display measure', default='par10',
                                   choices=[('mean', 'mean'), ('median', 'median'),
                                     ('par10', 'par10'), ('min', 'min'), ('max', 'max')])

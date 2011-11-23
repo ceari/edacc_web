@@ -63,6 +63,7 @@
         <form method="get" action="{{ url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment) }}">
             <table id="form_table">
             {{render_field(form.display_measure)}}
+            {{ render_field(form.solver_configs, size=10) }}
             </table>
             <div id="optional_instance_filter">
             <table>

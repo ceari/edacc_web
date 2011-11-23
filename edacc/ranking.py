@@ -206,8 +206,9 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         failed_runs = db.session.query(db.ExperimentResult.CPUTimeLimit, db.ExperimentResult.SolverConfig_idSolverConfig) \
                                 .filter_by(experiment=experiment) \
                                 .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
-                                .filter(or_(db.ExperimentResult.status != 1,
-                                            not_(db.ExperimentResult.resultCode.like(u'1%')))) \
+                                .filter(and_(or_(db.ExperimentResult.status != 1,
+                                            not_(db.ExperimentResult.resultCode.like(u'1%'))),
+                                            not_(db.ExperimentResult.status.in_([-1,0])))) \
                                 .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
         for run in failed_runs:
             failed_runs_by_solver[run.SolverConfig_idSolverConfig].append(run)
