@@ -13,15 +13,30 @@ from edacc import utils, models, constants
 
 configuration = {}
  #classify in Categories
-def classify(values, categories):
-    valueDict = {}    
+def classify(values, categories, standardize):
+    valueDict = {}  
     for vl in range(len(categories)): 
         valueDict[categories[vl]] = vl
     m = 0 
-    for v in values:
-        if v in valueDict:
-            values[m] = valueDict[v]
-        m += 1
+    if standardize == False:
+        for v in values:
+            if v in valueDict:
+                values[m] = valueDict[v]
+            m += 1
+    else:
+        expectedValue = 0.0
+        variance = 0.0
+        for v in values:
+            if v in valueDict:
+                values[m] = valueDict[v]
+                expectedValue = expectedValue + float(valueDict[v])
+                variance = variance + (float(valueDict[v]) * float(valueDict[v]))
+            m += 1
+        expectedValue = expectedValue / len(values)
+        variance = variance / len(values)
+        if variance != 0:
+            standardScore = lambda x: (x-expectedValue)/variance
+            values = map(standardScore, values) 
     return values
 
 #Turns the range of value
@@ -256,9 +271,10 @@ class config_vis(object):
                         valueList.append(tmp)
                     if scn not in deselectedConfigs:
                         values.append(tmp)
-                        if standardize == True:
-                            expectedValue = expectedValue + float(tmp)
-                            variance = variance + (float(tmp) * float(tmp))
+                        if(domain[pl] == 'num'):
+                            if standardize == True:
+                                expectedValue = expectedValue + float(tmp)
+                                variance = variance + (float(tmp) * float(tmp))
                 else:
                     if scn not in deselectedConfigs:
                         values.append(0)
@@ -268,7 +284,7 @@ class config_vis(object):
                 
             #maps the values of each parameter suitable for domains       
             if domain[pl] == "cat":
-                values = classify(values, valueList)
+                values = classify(values, valueList, standardize)
             
             elif domain[pl] == "num":
                 iv = 0
@@ -323,7 +339,6 @@ class config_vis(object):
                 if(parameterDomain[pl] == "integerDomain"):
                     minValue = int(minValue)
                     maxValue = int(maxValue)
-                
                 if standardize == True:
                     expectedValue = expectedValue / len(values)
                     variance = variance / len(values)
