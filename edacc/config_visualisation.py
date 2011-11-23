@@ -9,7 +9,7 @@
 """
 
 from edacc import utils, models, constants
-import time
+
 
 configuration = {}
  #classify in Categories
@@ -33,7 +33,6 @@ def turnValue(values):
     return values
 
 #Projects values to the range of the graph
-##TODO: was passiert, wenn die Werte kleiner Null?
 def project(values):
     values = map(float, values)
     if max(values) > 0:
@@ -63,7 +62,7 @@ def mapPosition(form):
 
 
 class config_vis(object):
-    def __init__(self, database, expID, configForm):
+    def __init__(self, database, expID, configForm, standardize):
         db = models.get_database(database) or abort(404)   
         experiment = db.session.query(db.Experiment).get(expID) or abort(404)
         if experiment.configurationExp == False: return # kein Konfiguratorexperiment
@@ -86,20 +85,21 @@ class config_vis(object):
         parameterPosition = {}
         page = 0
         
-        start_db = time.clock() 
         #db Queries for configuration visualisation
         name = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == expID).first()
         configuration['expName'] = str(name[0])
+        configuration['standardize'] = standardize
         
         if configForm == None:
             configuration['page'] = page
         else:
             page = map(int, configForm.getlist("page"))[0]+1
             configuration['page'] = page
-            minConf = map(str, configForm.getlist("min_confidence"))
-            maxConf = map(str, configForm.getlist("max_confidence"))   
-            minPerf = map(str, configForm.getlist("min_performance"))
-            maxPerf = map(str, configForm.getlist("max_performance"))   
+            ##TODO minDict
+            minDict['confidence'] = map(str, configForm.getlist("min_confidence"))[0]
+            maxDict['confidence'] = map(str, configForm.getlist("max_confidence"))[0]  
+            minDict['performance'] = map(str, configForm.getlist("min_performance"))[0]
+            maxDict['performance'] = map(str, configForm.getlist("max_performance"))[0]  
 
         paramList.append('confidence')
         paramList.append('performance') 
@@ -112,26 +112,28 @@ class config_vis(object):
         solverConfigName =  dict((s.idSolverConfig, s.name) 
                         for s in db.session.query(db.SolverConfiguration).
                             filter(db.SolverConfiguration.Experiment_idExperiment == expID))
-                            
+        if page == 0:
+            choosenConfigs = solverConfigName.keys()
+                                
         for scn in solverConfigName:
             count = int(db.session.query(db.ExperimentResult.idJob).
                             filter(db.ExperimentResult.SolverConfig_idSolverConfig == scn).count())
             parameterValue[scn]= {'confidence': count}
             
-            #deselect solverConfigs which aren't in the range of choosen confidence or performance
-            if page > 0:
-                if count < minConf or count > maxConf or solverConfigCosts[scn] < minPerf or solverConfigCosts[scn] > maxPerf:
-                    choosenConfigs.append(scn)   
-            
             if solverConfigCosts[scn] != None:
                 parameterValue[scn].update({'performance': solverConfigCosts[scn] })
             else:
                 parameterValue[scn].update({'performance': 0.0 })
-        print time.clock() - start_db, "dbZeit"
+                
+            #deselect solverConfigs which aren't in the range of choosen confidence or performance
+            if page > 0:
+                if count >= int(minDict['confidence']) and count <= int(maxDict['confidence']) and float(parameterValue[scn]['performance']) >= float(minDict['performance']) and float(parameterValue[scn]['performance']) <= float(maxDict['performance']):
+                    choosenConfigs.append(scn)
+                else:
+                    deselectedConfigs.append(scn)
+
         
         ##TODO: ab hier beim 2. Mal laden !  
-        
-        ##TODO: Fehler treten erst beim 2. Mal auf, also ueberall schauen wo configForm != None
         if page > 0:
             configurable = [p.Parameters_idParameter for p in experiment.configuration_scenario.parameters if p.configurable and p.parameter.name not in ('instance', 'seed')]
             parameterName  =  dict((p.idParameter, p.name) 
@@ -140,10 +142,8 @@ class config_vis(object):
             for id in parameterName.keys():
                 parameterDomain[id] = experiment.configuration_scenario.get_parameter_domain(parameterName[id])
 
-
             paramInstance = db.session.query(db.ParameterInstance).filter(db.ParameterInstance.SolverConfig_idSolverConfig.in_(choosenConfigs)).all()   
-
-            start_pi = time.clock() 
+            
             for pv in paramInstance:
                 if pv.Parameters_idParameter not in parameterName.keys() or pv.value == "": continue
                 if pv.SolverConfig_idSolverConfig not in parameterValue: 
@@ -151,7 +151,7 @@ class config_vis(object):
                 parameterValue[pv.SolverConfig_idSolverConfig].update({pv.Parameters_idParameter: pv.value})
                 if pv.Parameters_idParameter not in paramList:
                     paramList.append(pv.Parameters_idParameter)        
-            print time.clock() - start_pi, "piZeit"
+    
         
         parameterName.update({'confidence': 'confidence', 'performance': 'performance'})
                
@@ -163,7 +163,6 @@ class config_vis(object):
                     domain[pd] = 'cat'
                        
         #maps the web formular in lists
-        ##TODO: die Listen werden erstellt !
         if page > 1:
             for pm in paramList: 
                 if str(pm) in configForm.keys():
@@ -196,7 +195,7 @@ class config_vis(object):
                  
             
         #creates a dictionary with values of the parameters of each solverConfig
-        for scn in solverConfigName:
+        for scn in choosenConfigs:
             parameterInstance = {} 
             parameter = {}
             
@@ -225,7 +224,6 @@ class config_vis(object):
             solverConfig[scn]= parameterInstance
     
         #chance the position
-        ##TODO: positionswechsel
         if page > 1:
             formerPosition = []
             for pp in parameterPosition:
@@ -238,26 +236,36 @@ class config_vis(object):
                     del formerPosition[formerPosition.index(paramID)] 
                     formerPosition.insert((requestedPosition-1), paramID)
             paramList = formerPosition[:]
+        
         i=0
-
         for pl in paramList:
             values = []
             valueList = []
+            expectedValue = 0.0
+            variance = 0.0      
             minValue = 0
             maxValue = 0
             turn = False
             i += 1
             
             #creates a list of possible values (valueList) and an list of values for each parameter
-            for scn in solverConfigName:
+            for scn in choosenConfigs:
                 if (pl in solverConfig[scn]['parameter']):
-                    if (solverConfig[scn]['parameter'][pl] not in valueList):
-                        valueList.append(solverConfig[scn]['parameter'][pl])
+                    tmp = solverConfig[scn]['parameter'][pl]
+                    if (tmp not in valueList):
+                        valueList.append(tmp)
                     if scn not in deselectedConfigs:
-                        values.append(solverConfig[scn]['parameter'][pl])
+                        values.append(tmp)
+                        if standardize == True:
+                            expectedValue = expectedValue + float(tmp)
+                            variance = variance + (float(tmp) * float(tmp))
                 else:
                     if scn not in deselectedConfigs:
-                        values.append(0)        
+                        values.append(0)
+            if len(valueList) == 0:
+                valueList.append(0)
+                values.append(0)
+                
             #maps the values of each parameter suitable for domains       
             if domain[pl] == "cat":
                 values = classify(values, valueList)
@@ -301,18 +309,29 @@ class config_vis(object):
             if domain[pl] == 'num': 
                 if page > 1 and len(minDict[pl])>0 and float(minDict[pl])>=min(valueList) and float(minDict[pl])<=max(valueList):
                     minValue = minDict[pl]
-   
+                elif len(choosenConfigs) == 0:
+                    minValue = minDict[pl]
                 else:
                     minValue = min(valueList)
-                
-                if page > 1 and len(maxDict[pl])>0 and float(maxDict[pl])>=min(valueList) and float(maxDict[pl])<=max(valueList):
+                if page > 1:
+                    if len(maxDict[pl])>0 and float(maxDict[pl])>=min(valueList) and float(maxDict[pl])<=max(valueList):
                         maxValue = maxDict[pl]
+                elif len(choosenConfigs) == 0:
+                    maxValue = maxDict[pl]
                 else:
                     maxValue = max(valueList)
                 if(parameterDomain[pl] == "integerDomain"):
                     minValue = int(minValue)
                     maxValue = int(maxValue)
-                values = project(values)
+                
+                if standardize == True:
+                    expectedValue = expectedValue / len(values)
+                    variance = variance / len(values)
+                    if variance != 0:
+                        standardScore = lambda x: (x-expectedValue)/variance
+                        values = map(standardScore, values) 
+                else:
+                    values = project(values)
                 paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue,'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'num'}
                 
             elif domain[pl] == 'cat':
@@ -324,10 +343,9 @@ class config_vis(object):
         for i in range(numValue):
             list.append(i)
         configuration['numValue'] = list
-        ##TODO: configs werden aussortiert !
         if page > 1:
             selectedConfigs = []
-            for scn in solverConfigName:
+            for scn in choosenConfigs:
                 if scn not in deselectedConfigs:
                     if str(scn) in configList:
                         selectedConfigs.append([scn, solverConfigName[scn], 1])
@@ -336,7 +354,7 @@ class config_vis(object):
             configuration['solverConfigs'] = selectedConfigs
         else:
             selectedConfigs = []
-            for scn in solverConfigName:
+            for scn in choosenConfigs:
                 selectedConfigs.append([scn, solverConfigName[scn], 0])
             configuration['solverConfigs'] = selectedConfigs
        

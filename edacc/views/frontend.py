@@ -1177,16 +1177,16 @@ def ajax_monitor_tabelle(database):
 def configurator_visualisation(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    
+    standardize = False
     if request.method == 'POST' and request.form.get("submit") != "reset":
-        cv = config_visualisation.config_vis(database, experiment_id, request.form)
+        if (request.form.get("submit")== "standardize"):
+            standardize = True
+        cv = config_visualisation.config_vis(database, experiment_id, request.form, standardize)
         configuration = cv.getConfiguration()
     else:
-        cv = config_visualisation.config_vis(database, experiment_id, None)
+        cv = config_visualisation.config_vis(database, experiment_id, None, standardize)
         configuration = cv.getConfiguration()
-    start = time.clock()
     render_res = render('configurator_visualisation.html', experiment=experiment, database=database, db=db, configuration = configuration)
-    print "render:", time.clock() - start, "sec"
     return render_res
  
         

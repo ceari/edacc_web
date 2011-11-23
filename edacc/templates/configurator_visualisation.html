@@ -52,7 +52,7 @@
    }
     window.onload = function (e){
         document.getElementById("configurator").width = screen.width;
-        var line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}{%if configuration['paramAttribute'][z]['hide'] == False%}'10',{%endif%}{%endfor%}] 
+        var line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}{%if configuration['paramAttribute'][z]['hide'] == False%}{%if configuration['standardize'] == true%}'1'{%else%} '10'{%endif%} ,{%endif%}{%endfor%}] 
             {%for x in configuration['numValue']%}
                 ,[{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endif%}{%endfor%}]
             {%endfor%}
@@ -79,7 +79,10 @@
                 'rgba(0,0,0,255)',
             {%endif%}
             {%endfor%}]);
-            
+        {%if configuration['standardize'] == true%}
+            line.Set('chart.xaxispos', 'center');
+            line.Set('chart.ymax', 1);
+        {%endif%}
         line.Set('chart.gutter.top', 80);
 		line.Set('chart.gutter.bottom', 170);
         line.Set('chart.gutter.left', 100);
@@ -103,7 +106,9 @@
 <form name="Formular" method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
 <input type="submit" name="submit" value="refresh" onclick="return checkFormular()">
 <input type="submit" name="submit" value="reset">
-<input type="submit" name="submit" value="standardize">
+{%if configuration['page'] > 0%}
+    <input type="submit" name="submit" value="standardize">
+{%endif%}
 <table border="0" cellpadding="10" cellspacing="0" width="100%" valign="top">
     <td><table border="2" cellpadding="5" cellspacing="0" width="100%">  
         <th></th><td>min</td><td>max</td><td colspan="3"></td>
@@ -142,8 +147,8 @@
            
     </table></td>
 <td div style="float:left;" align="left" valign="top">
-    solver configuration<select name="solverConfigs"
-            size="{% if configuration['solverConfigs']|length < (configuration['paramAttribute']|length * 6) %} {{configuration['solverConfigs']|length}}{%else%}{{(configuration['paramAttribute']|length * 6)}}{%endif%}" 
+    <nobr>solver configuration</nobr><select name="solverConfigs"
+            size="{% if configuration['solverConfigs']|length < (configuration['paramAttribute']|length * 5) %} {{configuration['solverConfigs']|length}}{%else%}{{(configuration['paramAttribute']|length * 5)}}{%endif%}" 
             multiple>
         {%for sc in configuration['solverConfigs']%}    
             <option {%if sc[2] == 1%} selected= selected {%endif%} value="{{sc[0]}}">{{sc[1]}}</option>
