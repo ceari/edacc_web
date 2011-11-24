@@ -8,7 +8,7 @@
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
-import os, math
+import os, math, random
 
 from functools import wraps
 from rpy2 import robjects
@@ -575,13 +575,19 @@ def kerneldensity(data, property_name, log_property, filename, format='png'):
         log = ''
 
     if len(data) > 0:
-        robjects.r('d <- npudens(c(' + ",".join(map(str, data + [max(data or [0]) + 0.00001])) + '))')
-        robjects.r("d$bws$xnames = '"+property_name+"'")
+        #if len(data) > 1000:
+        #    data = random.sample(data, 1000)
+        #d = np.npudens(robjects.FloatVector(data + [max(data or [0]) + 0.00001]))
+        #robjects.r.plot(d, main="", log=log, xaxt="n", yaxt="n", xlab="", ylab="", xaxs="i", yaxs="i", las=1)
+        #vec = 'c(' + ",".join(map(str, data)) + ')'
+        robjects.r.plot(robjects.r.density(robjects.FloatVector(data)), main="", xlab=property_name, log=log)
+        #robjects.r('d <- density('+vec+', bw="nrd0", adjust=1, kernel="gaussian")')
+        #robjects.r("d$bws$xnames = '"+property_name+"'")
         # add some pseudo value to data because R crashes when the data is constant
         # and takes python down with it ...
-        robjects.r("plot(d, main='', log='"+log+"', xaxt='n', yaxt='n', xlab='', ylab='', xaxs='i', yaxs='i', las=1)")
+        #robjects.r("plot(d, main='')")
         # plot labels and axes
-        robjects.r.mtext('Nonparametric kernel density estimation',
+        robjects.r.mtext('Kernel density estimation',
                          padj=1, side=3, line=3, cex=1.7) # plot title
     else:
         robjects.r.frame()
