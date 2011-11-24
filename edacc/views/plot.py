@@ -580,16 +580,17 @@ def cactus_plot(database, experiment_id):
                 sc_results = []
                 for id in instances[instance_group]:
                     res = sc_res.filter(db.ExperimentResult.Instances_idInstance==id).all()
-                    res = [r.get_property_value(result_property, db) for r in res]
                     num_penalized = results.filter_by(solver_configuration=sc) \
                                         .filter(db.ExperimentResult.Instances_idInstance==id) \
                                         .filter(or_(db.ExperimentResult.status!=1,
                                                     not_(db.ExperimentResult.resultCode.like('1%')))).count()
                     if result_property == 'cputime':
-                        penalized_time = sum([j.get_penalized_time(10) for j in res if not str(res.resultCode).startswith('1')])
+                        penalized_time = sum([j.get_penalized_time(10) for j in res if not str(j.resultCode).startswith('1')])
+                        res_vals = [r.get_property_value(result_property, db) for r in res if str(r.resultCode.startswith('1'))]
                     else:
                         penalized_time = 0
-                    penalized_avg = (sum(res) + penalized_time) / (num_penalized + len(res))
+                        res_vals = [r.get_property_value(result_property, db) for r in res]
+                    penalized_avg = (sum(res_vals) + penalized_time) / (num_penalized + len(res_vals))
                     sc_results.append(penalized_avg)
             else:
                 run_number = int(run)
