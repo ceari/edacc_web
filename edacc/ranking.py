@@ -12,6 +12,7 @@
 import numpy
 from sqlalchemy.sql import select, and_, functions
 
+
 def avg_point_biserial_correlation_ranking(db, experiment, instances):
     """ Ranking through comparison of the RTDs of the solvers on the instances.
         This ranking only makes sense if the there were multiple runs of each
@@ -146,7 +147,7 @@ def number_of_solved_instances_ranking(db, experiment, instances):
             else:
                 return 0
 
-    return list(sorted(experiment.solver_configurations,cmp=comp))
+    return list(sorted(experiment.solver_configurations,cmp=comp,reverse=True))
 
 def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev):
     instance_ids = [i.idInstance for i in instances]
@@ -184,15 +185,17 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
              )]
 
     # single query fetch of all/most required data
-    successful_runs = db.session.query(db.ExperimentResult.resultTime,
-                                       db.ExperimentResult.SolverConfig_idSolverConfig,
-                                       db.ExperimentResult.Instances_idInstance) \
-                                .filter(db.ExperimentResult.resultCode.like(u'1%')) \
-                                .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
-                                .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
-                                .filter_by(experiment=experiment, status=1).all()
-    
-    
+    table = db.metadata.tables['ExperimentResults']
+    s = select([table.c['resultTime'],
+                table.c['SolverConfig_idSolverConfig'],
+                table.c['Instances_idInstance']],
+                and_(table.c['resultCode'].like(u'1%'),
+                    table.c['Instances_idInstance'].in_(instance_ids),
+                    table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
+                    table.c['Experiment_idExperiment']==experiment.idExperiment,
+                    table.c['status']==1)).select_from(table)
+    successful_runs = db.session.connection().execute(s)
+
     runs_by_solver_and_instance = {}
     for run in successful_runs:
         if not runs_by_solver_and_instance.has_key(run.SolverConfig_idSolverConfig):

@@ -2,13 +2,18 @@
 {% block title %}Solved instances{% endblock %}
 {% block head %}
     {{ super() }}
+    <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
+    <link type="text/css" href="{{url_for('static', filename='css/demo_table_jui.css')}}" rel="Stylesheet" />
     <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery-ui-1.8.16.custom.min.js')}}" type="text/javascript"></script>
+
     <script type="text/javascript">
         $(document).ready(function() {
             oTable = $('#table_instances').dataTable({
                 "bPaginate": false,
                 "bLengthChange": false,
+                "bJQueryUI": true,
                 "bFilter": true,
                 "bInfo": false,
                 "oLanguage": {
@@ -31,7 +36,7 @@
         These instances have been solved by at least one solver in any of its runs.
     </div>
     {% if solved_instances|length > 0 %}
-        <table id="table_instances">
+        <table class="display" id="table_instances">
             <thead>
                 <tr>
                     <th>Name</th>
