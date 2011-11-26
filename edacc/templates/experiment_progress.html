@@ -39,7 +39,7 @@
 				},
                 "aoColumns": [null, null, null, null, null, null, null, null, null, {"bVisible": false},
                              {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
-                             {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
+                             {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
                              {% for prop in db.get_result_properties() %}{"bVisible": false}, {%endfor%}]
             });
             var fixed_header = new FixedHeader( oTable );
@@ -202,8 +202,6 @@
                 <th>Wall Clock limit</th>
                 <th>Memory limit</th>
                 <th>Stack size limit</th>
-                <th>Output size limit first</th>
-                <th>Output size limit last</th>
                 <th>Compute node</th>
                 <th>Compute node IP</th>
                 <th>Priority</th>

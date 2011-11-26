@@ -651,7 +651,7 @@ def experiment_results_csv(database, experiment_id):
                            ELSE 0
                        END as runningTime,
                        ExperimentResults.CPUTimeLimit, ExperimentResults.wallClockTimeLimit, ExperimentResults.memoryLimit,
-                       ExperimentResults.stackSizeLimit, ExperimentResults.outputSizeLimitFirst, ExperimentResults.outputSizeLimitLast,
+                       ExperimentResults.stackSizeLimit,
                        ExperimentResults.computeNode, ExperimentResults.computeNodeIP, ExperimentResults.priority,
                        gridQueue.name
                        """ + (',' if prop_columns else '') + prop_columns + """
@@ -675,7 +675,7 @@ def experiment_results_csv(database, experiment_id):
     csv_writer = csv.writer(csv_response)
     csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'status code', 'result code', 'Status'] +
                         ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
-                        ['stackSizeLimit', 'outputSizeLimitFirst', 'outputSizeLimitLast', 'computeNode', 'computeNodeIP',
+                        ['stackSizeLimit', 'computeNode', 'computeNodeIP',
                          'priority', 'computeQueue ID'] +
                         [p.name for p in result_properties] + [p.name for p in instance_properties])
     csv_writer.writerows(jobs)
@@ -713,8 +713,7 @@ def experiment_progress_ajax(database, experiment_id):
                "runningTime",
                "ResultCodes.description", "ExperimentResults.status",
                "ExperimentResults.CPUTimeLimit", "ExperimentResults.wallClockTimeLimit",
-               "ExperimentResults.memoryLimit", "ExperimentResults.stackSizeLimit", "ExperimentResults.outputSizeLimitFirst",
-               "ExperimentResults.outputSizeLimitLast",
+               "ExperimentResults.memoryLimit", "ExperimentResults.stackSizeLimit",
                "ExperimentResults.computeNode", "ExperimentResults.computeNodeIP",
                "ExperimentResults.priority", "gridQueue.name"] + \
               ["`"+prop.name.replace("%", "%%")+"_value`.value" for prop in result_properties]
@@ -792,7 +791,7 @@ def experiment_progress_ajax(database, experiment_id):
                        END as runningTime,
                        ResultCodes.description, ExperimentResults.status,
                        ExperimentResults.CPUTimeLimit, ExperimentResults.wallClockTimeLimit, ExperimentResults.memoryLimit,
-                       ExperimentResults.stackSizeLimit, ExperimentResults.outputSizeLimitFirst, ExperimentResults.outputSizeLimitLast,
+                       ExperimentResults.stackSizeLimit,
                        ExperimentResults.computeNode, ExperimentResults.computeNodeIP, ExperimentResults.priority,
                        gridQueue.name
                        """ + (',' if prop_columns else '') + prop_columns + """
@@ -827,8 +826,8 @@ def experiment_progress_ajax(database, experiment_id):
 
         aaData.append([job.idJob, job[1], job[2], job[3],
                 job[4], job[5], job[6], running, job[8], job[9], \
-                job[10], job[11], job[12], job[13], job[14], job[15], job[16], job[17], job[18], job[19] ] \
-                + [job[i] for i in xrange(20, 20+len(result_properties))]
+                job[10], job[11], job[12], job[13], job[14], job[15], job[16], job[17] ] \
+                + [job[i] for i in xrange(18, 18+len(result_properties))]
                 #+ [job[i] for i in xrange(20+len(result_properties), 19+len(result_properties)+len(instance_properties))]
             )
 
@@ -837,7 +836,7 @@ def experiment_progress_ajax(database, experiment_id):
         csv_writer = csv.writer(csv_response)
         csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'status code', 'Status'] +
                             ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
-                            ['stackSizeLimit', 'outputSizeLimitFirst', 'outputSizeLimitLast', 'computeNode', 'computeNodeIP', 'priority', 'computeQueue ID'] +
+                            ['stackSizeLimit', 'computeNode', 'computeNodeIP', 'priority', 'computeQueue ID'] +
                             [p.name for p in result_properties] + [p.name for p in instance_properties])
         for d in aaData:
             csv_writer.writerow(d)
