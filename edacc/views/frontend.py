@@ -466,12 +466,15 @@ def experiment_results_by_instance(database, experiment_id):
             return redirect(url_for('frontend.instance_details',
                                     database=database, instance_id=instance.idInstance))
 
+        solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
+        results_by_sc = dict((id, list()) for id in solver_config_ids)
+        for run in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance) \
+                    .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
+                    .order_by('Instances_idInstance', 'run').all():
+            results_by_sc[run.SolverConfig_idSolverConfig].append(run)
+
         for sc in solver_configs:
-            runs = db.session.query(db.ExperimentResult) \
-                        .filter_by(experiment=experiment,
-                                   instance=instance,
-                                   solver_configuration=sc) \
-                        .order_by('Instances_idInstance', 'run').all()
+            runs = results_by_sc[sc.idSolverConfig]
 
             mean, median, par10 = None, None, None
             successful = len([j for j in runs if str(j.resultCode).startswith("1")])
