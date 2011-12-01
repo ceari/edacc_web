@@ -216,3 +216,8 @@ def lzma_compress(data):
     result = c.read(5)
     result += struct.pack('<Q', len(data))
     return result + c.read()
+
+def truncate_name(s, l=100):
+    if len(s) > l:
+        return s[:l/2] + " [..] " + s[-l/2:]
+    return s

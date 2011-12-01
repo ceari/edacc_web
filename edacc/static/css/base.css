@@ -207,47 +207,6 @@ table.details td {
     padding: 3px;
 }
 
-table.results {
-    border-width: 1px;
-    border-style: solid;
-    border-color: black;
-    border-collapse: collapse;
-    margin: 5px;
-}
-
-table.results th {
-    border-width: 1px;
-    border-style: solid;
-    border-color: black;
-    border-collapse: collapse;
-    padding: 3px;
-    background-color: #e6EEFF;
-}
-
-table.results td {
-    border-width: 1px;
-    border-style: solid;
-    border-color: black;
-    border-collapse: collapse;
-    padding: 3px;
-}
-
-table.results td.odd {
-    background-color: #ddd;
-}
-
-table.results td.even {
-    background-color: #eee;
-}
-
-table.results tr.odd {
-    background-color: #ddd;
-}
-
-table.results tr.even {
-    background-color: #eee;
-}
-
 table.details td.odd {
     background-color: #ddd;
 }
@@ -369,68 +328,4 @@ code, pre {
 
 .sorting_desc_disabled {
     background: url('/static/img/datatable/sort_desc_disabled.png') no-repeat center right;
-}
-
-#table_instances {
-    width: 100%;
-    border: 1px solid #ddd;
-    border-collapse: collapse;
-}
-
-#table_instances td {
-    padding: 2px;
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-#table_instances thead th {
-    padding: 3px 18px 3px 10px;
-    background-color: #e6EEFF;
-    cursor: pointer;
-}
-
-#table_instances tr.odd {
-    background-color: #f5f5f5;
-}
-
-#table_instances tr.even {
-    background-color: #fff;
-}
-
-#table_instances td, th {
-    border-width: 1px;
-    border-style: solid;
-    border-color: black;
-}
-
-#table_solver_configs {
-    width: 100%;
-    border: 1px solid #ddd;
-    border-collapse: collapse;
-}
-
-#table_solver_configs td {
-    padding: 2px;
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-#table_solver_configs thead th {
-    padding: 3px 18px 3px 10px;
-    background-color: #e6EEFF;
-    cursor: pointer;
-}
-
-#table_solver_configs tr.odd {
-    background-color: #f5f5f5;
-}
-
-#table_solver_configs tr.even {
-    background-color: #fff;
-}
-
-#table_solver_configs td, th {
-    border-width: 1px;
-    border-style: solid;
-    border-color: black;
 }

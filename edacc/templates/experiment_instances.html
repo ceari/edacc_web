@@ -3,11 +3,16 @@
 {% block head %}
     <meta name="robots" content="noindex" />
     {{ super() }}
+    <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
+    <link type="text/css" href="{{url_for('static', filename='css/demo_table_jui.css')}}" rel="Stylesheet" />
     <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery-ui-1.8.16.custom.min.js')}}" type="text/javascript"></script>
+
     <script type="text/javascript">
         $(document).ready(function() {
             oTable = $('#table_instances').dataTable({
+                "bJQueryUI": true,
                 "bPaginate": false,
                 "bLengthChange": false,
                 "bFilter": true,
@@ -34,7 +39,7 @@
         <a href="{{url_for('frontend.download_instances', database=database, experiment_id=experiment.idExperiment)}}">Download all instances as tarball</a> ({{experiment.get_total_instance_blob_size(db)|download_size}})
     </div>
     {% if instances|length > 0 %}
-        <table id="table_instances">
+        <table id="table_instances" class="display">
             <thead>
                 <tr>
                     <th>Name</th>
