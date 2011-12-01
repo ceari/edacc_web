@@ -72,11 +72,11 @@
                                                 ,
                                             {%endif%}
                                             {%endif%}{%endfor%}]);
-        line.Set('chart.colors', ['rgba(0,0,0,0)', {%for x in configuration['solverConfigs']%}
+        line.Set('chart.colors', ['rgba(255,255,255,1)', {%for x in configuration['solverConfigs']%}
             {%if x[2] == 1%}
-                'rgba(255,0,0,255)',
+                'rgba(255,0,0,1)',
             {%else%}
-                'rgba(0,0,0,255)',
+                'rgba(0,0,0,1)',
             {%endif%}
             {%endfor%}]);
         {%if configuration['negNum'] == 1%}

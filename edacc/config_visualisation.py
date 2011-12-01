@@ -33,12 +33,11 @@ def turnValue(values):
     return values
 
 #Projects values to the range of the graph
-##TODO: max austauschen
 def project(values, maxVal):
     values = map(float, values)
     if maxVal != 0:
         j = 0
-        tmp = 1/maxVal
+        tmp = 1/float(maxVal)
         for v in values:
             values[j] = v * tmp
             j += 1 
@@ -304,7 +303,7 @@ class config_vis(object):
             
             if numValue < len(values):
                 numValue = len(values)    
-                        
+                       
             if domain[pl] == 'num': 
                 if page > 1 and len(minDict[pl])>0 and float(minDict[pl])>=min(valueList) and float(minDict[pl])<=max(valueList):
                     minValue = minDict[pl]
@@ -344,7 +343,7 @@ class config_vis(object):
                 paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue,'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'num'}
                 
             elif domain[pl] == 'cat':
-                values = project(values, maxValue)
+                values = project(values, max(values))
                 paramAttribute[i] = {'values': values,'valueList': valueList, 'selectValueList': selectValueList[pl],'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'cat'}
 
         if standardize == 1:
