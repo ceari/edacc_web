@@ -345,10 +345,12 @@ class config_vis(object):
             elif domain[pl] == 'cat':
                 values = project(values, max(values))
                 paramAttribute[i] = {'values': values,'valueList': valueList, 'selectValueList': selectValueList[pl],'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'cat'}
-
         if standardize == 1:
             for ri in range(i):
-                paramAttribute[ri+1]['values'] = project(paramAttribute[ri+1]['values'], absMax)
+                if paramAttribute[ri+1]['domain'] == 'num':
+                    paramAttribute[ri+1]['values'] = project(paramAttribute[ri+1]['values'], absMax)
+        for ri in range(i):
+            print paramAttribute[ri+1]['values']
         configuration['paramAttribute'] = paramAttribute
         list = []
         for i in range(numValue):
