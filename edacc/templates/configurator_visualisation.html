@@ -52,7 +52,7 @@
    }
     window.onload = function (e){
         document.getElementById("configurator").width = screen.width;
-        var line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}{%if configuration['paramAttribute'][z]['hide'] == False%}{%if configuration['standardize'] == true%}'1'{%else%} '10'{%endif%} ,{%endif%}{%endfor%}] 
+        var line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}{%if configuration['paramAttribute'][z]['hide'] == False%}{%if configuration['standardize'] == true%}(1-({{z}}%2)*0.08){%else%}(1-({{z}}%2)*0.04){%endif%} ,{%endif%}{%endfor%}] 
             {%for x in configuration['numValue']%}
                 ,[{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endif%}{%endfor%}]
             {%endfor%}
@@ -79,9 +79,8 @@
                 'rgba(0,0,0,255)',
             {%endif%}
             {%endfor%}]);
-        {%if configuration['standardize'] == true%}
+        {%if configuration['negNum'] == 1%}
             line.Set('chart.xaxispos', 'center');
-            line.Set('chart.ymax', 1);
         {%endif%}
         line.Set('chart.gutter.top', 80);
 		line.Set('chart.gutter.bottom', 170);
@@ -104,15 +103,20 @@
 </div>
 
 <form name="Formular" method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
+
+<table border="0">
 <input type="submit" name="submit" value="refresh" onclick="return checkFormular()">
 <input type="submit" name="submit" value="reset">
-{%if configuration['page'] > 0%}
-    <input type="submit" name="submit" value="standardize">
-{%endif%}
+{%if configuration['page'] > 0%}{%if configuration['standardize']==1%}
+    <input type="submit" name="submit" value="original data">
+{%else%}
+    <input type="submit" name="submit" value="standardized data">
+{%endif%}{%endif%}
 <table border="0" cellpadding="10" cellspacing="0" width="100%" valign="top">
     <td><table border="2" cellpadding="5" cellspacing="0" width="100%">  
         <th></th><td>min</td><td>max</td><td colspan="3"></td>
         <input type="hidden" name="page" value="{{configuration['page']}}">
+        <input type="hidden" name="standardize" value="{{configuration['standardize']}}">
         {%for c in configuration['paramAttribute']%}
         <tr align="center" valign="middle">
             <th>{{configuration['paramAttribute'][c]['name']}}</th>
@@ -156,5 +160,6 @@
     </select>
 </td>
 </table>
+</table
 </form>
 {% endblock %}

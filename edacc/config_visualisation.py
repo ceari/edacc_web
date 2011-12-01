@@ -9,34 +9,19 @@
 """
 
 from edacc import utils, models, constants
-
+import math
 
 configuration = {}
  #classify in Categories
-def classify(values, categories, standardize):
+def classify(values, categories):
     valueDict = {}  
     for vl in range(len(categories)): 
         valueDict[categories[vl]] = vl
     m = 0 
-    if standardize == False:
-        for v in values:
-            if v in valueDict:
-                values[m] = valueDict[v]
-            m += 1
-    else:
-        expectedValue = 0.0
-        variance = 0.0
-        for v in values:
-            if v in valueDict:
-                values[m] = valueDict[v]
-                expectedValue = expectedValue + float(valueDict[v])
-                variance = variance + (float(valueDict[v]) * float(valueDict[v]))
-            m += 1
-        expectedValue = expectedValue / len(values)
-        variance = variance / len(values)
-        if variance != 0:
-            standardScore = lambda x: (x-expectedValue)/variance
-            values = map(standardScore, values) 
+    for v in values:
+        if v in valueDict:
+            values[m] = valueDict[v]
+        m += 1
     return values
 
 #Turns the range of value
@@ -48,11 +33,12 @@ def turnValue(values):
     return values
 
 #Projects values to the range of the graph
-def project(values):
+##TODO: max austauschen
+def project(values, maxVal):
     values = map(float, values)
-    if max(values) > 0:
+    if maxVal != 0:
         j = 0
-        tmp = 10/max(values)
+        tmp = 1/maxVal
         for v in values:
             values[j] = v * tmp
             j += 1 
@@ -99,7 +85,9 @@ class config_vis(object):
         parameterDomain = {}
         parameterPosition = {}
         page = 0
-        
+        absMax = 0
+        negNum = 0
+
         #db Queries for configuration visualisation
         name = db.session.query(db.Experiment.name).filter(db.Experiment.idExperiment == expID).first()
         configuration['expName'] = str(name[0])
@@ -110,7 +98,6 @@ class config_vis(object):
         else:
             page = map(int, configForm.getlist("page"))[0]+1
             configuration['page'] = page
-            ##TODO minDict
             minDict['confidence'] = map(str, configForm.getlist("min_confidence"))[0]
             maxDict['confidence'] = map(str, configForm.getlist("max_confidence"))[0]  
             minDict['performance'] = map(str, configForm.getlist("min_performance"))[0]
@@ -119,7 +106,6 @@ class config_vis(object):
         paramList.append('confidence')
         paramList.append('performance') 
         
-        ##TODO: beim 1. Mal laden nur dass hier!
         parameterDomain['confidence']= "integerDomain"
         parameterDomain['performance']= "realDomain"
         
@@ -147,8 +133,6 @@ class config_vis(object):
                 else:
                     deselectedConfigs.append(scn)
 
-        
-        ##TODO: ab hier beim 2. Mal laden !  
         if page > 0:
             configurable = [p.Parameters_idParameter for p in experiment.configuration_scenario.parameters if p.configurable and p.parameter.name not in ('instance', 'seed')]
             parameterName  =  dict((p.idParameter, p.name) 
@@ -256,8 +240,8 @@ class config_vis(object):
         for pl in paramList:
             values = []
             valueList = []
-            expectedValue = 0.0
-            variance = 0.0      
+            expectedValue = 0.0 
+            variance = 0.0    
             minValue = 0
             maxValue = 0
             turn = False
@@ -272,9 +256,8 @@ class config_vis(object):
                     if scn not in deselectedConfigs:
                         values.append(tmp)
                         if(domain[pl] == 'num'):
-                            if standardize == True:
+                            if standardize == 1:
                                 expectedValue = expectedValue + float(tmp)
-                                variance = variance + (float(tmp) * float(tmp))
                 else:
                     if scn not in deselectedConfigs:
                         values.append(0)
@@ -284,7 +267,7 @@ class config_vis(object):
                 
             #maps the values of each parameter suitable for domains       
             if domain[pl] == "cat":
-                values = classify(values, valueList, standardize)
+                values = classify(values, valueList)
             
             elif domain[pl] == "num":
                 iv = 0
@@ -329,8 +312,7 @@ class config_vis(object):
                     minValue = minDict[pl]
                 else:
                     minValue = min(valueList)
-                if page > 1:
-                    if len(maxDict[pl])>0 and float(maxDict[pl])>=min(valueList) and float(maxDict[pl])<=max(valueList):
+                if page > 1 and len(maxDict[pl])>0 and float(maxDict[pl])>=min(valueList) and float(maxDict[pl])<=max(valueList):
                         maxValue = maxDict[pl]
                 elif len(choosenConfigs) == 0:
                     maxValue = maxDict[pl]
@@ -339,25 +321,41 @@ class config_vis(object):
                 if(parameterDomain[pl] == "integerDomain"):
                     minValue = int(minValue)
                     maxValue = int(maxValue)
-                if standardize == True:
+                if standardize == 1:
+                    negNum = 1
                     expectedValue = expectedValue / len(values)
-                    variance = variance / len(values)
+                    for v in values:
+                        variance = variance + (v - expectedValue)**2
+                    variance = math.sqrt(variance/len(values))
                     if variance != 0:
                         standardScore = lambda x: (x-expectedValue)/variance
                         values = map(standardScore, values) 
                 else:
-                    values = project(values)
+                    if min(values) < 0:
+                        negNum = 1
+                    if math.fabs(min(values))>max(values):
+                        values = project(values, math.fabs(min(values)))
+                    else:
+                        values = project(values, max(values))
+                if max(values)>absMax:
+                    absMax = max(values)
+                if math.fabs(min(values))>absMax:
+                    absMax = math.fabs(min(values))
                 paramAttribute[i] = {'values': values,'min': minValue, 'max': maxValue,'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'num'}
                 
             elif domain[pl] == 'cat':
-                values = project(values)
+                values = project(values, maxValue)
                 paramAttribute[i] = {'values': values,'valueList': valueList, 'selectValueList': selectValueList[pl],'name': parameterName[pl], 'id': pl, 'hide': hide, 'turn': turn, 'positionList': positionList, 'domain': 'cat'}
-        
+
+        if standardize == 1:
+            for ri in range(i):
+                paramAttribute[ri+1]['values'] = project(paramAttribute[ri+1]['values'], absMax)
         configuration['paramAttribute'] = paramAttribute
         list = []
         for i in range(numValue):
             list.append(i)
         configuration['numValue'] = list
+        configuration['negNum'] = negNum
         if page > 1:
             selectedConfigs = []
             for scn in choosenConfigs:

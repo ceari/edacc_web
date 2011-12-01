@@ -1184,10 +1184,14 @@ def ajax_monitor_tabelle(database):
 def configurator_visualisation(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    standardize = False
+    standardize = 0
     if request.method == 'POST' and request.form.get("submit") != "reset":
-        if (request.form.get("submit")== "standardize"):
-            standardize = True
+        if (request.form.get("submit")== "standardized data"):
+            standardize = 1
+        elif (request.form.get("submit")== "original data"):
+            standardize = 0
+        else:
+            standardize = map(int, request.form.get("standardize"))[0]
         cv = config_visualisation.config_vis(database, experiment_id, request.form, standardize)
         configuration = cv.getConfiguration()
     else:
