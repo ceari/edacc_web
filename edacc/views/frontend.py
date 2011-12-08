@@ -1199,6 +1199,7 @@ def configurator_visualisation(database, experiment_id):
     else:
         cv = config_visualisation.config_vis(database, experiment_id, None, standardize)
         configuration = cv.getConfiguration()
+
     render_res = render('configurator_visualisation.html', experiment=experiment, database=database, db=db, configuration = configuration)
     return render_res
  

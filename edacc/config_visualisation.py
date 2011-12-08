@@ -326,9 +326,9 @@ class config_vis(object):
                     for v in values:
                         variance = variance + (v - expectedValue)**2
                     variance = math.sqrt(variance/len(values))
-                    if variance != 0:
-                        standardScore = lambda x: (x-expectedValue)/variance
-                        values = map(standardScore, values) 
+                    standardScore = lambda x: (x-expectedValue)/variance if variance != 0 else 0
+                    values = map(standardScore, values) 
+                    
                 else:
                     if min(values) < 0:
                         negNum = 1
@@ -349,8 +349,7 @@ class config_vis(object):
             for ri in range(i):
                 if paramAttribute[ri+1]['domain'] == 'num':
                     paramAttribute[ri+1]['values'] = project(paramAttribute[ri+1]['values'], absMax)
-        for ri in range(i):
-            print paramAttribute[ri+1]['values']
+
         configuration['paramAttribute'] = paramAttribute
         list = []
         for i in range(numValue):

@@ -93,7 +93,7 @@
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a><br/>
     <a href="{{ url_for('frontend.unsolved_instances', database=database, experiment_id=experiment.idExperiment) }}">Unsolved instances</a><br/>
     <a href="{{ url_for('frontend.solved_instances', database=database, experiment_id=experiment.idExperiment) }}">Solved instances</a><br/>
-    <a href="{{url_for('frontend.configurator_visualisation', database=database, experiment_id=experiment.idExperiment)}}">Configurator visualisation</a>
+    {% if experiment.configurationExp %}<a href="{{url_for('frontend.configurator_visualisation', database=database, experiment_id=experiment.idExperiment)}}">Configurator visualisation</a>{%endif%}
     {% endif %}
 
     <h2>Analysis</h2>

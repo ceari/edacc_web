@@ -9,7 +9,6 @@
 <script>
     function checkFormular(){
         //checks if input is correct
-        //##TODO: submit wert abfragen
         {%for c in configuration['paramAttribute'] if configuration['paramAttribute'][c]['domain'] == 'num'%}
                 if (document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value == "") {
                     alert("Please enter a value!");
@@ -52,27 +51,23 @@
    }
     window.onload = function (e){
         document.getElementById("configurator").width = screen.width;
-        var line = new RGraph.Line('configurator', [{%for z in configuration['paramAttribute']%}{%if configuration['paramAttribute'][z]['hide'] == False%}{%if configuration['standardize'] == true%}(1-({{z}}%2)*0.08){%else%}(1-({{z}}%2)*0.04){%endif%} ,{%endif%}{%endfor%}] 
-            {%for x in configuration['numValue']%}
+        var line = new RGraph.Line('configurator' {%for x in configuration['numValue']%}
                 ,[{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}'{{configuration['paramAttribute'][c]['values'][x]}}',{%endif%}{%endfor%}]
             {%endfor%}
             );  
         line.Set('chart.labels', [{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}
-                                                '{{configuration['paramAttribute'][c]['name']}}',
-                                            {%endif%}{%endfor%}]);
-        line.Set('chart.labels.ingraph', [{%for c in configuration['paramAttribute']%}{%if configuration['paramAttribute'][c]['hide'] == False%}
                                             {%if configuration['paramAttribute'][c]['domain'] == 'num'%}
                                                 {%if configuration['paramAttribute'][c]['turn'] == False%}
-                                                    ['{{configuration['paramAttribute'][c]['max']}}',,,,-0],
+                                                    '{{configuration['paramAttribute'][c]['name']}} [{{configuration['paramAttribute'][c]['min']}}, {{configuration['paramAttribute'][c]['max']}}]',
                                                 {%endif%}
                                                 {%if configuration['paramAttribute'][c]['turn'] == True%}
-                                                    ['{{configuration['paramAttribute'][c]['min']}}',,,,-0],
+                                                    '{{configuration['paramAttribute'][c]['name']}} [{{configuration['paramAttribute'][c]['max']}}, {{configuration['paramAttribute'][c]['min']}}]',
                                                 {%endif%}
                                             {%else%}
-                                                ,
+                                                '{{configuration['paramAttribute'][c]['name']}} {}',
                                             {%endif%}
                                             {%endif%}{%endfor%}]);
-        line.Set('chart.colors', ['rgba(255,255,255,1)', {%for x in configuration['solverConfigs']%}
+        line.Set('chart.colors', [{%for x in configuration['solverConfigs']%}
             {%if x[2] == 1%}
                 'rgba(255,0,0,1)',
             {%else%}
@@ -83,7 +78,7 @@
             line.Set('chart.xaxispos', 'center');
         {%endif%}
         line.Set('chart.gutter.top', 80);
-		line.Set('chart.gutter.bottom', 170);
+		line.Set('chart.gutter.bottom', 200);
         line.Set('chart.gutter.left', 100);
         line.Set('chart.gutter.right', 100);
         line.Set('chart.linewidth', 0.6);
@@ -99,7 +94,7 @@
 
 {% block content %}
 <div style="float:left;">
-    <canvas id="configurator" height="700">[No canvas support]</canvas>
+    <canvas id="configurator" height="730">[No canvas support]</canvas>
 </div>
 
 <form name="Formular" method="post" action="{{url_for('frontend.configurator_visualisation', experiment_id= experiment.idExperiment, database = database)}}">
