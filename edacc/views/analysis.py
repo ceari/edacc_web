@@ -71,9 +71,9 @@ def solver_ranking(database, experiment_id):
                 csv_writer.writerow(head)
 
                 for rnk, row in enumerate(ranking_data):
-                    write_row = [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 2), row[4:6])
-                    if form.calculate_average_dev.data: write_row.append(round(row[6], 2))
-                    if form.penalized_average_runtime.data: write_row.append(round(row[7], 2))
+                    write_row = [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 4), row[4:6])
+                    if form.calculate_average_dev.data: write_row.append(round(row[6], 4))
+                    if form.penalized_average_runtime.data: write_row.append(round(row[7], 4))
                     csv_writer.writerow(write_row)
 
                 csv_response.seek(0)
@@ -91,9 +91,9 @@ def solver_ranking(database, experiment_id):
                 table = "\\begin{tabular}{" + ('|'.join(['c'] * len(head))) + "}\n"
                 table += ' & '.join(head) + "\\\\ \\hline\n"
                 for rnk, row in enumerate(ranking_data):
-                    table += ' & '.join(map(str, [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 2), row[4:6])))
-                    if form.calculate_average_dev.data: table += " & " + str(round(row[6], 2))
-                    if form.penalized_average_runtime.data: table += " & " + str(round(row[7], 2))
+                    table += ' & '.join(map(str, [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 4), row[4:6])))
+                    if form.calculate_average_dev.data: table += " & " + str(round(row[6], 4))
+                    if form.penalized_average_runtime.data: table += " & " + str(round(row[7], 4))
                     table += "\\\\ \\hline\n"
                 table += "\\end{tabular}"
 
