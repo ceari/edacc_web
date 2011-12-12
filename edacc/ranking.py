@@ -206,16 +206,22 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
     if calculate_par10:
         failed_runs_by_solver = dict((sc.idSolverConfig, list()) for sc in ranked_solvers)
-        failed_runs = db.session.query(db.ExperimentResult.CPUTimeLimit, db.ExperimentResult.SolverConfig_idSolverConfig) \
-                                .filter_by(experiment=experiment) \
-                                .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
-                                .filter(and_(or_(db.ExperimentResult.status != 1,
-                                            not_(db.ExperimentResult.resultCode.like(u'1%'))),
-                                            not_(db.ExperimentResult.status.in_([-1,0])))) \
-                                .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
+        s = select([table.c['CPUTimeLimit'], table.c['SolverConfig_idSolverConfig']],
+                    and_(table.c['Experiment_idExperiment']==experiment.idExperiment,
+                        table.c['Instances_idInstance'].in_(instance_ids),
+                        table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
+                        and_(
+                            or_(
+                                table.c['status']!=1,
+                                not_(table.c['resultCode'].like(u'1%'))
+                            ),
+                            not_(table.c['status'].in_([-1,0]))
+                        )
+                    )).select_from(table)
+        failed_runs = db.session.connection().execute(s)
         for run in failed_runs:
             failed_runs_by_solver[run.SolverConfig_idSolverConfig].append(run)
-    
+
     for solver in ranked_solvers:
         if runs_by_solver_and_instance.has_key(solver.idSolverConfig):
             successful_runs = [run for ilist in runs_by_solver_and_instance[solver.idSolverConfig].values() \
