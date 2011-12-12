@@ -37,7 +37,15 @@
                     "bJQueryUI": true,
                     "bFilter": true,
                     "bInfo": true,
-                    "aaSorting": [[2,'desc']],
+                    {% if form.penalized_average_runtime.data %}
+                        {% if form.calculate_average_dev.data %}
+                        "aaSorting": [[8,'desc']],
+                        {% else %}
+                        "aaSorting": [[7,'desc']],
+                        {% endif %}
+                    {% else %}
+                        "aaSorting": [[2,'desc']],
+                    {% endif %}
                     "aoColumns": [
                         null,
                         null,
@@ -113,7 +121,7 @@
         {% for sc in data %}
             <tr>
                 <td>{{loop.index}}</td>
-                <td>{% if loop.index0 > 0 %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}">{{sc.0}}</a>{% else %}{{sc.0}}{% endif %}</td>
+                <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}">{{sc.0}}</a>{% else %}{{sc.0}}{% endif %}</td>
                 <td>{{sc.1}}</td>
                 <td>{{(sc.2 * 100.0)|round(2)}} %</td>
                 <td>{{(sc.3 * 100.0)|round(2)}} %</td>
