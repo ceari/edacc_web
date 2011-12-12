@@ -19,7 +19,7 @@ import random
 random.seed()
 
 from sqlalchemy import or_, not_, func
-from sqlalchemy.sql import select, and_, functions
+from sqlalchemy.sql import select, and_, functions, expression
 
 from flask import Module, render_template as render
 from flask import Response, abort, request, g
@@ -874,7 +874,14 @@ def runtime_matrix_plot(database, experiment_id):
         solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
 
         table = db.metadata.tables['ExperimentResults']
-        s = select([table.c['resultTime'],
+        if measure == 'par10':
+            time_case = expression.case([
+                            (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
+                            else_=table.c['CPUTimeLimit']*10.0)
+        else:
+            time_case = table.c['resultTime']
+            
+        s = select([time_case,
                     table.c['resultCode'],
                     table.c['CPUTimeLimit'],
                     table.c['SolverConfig_idSolverConfig'],
@@ -884,18 +891,14 @@ def runtime_matrix_plot(database, experiment_id):
 
         results_by_instance = {}
         for r in runs:
-            if measure == 'par10':
-                time = r.resultTime if str(r.resultCode).startswith('1') else r.CPUTimeLimit * 10
-            else:
-                time = r.resultTime
             if r.Instances_idInstance not in results_by_instance:
-                results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [time]}
+                results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [r[0]]}
             else:
                 rs = results_by_instance[r.Instances_idInstance]
                 if r.SolverConfig_idSolverConfig not in rs:
-                    rs[r.SolverConfig_idSolverConfig] = [time]
+                    rs[r.SolverConfig_idSolverConfig] = [r[0]]
                 else:
-                    rs[r.SolverConfig_idSolverConfig].append(time)
+                    rs[r.SolverConfig_idSolverConfig].append(r[0])
 
         solver_score = dict((sc_id, None) for sc_id in solver_configs_dict.iterkeys())
         for solver_config in solver_configs:
