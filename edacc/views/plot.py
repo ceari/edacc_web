@@ -18,7 +18,7 @@ import csv
 import random
 random.seed()
 
-from sqlalchemy import or_, not_
+from sqlalchemy import or_, not_, func
 from sqlalchemy.sql import select, and_, functions
 
 from flask import Module, render_template as render
@@ -863,22 +863,31 @@ def runtime_matrix_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     measure = request.args.get('measure', 'par10') or abort(404)
-    num_jobs_finished = db.session.query(db.ExperimentResult) \
-            .filter_by(experiment=exp).filter(or_(db.ExperimentResult.status>=1, db.ExperimentResult.status<-1)).count()
+    last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
+                                .filter_by(experiment=exp).first()
     
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def make_rtm_response(experiment_id, num_finished_jobs, measure, csv=False, type='png'):
+    def make_rtm_response(experiment_id, last_modified_job, measure, csv=False, type='png'):
         solver_configs = sorted(exp.solver_configurations, key=lambda sc: sc.idSolverConfig)
         instances = sorted(exp.instances, key=lambda i: i.idInstance)
         solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
 
+        table = db.metadata.tables['ExperimentResults']
+        s = select([table.c['resultTime'],
+                    table.c['resultCode'],
+                    table.c['CPUTimeLimit'],
+                    table.c['SolverConfig_idSolverConfig'],
+                    table.c['Instances_idInstance']],
+                    table.c['Experiment_idExperiment']==experiment_id).select_from(table)
+        runs = db.session.connection().execute(s)
+
         results_by_instance = {}
-        for r in db.session.query(db.ExperimentResult).filter_by(experiment=exp).yield_per(10000):
+        for r in runs:
             if measure == 'par10':
-                time = r.get_time() if str(r.resultCode).startswith('1') else r.get_penalized_time(10)
+                time = r.resultTime if str(r.resultCode).startswith('1') else r.CPUTimeLimit * 10
             else:
-                time = r.get_time()
+                time = r.resultTime
             if r.Instances_idInstance not in results_by_instance:
                 results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [time]}
             else:
@@ -969,4 +978,4 @@ def runtime_matrix_plot(database, experiment_id):
     elif request.args.has_key('eps'): type = 'eps'
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
-    return make_rtm_response(experiment_id, num_jobs_finished, measure, request.args.has_key('csv'), type)
+    return make_rtm_response(experiment_id, last_modified_job, measure, request.args.has_key('csv'), type)
