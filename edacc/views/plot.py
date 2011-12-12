@@ -889,6 +889,23 @@ def runtime_matrix_plot(database, experiment_id):
                     table.c['Experiment_idExperiment']==experiment_id).select_from(table)
         runs = db.session.connection().execute(s)
 
+        if measure == 'mean': aggregate_func = func.AVG(time_case)
+        elif measure == 'min': aggregate_func = func.MIN(time_case)
+        elif measure == 'max': aggregate_func = func.MAX(time_case)
+        elif measure == 'par10' or measure is None: aggregate_func = func.AVG(time_case)
+
+        s = select([table.c['SolverConfig_idSolverConfig'],
+                    aggregate_func], table.c['Experiment_idExperiment']==experiment_id) \
+                    .group_by(table.c['SolverConfig_idSolverConfig']) \
+                    .select_from(table)
+        solver_score = dict((sc[0], sc[1]) for sc in db.session.connection().execute(s))
+
+        s = select([table.c['Instances_idInstance'],
+                    aggregate_func], table.c['Experiment_idExperiment']==experiment_id) \
+                    .group_by(table.c['Instances_idInstance']) \
+                    .select_from(table)
+        instance_hardness = dict((sc[0], sc[1]) for sc in db.session.connection().execute(s))
+
         results_by_instance = {}
         for r in runs:
             if r.Instances_idInstance not in results_by_instance:
@@ -899,42 +916,6 @@ def runtime_matrix_plot(database, experiment_id):
                     rs[r.SolverConfig_idSolverConfig] = [r[0]]
                 else:
                     rs[r.SolverConfig_idSolverConfig].append(r[0])
-
-        solver_score = dict((sc_id, None) for sc_id in solver_configs_dict.iterkeys())
-        for solver_config in solver_configs:
-            jobs = []
-            for instance in instances:
-                jobs += results_by_instance.get(instance.idInstance, {}).get(solver_config.idSolverConfig, [])
-
-            runtimes = filter(lambda r: r is not None, jobs)
-            time_measure = None
-            if len(runtimes) > 0:
-                if measure == 'mean': time_measure = numpy.average(runtimes)
-                elif measure == 'median': time_measure = numpy.median(runtimes)
-                elif measure == 'min': time_measure = min(runtimes)
-                elif measure == 'max': time_measure = max(runtimes)
-                elif measure == 'par10' or measure is None:
-                    time_measure = numpy.average(jobs or [0])
-            solver_score[solver_config.idSolverConfig] = time_measure
-
-        instance_hardness = dict((i.idInstance, None) for i in instances)
-        for instance in instances:
-            jobs_by_instance = results_by_instance.get(instance.idInstance, None)
-            jobs = []
-            if jobs_by_instance:
-                for jobs_by_solver in jobs_by_instance.itervalues():
-                    jobs += jobs_by_solver
-
-            runtimes = filter(lambda r: r is not None, jobs)
-            time_measure = None
-            if len(runtimes) > 0:
-                if measure == 'mean': time_measure = numpy.average(runtimes)
-                elif measure == 'median': time_measure = numpy.median(runtimes)
-                elif measure == 'min': time_measure = min(runtimes)
-                elif measure == 'max': time_measure = max(runtimes)
-                elif measure == 'par10' or measure is None:
-                    time_measure = numpy.average(jobs or [0])
-            instance_hardness[instance.idInstance] = time_measure
 
         sorted_solver_configs = sorted(solver_configs, key=lambda sc: solver_score[sc.idSolverConfig])
         sorted_instances = sorted(instances, key=lambda i: instance_hardness[i.idInstance])

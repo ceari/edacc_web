@@ -211,7 +211,7 @@ class ResultsBySolverAndInstanceForm(Form):
     
 class RuntimeMatrixPlotForm(Form):
     measure = SelectField('Measure', default='par10',
-                                  choices=[('mean', 'mean'), ('median', 'median'),
+                                  choices=[('mean', 'mean'),
                                     ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
 
 class MonitorForm(Form):
