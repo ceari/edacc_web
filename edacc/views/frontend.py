@@ -154,7 +154,7 @@ def experiment_solver_configurations(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     solver_configurations = db.session.query(db.SolverConfiguration) \
-                                .options(joinedload_all('parameter_instances.parameter')) \
+                                #.options(joinedload_all('parameter_instances.parameter')) \
                                 .filter_by(experiment=experiment).all()
     
     # if competition db, show only own solvers if the phase is in OWN_RESULTS
