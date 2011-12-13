@@ -904,7 +904,7 @@ def runtime_matrix_plot(database, experiment_id):
                     aggregate_func], table.c['Experiment_idExperiment']==experiment_id) \
                     .group_by(table.c['Instances_idInstance']) \
                     .select_from(table)
-        instance_hardness = dict((sc[0], sc[1]) for sc in db.session.connection().execute(s))
+        instance_hardness = dict((inst[0], inst[1]) for inst in db.session.connection().execute(s))
 
         results_by_instance = {}
         for r in runs:
@@ -938,7 +938,7 @@ def runtime_matrix_plot(database, experiment_id):
                         time_measure = numpy.average(jobs or [0])
                 if request.args.has_key('csv'): rt_matrix[solver_config.idSolverConfig][instance.idInstance] = time_measure
                 flattened_rt_matrix.append(time_measure)
-
+        
         if csv:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)

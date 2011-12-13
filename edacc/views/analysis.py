@@ -52,7 +52,7 @@ def solver_ranking(database, experiment_id):
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
 
     if form.i.data:
-        CACHE_TIME = 1
+        CACHE_TIME = 7*24*60*60
         @cache.memoize(timeout=CACHE_TIME)
         def cached_ranking(database, experiment_id, sc_names, last_modified_job, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
