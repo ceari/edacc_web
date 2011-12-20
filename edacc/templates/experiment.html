@@ -38,7 +38,8 @@
 			    	$('#progress_num_running_perc').html(perc(data['num_jobs_running'],data['num_jobs_active']).toFixed(1) + ' %');
 			    	$('#progress_num_not_started').html(data['num_jobs_not_started']);
 			    	$('#progress_num_not_started_perc').html(perc(data['num_jobs_not_started'],data['num_jobs_active']).toFixed(1) + ' %');
-			    	if (data['eta'] == '0:00:00') $('#progress_eta').html('finished');
+                    if (data['progress_num_not_started'] > 0 && data['progress_num_running'] == 0) $('progress_eta').html('not started yet');
+			    	else if (data['eta'] == '0:00:00') $('#progress_eta').html('finished');
 			    	else $('#progress_eta').html(data['eta']);
 			    }
 			});

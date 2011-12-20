@@ -109,7 +109,7 @@
                     {% for job in row.times %}
                         {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
                         <td style="text-align: center;"><a style="color: black;" href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
-                                solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">{% if job.time_measure != None %}{{job.time_measure|round(2)}}{% endif %}</a></td>
+                                solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">{% if job.time_measure != None %}{{job.time_measure|round(4)}}{% endif %}</a></td>
                         {% endif %}
                     {% endfor %}
                 {% else %}
@@ -124,7 +124,7 @@
                         {% endif %}
                             <a style="color: black;" href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
                             solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">
-                            {% if job.time_measure != None %} {{job.time_measure|round(2)}} {% endif %}
+                            {% if job.time_measure != None %} {{job.time_measure|round(4)}} {% endif %}
                             </a>
                         </td>
                     {% elif job.total == 1 %}
@@ -135,7 +135,7 @@
                         {% endif %}
                             <a style="color: black;" href="{{base_result_details_url}}?id={{job.first_job.idJob}}">
                                 {% if job.time_measure != None %}
-                                {{job.time_measure|round(2)}} {{job.first_job.result_code.description}}
+                                {{job.time_measure|round(4)}} {{job.first_job.result_code_description}}
                                 {% endif %}
                             </a>
                         </td>
@@ -152,14 +152,14 @@
                 <td>Sum</td>
                 <td></td>
                 {% for sc in solver_configs %}
-                    <td style="text-align: center;">{{sum_by_solver[sc.idSolverConfig]|round(2)}}</td>
+                    <td style="text-align: center;">{{sum_by_solver[sc.idSolverConfig]|round(4)}}</td>
                 {% endfor %}
             </tr>
             <tr class="even">
                 <td>Average</td>
                 <td></td>
                 {% for sc in solver_configs %}
-                    <td style="text-align: center;">{{avg_by_solver[sc.idSolverConfig]|round(2)}}</td>
+                    <td style="text-align: center;">{{avg_by_solver[sc.idSolverConfig]|round(4)}}</td>
                 {% endfor %}
             </tr>
         </tfoot>
