@@ -322,11 +322,11 @@ def experiment_results(database, experiment_id):
         for row in results:
             write_row = [row['instance'].name, str(row['best_time'])]
             for sc_results in row['times']:
-                write_row.append(round(sc_results['time_measure'], 3))
+                write_row.append(round(sc_results['time_measure'], 4))
             csv_writer.writerow(write_row)
 
-        csv_writer.writerow(['Average', ''] + map(lambda x: str(round(x, 3)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
-        csv_writer.writerow(['Sum', ''] + map(lambda x: str(round(x, 3)), [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+        csv_writer.writerow(['Average', ''] + map(lambda x: str(round(x, 4)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+        csv_writer.writerow(['Sum', ''] + map(lambda x: str(round(x, 4)), [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
 
         csv_response.seek(0)
         headers = Headers()
