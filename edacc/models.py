@@ -206,7 +206,7 @@ class EDACCDatabase(object):
                 table_result_codes = db.metadata.tables['ResultCodes']
                 s = select([table.c['idJob'], table.c['resultCode'], table.c['resultTime'], table.c['status'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
-                            table_result_codes.c['description']],
+                            table_result_codes.c['description'], table_result_codes.c['CPUTimeLimit']],
                             and_(table.c['Experiment_idExperiment'] == self.idExperiment,
                                 table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                                 table.c['Instances_idInstance'].in_(instance_ids)),
