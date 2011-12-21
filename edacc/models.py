@@ -200,11 +200,16 @@ class EDACCDatabase(object):
                 num_successful = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
                 num_completed = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
                 M = dict((i.idInstance, dict((sc.idSolverConfig, list()) for sc in solver_configs)) for i in instances)
+                solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
+                instance_ids = [i.idInstance for i in instances]
                 table = db.metadata.tables['ExperimentResults']
                 table_result_codes = db.metadata.tables['ResultCodes']
                 s = select([table.c['idJob'], table.c['resultCode'], table.c['resultTime'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
                             table_result_codes.c['description']],
+                            and_(table.c['Experiment_idExperiment'] == self.idExperiment,
+                                table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
+                                table.c['Instances_idInstance'].in_(instance_ids)),
                             from_obj=table.join(table_result_codes))
                 Run = namedtuple('Run', ['idJob', 'result_code_description', 'resultCode', 'resultTime', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance'])
                 for r in db.session.connection().execute(s):
