@@ -200,15 +200,21 @@ class EDACCDatabase(object):
                 num_successful = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
                 num_completed = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
                 M = dict((i.idInstance, dict((sc.idSolverConfig, list()) for sc in solver_configs)) for i in instances)
-                Run = namedtuple('Run', ['idJob', 'result_code', 'resultCode', 'time', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance'])
-                for r in db.session.query(db.ExperimentResult).filter_by(experiment=self).yield_per(10000):
+                table = db.metadata.tables['ExperimentResults']
+                table_result_codes = db.metadata.tables['ResultCodes']
+                s = select([table.c['idJob'], table.c['resultCode'], table.c['time'],
+                            table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
+                            table_result_codes.c['description']],
+                            from_obj=table.join(table_result_codes))
+                Run = namedtuple('Run', ['idJob', 'result_code_description', 'resultCode', 'resultTime', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance'])
+                for r in db.session.connection().execute(s):
                     if r.Instances_idInstance not in M: continue
                     if r.SolverConfig_idSolverConfig not in M[r.Instances_idInstance]: continue
-                    num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1 if str(r.resultCode).startswith('1') else 0
-                    num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1 if r.status not in STATUS_PROCESSING else 0
+                    if str(r.resultCode).startswith('1'): num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
+                    if r.status not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
-                        Run(r.idJob, r.result_code, r.resultCode, r.get_time(), str(r.resultCode).startswith('1'),
-                            r.get_time() if str(r.resultCode).startswith('1') else r.get_penalized_time(10),
+                        Run(r.idJob, r[5], r.resultCode, r.get_time(), str(r.resultCode).startswith('1'),
+                            r.time if str(r.resultCode).startswith('1') else r.CPUTimeLimit * 10,
                             r.SolverConfig_idSolverConfig, r.Instances_idInstance))
                 return M, num_successful, num_completed
                     

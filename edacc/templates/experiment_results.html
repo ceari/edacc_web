@@ -135,7 +135,7 @@
                         {% endif %}
                             <a style="color: black;" href="{{base_result_details_url}}?id={{job.first_job.idJob}}">
                                 {% if job.time_measure != None %}
-                                {{job.time_measure|round(2)}} {{job.first_job.result_code.description}}
+                                {{job.time_measure|round(2)}} {{job.first_job.result_code_description}}
                                 {% endif %}
                             </a>
                         </td>
