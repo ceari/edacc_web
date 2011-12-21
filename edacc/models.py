@@ -205,6 +205,7 @@ class EDACCDatabase(object):
                 s = select([table.c['idJob'], table.c['resultCode'], table.c['resultTime'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
                             table_result_codes.c['description']],
+                            table.c['Experiment_idExperiment'] == self.idExperiment,
                             from_obj=table.join(table_result_codes))
                 Run = namedtuple('Run', ['idJob', 'result_code_description', 'resultCode', 'resultTime', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance'])
                 for r in db.session.connection().execute(s):
