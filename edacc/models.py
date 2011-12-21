@@ -204,7 +204,7 @@ class EDACCDatabase(object):
                 instance_ids = [i.idInstance for i in instances]
                 table = db.metadata.tables['ExperimentResults']
                 table_result_codes = db.metadata.tables['ResultCodes']
-                s = select([table.c['idJob'], table.c['resultCode'], table.c['resultTime'],
+                s = select([table.c['idJob'], table.c['resultCode'], table.c['resultTime'], table.c['statusCode'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
                             table_result_codes.c['description']],
                             and_(table.c['Experiment_idExperiment'] == self.idExperiment,
@@ -218,7 +218,7 @@ class EDACCDatabase(object):
                     if str(r.resultCode).startswith('1'): num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     if r.statusCode not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
-                        Run(r.idJob, r[5], r.resultCode, r.get_time(), str(r.resultCode).startswith('1'),
+                        Run(r.idJob, r[6], r.resultCode, r.get_time(), str(r.resultCode).startswith('1'),
                             r.time if str(r.resultCode).startswith('1') else r.CPUTimeLimit * 10,
                             r.SolverConfig_idSolverConfig, r.Instances_idInstance))
                 return M, num_successful, num_completed
