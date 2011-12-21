@@ -216,7 +216,7 @@ class EDACCDatabase(object):
                     if r.Instances_idInstance not in M: continue
                     if r.SolverConfig_idSolverConfig not in M[r.Instances_idInstance]: continue
                     if str(r.resultCode).startswith('1'): num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
-                    if r.status not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
+                    if r.statusCode not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
                         Run(r.idJob, r[5], r.resultCode, r.get_time(), str(r.resultCode).startswith('1'),
                             r.time if str(r.resultCode).startswith('1') else r.CPUTimeLimit * 10,
