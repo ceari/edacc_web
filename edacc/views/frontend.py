@@ -262,7 +262,7 @@ def experiment_results(database, experiment_id):
 
             completed = C[idInstance][idSolverConfig]
             successful = S[idInstance][idSolverConfig]
-            runtimes = [j.time for j in jobs if j.time is not None]
+            runtimes = [j.resultTime for j in jobs if j.resultTime is not None]
 
             time_measure = None
             if len(runtimes) > 0:
