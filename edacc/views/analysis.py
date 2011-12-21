@@ -507,6 +507,8 @@ def probabilistic_domination(database, experiment_id):
         no_dom = []
 
         for instance in instances:
+            if instance.idInstance not in sc1_results_by_instance_id: continue
+            if instance.idInstance not in sc2_results_by_instance_id: continue
             res1 = [r.get_property_value(form.result_property.data, db) for r in sc1_results_by_instance_id[instance.idInstance]]
             res2 = [r.get_property_value(form.result_property.data, db) for r in sc2_results_by_instance_id[instance.idInstance]]
             res1 = filter(lambda r: r is not None, res1)

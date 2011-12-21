@@ -202,7 +202,7 @@ class EDACCDatabase(object):
                 M = dict((i.idInstance, dict((sc.idSolverConfig, list()) for sc in solver_configs)) for i in instances)
                 table = db.metadata.tables['ExperimentResults']
                 table_result_codes = db.metadata.tables['ResultCodes']
-                s = select([table.c['idJob'], table.c['resultCode'], table.c['time'],
+                s = select([table.c['idJob'], table.c['resultCode'], table.c['resultTime'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
                             table_result_codes.c['description']],
                             from_obj=table.join(table_result_codes))

@@ -322,11 +322,11 @@ def experiment_results(database, experiment_id):
         for row in results:
             write_row = [row['instance'].name, str(row['best_time'])]
             for sc_results in row['times']:
-                write_row.append(sc_results['time_measure'])
+                write_row.append(round(sc_results['time_measure'], 3))
             csv_writer.writerow(write_row)
 
-        csv_writer.writerow(['Average', ''] + map(str, [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
-        csv_writer.writerow(['Sum', ''] + map(str, [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+        csv_writer.writerow(['Average', ''] + map(lambda x: str(round(x, 3)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+        csv_writer.writerow(['Sum', ''] + map(lambda x: str(round(x, 3)), [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
 
         csv_response.seek(0)
         headers = Headers()
@@ -404,8 +404,8 @@ def experiment_results_by_solver(database, experiment_id):
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'])
-            results = [[res[0].name] + [('' if r is None else r.get_time()) for r in res[1]] +
-                       [round(par10_by_instance[res[0].idInstance], 2)] for res in results]
+            results = [[res[0].name] + [('' if r is None else round(r.get_time(), 3)) for r in res[1]] +
+                       [round(par10_by_instance[res[0].idInstance], 4)] for res in results]
 
             if request.args.get('sort_by_instance_name', None):
                 sort_dir = request.args.get('sort_by_instance_name_dir', 'asc')
@@ -514,7 +514,7 @@ def experiment_results_by_instance(database, experiment_id):
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median', 'penalized avg. runtime'])
             for res in results:
-                csv_writer.writerow([str(res[0])] + [('' if r is None else r.get_time()) for r in res[1]] + [res[2], res[3], res[4]])
+                csv_writer.writerow([str(res[0])] + [('' if r is None else round(r.get_time(),3)) for r in res[1]] + map(lambda x: '' if x is None else round(x, 3), [res[2], res[3], res[4]]))
             csv_response.seek(0)
 
             headers = Headers()
