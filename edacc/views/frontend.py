@@ -396,7 +396,7 @@ def experiment_results_by_solver(database, experiment_id):
             # fill up runs_by_instance with None's up to num_runs
             runs_by_instance[instance] += [None] * (num_runs - count)
 
-            par10_by_instance[instance.idInstance] = total_time / count if count != 0 else 0
+            par10_by_instance[instance.idInstance] = total_time / float(count) if count != 0 else 0
 
         results = sorted(runs_by_instance.items(), key=lambda i: i[0].idInstance)
 
@@ -404,7 +404,7 @@ def experiment_results_by_solver(database, experiment_id):
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'])
-            results = [[res[0].name] + [('' if r is None else round(r.get_time(), 3)) for r in res[1]] +
+            results = [[res[0].name] + [('' if r.get_time() is None else round(r.get_time(), 3)) for r in res[1]] +
                        ['' if par10_by_instance[res[0].idInstance] is None else round(par10_by_instance[res[0].idInstance], 4)] for res in results]
 
             if request.args.get('sort_by_instance_name', None):
