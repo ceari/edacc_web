@@ -405,7 +405,7 @@ def experiment_results_by_solver(database, experiment_id):
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'])
             results = [[res[0].name] + [('' if r is None else round(r.get_time(), 3)) for r in res[1]] +
-                       [round(par10_by_instance[res[0].idInstance], 4)] for res in results]
+                       ['' if par10_by_instance[res[0].idInstance] is None else round(par10_by_instance[res[0].idInstance], 4)] for res in results]
 
             if request.args.get('sort_by_instance_name', None):
                 sort_dir = request.args.get('sort_by_instance_name_dir', 'asc')
