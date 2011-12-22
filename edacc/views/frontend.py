@@ -514,7 +514,7 @@ def experiment_results_by_instance(database, experiment_id):
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median', 'penalized avg. runtime'])
             for res in results:
-                csv_writer.writerow([str(res[0])] + [('' if r is None else round(r.get_time(),3)) for r in res[1]] + map(lambda x: '' if x is None else round(x, 3), [res[2], res[3], res[4]]))
+                csv_writer.writerow([str(res[0])] + [('' if r.get_time() is None else round(r.get_time(),3)) for r in res[1]] + map(lambda x: '' if x is None else round(x, 3), [res[2], res[3], res[4]]))
             csv_response.seek(0)
 
             headers = Headers()
