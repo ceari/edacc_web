@@ -441,7 +441,7 @@ class EDACCDatabase(object):
 
         schema.Table("instanceClass", metadata,
             schema.Column('parent', sqlalchemy.Integer, schema.ForeignKey("instanceClass.idinstanceClass")),
-            extend_existing=True, autoload=True
+            useexisting=True, autoload=True
         )
 
         # Table-Class mapping
