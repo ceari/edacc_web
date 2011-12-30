@@ -374,7 +374,7 @@ def experiment_results_by_solver(database, experiment_id):
         ers = db.session.query(db.ExperimentResult).options(joinedload_all('instance.properties')) \
                                 .filter_by(experiment=experiment,
                                     solver_configuration=solver_config) \
-                                .order_by('Instances_idInstance', 'run').all()
+                                .order_by('ExperimentResults.Instances_idInstance', 'run').all()
 
         par10_by_instance = {} # penalized average runtime (timeput * 10 for unsuccessful runs) by instance
         runs_by_instance = {}

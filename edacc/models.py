@@ -15,11 +15,13 @@ from collections import namedtuple
 from lxml import etree
 from cStringIO import StringIO
 
+import sqlalchemy
 from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
 from sqlalchemy.orm import relation, relationship, joinedload_all
 from sqlalchemy.sql import and_, not_, select
+from sqlalchemy import schema
 
 from edacc import config, utils
 from edacc.constants import *
@@ -71,7 +73,17 @@ class EDACCDatabase(object):
         class Instance(object):
             """ Maps the Instances table. """
             def __str__(self):
-                return self.name
+                return self.get_name()
+
+            def get_name(self):
+                if self.instance_classes[0] is None:
+                    return self.name
+                pc = self.instance_classes[0]
+                parent_classes = [pc.name]
+                while pc.parent_class:
+                    pc = pc.parent_class
+                    parent_classes.append(pc.name)
+                return '/'.join(reversed(parent_classes)) + "/" + self.name
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name. """
@@ -427,6 +439,11 @@ class EDACCDatabase(object):
 
         metadata.reflect()
 
+        schema.Table("instanceClass", metadata,
+            schema.Column('parent', sqlalchemy.Integer, schema.ForeignKey("instanceClass.idinstanceClass")),
+            extend_existing=True, autoload=True
+        )
+
         # Table-Class mapping
         mapper(GridQueue, metadata.tables['gridQueue'])
         mapper(Client, metadata.tables['Client'],
@@ -438,12 +455,18 @@ class EDACCDatabase(object):
         )
         mapper(Experiment_has_Client, metadata.tables['Experiment_has_Client'])
         mapper(Parameter, metadata.tables['Parameters'])
-        mapper(InstanceClass, metadata.tables['instanceClass'])
+        mapper(InstanceClass, metadata.tables['instanceClass'],
+            properties = {
+                'parent_class': relationship(InstanceClass, remote_side=metadata.tables['instanceClass'].c['idinstanceClass'],
+                    lazy="joined", join_depth=10)
+            }
+        )
         mapper(Instance, metadata.tables['Instances'],
             properties = {
                 'instance': deferred(metadata.tables['Instances'].c.instance),
                 'instance_classes': relationship(InstanceClass,
-                    secondary=metadata.tables['Instances_has_instanceClass'], backref='instances'),
+                    secondary=metadata.tables['Instances_has_instanceClass'], backref='instances',
+                    lazy="joined"),
                 'properties': relation(InstanceProperties, backref='instance'),
             }
         )

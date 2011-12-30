@@ -53,7 +53,7 @@
             <tbody>
             {% for instance in instances %}
                 <tr>
-                    <td><a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a></td>
+                    <td><a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.get_name()}}</a></td>
                     <td>{{instance.md5}}</td>
                     {% for prop in instance_properties %}
                     <td>{{instance.get_property_value(prop.idProperty, db)}}</td>
