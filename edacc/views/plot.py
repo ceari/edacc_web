@@ -988,8 +988,18 @@ def parameter_plot_1d(database, experiment_id):
         and_(table.c['Experiment_idExperiment']==experiment_id, not_(table.c['status'].in_((-1,0,))))).select_from(table)
     runs = db.session.connection().execute(s)
 
-    solver_configs = db.session.query(db.SolverConfiguration).options(joinedload('parameter_instances')).filter_by(experiment=exp).all()
+    table_sc = db.metadata.tables['SolverConfig']
+    table_sc_params = db.metadata.tables['SolverConfig_has_Parameters']
+    s = select(['idSolverConfig', 'value'],
+            and_(table_sc.c['Experiment_idExperiment']==experiment_id,
+                table_sc_params.c['Parameters_idParameter']==parameter_id),
+        from_obj=table_sc.join(table_sc_params))
+    param_values = db.session.connection().execute(s)
+
+    solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=exp).all()
     sc_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
+    sc_param_values = dict((sc.idSolverConfig, None) for sc in solver_configs)
+    for pv in param_values: sc_param_values[pv.idSolverConfig] = float(pv.value)
 
     solver_config_times = dict((sc.idSolverConfig, 0) for sc in solver_configs)
     sc_run_count = dict((sc.idSolverConfig, 0) for sc in solver_configs)
@@ -1001,11 +1011,6 @@ def parameter_plot_1d(database, experiment_id):
     for sc in solver_config_times.keys():
         if sc_run_count[sc] == 0: continue
         par10 = solver_config_times[sc] / sc_run_count[sc]
-        parameter_value = 0
-        for param in sc_dict[sc].parameter_instances:
-            if param.Parameters_idParameter == parameter_id:
-                parameter_value = float(param.value)
-                break
-        data.append((parameter_value, par10))
+        data.append((sc_param_values[sc], par10))
 
     return make_plot_response(plots.parameter_plot_1d, data, parameter_name)
