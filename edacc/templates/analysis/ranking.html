@@ -37,15 +37,7 @@
                     "bJQueryUI": true,
                     "bFilter": true,
                     "bInfo": true,
-                    {% if form.penalized_average_runtime.data %}
-                        {% if form.calculate_average_dev.data %}
-                        "aaSorting": [[8,'asc']],
-                        {% else %}
-                        "aaSorting": [[7,'asc']],
-                        {% endif %}
-                    {% else %}
-                        "aaSorting": [[2,'desc']],
-                    {% endif %}
+                    "aaSorting": [[2,'desc']],
                     "aoColumns": [
                         null,
                         null,
