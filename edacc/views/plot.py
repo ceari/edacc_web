@@ -972,6 +972,7 @@ def parameter_plot_1d(database, experiment_id):
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     parameter_id = int(request.args.get('parameter'))
+    parameter_name = db.session.query(db.Parameter).get(parameter_id).name
 
     measure = "par10"
     table = db.metadata.tables['ExperimentResults']
@@ -1007,4 +1008,4 @@ def parameter_plot_1d(database, experiment_id):
                 break
         data.append((parameter_value, par10))
 
-    return make_plot_response(plots.parameter_plot_1d, data)
+    return make_plot_response(plots.parameter_plot_1d, data, parameter_name)

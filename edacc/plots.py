@@ -659,13 +659,13 @@ def runtime_matrix_plot(flattened_rtmatrix, num_sorted_solver_configs, num_sorte
     grdevices.dev_off()
 
 @synchronized
-def parameter_plot_1d(data, filename, format='png'):
+def parameter_plot_1d(data, parameter_name, filename, format='png'):
     """ Scatter plot of the points given in the list :points:
         Each element of points should be a tuple (x, y).
         Returns a list with the points in device (pixel) coordinates.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=800,
+        grdevices.png(file=filename, units="px", width=1200,
             height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
@@ -695,15 +695,8 @@ def parameter_plot_1d(data, filename, format='png'):
 
     # plot running times
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-        type='p', col=colors[col % len(colors)], las = 1,
-        xaxs='i', yaxs='i',
-        xlab='', ylab='', pch=pch, tck=0.015,
+        type='p', col=colors[col % len(colors)], las = 1, main='PAR10 against ' + parameter_name,
+        xlab=parameter_name, ylab='PAR10', pch=pch, tck=0.015,
         **{'cex.axis': 1.2, 'cex.main': 1.5})
-
-    # plot labels and axis
-    robjects.r.axis(side=4, tck=0.015, las=1,
-        **{'cex.axis': 1.2, 'cex.main': 1.5}) # plot right axis
-    robjects.r.axis(side=3, tck=0.015, las=1,
-        **{'cex.axis': 1.2, 'cex.main': 1.5}) # plot top axis
 
     grdevices.dev_off()
