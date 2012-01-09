@@ -58,12 +58,12 @@
                         dataType: 'json',
                         success: function(data) {
                             oTable.fnUpdate(data['num_solver_configs'], row, 2, false, false);
-                            oTable.fnUpdate(data['num_instances'], row, 3), false, false;
+                            oTable.fnUpdate(data['num_instances'], row, 3, false, false);
                             oTable.fnUpdate(data['num_jobs'], row, 4, false, false);
                             var status_html = '';
                             if (data['is_running']) status_html += '<img alt="There are jobs running in this experiment" title="There are jobs running in this experiment" src="{{url_for('static', filename='img/computing.gif')}}"/>';
                             if (data['has_crashed_jobs']) status_html += '<img alt="There are crashed jobs in this experiment" title="There are crashed jobs in this experiment" src="{{url_for('static', filename='img/icon_alert.gif')}}"/>';
-                            oTable.fnUpdate(status_html, row, 6, true, row == 0 ? true: false);
+                            oTable.fnUpdate(status_html, row, 6, row % 5 == 0, row % 5 == 0);
 
                             if (row >= 1) queryExperimentInfo(row - 1);
                         }
