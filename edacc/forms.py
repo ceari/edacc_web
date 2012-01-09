@@ -217,6 +217,9 @@ class RuntimeMatrixPlotForm(Form):
 class ParameterPlot1DForm(Form):
     #i = QuerySelectMultipleField('Instances', get_label=lambda i: i.get_name(), get_pk=lambda i: i.idInstance, allow_blank=True)
     parameter = SelectField('Parameter')
+    measure = SelectField('Measure', default='par10',
+        choices=[('mean', 'mean'), ('median', 'median'),
+            ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
 
 class MonitorForm(Form):
     experiments = QuerySelectMultipleField('Experiments', get_label = lambda e: e.name)

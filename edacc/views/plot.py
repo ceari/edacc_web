@@ -973,8 +973,8 @@ def parameter_plot_1d(database, experiment_id):
 
     parameter_id = int(request.args.get('parameter'))
     parameter_name = db.session.query(db.Parameter).get(parameter_id).name
+    measure = request.args.get('measure', 'par10')
 
-    measure = "par10"
     table = db.metadata.tables['ExperimentResults']
     if measure == 'par10':
         time_case = expression.case([
@@ -1001,16 +1001,22 @@ def parameter_plot_1d(database, experiment_id):
     sc_param_values = dict((sc.idSolverConfig, None) for sc in solver_configs)
     for pv in param_values: sc_param_values[pv.idSolverConfig] = float(pv.value)
 
-    solver_config_times = dict((sc.idSolverConfig, 0) for sc in solver_configs)
+    solver_config_times = dict((sc.idSolverConfig, list()) for sc in solver_configs)
     sc_run_count = dict((sc.idSolverConfig, 0) for sc in solver_configs)
     for run in runs:
-        solver_config_times[run.SolverConfig_idSolverConfig] += run[0]
-        sc_run_count[run.SolverConfig_idSolverConfig] += 1
+        solver_config_times[run.SolverConfig_idSolverConfig].append(run[0])
 
     data = []
     for sc in solver_config_times.keys():
-        if sc_run_count[sc] == 0: continue
-        par10 = solver_config_times[sc] / sc_run_count[sc]
-        data.append((sc_param_values[sc], par10))
+        if len(solver_config_times[sc]) == 0: continue
+        if measure == "par10" or measure == "mean":
+            cost = sum(solver_config_times[sc]) / len(solver_config_times[sc])
+        elif measure == "max":
+            cost = max(solver_config_times[sc])
+        elif measure == "min":
+            cost = min(solver_config_times[sc])
+        elif measure == "median":
+            cost = numpy.median(solver_config_times[sc])
+        data.append((sc_param_values[sc], cost))
 
-    return make_plot_response(plots.parameter_plot_1d, data, parameter_name)
+    return make_plot_response(plots.parameter_plot_1d, data, parameter_name, measure)

@@ -659,7 +659,7 @@ def runtime_matrix_plot(flattened_rtmatrix, num_sorted_solver_configs, num_sorte
     grdevices.dev_off()
 
 @synchronized
-def parameter_plot_1d(data, parameter_name, filename, format='png'):
+def parameter_plot_1d(data, parameter_name, measure, filename, format='png'):
     """ Scatter plot of the points given in the list :points:
         Each element of points should be a tuple (x, y).
         Returns a list with the points in device (pixel) coordinates.
@@ -695,8 +695,8 @@ def parameter_plot_1d(data, parameter_name, filename, format='png'):
 
     # plot running times
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-        type='p', col=colors[col % len(colors)], las = 1, main='PAR10 against ' + parameter_name,
-        xlab=parameter_name, ylab='PAR10', pch=pch, tck=0.015,
+        type='p', col=colors[col % len(colors)], las = 1, main=measure + ' runtime against ' + parameter_name,
+        xlab=parameter_name, ylab=measure, pch=pch, tck=0.015,
         **{'cex.axis': 1.2, 'cex.main': 1.5})
 
     grdevices.dev_off()

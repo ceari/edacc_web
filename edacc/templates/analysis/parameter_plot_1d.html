@@ -20,7 +20,8 @@
         </div>
         <form id="plot_form" method="get" action="{{url_for('analysis.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
-            {{ render_field(form.parameter) }}
+                {{ render_field(form.parameter) }}
+                {{ render_field(form.measure) }}
                 <tr><td colspan="2"><input type="submit" value="Show"/></td></tr>
             </table>
         </form>
