@@ -63,6 +63,7 @@
                     <th>Solvers</th>
                     <th>Instances</th>
                     <th>Jobs</th>
+                    <th title="Automated algorithm configuration experiment">AAC Exp.</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -74,6 +75,7 @@
                     <td class="center">{{experiment.get_num_solver_configs(db)}}</td>
                     <td class="center">{{experiment.get_num_instances(db)}}</td>
                     <td class="center">{{experiment.get_num_jobs(db)}}</td>
+                    <td class="center">{% if experiment.configurationExp %}X{% endif %}</td>
                     <td class="center">
                         {% if experiment_running[experiment.idExperiment] %}<img alt="There are jobs running in this experiment" title="There are jobs running in this experiment" src="{{url_for('static', filename='img/computing.gif')}}"/>{% endif %}
                         {% if experiment_crashes[experiment.idExperiment] %}<img alt="There are crashed jobs in this experiment" title="There are crashed jobs in this experiment" src="{{url_for('static', filename='img/icon_alert.gif')}}"/>{% endif %}
