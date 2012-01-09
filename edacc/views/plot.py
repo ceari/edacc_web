@@ -984,7 +984,7 @@ def parameter_plot_1d(database, experiment_id):
 
     s = select([time_case,
                 table.c['SolverConfig_idSolverConfig']],
-        and_(table.c['Experiment_idExperiment']==experiment_id)).select_from(table)
+        and_(table.c['Experiment_idExperiment']==experiment_id, not_(table.c['status'].in_((-1,0,))))).select_from(table)
     runs = db.session.connection().execute(s)
 
     solver_configs = db.session.query(db.SolverConfiguration).options(joinedload('parameter_instances')).filter_by(experiment=exp).all()
