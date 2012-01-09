@@ -96,7 +96,6 @@
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a><br/>
     <a href="{{ url_for('frontend.unsolved_instances', database=database, experiment_id=experiment.idExperiment) }}">Unsolved instances</a><br/>
     <a href="{{ url_for('frontend.solved_instances', database=database, experiment_id=experiment.idExperiment) }}">Solved instances</a><br/>
-    {% if experiment.configurationExp %}<a href="{{url_for('frontend.configurator_visualisation', database=database, experiment_id=experiment.idExperiment)}}">Configurator visualisation</a>{%endif%}
     {% endif %}
 
     <h2>Analysis</h2>
@@ -116,6 +115,10 @@
         <a href="{{url_for('analysis.property_distributions', database=database, experiment_id=experiment.idExperiment)}}">Property distributions of solvers on an instance</a><br/>
         <a href="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">Analysis - Probabilistic Domination of solvers on the instances</a><br/>
     {% endif %}
+    {% if experiment.configurationExp %}
+        <a href="{{url_for('frontend.configurator_visualisation', database=database, experiment_id=experiment.idExperiment)}}">Configurator visualisation</a><br/>
+        <a href="{{url_for('analysis.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}">Parameter plot</a>
+    {%endif%}
     {% endif %}
 
 

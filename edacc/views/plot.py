@@ -963,3 +963,48 @@ def runtime_matrix_plot(database, experiment_id):
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
     return make_rtm_response(experiment_id, last_modified_job, measure, request.args.has_key('csv'), type)
+
+@plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-1d-img/')
+@require_phase(phases=ANALYSIS2)
+@require_login
+def parameter_plot_1d(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    parameter_id = int(request.args.get('parameter'))
+
+    measure = "par10"
+    table = db.metadata.tables['ExperimentResults']
+    if measure == 'par10':
+        time_case = expression.case([
+            (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
+            else_=table.c['CPUTimeLimit']*10.0)
+    else:
+        time_case = table.c['resultTime']
+
+    s = select([time_case,
+                table.c['SolverConfig_idSolverConfig']],
+        and_(table.c['Experiment_idExperiment']==experiment_id)).select_from(table)
+    runs = db.session.connection().execute(s)
+
+    solver_configs = db.session.query(db.SolverConfiguration).options(joinedload('parameter_instances')).filter_by(experiment=exp).all()
+    sc_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
+
+    solver_config_times = dict((sc.idSolverConfig, 0) for sc in solver_configs)
+    sc_run_count = dict((sc.idSolverConfig, 0) for sc in solver_configs)
+    for run in runs:
+        solver_config_times[run.SolverConfig_idSolverConfig] += run[0]
+        sc_run_count[run.SolverConfig_idSolverConfig] += 1
+
+    data = []
+    for sc in solver_config_times.keys():
+        if sc_run_count[sc] == 0: continue
+        par10 = solver_config_times[sc] / sc_run_count[sc]
+        parameter_value = 0
+        for param in sc_dict[sc].parameter_instances:
+            if param.Parameters_idParameter == parameter_id:
+                parameter_value = float(param.value)
+                break
+        data.append((parameter_value, par10))
+
+    return make_plot_response(plots.parameter_plot_1d, data)
