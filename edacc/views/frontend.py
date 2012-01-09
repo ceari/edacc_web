@@ -68,21 +68,9 @@ def experiments_index(database):
         experiments = []
     else:
         experiments = db.session.query(db.Experiment).all()
-        experiment_running = dict((r[0], r[1] > 0) for r in db.session.query(db.ExperimentResult.Experiment_idExperiment,
-                                                                         func.count(db.ExperimentResult)) \
-                .filter_by(status=STATUS_RUNNING) \
-                .filter(func.timestampdiff(sqla_text("SECOND"),
-                                        db.ExperimentResult.startTime, func.now()) < db.ExperimentResult.CPUTimeLimit + 100)
-                .filter(db.ExperimentResult.priority>=0).group_by(db.ExperimentResult.Experiment_idExperiment))
-        experiment_crashes = dict((r[0], r[1] > 0) for r in db.session.query(db.ExperimentResult.Experiment_idExperiment,
-                                                                         func.count(db.ExperimentResult)) \
-                .filter(db.ExperimentResult.status<=-2) \
-                .filter(db.ExperimentResult.priority>=0).group_by(db.ExperimentResult.Experiment_idExperiment))
         experiments.sort(key=lambda e: e.date)
 
-    return render('experiments.html', experiments=experiments, experiment_running=experiment_running,
-                  experiment_crashes=experiment_crashes, db=db, database=database)
-
+    return render('experiments.html', experiments=experiments, db=db, database=database)
 
 @frontend.route('/<database>/categories')
 @require_competition
@@ -547,6 +535,42 @@ def experiment_progress(database, experiment_id):
     return render('experiment_progress.html', experiment=experiment,
                   database=database, db=db, JS_colors=JS_colors)
 
+@frontend.route('/<database>/experiment/<int:experiment_id>/experiment-list-stats-ajax/')
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
+@require_login
+def experiment_list_stats_ajax(database, experiment_id):
+    """ Returns JSON-serialized stats about the experiment's progress
+    such as number of jobs, instances, solvers, crashes, ...
+    """
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    num_jobs = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
+    num_instances = experiment.get_num_instances(db)
+    num_solver_configs = experiment.get_num_solver_configs(db)
+
+    experiment_running = db.session.query(db.ExperimentResult.Experiment_idExperiment,
+        func.count(db.ExperimentResult))\
+                         .filter_by(status=STATUS_RUNNING)\
+                         .filter_by(experiment=experiment)\
+                         .filter(func.timestampdiff(sqla_text("SECOND"),
+        db.ExperimentResult.startTime, func.now()) < db.ExperimentResult.CPUTimeLimit + 100)\
+                         .filter(db.ExperimentResult.priority>=0).first()[1] > 0
+
+    experiment_crashes = db.session.query(db.ExperimentResult.Experiment_idExperiment,
+        func.count(db.ExperimentResult))\
+                         .filter_by(experiment=experiment)\
+                         .filter(db.ExperimentResult.status<=-2)\
+                         .filter(db.ExperimentResult.priority>=0).first()[1] > 0
+
+    return json_dumps({
+        'num_jobs': num_jobs,
+        'num_instances': num_instances,
+        'num_solver_configs': num_solver_configs,
+        'is_running': experiment_running,
+        'has_crashed_jobs': experiment_crashes,
+        })
+
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/experiment-stats-ajax/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
@@ -574,6 +598,23 @@ def experiment_stats_ajax(database, experiment_id):
     num_jobs_error = db.session.query(db.ExperimentResult) \
             .filter_by(experiment=experiment).filter(db.ExperimentResult.status<=-2) \
             .filter(db.ExperimentResult.priority>=0).count()
+
+    num_instances = experiment.get_num_instances(db)
+    num_solver_configs = experiment.get_num_solver_configs(db)
+
+    experiment_running = db.session.query(db.ExperimentResult.Experiment_idExperiment,
+        func.count(db.ExperimentResult)) \
+            .filter_by(status=STATUS_RUNNING) \
+            .filter_by(experiment=experiment) \
+            .filter(func.timestampdiff(sqla_text("SECOND"),
+            db.ExperimentResult.startTime, func.now()) < db.ExperimentResult.CPUTimeLimit + 100) \
+        .filter(db.ExperimentResult.priority>=0).first()[1] > 0
+
+    experiment_crashes = db.session.query(db.ExperimentResult.Experiment_idExperiment,
+        func.count(db.ExperimentResult))\
+            .filter_by(experiment=experiment) \
+            .filter(db.ExperimentResult.status<=-2)\
+            .filter(db.ExperimentResult.priority>=0).first()[1] > 0
 
     avg_time = db.session.query(func.avg(db.ExperimentResult.resultTime)) \
                 .filter_by(experiment=experiment) \
@@ -604,6 +645,10 @@ def experiment_stats_ajax(database, experiment_id):
         'num_jobs_running': num_jobs_running,
         'num_jobs_finished': num_jobs_finished,
         'num_jobs_error': num_jobs_error,
+        'num_instances': num_instances,
+        'num_solver_configs': num_solver_configs,
+        'is_running': experiment_running,
+        'has_crashed_jobs': experiment_crashes,
         'eta': str(timeleft),
     })
 

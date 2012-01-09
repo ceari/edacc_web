@@ -33,7 +33,7 @@
     };
 
         $(document).ready(function() {
-            oTable = $('#table_experiments').dataTable({
+            var oTable = $('#table_experiments').dataTable({
                 "bPaginate": false,
                 "bLengthChange": false,
                 "bJQueryUI": true,
@@ -45,6 +45,33 @@
                 ]
             });
             new FixedHeader( oTable );
+
+            {% if experiments %}
+                var experiment_ids = new Array({{experiments|length}});
+                {% for exp in experiments %}
+                experiment_ids[{{ loop.index0 }}] = {{exp.idExperiment}};
+                {% endfor %}
+                // start populating table with additional experiment information
+                var queryExperimentInfo = function(row) {
+                    $.ajax({
+                        url: "/{{database}}/experiment/"+experiment_ids[row]+"/experiment-list-stats-ajax/",
+                        dataType: 'json',
+                        success: function(data) {
+                            oTable.fnUpdate(data['num_solver_configs'], row, 2);
+                            oTable.fnUpdate(data['num_instances'], row, 3);
+                            oTable.fnUpdate(data['num_jobs'], row, 4);
+                            var status_html = '';
+                            if (data['is_running']) status_html += '<img alt="There are jobs running in this experiment" title="There are jobs running in this experiment" src="{{url_for('static', filename='img/computing.gif')}}"/>';
+                            if (data['has_crashed_jobs']) status_html += '<img alt="There are crashed jobs in this experiment" title="There are crashed jobs in this experiment" src="{{url_for('static', filename='img/icon_alert.gif')}}"/>';
+                            oTable.fnUpdate(status_html, row, 6);
+
+                            if (row >= 1) queryExperimentInfo(row - 1);
+                        }
+                    });
+                }
+
+                queryExperimentInfo({{ experiments|length - 1}});
+            {% endif %}
         });
 
     </script>
@@ -72,14 +99,11 @@
                 <tr>
                     <td><a style="color: black;" title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a></td>
                     <td class="center">{{experiment.date|datetimeformat('%d.%m.%Y')}}</td>
-                    <td class="center">{{experiment.get_num_solver_configs(db)}}</td>
-                    <td class="center">{{experiment.get_num_instances(db)}}</td>
-                    <td class="center">{{experiment.get_num_jobs(db)}}</td>
+                    <td class="center"></td>
+                    <td class="center"></td>
+                    <td class="center"></td>
                     <td class="center">{% if experiment.configurationExp %}X{% endif %}</td>
-                    <td class="center">
-                        {% if experiment_running[experiment.idExperiment] %}<img alt="There are jobs running in this experiment" title="There are jobs running in this experiment" src="{{url_for('static', filename='img/computing.gif')}}"/>{% endif %}
-                        {% if experiment_crashes[experiment.idExperiment] %}<img alt="There are crashed jobs in this experiment" title="There are crashed jobs in this experiment" src="{{url_for('static', filename='img/icon_alert.gif')}}"/>{% endif %}
-                    </td>
+                    <td class="center"></td>
                 </tr>
             {% endfor %}
             </tbody>
