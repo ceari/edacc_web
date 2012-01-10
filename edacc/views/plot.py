@@ -19,7 +19,7 @@ import random
 random.seed()
 
 from sqlalchemy import or_, not_, func
-from sqlalchemy.sql import select, and_, functions, expression
+from sqlalchemy.sql import select, and_, functions, expression, alias
 
 from flask import Module, render_template as render
 from flask import Response, abort, request, g
@@ -1024,3 +1024,69 @@ def parameter_plot_1d(database, experiment_id):
         data.append((sc_param_values[sc], cost))
 
     return make_plot_response(plots.parameter_plot_1d, data, parameter_name, measure)
+
+@plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d-img/')
+@require_phase(phases=ANALYSIS2)
+@require_login
+def parameter_plot_2d(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    parameter1_id = int(request.args.get('parameter1'))
+    parameter2_id = int(request.args.get('parameter2'))
+    parameter1_name = db.session.query(db.Parameter).get(parameter1_id).name
+    parameter2_name = db.session.query(db.Parameter).get(parameter2_id).name
+    measure = request.args.get('measure', 'par10')
+    instance_ids = map(int, request.args.getlist('i'))
+
+    table = db.metadata.tables['ExperimentResults']
+    if measure == 'par10':
+        time_case = expression.case([
+            (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
+            else_=table.c['CPUTimeLimit']*10.0)
+    else:
+        time_case = table.c['resultTime']
+
+    s = select([time_case,
+                table.c['SolverConfig_idSolverConfig']],
+        and_(table.c['Experiment_idExperiment']==experiment_id,
+            not_(table.c['status'].in_((-1,0,))),
+            table.c['Instances_idInstance'].in_(instance_ids)
+        )).select_from(table)
+    runs = db.session.connection().execute(s)
+
+    table_sc = db.metadata.tables['SolverConfig']
+    table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
+    table_sc_params2 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param2")
+    s = select(['idSolverConfig', table_sc_params1.c['value'], table_sc_params2.c['value']],
+        and_(table_sc.c['Experiment_idExperiment']==experiment_id,
+             table_sc_params1.c['Parameters_idParameter']==parameter1_id,
+             table_sc_params2.c['Parameters_idParameter']==parameter2_id),
+        from_obj=table_sc.join(table_sc_params1).join(table_sc_params2))
+    param_values = db.session.connection().execute(s)
+
+    solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=exp).all()
+    sc_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
+    sc_param_values = dict((sc.idSolverConfig, None) for sc in solver_configs)
+    for pv in param_values: sc_param_values[pv.idSolverConfig] = (float(pv[1]), float(pv[2]))
+
+    solver_config_times = dict((sc.idSolverConfig, list()) for sc in solver_configs)
+    sc_run_count = dict((sc.idSolverConfig, 0) for sc in solver_configs)
+    for run in runs:
+        solver_config_times[run.SolverConfig_idSolverConfig].append(run[0])
+
+    data = []
+    for sc in solver_config_times.keys():
+        if len(solver_config_times[sc]) == 0: continue
+        if measure == "par10" or measure == "mean":
+            cost = sum(solver_config_times[sc]) / len(solver_config_times[sc])
+        elif measure == "max":
+            cost = max(solver_config_times[sc])
+        elif measure == "min":
+            cost = min(solver_config_times[sc])
+        elif measure == "median":
+            cost = numpy.median(solver_config_times[sc])
+        data.append(sc_param_values[sc] + (cost,))
+        print sc, sc_param_values[sc], cost
+
+    return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure)

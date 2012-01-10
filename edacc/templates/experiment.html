@@ -117,7 +117,8 @@
     {% endif %}
     {% if experiment.configurationExp %}
         <a href="{{url_for('frontend.configurator_visualisation', database=database, experiment_id=experiment.idExperiment)}}">Configurator visualisation</a><br/>
-        <a href="{{url_for('analysis.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Cost against parameter value</a>
+        <a href="{{url_for('analysis.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}">Cost against one parameter</a><br/>
+        <a href="{{url_for('analysis.parameter_plot_2d', database=database, experiment_id=experiment.idExperiment)}}">Cost against two parameters</a>
     {%endif%}
     {% endif %}
 

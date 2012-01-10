@@ -687,9 +687,6 @@ def parameter_plot_1d(data, parameter_name, measure, filename, format='png'):
     xs = [p[0] for p in data]
     ys = [p[1] for p in data]
 
-    legend_colors = []
-    legend_strs = []
-    legend_point_styles = []
     col = 0
     pch = 3 # 3 looks nice
 
@@ -700,5 +697,44 @@ def parameter_plot_1d(data, parameter_name, measure, filename, format='png'):
         xaxs='i', yaxs='i', cex=1.2,
         xlab=parameter_name, ylab=measure, pch=pch, tck=0.015,
         **{'cex.axis': 1.2, 'cex.main': 1.5})
+
+    grdevices.dev_off()
+
+@synchronized
+def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, filename, format='png'):
+    """ Scatter plot of the points given in the list :points:
+        Each element of points should be a tuple (x, y).
+        Returns a list with the points in device (pixel) coordinates.
+    """
+    if format == 'png':
+        grdevices.png(file=filename, units="px", width=1000,
+            height=800, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
+    elif format == 'eps':
+        grdevices.postscript(file=filename, height=7, width=9)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
+
+    # set margins to fit in labels on the right and top
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
+    if format == 'rscript':
+        file.write('par(mar=c(5,4,4,15))\n')
+
+    robjects.r.options(scipen=10)
+    if format == 'rscript':
+        file.write('options(scipen=10)\n')
+
+    xs = [p[0] for p in data]
+    ys = [p[1] for p in data]
+    costs = [p[2] for p in data]
+    min_cost = min(costs)
+    max_cost = max(costs)
+    costs = map(lambda c: 1 + int( (c - min_cost) * (255.0/(max_cost-min_cost))), costs)
+    cols = robjects.r("heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]")
+
+    robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=3,
+        xlab=parameter1_name, ylab=parameter2_name)
 
     grdevices.dev_off()

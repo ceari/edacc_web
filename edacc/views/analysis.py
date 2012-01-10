@@ -588,3 +588,23 @@ def parameter_plot_1d(database, experiment_id):
 
     return render('/analysis/parameter_plot_1d.html', database=database, db=db,
         experiment=experiment, form=form, GET_data=GET_data)
+
+@analysis.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d/')
+@require_phase(phases=ANALYSIS2)
+@require_login
+def parameter_plot_2d(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    if not experiment.configurationExp: abort(404)
+
+    cs_params = [param for param in experiment.configuration_scenario.parameters if param.configurable and \
+                   experiment.configuration_scenario.get_parameter_domain(param.parameter.name) in ('realDomain', 'integerDomain')]
+
+    form = forms.ParameterPlot2DForm(request.args)
+    form.parameter1.choices = [(p.parameter.idParameter, p.parameter.name) for p in cs_params]
+    form.parameter2.choices = reversed([(p.parameter.idParameter, p.parameter.name) for p in cs_params])
+    form.i.query = experiment.get_instances(db) or EmptyQuery()
+    GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
+    return render('/analysis/parameter_plot_2d.html', database=database, db=db,
+        experiment=experiment, form=form, GET_data=GET_data)

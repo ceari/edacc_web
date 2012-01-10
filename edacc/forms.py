@@ -214,9 +214,17 @@ class RuntimeMatrixPlotForm(Form):
                                   choices=[('mean', 'mean'),
                                     ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
 
+class ParameterPlot2DForm(Form):
+    parameter1 = SelectField('First parameter')
+    parameter2 = SelectField('Second parameter')
+    measure = SelectField('Measure', default='par10',
+        choices=[('mean', 'mean'), ('median', 'median'),
+            ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
+    i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
+    instance_filter = TextField('Filter Instances')
+
 class ParameterPlot1DForm(Form):
-    #i = QuerySelectMultipleField('Instances', get_label=lambda i: i.get_name(), get_pk=lambda i: i.idInstance, allow_blank=True)
-    parameter = SelectField('Parameter')
+    parameter = SelectField('First parameter')
     measure = SelectField('Measure', default='par10',
         choices=[('mean', 'mean'), ('median', 'median'),
             ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
