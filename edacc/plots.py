@@ -735,6 +735,7 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, filename,
     cols = robjects.r("heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]")
 
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=3,
-        xlab=parameter1_name, ylab=parameter2_name)
+        xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
+        xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]))
 
     grdevices.dev_off()
