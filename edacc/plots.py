@@ -696,6 +696,8 @@ def parameter_plot_1d(data, parameter_name, measure, filename, format='png'):
     # plot running times
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
         type='p', col=colors[col % len(colors)], las = 1, main=measure + ' runtime against ' + parameter_name,
+        xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([0.0, max(ys)]),
+        xaxs='i', yaxs='i', cex=1.2,
         xlab=parameter_name, ylab=measure, pch=pch, tck=0.015,
         **{'cex.axis': 1.2, 'cex.main': 1.5})
 

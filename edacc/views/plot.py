@@ -974,6 +974,7 @@ def parameter_plot_1d(database, experiment_id):
     parameter_id = int(request.args.get('parameter'))
     parameter_name = db.session.query(db.Parameter).get(parameter_id).name
     measure = request.args.get('measure', 'par10')
+    instance_ids = map(int, request.args.getlist('i'))
 
     table = db.metadata.tables['ExperimentResults']
     if measure == 'par10':
@@ -985,7 +986,10 @@ def parameter_plot_1d(database, experiment_id):
 
     s = select([time_case,
                 table.c['SolverConfig_idSolverConfig']],
-        and_(table.c['Experiment_idExperiment']==experiment_id, not_(table.c['status'].in_((-1,0,))))).select_from(table)
+        and_(table.c['Experiment_idExperiment']==experiment_id,
+            not_(table.c['status'].in_((-1,0,))),
+            table.c['Instances_idInstance'].in_(instance_ids)
+            )).select_from(table)
     runs = db.session.connection().execute(s)
 
     table_sc = db.metadata.tables['SolverConfig']

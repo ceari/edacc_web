@@ -583,6 +583,7 @@ def parameter_plot_1d(database, experiment_id):
 
     form = forms.ParameterPlot1DForm(request.args)
     form.parameter.choices = [(p.parameter.idParameter, p.parameter.name) for p in cs_params]
+    form.i.query = experiment.get_instances(db) or EmptyQuery()
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/parameter_plot_1d.html', database=database, db=db,

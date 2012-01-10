@@ -220,6 +220,8 @@ class ParameterPlot1DForm(Form):
     measure = SelectField('Measure', default='par10',
         choices=[('mean', 'mean'), ('median', 'median'),
             ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
+    i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
+    instance_filter = TextField('Filter Instances')
 
 class MonitorForm(Form):
     experiments = QuerySelectMultipleField('Experiments', get_label = lambda e: e.name)
