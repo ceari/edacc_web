@@ -729,6 +729,7 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, filename,
     xs = [p[0] for p in data]
     ys = [p[1] for p in data]
     costs = [p[2] for p in data]
+    min_cost_point = data[costs.index(min(costs))]
     min_cost = min(costs)
     max_cost = max(costs)
     costs = map(lambda c: 1 + int( (c - min_cost) * (255.0/(max_cost-min_cost))), costs)
@@ -736,6 +737,7 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, filename,
 
     robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=3,
         xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
-        xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]))
+        xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
+        main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)))
 
     grdevices.dev_off()

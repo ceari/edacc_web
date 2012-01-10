@@ -1087,6 +1087,5 @@ def parameter_plot_2d(database, experiment_id):
         elif measure == "median":
             cost = numpy.median(solver_config_times[sc])
         data.append(sc_param_values[sc] + (cost,))
-        print sc, sc_param_values[sc], cost
 
     return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure)
