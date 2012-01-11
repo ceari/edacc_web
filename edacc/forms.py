@@ -222,6 +222,7 @@ class ParameterPlot2DForm(Form):
             ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
+    surface_interpolation = BooleanField("Interpolate surface", default=True)
 
 class ParameterPlot1DForm(Form):
     parameter = SelectField('First parameter')

@@ -62,13 +62,14 @@
     <div style="margin-right: 5px; float: left;">
         <h2>Solver configuration cost against two parameters</h2>
         <div style="margin-bottom: 5px;">
-        Plot of the runtime of each solver configuration (in color, white=high, red=low) as function of two parameters.
+        Plot of the runtime of each solver configuration (in color) as function of two parameters.
         </div>
         <form id="plot_form" method="get" action="{{url_for('analysis.parameter_plot_2d', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
                 {{ render_field(form.parameter1) }}
                 {{ render_field(form.parameter2) }}
                 {{ render_field(form.measure) }}
+                {{ render_field(form.surface_interpolation) }}
                 {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
                 <tr name="tr_instances_filter">
                     <td style="vertical-align: middle;">Filter instances</td>

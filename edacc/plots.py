@@ -17,6 +17,8 @@ from edacc.utils import newline_split_string
 
 grdevices = importr('grDevices') # plotting target devices
 stats = importr('stats') # statistical methods
+akima = importr('akima') # surface interpolation
+fields = importr('fields') # image plotting
 
 #with open(os.devnull) as devnull:
     # redirect the annoying np package import output to nirvana
@@ -701,7 +703,7 @@ def parameter_plot_1d(data, parameter_name, measure, filename, format='png'):
     grdevices.dev_off()
 
 @synchronized
-def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, filename, format='png'):
+def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_interpolation, filename, format='png'):
     """ Scatter plot of the points given in the list :points:
         Each element of points should be a tuple (x, y).
         Returns a list with the points in device (pixel) coordinates.
@@ -730,14 +732,23 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, filename,
     ys = [p[1] for p in data]
     costs = [p[2] for p in data]
     min_cost_point = data[costs.index(min(costs))]
-    min_cost = min(costs)
-    max_cost = max(costs)
-    costs = map(lambda c: 1 + int( (c - min_cost) * (255.0/(max_cost-min_cost))), costs)
-    cols = robjects.r("heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]")
 
-    robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=3,
-        xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
-        xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
-        main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)))
+    if not surface_interpolation:
+        min_cost = min(costs)
+        max_cost = max(costs)
+        costs = map(lambda c: 1 + int( (c - min_cost) * (255.0/(max_cost-min_cost))), costs)
+        cols = robjects.r("heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]")
+
+        robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=19,
+            xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i', cex=1.5,
+            xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
+            main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)))
+    else:
+        surf = akima.interp(robjects.FloatVector(xs), robjects.FloatVector(ys), robjects.FloatVector(costs))
+        robjects.r("image.plot")(surf, nlevel=256,
+            xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
+            xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
+            main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)),
+            **{'legend.lab': measure, 'legend.mar': 4.5})
 
     grdevices.dev_off()

@@ -1032,6 +1032,7 @@ def parameter_plot_2d(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
+    surface_interpolation = request.args.has_key('surface_interpolation')
     parameter1_id = int(request.args.get('parameter1'))
     parameter2_id = int(request.args.get('parameter2'))
     parameter1_name = db.session.query(db.Parameter).get(parameter1_id).name
@@ -1088,4 +1089,4 @@ def parameter_plot_2d(database, experiment_id):
             cost = numpy.median(solver_config_times[sc])
         data.append(sc_param_values[sc] + (cost,))
 
-    return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure)
+    return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure, surface_interpolation)
