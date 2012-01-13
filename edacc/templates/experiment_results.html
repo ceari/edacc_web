@@ -27,8 +27,8 @@
                 return ((fx < fy) ?  1 : ((fx > fy) ? -1 : 0));
             };
 
-			$('#toggle_sorting').click(function() { 
-	            oTable = $('#table_results').dataTable({
+			//$('#toggle_sorting').click(function() {
+	            var oTable = $('#table_results').dataTable({
 	                "bPaginate": false,
 	                "bLengthChange": false,
 	                "bFilter": true,
@@ -41,7 +41,7 @@
                 $('#toggle_sorting').hide();
 	            var fixed_header = new FixedHeader(oTable);
 	            fixed_header.fnUpdate();
-			});
+			//});
 			
             {% include '/analysis/multiple_instances_filter_js.html' %}
 
@@ -86,7 +86,7 @@
             <input type="submit" name="submit" value="Show"/></td><td><input type="submit" name="csv" value="Export CSV"/>
         </form>
         <a href="JavaScript:void(0);" id="toggle_instance_filter">Show/Hide instance filter</a><br/>
-        <a href="JavaScript:void(0);" id="toggle_sorting">Enable sorting of table (consider using a browser with a fast Javascript engine)</a>
+        <!--<a href="JavaScript:void(0);" id="toggle_sorting">Enable sorting of table (consider using a browser with a fast Javascript engine)</a>-->
     </div>
     <table class="display" id="table_results">
         <thead>

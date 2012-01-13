@@ -1,5 +1,34 @@
 {% extends "base.html" %}
 {% block title %}Results of {{solver_configuration.get_name()}} on {{instance.name}}{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.tooltip.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/ColVis.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.timers-1.2.js')}}" type="text/javascript"></script>
+    <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
+    <link type="text/css" href="{{url_for('static', filename='css/demo_table_jui.css')}}" rel="Stylesheet" />
+    <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery-ui-1.8.16.custom.min.js')}}" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var oTable = $('#table_results').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": true,
+                "bJQueryUI": true,
+                "oColVis": {
+                    "aiExclude": [ 0 ],
+                    "bRestore": true
+                },
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                }
+            });
+        });
+    </script>
+{% endblock %}
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
@@ -11,7 +40,7 @@
     <div style="float:left;">
         Completed {{completed}}/{{results|length}} runs<br/>
         Correct answers: {{correct}}/{{results|length}}<br/>
-        <table class="results">
+        <table id="table_results" class="display">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -23,7 +52,7 @@
             <tbody>
                 {% for result in results %}
                     <tr bgcolor="{{result.resultCode|job_result_code_color}}">
-                        <td><a style="color: black;" href="{{url_for('experiment_result', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">{{result.idJob}}</a></td>
+                        <td><a style="color: black;" href="{{url_for('experiment_result', database=database, experiment_id=experiment.idExperiment)}}?id={{ result.idJob }}">{{result.idJob}}</a></td>
                         <td>{{result.status_code.description}}</td>
                         <td>{{result.get_time()|result_time}}</td>
                         <td>{{result.result_code.description}}</td>
