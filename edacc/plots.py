@@ -743,6 +743,8 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
             xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i', cex=1.5,
             xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
             main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)))
+        robjects.r.par(new=1)
+        robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]), type='p', pch=3, col='red', cex=3)
     else:
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
@@ -753,5 +755,7 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
             xlim=robjects.FloatVector([min_x, max_x]), ylim=robjects.FloatVector([min_y, max_y]),
             main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)),
             **{'legend.lab': measure, 'legend.mar': 4.5})
+        robjects.r.par(new=1)
+        robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]), type='p', pch=3, col='red', cex=2)
 
     grdevices.dev_off()
