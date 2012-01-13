@@ -720,7 +720,7 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
         file = open(filename, 'w')
 
     # set margins to fit in labels on the right and top
-    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 5]))
     if format == 'rscript':
         file.write('par(mar=c(5,4,4,15))\n')
 
@@ -744,10 +744,13 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
             xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
             main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)))
     else:
-        surf = akima.interp(robjects.FloatVector(xs), robjects.FloatVector(ys), robjects.FloatVector(costs))
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        surf = akima.interp(robjects.FloatVector(xs), robjects.FloatVector(ys), robjects.FloatVector(costs),
+                            xo=robjects.r.seq(min_x, max_x, (max_x - min_x) / 1000.0), yo=robjects.r.seq(min_y, max_y, (max_y - min_y) / 800.0))
         robjects.r("image.plot")(surf, nlevel=256,
             xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
-            xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
+            xlim=robjects.FloatVector([min_x, max_x]), ylim=robjects.FloatVector([min_y, max_y]),
             main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)),
             **{'legend.lab': measure, 'legend.mar': 4.5})
 
