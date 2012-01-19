@@ -579,7 +579,7 @@ def parameter_plot_1d(database, experiment_id):
     if not experiment.configurationExp: abort(404)
 
     cs_params = [param for param in experiment.configuration_scenario.parameters if param.configurable and \
-                    experiment.configuration_scenario.get_parameter_domain(param.parameter.name) in ('realDomain', 'integerDomain')]
+                    experiment.configuration_scenario.get_parameter_domain(param.parameter.name) in ('realDomain', 'integerDomain', 'ordinalDomain', 'categoricalDomain')]
 
     form = forms.ParameterPlot1DForm(request.args)
     form.parameter.choices = [(p.parameter.idParameter, p.parameter.name) for p in cs_params]
@@ -598,7 +598,7 @@ def parameter_plot_2d(database, experiment_id):
     if not experiment.configurationExp: abort(404)
 
     cs_params = [param for param in experiment.configuration_scenario.parameters if param.configurable and \
-                   experiment.configuration_scenario.get_parameter_domain(param.parameter.name) in ('realDomain', 'integerDomain')]
+                   experiment.configuration_scenario.get_parameter_domain(param.parameter.name) in ('realDomain', 'integerDomain', 'ordinalDomain', 'categoricalDomain')]
 
     form = forms.ParameterPlot2DForm(request.args)
     form.parameter1.choices = [(p.parameter.idParameter, p.parameter.name) for p in cs_params]
