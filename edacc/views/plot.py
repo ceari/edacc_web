@@ -977,6 +977,7 @@ def parameter_plot_1d(database, experiment_id):
     instance_ids = map(int, request.args.getlist('i'))
 
     table = db.metadata.tables['ExperimentResults']
+    table_sc = db.metadata.tables['SolverConfig']
     if measure == 'par10':
         time_case = expression.case([
             (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
@@ -987,9 +988,10 @@ def parameter_plot_1d(database, experiment_id):
     s = select([time_case,
                 table.c['SolverConfig_idSolverConfig']],
         and_(table.c['Experiment_idExperiment']==experiment_id,
+            table_sc.c['SolverBinaries_idSolverBinary']==exp.configuration_scenario.SolverBinaries_idSolverBinary,
             not_(table.c['status'].in_((-1,0,))),
             table.c['Instances_idInstance'].in_(instance_ids)
-            )).select_from(table)
+            ), from_obj=table.join(table_sc))
     runs = db.session.connection().execute(s)
 
     table_sc = db.metadata.tables['SolverConfig']
@@ -1041,6 +1043,10 @@ def parameter_plot_2d(database, experiment_id):
     instance_ids = map(int, request.args.getlist('i'))
 
     table = db.metadata.tables['ExperimentResults']
+    table_sc = db.metadata.tables['SolverConfig']
+    table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
+    table_sc_params2 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param2")
+
     if measure == 'par10':
         time_case = expression.case([
             (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
@@ -1051,14 +1057,12 @@ def parameter_plot_2d(database, experiment_id):
     s = select([time_case,
                 table.c['SolverConfig_idSolverConfig']],
         and_(table.c['Experiment_idExperiment']==experiment_id,
+            table_sc.c['SolverBinaries_idSolverBinary']==exp.configuration_scenario.SolverBinaries_idSolverBinary,
             not_(table.c['status'].in_((-1,0,))),
             table.c['Instances_idInstance'].in_(instance_ids)
-        )).select_from(table)
+        ), from_obj=table.join(table_sc))
     runs = db.session.connection().execute(s)
 
-    table_sc = db.metadata.tables['SolverConfig']
-    table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
-    table_sc_params2 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param2")
     s = select(['idSolverConfig', table_sc_params1.c['value'], table_sc_params2.c['value']],
         and_(table_sc.c['Experiment_idExperiment']==experiment_id,
              table_sc_params1.c['Parameters_idParameter']==parameter1_id,

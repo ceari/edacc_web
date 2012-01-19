@@ -749,7 +749,8 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
         surf = akima.interp(robjects.FloatVector(xs), robjects.FloatVector(ys), robjects.FloatVector(costs),
-                            xo=robjects.r.seq(min_x, max_x, (max_x - min_x) / 1000.0), yo=robjects.r.seq(min_y, max_y, (max_y - min_y) / 800.0))
+                            xo=robjects.r.seq(min_x, max_x, (max_x - min_x) / 1000.0), yo=robjects.r.seq(min_y, max_y, (max_y - min_y) / 800.0),
+                            duplicate="mean")
         robjects.r("image.plot")(surf, nlevel=256,
             xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
             xlim=robjects.FloatVector([min_x, max_x]), ylim=robjects.FloatVector([min_y, max_y]),
