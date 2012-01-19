@@ -736,7 +736,7 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
     if not surface_interpolation:
         min_cost = min(costs)
         max_cost = max(costs)
-        costs = map(lambda c: 1 + int( (c - min_cost) * (255.0/(max_cost-min_cost))), costs)
+        costs = map(lambda c: 1 + int( (c - min_cost) * (200.0/(max_cost-min_cost))), costs)
         cols = robjects.r("heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]")
 
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=19,
