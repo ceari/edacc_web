@@ -143,7 +143,7 @@ def number_of_solved_instances_ranking(db, experiment, instances):
         else:
             # break ties by cumulative CPU time over all solved instances
             if results.has_key(s1.idSolverConfig) and results.has_key(s2.idSolverConfig):
-                return sgn(results[s1.idSolverConfig][0] - results[s2.idSolverConfig][0])
+                return sgn(results[s2.idSolverConfig][0] - results[s1.idSolverConfig][0])
             else:
                 return 0
 
