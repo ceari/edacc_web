@@ -24,11 +24,13 @@ except:
 
 from sqlalchemy import func
 
-from flask import abort, Module
+from flask import abort, Module, g
 
 from edacc import models
 
 api = Module(__name__)
+
+# TODO: restricted access
 
 @api.route('/api/<database>/experiment-result/<int:id>/')
 def get_experiment_result(database, id):

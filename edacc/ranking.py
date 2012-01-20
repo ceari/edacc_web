@@ -263,5 +263,5 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             penalized_average_runtime
         ))
 
-    if calculate_par10: data.sort(key=lambda x: x[7])
+    #if calculate_par10: data.sort(key=lambda x: x[7])
     return data
