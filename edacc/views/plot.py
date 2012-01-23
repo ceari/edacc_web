@@ -39,7 +39,10 @@ def make_plot_response(function, *args, **kwargs):
     elif request.args.has_key('rscript'): type = 'rscript'; mime = 'text/plain'
     else: type = 'png'; mime = 'image/png'
     filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.' + type
-    function(*args, filename=filename, format=type, **kwargs)
+    try:
+        function(*args, filename=filename, format=type, **kwargs)
+    except Exception as exception:
+        plots.make_error_plot(text=str(exception), filename=filename, format=type)
     headers = Headers()
     headers.add('Content-Disposition', 'attachment', filename=secure_filename('data.' + type))
     response = Response(response=open(filename, 'rb').read(), mimetype=mime, headers=headers)
@@ -1066,7 +1069,8 @@ def parameter_plot_2d(database, experiment_id):
     s = select(['idSolverConfig', table_sc_params1.c['value'], table_sc_params2.c['value']],
         and_(table_sc.c['Experiment_idExperiment']==experiment_id,
              table_sc_params1.c['Parameters_idParameter']==parameter1_id,
-             table_sc_params2.c['Parameters_idParameter']==parameter2_id),
+             table_sc_params2.c['Parameters_idParameter']==parameter2_id,
+             table_sc_params1.c['value']!=None, table_sc_params2.c['value']!=None),
         from_obj=table_sc.join(table_sc_params1).join(table_sc_params2))
     param_values = db.session.connection().execute(s)
 
@@ -1083,6 +1087,7 @@ def parameter_plot_2d(database, experiment_id):
     data = []
     for sc in solver_config_times.keys():
         if len(solver_config_times[sc]) == 0: continue
+        if sc_param_values[sc] is None: continue
         if measure == "par10" or measure == "mean":
             cost = sum(solver_config_times[sc]) / len(solver_config_times[sc])
         elif measure == "max":

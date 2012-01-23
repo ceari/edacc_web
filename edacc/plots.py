@@ -749,8 +749,8 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
         surf = akima.interp(robjects.FloatVector(xs), robjects.FloatVector(ys), robjects.FloatVector(costs),
-                            xo=robjects.r.seq(min_x, max_x, (max_x - min_x) / 1000.0), yo=robjects.r.seq(min_y, max_y, (max_y - min_y) / 800.0),
-                            duplicate="mean")
+                        xo=robjects.r.seq(min_x, max_x, (max_x - min_x) / 1000.0), yo=robjects.r.seq(min_y, max_y, (max_y - min_y) / 800.0),
+                        duplicate="mean")
         robjects.r("image.plot")(surf, nlevel=256,
             xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
             xlim=robjects.FloatVector([min_x, max_x]), ylim=robjects.FloatVector([min_y, max_y]),
@@ -759,4 +759,20 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
         robjects.r.par(new=1)
         robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]), type='p', pch=3, col='red', cex=2)
 
+    grdevices.dev_off()
+
+@synchronized
+def make_error_plot(text, filename, format='png'):
+    if format == 'png':
+        grdevices.png(file=filename, units="px", width=800,
+            height=400, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
+    elif format == 'eps':
+        grdevices.postscript(file=filename, height=7, width=9)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
+
+    robjects.r.plot(0, xaxt='n', yaxt='n', bty='n', pch='', ylab='', xlab='', main=text)
     grdevices.dev_off()
