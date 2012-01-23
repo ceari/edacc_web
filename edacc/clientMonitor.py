@@ -116,7 +116,7 @@ class ClientMonitor(Canvas):
                 elif timestampdiff[cID] > 10:
                     self.circle(cxy, 'passive')
                 expText = clientIsInExperimentName[cID]
-                self.create_text(clientCenter, text=expText)                  
+                self.create_text(clientCenter)
                 j = j + 1
             clusterImageMap.append({"id": str(c), "position": clusterCenter, "clients": clientImageMap}) 
             location = gridQueue[c]
@@ -141,4 +141,4 @@ class ClientMonitor(Canvas):
     def circleCluster(self, xy, location, radius):
         self.create_oval(xy, fill="white")
         self.create_text(xy[0]+radius, xy[1]+radius, text = location)
-    
+
