@@ -985,7 +985,7 @@ def parameter_plot_1d(database, experiment_id):
 
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def plot_image(parameter_id, measure, instance_ids, runtime_cap, last_modified_job):
+    def plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         if measure == 'par10':
@@ -1037,7 +1037,7 @@ def parameter_plot_1d(database, experiment_id):
 
         return make_plot_response(plots.parameter_plot_1d, data, parameter_name, measure, runtime_cap)
 
-    return plot_image(parameter_id, measure, instance_ids, runtime_cap, last_modified_job)
+    return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d-img/')
 @require_phase(phases=ANALYSIS2)
@@ -1060,7 +1060,7 @@ def parameter_plot_2d(database, experiment_id):
 
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def plot_image(parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation):
+    def plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
@@ -1116,4 +1116,4 @@ def parameter_plot_2d(database, experiment_id):
 
         return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap=runtime_cap)
 
-    return plot_image(parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation=surface_interpolation)
+    return plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation=surface_interpolation)
