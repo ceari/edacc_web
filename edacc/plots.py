@@ -703,7 +703,7 @@ def parameter_plot_1d(data, parameter_name, measure, filename, format='png'):
     grdevices.dev_off()
 
 @synchronized
-def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_interpolation, filename, format='png'):
+def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap, filename, format='png'):
     """ Scatter plot of the points given in the list :points:
         Each element of points should be a tuple (x, y).
         Returns a list with the points in device (pixel) coordinates.
@@ -730,7 +730,7 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
 
     xs = [p[0] for p in data]
     ys = [p[1] for p in data]
-    costs = [p[2] for p in data]
+    costs = [min(p[2], runtime_cap) for p in data]
     min_cost_point = data[costs.index(min(costs))]
 
     if not surface_interpolation:

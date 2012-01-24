@@ -80,10 +80,13 @@ class EDACCDatabase(object):
                     return self.name
                 pc = self.instance_classes[0]
                 parent_classes = [pc.name]
-                while pc.parent_class:
+                count = 1
+                while pc.parent_class and count < 3:
                     pc = pc.parent_class
                     parent_classes.append(pc.name)
-                return '/'.join(reversed(parent_classes)) + "/" + self.name
+                    count += 1
+                if pc.parent_class: return '/.../' + '/'.join(reversed(parent_classes)) + "/" + self.name
+                else: return '/'.join(reversed(parent_classes)) + "/" + self.name
 
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name. """

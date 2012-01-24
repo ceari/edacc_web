@@ -8,48 +8,7 @@
     <script src="{{url_for('static', filename='js/jquery.hotkeys.js')}}" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-            {% if form.parameter.data %}
-            $.ajax({
-                {% autoescape false %}
-                url: "{{url_for('plot.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&imagemap",
-                dataType: 'html',
-                success: function(data) {
-                    $('#map_instances').html(data);
-                    $("map *").tooltip({positionLeft: true, showURL: false});
-                }
-                {% endautoescape %}
-            });
-            {% endif %}
-
             {% include '/analysis/multiple_instances_filter_js.html' %}
-
-            show_plot = function() {
-                data = $('#plot_form').serialize();
-                $('#div_plot').html('<img usemap="#map_instances" alt="Generating image..." src="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'"/>');
-                $('#div_plot').append('<map id="map_instances" name="map_instances"/>');
-                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&pdf">PDF</a> | <a href="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&eps">EPS</a> | <a href="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&csv">Raw Data (CSV)</a> | <a href="{{url_for("plot.scatter_1solver_instance_vs_result_property", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&rscript">R script</a>');
-                $.ajax({
-                    url: "{{url_for('plot.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?"+data+"&imagemap",
-                    dataType: 'html',
-                    success: function(data) {
-                        $('#map_instances').html(data);
-                        $("map *").tooltip({positionLeft: true, showURL: false});
-                    }
-                });
-                $.ajax({
-                    url: "{{url_for('analysis.scatter_1solver_instance_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}?"+data+"&ajax_correlation",
-                    dataType: 'json',
-                    success: function(data) {
-                        $('#correlation_data').html('<h3>Spearman Rank correlation coefficient</h3>' +
-                                'Correlation Coefficient: '+data['spearman_r']+'<br/>' +
-                                '<i>p</i>-value: '+data['spearman_p_value']+' (not exact in case there are ties in the data)' +
-                                '<h3>Pearson product-moment correlation coefficient</h3>' +
-                                'Correlation Coefficient: '+data['pearson_r']+'<br/>' +
-                                '<i>p</i>-value: '+data['pearson_p_value']+'');
-                    }
-                });
-                return false;
-            }
         });
     </script>
 {% endblock %}
@@ -84,7 +43,7 @@
     {% if form.parameter.data != "None" %}
         {% autoescape false %}
             <img alt="Generating image..." style="margin: 10px;" src="{{url_for('plot.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
-            Download as <a href="{{url_for('plot.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a>
+            Download as <a href="{{url_for('plot.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> | <a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV) | </a><a href="{{url_for('plot.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&rscript">R script</a>
         {% endautoescape %}
     {% endif %}
     </div>

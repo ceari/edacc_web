@@ -1044,12 +1044,15 @@ def parameter_plot_2d(database, experiment_id):
     parameter2_name = db.session.query(db.Parameter).get(parameter2_id).name
     measure = request.args.get('measure', 'par10')
     instance_ids = map(int, request.args.getlist('i'))
+    runtime_cap = float(request.args.get('runtime_cap'))
 
     table = db.metadata.tables['ExperimentResults']
     table_sc = db.metadata.tables['SolverConfig']
     table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
     table_sc_params2 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param2")
 
+    import time
+    start = time.clock()
     if measure == 'par10':
         time_case = expression.case([
             (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
@@ -1098,4 +1101,4 @@ def parameter_plot_2d(database, experiment_id):
             cost = numpy.median(solver_config_times[sc])
         data.append(sc_param_values[sc] + (cost,))
 
-    return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure, surface_interpolation)
+    return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap=runtime_cap)
