@@ -86,6 +86,7 @@
     {% if form.parameter1.data != "None" %}
         {% autoescape false %}
             <img alt="Generating image..." style="margin: 10px;" src="{{url_for('plot.parameter_plot_2d', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
+        Download as <a href="{{url_for('plot.parameter_plot_2d', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.parameter_plot_2d', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a>
         {% endautoescape %}
     {% endif %}
     </div>

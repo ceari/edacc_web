@@ -174,11 +174,11 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     # Virtual best solver data
     data = [('Virtual Best Solver (VBS)',                   # name of the solver
              vbs_num_solved,                                # number of successful runs
-             0.0 if max_num_runs_per_solver == 0 else \
+             0.0 if max_num_runs_per_solver == 0 else
                     vbs_num_solved / float(max_num_runs_per_solver) ,  # % of all runs
              1.0,                                           # % of vbs runs
              vbs_cumulated_cpu,                             # cumulated CPU time
-             (0.0 if vbs_num_solved == 0 else \
+             (0.0 if vbs_num_solved == 0 else
                      vbs_cumulated_cpu / vbs_num_solved),   # average CPU time per successful run
              0.0, # avg stddev
              vbs_par10

@@ -74,10 +74,7 @@ def register(database):
                 return render('/accounts/register.html', database=database,
                               db=db, errors=errors, form=form)
 
-            try:
-                del session['captcha']
-            except:
-                pass
+            session.pop('captcha', None)
             flash('Account created successfully. You can log in now.')
             return redirect(url_for('frontend.experiments_index',
                                     database=database))
