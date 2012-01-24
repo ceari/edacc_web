@@ -17,7 +17,7 @@ CACHE_TIMEOUT = 5
 MEMCACHED_HOST = '127.0.0.1:11211'
 
 # Directory the web application can use to save temporary files (required)
-TEMP_DIR = '/tmp/'
+TEMP_DIR = '/tmp/edacc-webfrontend'
 
 # Toggle Flask's error logging
 LOGGING = False

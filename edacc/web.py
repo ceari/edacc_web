@@ -10,13 +10,18 @@
     :license: MIT, see LICENSE for details.
 """
 
-import uuid, datetime
+import uuid, datetime, os
 
 from jinja2 import FileSystemBytecodeCache
 from werkzeug import ImmutableDict
 from flask import Flask, Request, g
 from flaskext.cache import Cache
 from edacc import config, models, utils
+
+try:
+    os.makedirs(config.TEMP_DIR)
+except OSError:
+    pass
 
 Flask.jinja_options = ImmutableDict({
                             'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
