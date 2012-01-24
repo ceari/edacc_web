@@ -978,57 +978,66 @@ def parameter_plot_1d(database, experiment_id):
     parameter_name = db.session.query(db.Parameter).get(parameter_id).name
     measure = request.args.get('measure', 'par10')
     instance_ids = map(int, request.args.getlist('i'))
+    runtime_cap = float(request.args.get('runtime_cap'))
 
-    table = db.metadata.tables['ExperimentResults']
-    table_sc = db.metadata.tables['SolverConfig']
-    if measure == 'par10':
-        time_case = expression.case([
-            (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
-            else_=table.c['CPUTimeLimit']*10.0)
-    else:
-        time_case = table.c['resultTime']
+    last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified))\
+        .filter_by(experiment=exp).first()
 
-    s = select([time_case,
-                table.c['SolverConfig_idSolverConfig']],
-        and_(table.c['Experiment_idExperiment']==experiment_id,
-            table_sc.c['SolverBinaries_idSolverBinary']==exp.configuration_scenario.SolverBinaries_idSolverBinary,
-            not_(table.c['status'].in_((-1,0,))),
-            table.c['Instances_idInstance'].in_(instance_ids)
-            ), from_obj=table.join(table_sc))
-    runs = db.session.connection().execute(s)
+    CACHE_TIME = 14*24*60*60
+    @cache.memoize(timeout=CACHE_TIME)
+    def plot_image(parameter_id, measure, instance_ids, runtime_cap, last_modified_job):
+        table = db.metadata.tables['ExperimentResults']
+        table_sc = db.metadata.tables['SolverConfig']
+        if measure == 'par10':
+            time_case = expression.case([
+                (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
+                else_=table.c['CPUTimeLimit']*10.0)
+        else:
+            time_case = table.c['resultTime']
 
-    table_sc = db.metadata.tables['SolverConfig']
-    table_sc_params = db.metadata.tables['SolverConfig_has_Parameters']
-    s = select(['idSolverConfig', 'value'],
-            and_(table_sc.c['Experiment_idExperiment']==experiment_id,
-                table_sc_params.c['Parameters_idParameter']==parameter_id),
-        from_obj=table_sc.join(table_sc_params))
-    param_values = db.session.connection().execute(s)
+        s = select([time_case,
+                    table.c['SolverConfig_idSolverConfig']],
+            and_(table.c['Experiment_idExperiment']==experiment_id,
+                table_sc.c['SolverBinaries_idSolverBinary']==exp.configuration_scenario.SolverBinaries_idSolverBinary,
+                not_(table.c['status'].in_((-1,0,))),
+                table.c['Instances_idInstance'].in_(instance_ids)
+                ), from_obj=table.join(table_sc))
+        runs = db.session.connection().execute(s)
 
-    solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=exp).all()
-    sc_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
-    sc_param_values = dict((sc.idSolverConfig, None) for sc in solver_configs)
-    for pv in param_values: sc_param_values[pv.idSolverConfig] = float(pv.value)
+        table_sc = db.metadata.tables['SolverConfig']
+        table_sc_params = db.metadata.tables['SolverConfig_has_Parameters']
+        s = select(['idSolverConfig', 'value'],
+                and_(table_sc.c['Experiment_idExperiment']==experiment_id,
+                    table_sc_params.c['Parameters_idParameter']==parameter_id),
+            from_obj=table_sc.join(table_sc_params))
+        param_values = db.session.connection().execute(s)
 
-    solver_config_times = dict((sc.idSolverConfig, list()) for sc in solver_configs)
-    sc_run_count = dict((sc.idSolverConfig, 0) for sc in solver_configs)
-    for run in runs:
-        solver_config_times[run.SolverConfig_idSolverConfig].append(run[0])
+        solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=exp).all()
+        sc_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
+        sc_param_values = dict((sc.idSolverConfig, None) for sc in solver_configs)
+        for pv in param_values: sc_param_values[pv.idSolverConfig] = float(pv.value)
 
-    data = []
-    for sc in solver_config_times.keys():
-        if len(solver_config_times[sc]) == 0: continue
-        if measure == "par10" or measure == "mean":
-            cost = sum(solver_config_times[sc]) / len(solver_config_times[sc])
-        elif measure == "max":
-            cost = max(solver_config_times[sc])
-        elif measure == "min":
-            cost = min(solver_config_times[sc])
-        elif measure == "median":
-            cost = numpy.median(solver_config_times[sc])
-        data.append((sc_param_values[sc], cost))
+        solver_config_times = dict((sc.idSolverConfig, list()) for sc in solver_configs)
+        sc_run_count = dict((sc.idSolverConfig, 0) for sc in solver_configs)
+        for run in runs:
+            solver_config_times[run.SolverConfig_idSolverConfig].append(run[0])
 
-    return make_plot_response(plots.parameter_plot_1d, data, parameter_name, measure)
+        data = []
+        for sc in solver_config_times.keys():
+            if len(solver_config_times[sc]) == 0: continue
+            if measure == "par10" or measure == "mean":
+                cost = sum(solver_config_times[sc]) / len(solver_config_times[sc])
+            elif measure == "max":
+                cost = max(solver_config_times[sc])
+            elif measure == "min":
+                cost = min(solver_config_times[sc])
+            elif measure == "median":
+                cost = numpy.median(solver_config_times[sc])
+            data.append((sc_param_values[sc], cost))
+
+        return make_plot_response(plots.parameter_plot_1d, data, parameter_name, measure, runtime_cap)
+
+    return plot_image(parameter_id, measure, instance_ids, runtime_cap, last_modified_job)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d-img/')
 @require_phase(phases=ANALYSIS2)
@@ -1046,59 +1055,65 @@ def parameter_plot_2d(database, experiment_id):
     instance_ids = map(int, request.args.getlist('i'))
     runtime_cap = float(request.args.get('runtime_cap'))
 
-    table = db.metadata.tables['ExperimentResults']
-    table_sc = db.metadata.tables['SolverConfig']
-    table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
-    table_sc_params2 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param2")
+    last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified))\
+        .filter_by(experiment=exp).first()
 
-    import time
-    start = time.clock()
-    if measure == 'par10':
-        time_case = expression.case([
-            (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
-            else_=table.c['CPUTimeLimit']*10.0)
-    else:
-        time_case = table.c['resultTime']
+    CACHE_TIME = 14*24*60*60
+    @cache.memoize(timeout=CACHE_TIME)
+    def plot_image(parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation):
+        table = db.metadata.tables['ExperimentResults']
+        table_sc = db.metadata.tables['SolverConfig']
+        table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
+        table_sc_params2 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param2")
 
-    s = select([time_case,
-                table.c['SolverConfig_idSolverConfig']],
-        and_(table.c['Experiment_idExperiment']==experiment_id,
-            table_sc.c['SolverBinaries_idSolverBinary']==exp.configuration_scenario.SolverBinaries_idSolverBinary,
-            not_(table.c['status'].in_((-1,0,))),
-            table.c['Instances_idInstance'].in_(instance_ids)
-        ), from_obj=table.join(table_sc))
-    runs = db.session.connection().execute(s)
+        if measure == 'par10':
+            time_case = expression.case([
+                (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
+                else_=table.c['CPUTimeLimit']*10.0)
+        else:
+            time_case = table.c['resultTime']
 
-    s = select(['idSolverConfig', table_sc_params1.c['value'], table_sc_params2.c['value']],
-        and_(table_sc.c['Experiment_idExperiment']==experiment_id,
-             table_sc_params1.c['Parameters_idParameter']==parameter1_id,
-             table_sc_params2.c['Parameters_idParameter']==parameter2_id,
-             table_sc_params1.c['value']!=None, table_sc_params2.c['value']!=None),
-        from_obj=table_sc.join(table_sc_params1).join(table_sc_params2))
-    param_values = db.session.connection().execute(s)
+        s = select([time_case,
+                    table.c['SolverConfig_idSolverConfig']],
+            and_(table.c['Experiment_idExperiment']==experiment_id,
+                table_sc.c['SolverBinaries_idSolverBinary']==exp.configuration_scenario.SolverBinaries_idSolverBinary,
+                not_(table.c['status'].in_((-1,0,))),
+                table.c['Instances_idInstance'].in_(instance_ids)
+            ), from_obj=table.join(table_sc))
+        runs = db.session.connection().execute(s)
 
-    solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=exp).all()
-    sc_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
-    sc_param_values = dict((sc.idSolverConfig, None) for sc in solver_configs)
-    for pv in param_values: sc_param_values[pv.idSolverConfig] = (float(pv[1]), float(pv[2]))
+        s = select(['idSolverConfig', table_sc_params1.c['value'], table_sc_params2.c['value']],
+            and_(table_sc.c['Experiment_idExperiment']==experiment_id,
+                 table_sc_params1.c['Parameters_idParameter']==parameter1_id,
+                 table_sc_params2.c['Parameters_idParameter']==parameter2_id,
+                 table_sc_params1.c['value']!=None, table_sc_params2.c['value']!=None),
+            from_obj=table_sc.join(table_sc_params1).join(table_sc_params2))
+        param_values = db.session.connection().execute(s)
 
-    solver_config_times = dict((sc.idSolverConfig, list()) for sc in solver_configs)
-    sc_run_count = dict((sc.idSolverConfig, 0) for sc in solver_configs)
-    for run in runs:
-        solver_config_times[run.SolverConfig_idSolverConfig].append(run[0])
+        solver_configs = db.session.query(db.SolverConfiguration).filter_by(experiment=exp).all()
+        sc_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
+        sc_param_values = dict((sc.idSolverConfig, None) for sc in solver_configs)
+        for pv in param_values: sc_param_values[pv.idSolverConfig] = (float(pv[1]), float(pv[2]))
 
-    data = []
-    for sc in solver_config_times.keys():
-        if len(solver_config_times[sc]) == 0: continue
-        if sc_param_values[sc] is None: continue
-        if measure == "par10" or measure == "mean":
-            cost = sum(solver_config_times[sc]) / len(solver_config_times[sc])
-        elif measure == "max":
-            cost = max(solver_config_times[sc])
-        elif measure == "min":
-            cost = min(solver_config_times[sc])
-        elif measure == "median":
-            cost = numpy.median(solver_config_times[sc])
-        data.append(sc_param_values[sc] + (cost,))
+        solver_config_times = dict((sc.idSolverConfig, list()) for sc in solver_configs)
+        sc_run_count = dict((sc.idSolverConfig, 0) for sc in solver_configs)
+        for run in runs:
+            solver_config_times[run.SolverConfig_idSolverConfig].append(run[0])
 
-    return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap=runtime_cap)
+        data = []
+        for sc in solver_config_times.keys():
+            if len(solver_config_times[sc]) == 0: continue
+            if sc_param_values[sc] is None: continue
+            if measure == "par10" or measure == "mean":
+                cost = sum(solver_config_times[sc]) / len(solver_config_times[sc])
+            elif measure == "max":
+                cost = max(solver_config_times[sc])
+            elif measure == "min":
+                cost = min(solver_config_times[sc])
+            elif measure == "median":
+                cost = numpy.median(solver_config_times[sc])
+            data.append(sc_param_values[sc] + (cost,))
+
+        return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap=runtime_cap)
+
+    return plot_image(parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation=surface_interpolation)

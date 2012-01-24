@@ -587,7 +587,27 @@ def parameter_plot_1d(database, experiment_id):
     form.i.query = experiment.get_instances(db) or EmptyQuery()
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
-    return render('/analysis/parameter_plot_1d.html', database=database, db=db,
+    max_runtime = None
+    if form.i.data:
+        instance_ids = [i.idInstance for i in form.i.data]
+        table = db.metadata.tables['ExperimentResults']
+        table_sc = db.metadata.tables['SolverConfig']
+        if form.measure.data == 'par10':
+            time_case = expression.case([
+                (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
+                else_=table.c['CPUTimeLimit']*10.0)
+        else:
+            time_case = table.c['resultTime']
+
+        s = select([func.max(time_case)],
+            and_(table.c['Experiment_idExperiment']==experiment_id,
+                table_sc.c['SolverBinaries_idSolverBinary']==experiment.configuration_scenario.SolverBinaries_idSolverBinary,
+                not_(table.c['status'].in_((-1,0,))),
+                table.c['Instances_idInstance'].in_(instance_ids)
+            ), from_obj=table.join(table_sc))
+        max_runtime = db.session.connection().execute(s).fetchone()[0]
+
+    return render('/analysis/parameter_plot_1d.html', database=database, db=db, max_runtime=max_runtime,
         experiment=experiment, form=form, GET_data=GET_data)
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d/')

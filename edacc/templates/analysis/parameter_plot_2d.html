@@ -22,6 +22,7 @@
             {% if form.i.data %}
                 $("#slider").slider({
                     max: {{ max_runtime }},
+                    step: {{ max_runtime / 20 }},
                     slide: function(event, ui) {
                         $("#runtime_cap").html(ui.value);
                     },
@@ -30,6 +31,23 @@
                     }
                 });
                 $("#slider").slider("option", "value", {{ max_runtime }});
+
+                var form_data = $("#plot_form").serialize();
+                var preload_func = function(runtime_cap) {
+                    if (runtime_cap <= 1e-6) {
+                        $("#preload_status").hide();
+                        return;
+                    }
+                    $.ajax({
+                        url: "{{url_for("plot.parameter_plot_2d", database=database, experiment_id=experiment.idExperiment)}}?"+data+"&runtime_cap="+runtime_cap,
+                        success: function(data) {
+                            preload_func(runtime_cap - {{ max_runtime / 20 }});
+                        }
+                    });
+
+                }
+
+                preload_func({{ max_runtime }});
             {% endif %}
 
 
@@ -65,7 +83,9 @@
             </table>
         </form>
         {% if form.i.data %}
-            <table><tr><td>Runtime cap:</td><td><div style="width: 400px" id="slider"></div></td><td><div id="runtime_cap" style="margin-left: 15px;">{{ max_runtime }}</div></td></tr></table>
+            <table><tr><td>Runtime cap:</td><td><div style="width: 400px" id="slider"></div></td><td><div id="runtime_cap" style="margin-left: 15px;">{{ max_runtime }}</div></td></tr>
+                <tr><td colspan="2"><div id="preload_status">Prerendering images for all runtime cap choices: <img src="{{url_for('static', filename='img/computing.gif')}}" /></div></td></tr>
+            </table>
         {% endif %}
     </div>
     <div id="div_plot" style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">

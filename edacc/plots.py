@@ -661,7 +661,7 @@ def runtime_matrix_plot(flattened_rtmatrix, num_sorted_solver_configs, num_sorte
     grdevices.dev_off()
 
 @synchronized
-def parameter_plot_1d(data, parameter_name, measure, filename, format='png'):
+def parameter_plot_1d(data, parameter_name, measure, runtime_cap, filename, format='png'):
     """ Scatter plot of the points given in the list :points:
         Each element of points should be a tuple (x, y).
         Returns a list with the points in device (pixel) coordinates.
@@ -687,7 +687,7 @@ def parameter_plot_1d(data, parameter_name, measure, filename, format='png'):
         file.write('options(scipen=10)\n')
 
     xs = [p[0] for p in data]
-    ys = [p[1] for p in data]
+    ys = [min(p[1], runtime_cap) for p in data]
 
     col = 0
     pch = 3 # 3 looks nice
