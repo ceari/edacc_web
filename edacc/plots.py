@@ -45,8 +45,8 @@ def synchronized(f):
     """
     @wraps(f)
     def lockedfunc(*args, **kwargs):
+        global_lock.acquire()
         try:
-            global_lock.acquire()
             return f(*args, **kwargs)
         finally:
             global_lock.release()

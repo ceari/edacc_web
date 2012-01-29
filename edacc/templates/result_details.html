@@ -25,6 +25,38 @@
             <td>CPU Time</td>
             <td>{{result.get_time()|result_time}}</td>
         </tr>
+        <tr class="even">
+            <td>Job started</td>
+            <td>{{result.startTime|datetimeformat}}</td>
+        </tr>
+        <tr class="odd">
+            <td>Result code</td>
+            <td>{{result.resultCode}}</td>
+        </tr>
+        <tr class="even">
+            <td>Status code</td>
+            <td>{{result.status}}</td>
+        </tr>
+        <tr class="odd">
+            <td>Compute node</td>
+            <td>{{result.computeNode}}</td>
+        </tr>
+        <tr class="even">
+            <td>CPU time limit</td>
+            <td>{{result.CPUTimeLimit}}</td>
+        </tr>
+        <tr class="odd">
+            <td>Wallclock time limit</td>
+            <td>{{result.wallClockTimeLimit}}</td>
+        </tr>
+        <tr class="even">
+            <td>Memory limit</td>
+            <td>{{result.memoryLimit}}</td>
+        </tr>
+        <tr class="odd">
+            <td>Stack size limit</td>
+            <td>{{result.stackSizeLimit}}</td>
+        </tr>
         {% for prop in db.get_result_properties() %}
         <tr class="{{'even' if loop.index0 % 2 == 0 else 'odd'}}">
             <td>{{prop.name}}:</td><td>{% if result.get_property_value(prop.idProperty, db) == None %}not yet calculated{% else %}{{result.get_property_value(prop.idProperty, db)}}{% endif %}</td>

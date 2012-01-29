@@ -1,3 +1,5 @@
+Useful MySQL server settings for EDACC databases:
+
 max_connections = 1000
 max_allowed_packet = 1024M
 table_open_cache = 64
