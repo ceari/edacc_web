@@ -42,7 +42,7 @@ class RegistrationForm(Form):
     lastname = TextField('Last Name',
                          [Required(ERROR_REQUIRED),
                           Length(max=255)])
-    firstname = TextField('First Name',
+    firstname = TextField('Given Name',
                           [Required(ERROR_REQUIRED),
                            Length(max=255)])
     email = TextField('Email',
@@ -66,7 +66,7 @@ class LoginForm(Form):
 class SolverForm(Form):
     name = TextField('Name', [Required(ERROR_REQUIRED)])
     binary = FileField('Binary')
-    code = FileField('Code')
+    code = FileField('Code (.zip-archive)')
     description = TextAreaField('Description')
     version = TextField('Version', [Required(ERROR_REQUIRED)])
     authors = TextField('Authors', [Required(ERROR_REQUIRED)])
@@ -79,9 +79,8 @@ class SolverForm(Form):
                                                      to compete in.')])
 
     def validate_parameters(self, field):
-        if not 'SEED' in field.data or not 'INSTANCE' in field.data:
-            raise ValidationError('You have to specify SEED \
-                                             and INSTANCE as parameters.')
+        if not 'INSTANCE' in field.data:
+            raise ValidationError('You have to specify INSTANCE as a parameter.')
 
     def validate_code(self, field):
         if not field.file.filename or not field.file.filename.endswith('.zip'):

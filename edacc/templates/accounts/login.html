@@ -15,7 +15,7 @@
     </form>
     {% if 'csrf' in form.errors %}
         <div class="form_error">
-            Missing or invalid CSRF token
+            Missing or invalid CSRF token.
         </div>
     {% endif %}
     {% if db.competition_phase() == 1 %}

@@ -70,7 +70,7 @@ class ClientMonitor(Canvas):
 
         
         #Dictionary which store all clients for each grid
-        for c in db.session.query(db.Client.gridQueue_idgridQueue).filter(db.Client.idClient == db.Experiment_has_Client.Client_idClient).filter(db.Experiment_has_Client.Experiment_idExperiment == exp):
+        for c in db.session.query(db.Client.gridQueue_idgridQueue).filter(db.Client.idClient == db.Experiment_has_Client.Client_idClient):
             if int(c[0]) not in cluster:
                 cluster.append(int(c[0]))   
 

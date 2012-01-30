@@ -103,7 +103,7 @@ def parse_parameters(parameters):
     while i < len(parameters):
         if parameters[i].startswith('-'):
             # prefixed parameter
-            if i+1 < len(parameters) and (parameters[i+1] == 'SEED' or parameters[i+1] == 'INSTANCE'):
+            if i+1 < len(parameters) and (parameters[i+1].lower() == 'seed' or parameters[i+1].lower() == 'instance'):
                 pname = parameters[i+1].lower()
                 prefix = parameters[i]
                 default_value = ''
@@ -125,7 +125,7 @@ def parse_parameters(parameters):
                     i += 2
         else:
             # parameter without prefix
-            if parameters[i] == 'SEED' or parameters[i] == 'INSTANCE':
+            if parameters[i].lower() == 'seed' or parameters[i].lower() == 'instance':
                 pname = parameters[i].lower()
                 prefix = ''
                 default_value = ''

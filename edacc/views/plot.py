@@ -61,13 +61,13 @@ def scatter_2solver_1property_points(db, exp, sc1, sc2, instances, result_proper
     instance_ids = [i.idInstance for i in instances]
 
     results1 = db.session.query(db.ExperimentResult)
-    results1 = results1.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+    results1 = results1.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results1 = results1.options(joinedload(db.ExperimentResult.properties), joinedload(db.ExperimentResult.instance))
     results1 = results1.filter_by(experiment=exp, solver_configuration=sc1).order_by(db.ExperimentResult.run) \
                         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
 
     results2 = db.session.query(db.ExperimentResult)
-    results2 = results2.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+    results2 = results2.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
     results2 = results2.options(joinedload(db.ExperimentResult.properties), joinedload(db.ExperimentResult.instance))
     results2 = results2.filter_by(experiment=exp, solver_configuration=sc2).order_by(db.ExperimentResult.run) \
                         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
@@ -231,7 +231,7 @@ def scatter_2solver_1property(database, experiment_id):
 def scatter_1solver_instance_vs_result_property_points(db, exp, solver_config, instances, instance_property, result_property, run):
     instance_ids = [i.idInstance for i in instances]
     results = db.session.query(db.ExperimentResult)
-    results = results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+    results = results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration)).options(joinedload(db.ExperimentResult.instance))
     results = results.filter_by(experiment=exp, solver_configuration=solver_config) \
                     .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
 
@@ -376,7 +376,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 def scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, instances, result_property1, result_property2, run):
     instance_ids = [i.idInstance for i in instances]
     results = db.session.query(db.ExperimentResult)
-    results = results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.instance, db.ExperimentResult.solver_configuration))
+    results = results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration)).options(joinedload(db.ExperimentResult.instance))
     results = results.filter_by(experiment=exp, solver_configuration=solver_config).order_by(db.ExperimentResult.run) \
                     .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()
 

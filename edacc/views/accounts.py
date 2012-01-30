@@ -69,7 +69,7 @@ def register(database):
                 db.session.commit()
             except Exception:
                 db.session.rollback()
-                errors.append('Error when trying to save the account. Please \
+                errors.append('Error while trying to save the account to the database. Please \
                               contact an administrator.')
                 return render('/accounts/register.html', database=database,
                               db=db, errors=errors, form=form)
@@ -165,7 +165,7 @@ def submit_benchmark(database):
         md5sum = md5sum.hexdigest()
 
         instance = db.Instance()
-        instance.name = secure_filename(instance_name) if name == '' else secure_filename(name)
+        instance.name = str(g.User.idUser) + "_" + (secure_filename(instance_name) if name == '' else secure_filename(name))
         if db.session.query(db.Instance).filter_by(name=instance.name).first() is not None:
             error = 'A benchmark with this name already exists.'
 
@@ -187,11 +187,11 @@ def submit_benchmark(database):
             db.session.add(source_class)
             source_class.name = form.new_source_class.data
             source_class.description = form.new_source_class_description.data
-            source_class.source = True
+            source_class.parent = None
             source_class.user = g.User
-            instance.source_class = source_class
+            instance.instance_classes.append(source_class)
         else:
-            instance.source_class = form.source_class.data
+            instance.instance_classes.append(source_class)
 
         if not error:
             try:
@@ -224,6 +224,7 @@ def submit_solver(database, id=None):
 
     if id is not None:
         solver = db.session.query(db.Solver).get(id) or abort(404)
+        solver_binary = solver.binaries[0]
         if solver.user != g.User:
             abort(401)
         form = forms.SolverForm(request.form, solver)
@@ -250,7 +251,7 @@ def submit_solver(database, id=None):
         hash.update(bin)
         if id is None and db.session.query(db.Solver) \
                         .filter_by(md5=hash.hexdigest()).first() is not None:
-            error = 'Solver with this binary already exists'
+            error = 'Solver with this binary (md5 checksum) already exists'
             valid = False
 
         if id is None and db.session.query(db.Solver) \
@@ -264,13 +265,15 @@ def submit_solver(database, id=None):
         if valid:
             if id is None:
                 solver = db.Solver()
+                solver_binary = db.SolverBinary()
+                solver_binary.solver = solver
             solver.name = name
-            solver.binaryName = secure_filename(form.binary.data)
-            solver.binary = bin
-            solver.md5 = hash.hexdigest()
+            solver_binary.binaryName = secure_filename(form.binary.data)
+            solver_binary.binaryArchive = bin
+            solver_binary.md5 = hash.hexdigest()
             solver.description = description
             solver.code = request.files[form.code.name].read()
-            solver.version = version
+            solver_binary.version = solver.version = version
             solver.authors = authors
             solver.user = g.User
             solver.competition_categories = form.competition_categories.data
@@ -289,8 +292,7 @@ def submit_solver(database, id=None):
                 param.name = p[0]
                 param.prefix = p[1]
                 param.value = p[2]
-                # p[3] actually means 'is boolean'
-                param.hasValue = not p[3]
+                param.hasValue = not p[3] # p[3] actually means 'is boolean'
                 param.order = int(p[4])
                 param.solver = solver
                 db.session.add(param)
