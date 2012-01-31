@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{solver.name}}{% endblock %}
+{% block content %}
+<h2>{{solver.name}}</h2>
+
+<table class="details">
+    <tr class="even">
+        <td>Name:</td>
+        <td>{{solver.name}}</td>
+    </tr>
+    <tr class="odd">
+        <td>Type:</td>
+        <td>{{solver.type}}</td>
+    </tr>
+    <tr class="even">
+        <td>Version:</td>
+        <td>{{solver.version}}</td>
+    </tr>
+    <tr class="odd">
+        <td>Description:</td>
+        <td>{{solver.description}}</td>
+    </tr>
+    <tr class="even">
+        <td>Authors:</td>
+        <td>{{solver.authors}}</td>
+    </tr>
+</table>
+
+
+{% endblock %}

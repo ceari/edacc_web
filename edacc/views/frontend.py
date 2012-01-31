@@ -364,7 +364,10 @@ def experiment_results_by_solver(database, experiment_id):
                                     solver_configuration=solver_config) \
                                 .order_by('ExperimentResults.Instances_idInstance', 'run').all()
 
-        par10_by_instance = {} # penalized average runtime (timeput * 10 for unsuccessful runs) by instance
+        mean_by_instance = {}
+        par10_by_instance = {} # penalized average runtime (timeout * 10 for unsuccessful runs) by instance
+        var_by_instance = {} # variance over the runs per instance
+        std_by_instance = {}
         runs_by_instance = {}
         for r in ers:
             if not r.instance in runs_by_instance:
@@ -374,16 +377,20 @@ def experiment_results_by_solver(database, experiment_id):
 
         for instance in runs_by_instance.keys():
             total_time, count = 0.0, 0
+            runtimes = []
             for run in runs_by_instance[instance]:
                 count += 1
                 if run.status != 1 or not str(run.resultCode).startswith('1'):
-                    total_time += run.get_penalized_time(10)
+                    runtimes.append(run.get_penalized_time(10))
                 else:
-                    total_time += run.resultTime
+                    runtimes.append(run.resultTime)
+            total_time = sum(runtimes)
 
+            var_by_instance[instance.idInstance] = numpy.var(runtimes) if runtimes else 'n/a'
+            std_by_instance[instance.idInstance] = numpy.std(runtimes) if runtimes else 'n/a'
+            mean_by_instance[instance.idInstance] = total_time / count if count > 0 else 'n/a'
             # fill up runs_by_instance with None's up to num_runs
             runs_by_instance[instance] += [None] * (num_runs - count)
-
             par10_by_instance[instance.idInstance] = total_time / float(count) if count != 0 else 0
 
         results = sorted(runs_by_instance.items(), key=lambda i: i[0].idInstance)
@@ -391,9 +398,12 @@ def experiment_results_by_solver(database, experiment_id):
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
-            csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'])
+            csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'] + ['Variance'])
             results = [[res[0].name] + [('' if r.get_time() is None else round(r.get_time(), 3)) for r in res[1]] +
-                       ['' if par10_by_instance[res[0].idInstance] is None else round(par10_by_instance[res[0].idInstance], 4)] for res in results]
+                       ['' if par10_by_instance[res[0].idInstance] is None else round(par10_by_instance[res[0].idInstance], 4)] +
+                       ['' if mean_by_instance[res[0].idInstance] is None else round(mean_by_instance[res[0].idInstance], 4)] +
+                       ['' if var_by_instance[res[0].idInstance] is None else round(var_by_instance[res[0].idInstance], 4)] +
+                       ['' if std_by_instance[res[0].idInstance] is None else round(std_by_instance[res[0].idInstance], 4)] for res in results]
 
             if request.args.get('sort_by_instance_name', None):
                 sort_dir = request.args.get('sort_by_instance_name_dir', 'asc')
@@ -420,6 +430,7 @@ def experiment_results_by_solver(database, experiment_id):
         return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
                   form=form, results=results, par10_by_instance=par10_by_instance, num_runs=num_runs,
+                  var_by_instance=var_by_instance, std_by_instance=std_by_instance, mean_by_instance=mean_by_instance,
                   instance_properties=db.get_instance_properties())
 
     return render('experiment_results_by_solver.html', db=db, database=database,
@@ -995,6 +1006,18 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
     return render('solver_configuration_details.html', solver_config=solver_config,
                   solver=solver, parameters=parameters, database=database, db=db,
                   experiment=experiment)
+
+
+@frontend.route('/<database>/solver/<int:solver_id>')
+@require_competition
+@require_login
+def solver_details(database, solver_id):
+    db = models.get_database(database) or abort(404)
+    solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+
+    if not is_admin() and solver.user != g.User: abort(401)
+
+    return render('solver_details.html', database=database, db=db, solver=solver)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/')

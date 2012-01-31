@@ -66,9 +66,11 @@ class LoginForm(Form):
 class SolverForm(Form):
     name = TextField('Name', [Required(ERROR_REQUIRED)])
     binary = FileField('Binary')
-    code = FileField('Code (.zip-archive)')
+    code = FileField('Code')
     description = TextAreaField('Description')
     version = TextField('Version', [Required(ERROR_REQUIRED)])
+    run_path = TextField('Binary name', [Required(ERROR_REQUIRED)])
+    run_command = TextField('Run command')
     authors = TextField('Authors', [Required(ERROR_REQUIRED)])
     parameters = TextField('Parameters', [Required(ERROR_REQUIRED)])
     competition_categories = QuerySelectMultipleField(

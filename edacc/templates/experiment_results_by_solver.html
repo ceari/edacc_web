@@ -30,7 +30,7 @@
                 "aoColumns": [{"bSearchable": true},
                               {% for _ in range(instance_properties|length) %} {"bVisible": false},{% endfor %}
                               {% for i in range(num_runs) %}{"bSortable":false,"bSearchable":false},{% endfor %}
-                              {"bSearchable": false}]
+                              {"bSearchable": false}, {"bSearchable": false}, {"bSearchable": false}, {"bSearchable": false}]
             });
 
 
@@ -89,6 +89,9 @@
                     {% endfor %}
                     {% for i in range(num_runs) %}<th>{{i}}</th>{% endfor %}
                     <th title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the experiment's timeout for unsuccessful runs" id="th_par10">penalized avg. runtime</th>
+                    <th>Mean</th>
+                    <th>Variance</th>
+                    <th>Std. Deviation</th>
                 </tr>
             </thead>
             <tbody>
@@ -107,7 +110,10 @@
                             <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ (run.get_time()|result_time) if not run.get_time() else (run.get_time()|result_time|round(3))}}</a></td>
                             {% endif %}
                         {% endfor %}
-                        <td nowrap="nowrap" style="text-align: center;">{{par10_by_instance[result.0.idInstance]|round(3)}}</td>
+                        <td nowrap="nowrap" style="text-align: center;">{{ par10_by_instance[result.0.idInstance]|round(3) }}</td>
+                        <td nowrap="nowrap" style="text-align: center;">{{ mean_by_instance[result.0.idInstance]|round(3) }}</td>
+                        <td nowrap="nowrap" style="text-align: center;">{{ var_by_instance[result.0.idInstance]|round(3) }}</td>
+                        <td nowrap="nowrap" style="text-align: center;">{{ std_by_instance[result.0.idInstance]|round(3) }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

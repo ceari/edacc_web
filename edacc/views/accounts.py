@@ -249,7 +249,7 @@ def submit_solver(database, id=None):
         bin = request.files[form.binary.name].read()
         hash = hashlib.md5()
         hash.update(bin)
-        if id is None and db.session.query(db.Solver) \
+        if id is None and db.session.query(db.SolverBinary) \
                         .filter_by(md5=hash.hexdigest()).first() is not None:
             error = 'Solver with this binary (md5 checksum) already exists'
             valid = False
@@ -268,18 +268,19 @@ def submit_solver(database, id=None):
                 solver_binary = db.SolverBinary()
                 solver_binary.solver = solver
             solver.name = name
-            solver_binary.binaryName = secure_filename(form.binary.data)
+            solver_binary.binaryName = form.run_path.data
             solver_binary.binaryArchive = bin
             solver_binary.md5 = hash.hexdigest()
             solver.description = description
             solver.code = request.files[form.code.name].read()
             solver_binary.version = solver.version = version
+            solver_binary.runCommand = form.run_command.data
+            solver_binary.runPath = "/" + form.run_path.data
             solver.authors = authors
             solver.user = g.User
             solver.competition_categories = form.competition_categories.data
 
-            if id is None:
-                db.session.add(solver)
+            db.session.add(solver)
 
             # on resubmissions delete old parameters
             if id is not None:
@@ -289,16 +290,17 @@ def submit_solver(database, id=None):
 
             for p in params:
                 param = db.Parameter()
-                param.name = p[0]
-                param.prefix = p[1]
-                param.value = p[2]
+                param.name = None if p[0] == '' else p[0]
+                param.prefix = None if p[1] == '' else p[1]
+                param.defaultValue = p[2]
                 param.hasValue = not p[3] # p[3] actually means 'is boolean'
                 param.order = int(p[4])
                 param.solver = solver
                 db.session.add(param)
             try:
                 db.session.commit()
-            except:
+            except Exception as e:
+                print e
                 db.session.rollback()
                 flash("Couldn't save solver to the database. Please contact an administrator for support.")
                 return render('/accounts/submit_solver.html', database=database,
@@ -356,7 +358,7 @@ def download_solver(database, id):
     headers.add('Content-Disposition', 'attachment',
                 filename=solver.binaryName)
 
-    return Response(response=solver.binary, headers=headers)
+    return Response(response=solver.binaries[0].binaryArchive, headers=headers)
 
 
 @accounts.route('/<database>/download-solver-code/<int:id>/')
