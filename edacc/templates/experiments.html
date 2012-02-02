@@ -73,8 +73,31 @@
                 }
 
                 queryExperimentInfo({{ experiments|length - 1}});
+
+                /*hide_experiment = function(expID) {
+                    if ($.inArray(expID, hidden_experiments) == -1) hidden_experiments.push(expID);
+                    $.cookie('hidden_experiments_{{database}}', JSON.stringify(hidden_experiments));
+                    for (var trrow in oTable.fnGetNodes()) {
+                        if (oTable.fnGetData(trrow) != null && expID == oTable.fnGetData(trrow)[0]) {
+                            oTable.fnDeleteRow(trrow);
+                        }
+                    }
+                    return false;
+                }
+
+                var hidden_experiments = new Array();
+                if ($.cookie('hidden_experiments_{{database}}') != null) {
+                    hidden_experiments = $.parseJSON($.cookie('hidden_experiments_{{database}}'));
+                    alert(hidden_experiments);
+                    for (ix in hidden_experiments) hide_experiment(hidden_experiments[ix]);
+                }*/
+
+
+
             {% endif %}
         });
+
+
     </script>
 {% endblock %}
 {% block content %}
@@ -94,6 +117,7 @@
                     <th>Jobs</th>
                     <th title="Automated algorithm configuration experiment">AAC Exp.</th>
                     <th>Status</th>
+                    <!-- <th></th> -->
                 </tr>
             </thead>
             <tbody>
@@ -107,6 +131,7 @@
                     <td class="center"></td>
                     <td class="center">{% if experiment.configurationExp %}{{ '\u2713' }}{% endif %}</td>
                     <td class="center"></td>
+                    <!-- <td class="center"> <a href="javascript:void(0);" onclick="hide_experiment({{ experiment.idExperiment }});">Hide</a></td> -->
                 </tr>
             {% endfor %}
             </tbody>

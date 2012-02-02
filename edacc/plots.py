@@ -106,16 +106,15 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     min_x = 0
     min_y = 0
 
+    min_x = min([x for x in xs if x > 0.0] or [0.01])
+    min_y = min([y for y in ys if y > 0.0] or [0.01])
+
     log = ''
     if xscale == 'log':
         log += 'x'
-        min_x = min([x for x in xs if x > 0.0] or [0.01])
-        min_y = min([y for y in ys if y > 0.0] or [0.01])
 
     if yscale == 'log':
         log += 'y'
-        min_x = min([x for x in xs if x > 0.0] or [0.01])
-        min_y = min([y for y in ys if y > 0.0] or [0.01])
 
     min_v = min(min_x, min_y)
 

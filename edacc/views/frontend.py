@@ -146,7 +146,7 @@ def experiment_solver_configurations(database, experiment_id):
     
     # if competition db, show only own solvers if the phase is in OWN_RESULTS
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        solver_configurations = filter(lambda sc: sc.solver.user == g.User, solver_configurations)
+        solver_configurations = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configurations)
 
     return render('experiment_solver_configurations.html', experiment=experiment,
                   solver_configurations=solver_configurations,
@@ -213,7 +213,7 @@ def experiment_results(database, experiment_id):
 
     # if competition db, show only own solvers unless phase is 6 or 7
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
+        solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     form = forms.ResultsBySolverAndInstanceForm(request.args)
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
@@ -346,7 +346,7 @@ def experiment_results_by_solver(database, experiment_id):
     solver_configs = experiment.solver_configurations
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
+        solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     form = forms.ResultBySolverForm(request.args)
     form.solver_config.query = solver_configs or EmptyQuery()
@@ -451,7 +451,7 @@ def experiment_results_by_instance(database, experiment_id):
     solver_configs = experiment.solver_configurations
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        solver_configs = filter(lambda sc: sc.solver.user == g.User, solver_configs)
+        solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     form = forms.ResultByInstanceForm(request.args)
     form.instance.query = instances or EmptyQuery()
@@ -698,7 +698,7 @@ def experiment_results_csv(database, experiment_id):
                       """ % (prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.name.replace("%", "%%"), prop.idProperty)
 
     conn = db.session.connection()
-    res = conn.execute("""SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
+    base_query = """SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
                        SolverConfig.name, Instances.name,
                        ExperimentResults.run, ExperimentResults.resultTime,
                        ExperimentResults.seed, ExperimentResults.status,
@@ -718,16 +718,20 @@ def experiment_results_csv(database, experiment_id):
                     LEFT JOIN ResultCodes ON ExperimentResults.resultCode=ResultCodes.resultCode
                     LEFT JOIN StatusCodes ON ExperimentResults.status=StatusCodes.statusCode
                     LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
+                    LEFT JOIN SolverBinaries ON SolverBinaries.idSolverBinary = SolverConfig.SolverBinaries_idSolverBinary
+                    LEFT JOIN Solver ON Solver.idSolver = SolverBinaries.idSolverBinary
                     LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
                     LEFT JOIN gridQueue ON gridQueue.idgridQueue=ExperimentResults.computeQueue
-                    """+prop_joins+""" """ + inst_prop_joins + """ 
-                 WHERE ExperimentResults.Experiment_idExperiment = %s """, (experiment_id, ))
-
-    jobs = res.fetchall()
+                    """+prop_joins+""" """ + inst_prop_joins + """
+                 WHERE ExperimentResults.Experiment_idExperiment = %s """
 
     # if competition db, show only own solvers unless phase is 6 or 7
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        jobs = filter(lambda j: db.session.query(db.SolverConfiguration).get(j[1]).solver.user == g.User, jobs)
+        res = conn.execute(base_query + """ AND Solver.User_idUser = %s """ , (experiment_id, g.User.idUser))
+        jobs = res.fetchall()
+    else:
+        res = conn.execute(base_query , (experiment_id, ))
+        jobs = res.fetchall()
 
     csv_response = StringIO.StringIO()
     csv_writer = csv.writer(csv_response)
@@ -821,6 +825,11 @@ def experiment_progress_ajax(database, experiment_id):
     where_clause += "ExperimentResults.Experiment_idExperiment = %s "
     params.append(experiment.idExperiment)
 
+    # if competition db, show only own solvers unless phase is 6 or 7
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+        where_clause += " AND Solver.User_idUser = %s "
+        params.append(g.User.idUser)
+
     order = ""
     if request.args.get('iSortCol_0', '') != '' and int(request.args.get('iSortingCols', 0)) > 0:
         order = "ORDER BY "
@@ -857,6 +866,8 @@ def experiment_progress_ajax(database, experiment_id):
                     LEFT JOIN ResultCodes ON ExperimentResults.resultCode=ResultCodes.resultCode
                     LEFT JOIN StatusCodes ON ExperimentResults.status=StatusCodes.statusCode
                     LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
+                    LEFT JOIN SolverBinaries ON SolverBinaries.idSolverBinary = SolverConfig.SolverBinaries_idSolverBinary
+                    LEFT JOIN Solver ON Solver.idSolver = SolverBinaries.idSolverBinary
                     LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
                     LEFT JOIN gridQueue ON gridQueue.idgridQueue=ExperimentResults.computeQueue
                     """+prop_joins+"""
@@ -870,10 +881,6 @@ def experiment_progress_ajax(database, experiment_id):
                        FROM ExperimentResults WHERE Experiment_idExperiment = %s""",
                        experiment.idExperiment)
     numTotal = res.fetchone()[0]
-
-    # if competition db, show only own solvers unless phase is 6 or 7
-    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        jobs = filter(lambda j: db.session.query(db.SolverConfiguration).get(j[1]).solver.user == g.User, jobs)
 
     aaData = []
     for job in jobs:
@@ -924,7 +931,7 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
     if instance not in experiment.instances: abort(404)
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        if not solver_configuration.solver.user == g.User: abort(401)
+        if not solver_configuration.solver_binary.solver.user == g.User: abort(401)
 
     jobs = db.session.query(db.ExperimentResult) \
                     .filter_by(experiment=experiment) \
@@ -1030,7 +1037,7 @@ def experiment_result(database, experiment_id):
     result = db.session.query(db.ExperimentResult).get(request.args.get('id', 0)) or abort(404)
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        if result.solver_configuration.solver.user != g.User: abort(401)
+        if result.solver_configuration.solver_binary.solver.user != g.User: abort(401)
 
     solverOutput = result.output.solverOutput
     launcherOutput = result.output.launcherOutput
@@ -1082,7 +1089,7 @@ def solver_output_download(database, experiment_id, result_id):
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        if result.solver_configuration.solver.user != g.User: abort(401)
+        if result.solver_configuration.solver_binary.solver.user != g.User: abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -1100,7 +1107,7 @@ def launcher_output_download(database, experiment_id, result_id):
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        if result.solver_configuration.solver.user != g.User: abort(401)
+        if result.solver_configuration.solver_binary.solver.user != g.User: abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -1118,7 +1125,7 @@ def watcher_output_download(database, experiment_id, result_id):
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        if result.solver_configuration.solver.user != g.User: abort(401)
+        if result.solver_configuration.solver_binary.solver.user != g.User: abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
@@ -1136,7 +1143,7 @@ def verifier_output_download(database, experiment_id, result_id):
     result = db.session.query(db.ExperimentResult).get(result_id) or abort(404)
 
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-        if result.solver_configuration.solver.user != g.User: abort(401)
+        if result.solver_configuration.solver_binary.solver.user != g.User: abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
