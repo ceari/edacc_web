@@ -71,19 +71,19 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         file = open(filename, 'w')
 
     # set margins to fit in labels on the right and top
-    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
+    robjects.r.par(mar = robjects.FloatVector([6, 6, 6, 17]))
     if format == 'rscript':
         file.write('par(mar=c(5,4,4,15))\n')
 
     if ((xscale == 'log' and yscale == 'log') or (xscale == '' and yscale == '')) and diagonal_line:
         # plot dashed line from (0,0) to (max_x,max_y)
-        robjects.r.plot(robjects.FloatVector([0,max_x]),
-                        robjects.FloatVector([0,max_y]),
-                        type='l', col='black', lty=2,
-                        xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
-                        xaxs='i', yaxs='i',
-                        xaxt='n', yaxt='n',
-                        xlab='', ylab='')
+        #robjects.r.plot(robjects.FloatVector([0,max_x]),
+        #                robjects.FloatVector([0,max_y]),
+        #                type='l', col='black', lty=2,
+        #                xlim=robjects.r.c(0,max_x), ylim=robjects.r.c(0,max_y),
+        #                xaxs='i', yaxs='i',
+        #                xaxt='n', yaxt='n',
+        #                xlab='', ylab='')
         # to be able to plot in the same graph again
         robjects.r.par(new=1)
 
@@ -116,7 +116,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     if yscale == 'log':
         log += 'y'
 
-    min_v = min(min_x, min_y)
+    #min_v = min(min_x, min_y)
 
     legend_colors = []
     legend_strs = []
@@ -130,7 +130,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         # plot running times
         robjects.r.plot(robjects.FloatVector(ig_xs), robjects.FloatVector(ig_ys),
                         type='p', col=colors[col % len(colors)], las = 1,
-                        xlim=robjects.r.c(min_v,max_x), ylim=robjects.r.c(min_v,max_y),
+                        xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(min_y,max_y),
                         xaxs='i', yaxs='i', log=log,
                         xlab='', ylab='', pch=pch, tck=0.015,
                         **{'cex.axis': 1.2, 'cex.main': 1.5})
