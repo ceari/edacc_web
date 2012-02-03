@@ -520,7 +520,7 @@ def experiment_results_by_instance(database, experiment_id):
                 if len(runtimes) > 0:
                     mean = numpy.average(runtimes)
                     median = numpy.median(runtimes)
-                    cv = numpy.std(runtimes) / numpy.average(runtimes)
+                    cv = numpy.std(runtimes) / mean
                     quantiles = mquantiles(runtimes, [0.25, 0.5, 0.75])
                     qcd = (quantiles[2] - quantiles[0]) / quantiles[1]
 

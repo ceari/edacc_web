@@ -55,7 +55,7 @@ def solver_ranking(database, experiment_id):
     if form.i.data:
         CACHE_TIME = 7*24*60*60
         @cache.memoize(timeout=CACHE_TIME)
-        def cached_ranking(database, experiment_id, sc_names, last_modified_job, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
+        def cached_ranking(database, experiment_id, sc_names, last_modified_job, job_count, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data)
             ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
@@ -65,7 +65,10 @@ def solver_ranking(database, experiment_id):
                 head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
                                      'cumulated CPU time', 'avg. CPU time per successful run']
 
-                if form.calculate_average_dev.data: head.append('avg. deviation of successful runs')
+                if form.calculate_average_dev.data:
+                    head.append('avg. deviation of successful runs')
+                    head.append('avg. coefficient of variation')
+                    head.append('avg. quartile coefficient of dispersion')
                 if form.penalized_average_runtime.data: head.append('penalized avg. runtime')
                 csv_response = StringIO.StringIO()
                 csv_writer = csv.writer(csv_response)
@@ -73,8 +76,11 @@ def solver_ranking(database, experiment_id):
 
                 for rnk, row in enumerate(ranking_data):
                     write_row = [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 4), row[4:6])
-                    if form.calculate_average_dev.data: write_row.append(round(row[6], 4))
-                    if form.penalized_average_runtime.data: write_row.append(round(row[7], 4))
+                    if form.calculate_average_dev.data:
+                        write_row.append(round(row[6], 4))
+                        write_row.append(round(row[7], 4))
+                        write_row.append(round(row[8], 4))
+                    if form.penalized_average_runtime.data: write_row.append(round(row[9], 4))
                     csv_writer.writerow(write_row)
 
                 csv_response.seek(0)
@@ -87,14 +93,20 @@ def solver_ranking(database, experiment_id):
                 head = ['\\#', 'Solver', '\\# of successful runs', '\\% of all runs', '\\% of VBS runs',
                                      'cumulated CPU time', 'avg. CPU time per successful run']
 
-                if form.calculate_average_dev.data: head.append('avg. deviation of successful runs')
+                if form.calculate_average_dev.data:
+                    head.append('avg. deviation of successful runs')
+                    head.append('avg. coefficient of variation')
+                    head.append('avg. quartile coefficient of dispersion')
                 if form.penalized_average_runtime.data: head.append('penalized avg. runtime')
                 table = "\\begin{tabular}{" + ('|'.join(['c'] * len(head))) + "}\n"
                 table += ' & '.join(head) + "\\\\ \\hline\n"
                 for rnk, row in enumerate(ranking_data):
                     table += ' & '.join(map(str, [rnk, row[0], row[1], round(row[2] * 100, 2), round(row[3] * 100, 2)] + map(lambda x: round(x, 4), row[4:6])))
-                    if form.calculate_average_dev.data: table += " & " + str(round(row[6], 4))
-                    if form.penalized_average_runtime.data: table += " & " + str(round(row[7], 4))
+                    if form.calculate_average_dev.data:
+                        table += " & " + str(round(row[6], 4))
+                        table += " & " + str(round(row[7], 4))
+                        table += " & " + str(round(row[8], 4))
+                    if form.penalized_average_runtime.data: table += " & " + str(round(row[9], 4))
                     table += "\\\\ \\hline\n"
                 table += "\\end{tabular}"
 
@@ -102,16 +114,16 @@ def solver_ranking(database, experiment_id):
                 headers.add('Content-Type', 'text/plain')
                 return Response(response=table, headers=headers)
 
-
             return render('/analysis/ranking.html', database=database, db=db,
                           experiment=experiment, ranked_solvers=ranked_solvers,
                           data=ranking_data, form=form, instance_properties=db.get_instance_properties())
 
         last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
                                 .filter_by(experiment=experiment).first()
+        job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
 
         return cached_ranking(database, experiment_id, ''.join(sc.get_name() for sc in experiment.solver_configurations),
-                              last_modified_job, [i.idInstance for i in form.i.data],
+                              last_modified_job, job_count, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               'csv' in request.args, 'latex' in request.args)
 

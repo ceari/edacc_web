@@ -10,7 +10,9 @@
     :license: MIT, see LICENSE for details.
 """
 import numpy
-from sqlalchemy.sql import select, and_, functions
+from scipy.stats.mstats import mquantiles
+
+from sqlalchemy.sql import select, and_, functions, not_
 
 
 def avg_point_biserial_correlation_ranking(db, experiment, instances):
@@ -181,6 +183,8 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
              (0.0 if vbs_num_solved == 0 else
                      vbs_cumulated_cpu / vbs_num_solved),   # average CPU time per successful run
              0.0, # avg stddev
+             0.0,
+             0.0,
              vbs_par10
              )]
 
@@ -203,6 +207,23 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         if not runs_by_solver_and_instance[run.SolverConfig_idSolverConfig].has_key(run.Instances_idInstance):
             runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance] = []
         runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance].append(run)
+
+    if calculate_avg_stddev:
+        finished_runs_by_solver_and_instance = {}
+        s = select([table.c['resultTime'],
+                    table.c['SolverConfig_idSolverConfig'],
+                    table.c['Instances_idInstance']],
+            and_(table.c['Instances_idInstance'].in_(instance_ids),
+                table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
+                table.c['Experiment_idExperiment']==experiment.idExperiment,
+                not_(table.c['status'].in_((-1,0))))).select_from(table)
+        finished_runs = db.session.connection().execute(s)
+        for run in finished_runs:
+            if not finished_runs_by_solver_and_instance.has_key(run.SolverConfig_idSolverConfig):
+                finished_runs_by_solver_and_instance[run.SolverConfig_idSolverConfig] = {}
+            if not finished_runs_by_solver_and_instance[run.SolverConfig_idSolverConfig].has_key(run.Instances_idInstance):
+                finished_runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance] = []
+            finished_runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance].append(run)
 
     if calculate_par10:
         failed_runs_by_solver = dict((sc.idSolverConfig, list()) for sc in ranked_solvers)
@@ -240,17 +261,24 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                                             / (len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]))
 
         avg_stddev_runtime = 0.0
+        avg_cv = 0.0
+        avg_qcd = 0.0
         if calculate_avg_stddev:
             count = 0
             for instance in instance_ids:
-                if solver.idSolverConfig in runs_by_solver_and_instance and runs_by_solver_and_instance[solver.idSolverConfig].has_key(instance):
-                    instance_runtimes = runs_by_solver_and_instance[solver.idSolverConfig][instance]
-                    avg_stddev_runtime += numpy.std([j[0] for j in instance_runtimes])
+                if solver.idSolverConfig in finished_runs_by_solver_and_instance and finished_runs_by_solver_and_instance[solver.idSolverConfig].has_key(instance):
+                    instance_runtimes = finished_runs_by_solver_and_instance[solver.idSolverConfig][instance]
+                    runtimes = [j[0] for j in instance_runtimes]
+                    stddev = numpy.std(runtimes)
+                    avg_stddev_runtime += stddev
+                    avg_cv += stddev / numpy.average(runtimes)
+                    quantiles = mquantiles(runtimes, [0.25, 0.5, 0.75])
+                    avg_qcd += (quantiles[2] - quantiles[0]) / quantiles[1]
                     count += 1
             if count > 0:
                 avg_stddev_runtime /= float(count)
-            else:
-                avg_stddev_runtime = 0.0
+                avg_cv /= float(count)
+                avg_qcd /= float(count)
 
         data.append((
             solver,
@@ -260,6 +288,8 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             successful_runs_sum,
             numpy.average([j[0] for j in successful_runs] or 0),
             avg_stddev_runtime,
+            avg_cv,
+            avg_qcd,
             penalized_average_runtime
         ))
 

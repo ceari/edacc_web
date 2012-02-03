@@ -47,7 +47,7 @@
                         { "sType": "percent" },
                         null,
                         null
-                        {% if form.calculate_average_dev.data %}, null{% endif %}
+                        {% if form.calculate_average_dev.data %}, null, null, null{% endif %}
                         {% if form.penalized_average_runtime.data %}, null{% endif %}
                     ]
                 });
@@ -78,7 +78,7 @@
                         Example: (numAtoms &gt;= 6000 && numAtoms &lt;= 8000 && name.match(/k3/))
                     </td>
                 </tr>
-                {{ render_field(form.calculate_average_dev, explanation="Average standard deviation of runtimes over all instances")}}
+                {{ render_field(form.calculate_average_dev, explanation="Averaged instance runtime dispersion measures")}}
                 {{ render_field(form.penalized_average_runtime, explanation="10 * run's CPU time limit for unsuccessful runs")}}
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
             </table>
@@ -104,6 +104,8 @@
                 <th>avg. CPU time per successful run</th>
                 {% if form.calculate_average_dev.data %}
                 <th>avg. deviation of successful runs</th>
+                <th>avg. coefficient of variation</th>
+                <th>avg. quartile coefficient of dispersion</th>
                 {% endif %}
                 {% if form.penalized_average_runtime.data %}
                 <th>penalized avg. runtime</th>
@@ -122,9 +124,11 @@
                 <td>{{sc.5|round(3)}}</td>
                 {% if form.calculate_average_dev.data %}
                 <td>{{sc.6|round(3)}}</td>
+                <td>{{sc.7|round(3)}}</td>
+                <td>{{sc.8|round(3)}}</td>
                 {% endif %}
                 {% if form.penalized_average_runtime.data %}
-                <td>{{sc.7|round(4)}}</td>
+                <td>{{sc.9|round(4)}}</td>
                 {% endif %}
             </tr>
         {% endfor %}
