@@ -167,7 +167,7 @@ def scatter_2solver_1property(database, experiment_id):
 
     max_x = max([max([p[0] for p in ig] or [0]) for ig in points] or [0])
     max_y = max([max([p[1] for p in ig] or [0]) for ig in points] or [0])
-    #max_x = max_y = max(max_x, max_y) * 1.1
+    max_x = max_y = max(max_x, max_y) * 1.1
 
     title = sc1.get_name() + ' vs. ' + sc2.get_name()
     if result_property == 'cputime':
