@@ -73,6 +73,7 @@
             <table id="form_table">
             {{render_field(form.display_measure)}}
             {{ render_field(form.solver_configs, size=10) }}
+            {{ render_field(form.calculate_dispersion, explanation="(Coefficient of variation, Quartile coefficient of dispersion)") }}
             </table>
             <div id="optional_instance_filter">
             <table>
@@ -128,7 +129,7 @@
                         {% endif %}
                             <a style="color: black;" href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
                             solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">
-                            {% if job.time_measure != None %} {{job.time_measure|round(4)}} {% endif %}
+                            {% if job.time_measure != None %} {{job.time_measure|round(4)}} {% if form.calculate_dispersion.data %} ({{ job.coeff_variation|round(4) }}, {{ job.quartile_coeff_dispersion|round(4) }}) {% endif %} {% endif %}
                             </a>
                         </td>
                     {% elif job.total == 1 %}
@@ -166,6 +167,22 @@
                     <td style="text-align: center;">{{avg_by_solver[sc.idSolverConfig]|round(4)}}</td>
                 {% endfor %}
             </tr>
+            {% if form.calculate_dispersion.data %}
+                <tr class="odd">
+                    <td>Average coeff. of variation</td>
+                    <td></td>
+                    {% for sc in solver_configs %}
+                        <td style="text-align: center;">{{avg_cv_by_solver[sc.idSolverConfig]|round(4)}}</td>
+                    {% endfor %}
+                </tr>
+                <tr class="even">
+                    <td>Average quartile coeff. of disp.</td>
+                    <td></td>
+                    {% for sc in solver_configs %}
+                        <td style="text-align: center;">{{avg_qcd_by_solver[sc.idSolverConfig]|round(4)}}</td>
+                    {% endfor %}
+                </tr>
+            {% endif %}
         </tfoot>
     </table>
     <div style="margin-top: 10px;">

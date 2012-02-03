@@ -209,6 +209,7 @@ class ResultsBySolverAndInstanceForm(Form):
                                     ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
+    calculate_dispersion = BooleanField('Calculate dispersion measures', default=False)
     
 class RuntimeMatrixPlotForm(Form):
     measure = SelectField('Measure', default='par10',

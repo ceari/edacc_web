@@ -27,6 +27,7 @@ import tarfile
 import Image
 import time
 import os
+from scipy.stats.mstats import mquantiles
 
 from flask import Module
 from flask import render_template as render
@@ -235,6 +236,8 @@ def experiment_results(database, experiment_id):
     results_by_instance, S, C = experiment.get_result_matrix(db, solver_configs, instances)
 
     times_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
+    cv_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
+    qcd_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
     results = []
     best_sc_by_instance_id = {}
     for idInstance in instances_dict.iterkeys():
@@ -253,6 +256,8 @@ def experiment_results(database, experiment_id):
             runtimes = [j.resultTime for j in jobs if j.resultTime is not None]
 
             time_measure = None
+            coeff_variation = None
+            quartile_coeff_dispersion = None
             if len(runtimes) > 0:
                 if form.display_measure.data == 'mean':
                     time_measure = numpy.average(runtimes)
@@ -266,6 +271,13 @@ def experiment_results(database, experiment_id):
                     time_measure = numpy.average([j.penalized_time10 for j in jobs] or [0])
 
                 times_by_solver[idSolverConfig].append(time_measure)
+                if form.calculate_dispersion.data:
+                    coeff_variation = numpy.std(runtimes) / numpy.average(runtimes)
+                    quantiles = mquantiles(runtimes, [0.25, 0.5, 0.75])
+                    quartile_coeff_dispersion = (quantiles[2] - quantiles[0]) / quantiles[1]
+
+                    cv_by_solver[idSolverConfig].append(coeff_variation)
+                    qcd_by_solver[idSolverConfig].append(quartile_coeff_dispersion)
 
             if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and successful > 0:
                 best_sc_time = time_measure
@@ -281,6 +293,8 @@ def experiment_results(database, experiment_id):
                 bg_color = 'FF8040' #orange
 
             row.append({'time_measure': time_measure ,
+                        'coeff_variation': coeff_variation,
+                        'quartile_coeff_dispersion': quartile_coeff_dispersion,
                         'successful': successful,
                         'completed': completed,
                         'bg_color': bg_color,
@@ -293,9 +307,14 @@ def experiment_results(database, experiment_id):
 
     sum_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
     avg_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+    avg_cv_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+    avg_qcd_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+
     for idSolverConfig in solver_configs_dict.iterkeys():
         sum_by_solver[idSolverConfig] = sum(times_by_solver[idSolverConfig])
         avg_by_solver[idSolverConfig] = numpy.average(times_by_solver[idSolverConfig])
+        avg_cv_by_solver[idSolverConfig] = numpy.average(cv_by_solver[idSolverConfig])
+        avg_qcd_by_solver[idSolverConfig] = numpy.average(qcd_by_solver[idSolverConfig])
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
@@ -310,11 +329,17 @@ def experiment_results(database, experiment_id):
         for row in results:
             write_row = [row['instance'].name, str(row['best_time'])]
             for sc_results in row['times']:
-                write_row.append(round(sc_results['time_measure'], 4))
+                if form.calculate_dispersion.data:
+                    write_row.append(str(round(sc_results['time_measure'], 4)) + " (%.4f, %.4f)" % (sc_results['coeff_variation'], sc_results['quartile_coeff_dispersion']))
+                else:
+                    write_row.append(round(sc_results['time_measure'], 4))
             csv_writer.writerow(write_row)
 
         csv_writer.writerow(['Average', ''] + map(lambda x: str(round(x, 4)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
         csv_writer.writerow(['Sum', ''] + map(lambda x: str(round(x, 4)), [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+        if form.calculate_dispersion.data:
+            csv_writer.writerow(['Avg. coefficient of variation', ''] + map(lambda x: str(round(x, 4)), [avg_cv_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+            csv_writer.writerow(['Avg. quartile coefficient of dispersion', ''] + map(lambda x: str(round(x, 4)), [avg_qcd_by_solver[sc.idSolverConfig] for sc in solver_configs]))
 
         csv_response.seek(0)
         headers = Headers()
@@ -331,6 +356,7 @@ def experiment_results(database, experiment_id):
                     instances_dict=instances_dict, best_sc_by_instance_id=best_sc_by_instance_id,
                     results=results, database=database, db=db, form=form,
                     sum_by_solver=sum_by_solver, avg_by_solver=avg_by_solver,
+                    avg_cv_by_solver=avg_cv_by_solver, avg_qcd_by_solver=avg_qcd_by_solver,
                     base_result_details_url=base_result_details_url)
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
@@ -474,7 +500,7 @@ def experiment_results_by_instance(database, experiment_id):
         for sc in solver_configs:
             runs = results_by_sc[sc.idSolverConfig]
 
-            mean, median, par10 = None, None, None
+            mean, median, par10, cv, qcd = None, None, None, None, None
             successful = len([j for j in runs if str(j.resultCode).startswith("1")])
             if len(runs) > 0:
                 runtimes = [j.get_time() for j in runs]
@@ -494,11 +520,17 @@ def experiment_results_by_instance(database, experiment_id):
                 if len(runtimes) > 0:
                     mean = numpy.average(runtimes)
                     median = numpy.median(runtimes)
+                    cv = numpy.std(runtimes) / numpy.average(runtimes)
+                    quantiles = mquantiles(runtimes, [0.25, 0.5, 0.75])
+                    qcd = (quantiles[2] - quantiles[0]) / quantiles[1]
 
-            results.append((sc, runs + [None] * (num_runs - len(runs)), mean, median, par10, successful))
+
+            results.append((sc, runs + [None] * (num_runs - len(runs)), mean, median, par10, successful, cv, qcd))
             min_mean_sc, min_mean = None, 0
             min_median_sc, min_median = None, 0
             min_par10_sc, min_par10 = None, 0
+            min_cv_sc, min_cv = None, 0
+            min_qcd_sc, min_qcd = None, 0
             for r in results:
                 if r[2] is None or r[5] == 0: continue
                 if min_mean_sc is None or r[2] < min_mean:
@@ -507,13 +539,17 @@ def experiment_results_by_instance(database, experiment_id):
                     min_median_sc, min_median = r[0], r[3]
                 if min_par10_sc is None or r[4] < min_par10:
                     min_par10_sc, min_par10 = r[0], r[4]
+                if min_cv_sc is None or r[6] < min_cv:
+                    min_cv_sc, min_cv = r[0], r[6]
+                if min_qcd_sc is None or r[7] < min_qcd:
+                    min_qcd_sc, min_qcd = r[0], r[7]
 
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
-            csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median', 'penalized avg. runtime'])
+            csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median', 'penalized avg. runtime', 'coeff. of variation', 'quartile coeff. of dispersion'])
             for res in results:
-                csv_writer.writerow([str(res[0])] + [('' if r.get_time() is None else round(r.get_time(),3)) for r in res[1]] + map(lambda x: '' if x is None else round(x, 3), [res[2], res[3], res[4]]))
+                csv_writer.writerow([str(res[0])] + [('' if r.get_time() is None else round(r.get_time(),4)) for r in res[1]] + map(lambda x: '' if x is None else round(x, 3), [res[2], res[3], res[4], res[6], res[7]]))
             csv_response.seek(0)
 
             headers = Headers()
@@ -525,7 +561,9 @@ def experiment_results_by_instance(database, experiment_id):
         return render('experiment_results_by_instance.html', db=db, database=database,
                   instances=instances, experiment=experiment,
                   form=form, results=results, min_mean_sc=min_mean_sc,
-                  min_median_sc=min_median_sc, min_par10_sc=min_par10_sc, num_runs=num_runs)
+                  min_median_sc=min_median_sc, min_par10_sc=min_par10_sc,
+                  min_cv_sc=min_cv_sc, min_qcd_sc=min_qcd_sc,
+                  num_runs=num_runs)
 
 
     return render('experiment_results_by_instance.html', db=db, database=database,

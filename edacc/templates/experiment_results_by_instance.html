@@ -22,7 +22,7 @@
                 },
                 "aoColumns": [{"bSearchable": true},
                               {% for i in range(experiment.get_max_num_runs(db)) %}{"bSearchable":false},{% endfor %}
-                              {"bSearchable": false},{"bSearchable": false},{"bSearchable": false}, ]
+                              {"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false} ]
             });
             new FixedHeader(oTable);
 
@@ -53,6 +53,8 @@
                     <th>Mean</th>
                     <th>Median</th>
                     <th id="th_par10" title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the job's cpu time limit for unsuccessful runs">par10</th>
+                    <th>Coeff. of variation</th>
+                    <th>Quartile coeff. of dispersion</th>
                 </tr>
             </thead>
             <tbody>
@@ -72,9 +74,11 @@
                                 {% endif %}
                             {% endif %}
                         {% endfor %}
-                        <td style="{{'background-color: yellow;' if result[0] == min_mean_sc else ''}}">{{result[2]|round(3) if result[2] else ''}}</td>
-                        <td style="{{'background-color: yellow;' if result[0] == min_median_sc else ''}}">{{result[3]|round(3) if result[3] else ''}}</td>
-                        <td style="{{'background-color: yellow;' if result[0] == min_par10_sc else ''}}">{{result[4]|round(3) if result[4] else ''}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_mean_sc else ''}}">{{result[2]|round(4) if result[2] else ''}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_median_sc else ''}}">{{result[3]|round(4) if result[3] else ''}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_par10_sc else ''}}">{{result[4]|round(4) if result[4] else ''}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_cv_sc else ''}}">{{result[6]|round(4) if result[6] else ''}}</td>
+                        <td style="{{'background-color: yellow;' if result[0] == min_qcd_sc else ''}}">{{result[7]|round(4) if result[7] else ''}}</td>
                     </tr>
                 {% endfor %}
             </tbody>
