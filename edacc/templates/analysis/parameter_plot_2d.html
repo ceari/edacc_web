@@ -15,7 +15,7 @@
             var show_plot = function() {
                 data = $('#plot_form').serialize();
                 $('#div_plot').html('<img usemap="#map_instances" alt="Generating image..." src="{{url_for("plot.parameter_plot_2d", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&runtime_cap='+$("#slider").slider("option","value")+'"/>');
-                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.parameter_plot_2d", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&runtime_cap='+$("#slider").slider("option","value")+'&pdf">PDF</a> | <a href="{{url_for("plot.parameter_plot_2d", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&runtime_cap='+$("#slider").slider("option","value")+'&eps">EPS</a>');
+                $('#div_plot').append('<br/>Download as <a href="{{url_for("plot.parameter_plot_2d", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&runtime_cap='+$("#slider").slider("option","value")+'&pdf">PDF</a> | <a href="{{url_for("plot.parameter_plot_2d", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&runtime_cap='+$("#slider").slider("option","value")+'&eps">EPS</a>  | <a href="{{url_for("plot.parameter_plot_2d", database=database, experiment_id=experiment.idExperiment)}}?'+data+'&runtime_cap='+$("#slider").slider("option","value")+'&rscript">rscript</a>');
                 return false;
             }
 

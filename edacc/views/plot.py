@@ -42,7 +42,7 @@ def make_plot_response(function, *args, **kwargs):
     try:
         function(*args, filename=filename, format=type, **kwargs)
     except Exception as exception:
-        plots.make_error_plot(text=str(exception), filename=filename, format=type)
+        plots.make_error_plot(text=str(exception), filename=filename, format='png')
     headers = Headers()
     headers.add('Content-Disposition', 'attachment', filename=secure_filename('data.' + type))
     response = Response(response=open(filename, 'rb').read(), mimetype=mime, headers=headers)
@@ -1060,7 +1060,7 @@ def parameter_plot_2d(database, experiment_id):
 
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation):
+    def plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation, type):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
@@ -1116,4 +1116,8 @@ def parameter_plot_2d(database, experiment_id):
 
         return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap=runtime_cap)
 
-    return plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation=surface_interpolation)
+    if request.args.has_key('pdf'): type = 'pdf'
+    elif request.args.has_key('eps'): type = 'eps'
+    elif request.args.has_key('rscript'): type = 'rscript'
+    else: type = 'png'
+    return plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation, type)

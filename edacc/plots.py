@@ -718,47 +718,72 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
         grdevices.postscript(file=os.devnull, height=7, width=9)
         file = open(filename, 'w')
 
-    # set margins to fit in labels on the right and top
-    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 5]))
-    if format == 'rscript':
-        file.write('par(mar=c(5,4,4,15))\n')
+        file.write("library(akima)\nlibrary(fields)\n")
 
-    robjects.r.options(scipen=10)
-    if format == 'rscript':
-        file.write('options(scipen=10)\n')
+    try:
+        # set margins to fit in labels on the right and top
+        robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 5]))
+        if format == 'rscript':
+            file.write('par(mar=c(5,4,4,5))\n')
 
-    xs = [p[0] for p in data]
-    ys = [p[1] for p in data]
-    costs = [min(p[2], runtime_cap) for p in data]
-    min_cost_point = data[costs.index(min(costs))]
+        robjects.r.options(scipen=10)
+        if format == 'rscript':
+            file.write('options(scipen=10)\n')
 
-    if not surface_interpolation:
-        min_cost = min(costs)
-        max_cost = max(costs)
-        costs = map(lambda c: 1 + int( (c - min_cost) * (200.0/(max_cost-min_cost))), costs)
-        cols = robjects.r("heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]")
+        xs = [p[0] for p in data]
+        ys = [p[1] for p in data]
+        costs = [min(p[2], runtime_cap) for p in data]
+        min_cost_point = data[costs.index(min(costs))]
 
-        robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=19,
-            xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i', cex=1.5,
-            xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
-            main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)))
-        robjects.r.par(new=1)
-        robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]), type='p', pch=3, col='red', cex=3)
-    else:
-        min_x, max_x = min(xs), max(xs)
-        min_y, max_y = min(ys), max(ys)
-        surf = akima.interp(robjects.FloatVector(xs), robjects.FloatVector(ys), robjects.FloatVector(costs),
-                        xo=robjects.r.seq(min_x, max_x, (max_x - min_x) / 1000.0), yo=robjects.r.seq(min_y, max_y, (max_y - min_y) / 800.0),
-                        duplicate="mean")
-        robjects.r("image.plot")(surf, nlevel=256,
-            xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
-            xlim=robjects.FloatVector([min_x, max_x]), ylim=robjects.FloatVector([min_y, max_y]),
-            main="Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4)),
-            **{'legend.lab': measure, 'legend.mar': 4.5})
-        robjects.r.par(new=1)
-        robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]), type='p', pch=3, col='red', cex=2)
+        if not surface_interpolation:
+            min_cost = min(costs)
+            max_cost = max(costs)
+            costs = map(lambda c: 1 + int( (c - min_cost) * (200.0/(max_cost-min_cost))), costs)
+            cols = robjects.r("heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]")
+            title = "Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4))
 
-    grdevices.dev_off()
+            if format == 'rscript':
+                file.write("cols = heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]\n")
+                file.write("plot(c(%s), c(%s), type='p', col=cols, pch=19, xlab='%s', ylab='%s', xaxs='i', yaxs='i', cex=1.5, xlim=c(%f, %f), ylim=c(%f, %f), main='%s')\n"\
+                % (','.join(map(str, xs)), ','.join(map(str, ys)), parameter1_name, parameter2_name, min(xs), max(xs), min(ys), max(ys), title))
+                file.write("par(new=1)\n")
+                file.write("points(c(%f), c(%f), type='p', pch=3, col='red', cex=3)\n" % (min_cost_point[0], min_cost_point[1]))
+                file.close()
+
+            robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=19,
+                xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i', cex=1.5,
+                xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
+                main=title)
+            robjects.r.par(new=1)
+            robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]), type='p', pch=3, col='red', cex=3)
+        else:
+            min_x, max_x = min(xs), max(xs)
+            min_y, max_y = min(ys), max(ys)
+            surf = akima.interp(robjects.FloatVector(xs), robjects.FloatVector(ys), robjects.FloatVector(costs),
+                            xo=robjects.r.seq(min_x, max_x, (max_x - min_x) / 1000.0), yo=robjects.r.seq(min_y, max_y, (max_y - min_y) / 800.0),
+                            duplicate="mean")
+            title = "Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4))
+
+            if format == 'rscript':
+                file.write("surf = interp(c(%s), c(%s), c(%s), xo=seq(%f, %f, %f), yo=seq(%f, %f, %f), duplicate='mean')\n"\
+                % (','.join(map(str, xs)), ','.join(map(str, ys)), ','.join(map(str, costs)), min_x, max_x, (max_x - min_x) / 1000.0, min_y, max_y, (max_y - min_y) / 800.0))
+                file.write("image.plot(surf, nlevel=256, xlab='%s', ylab='%s', xaxs='i', yaxs='i', xlim=c(%f, %f), ylim=c(%f, %f), main='%s', legend.lab='%s', legend.mar=4.5)\n"\
+                % (parameter1_name, parameter2_name, min_x, max_x, min_y, max_y, title, measure))
+                file.write("par(new=1)\n")
+                file.write("points(c(%f), c(%f), type='p', pch=3, col='red', cex=2)\n" % (min_cost_point[0], min_cost_point[1]))
+                file.close()
+
+            robjects.r("image.plot")(surf, nlevel=256,
+                xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i',
+                xlim=robjects.FloatVector([min_x, max_x]), ylim=robjects.FloatVector([min_y, max_y]),
+                main=title,
+                **{'legend.lab': measure, 'legend.mar': 4.5})
+            robjects.r.par(new=1)
+            robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]), type='p', pch=3, col='red', cex=2)
+    except Exception as ex:
+        raise ex
+    finally:
+        grdevices.dev_off()
 
 @synchronized
 def make_error_plot(text, filename, format='png'):
@@ -772,6 +797,8 @@ def make_error_plot(text, filename, format='png'):
     elif format == 'rscript':
         grdevices.postscript(file=os.devnull, height=7, width=9)
         file = open(filename, 'w')
-
-    robjects.r.plot(0, xaxt='n', yaxt='n', bty='n', pch='', ylab='', xlab='', main=text)
-    grdevices.dev_off()
+        file.close()
+    try:
+        robjects.r.plot(0, xaxt='n', yaxt='n', bty='n', pch='', ylab='', xlab='', main=text)
+    finally:
+        grdevices.dev_off()
