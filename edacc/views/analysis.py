@@ -637,6 +637,25 @@ def parameter_plot_2d(database, experiment_id):
     form.parameter1.choices = [(p.parameter.idParameter, p.parameter.name) for p in cs_params]
     form.parameter2.choices = reversed([(p.parameter.idParameter, p.parameter.name) for p in cs_params])
     form.i.query = experiment.get_instances(db) or EmptyQuery()
+
+    table = db.metadata.tables['ExperimentResults']
+    time_case = expression.case([
+        (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
+        else_=table.c['CPUTimeLimit']*10.0)
+
+    s = select([table.c['Instances_idInstance'], func.AVG(time_case)],
+                and_(
+                    table.c['Experiment_idExperiment']==experiment_id,
+                ),
+                from_obj=table).group_by(table.c['Instances_idInstance'])
+    instance_avg = db.session.connection().execute(s)
+
+    avg_by_instance = dict((instance.idInstance, 0) for instance in experiment.get_instances(db))
+    for avg in instance_avg:
+        avg_by_instance[avg[0]] = avg[1]
+
+    form.i.query.sort(key=lambda i: avg_by_instance[i.idInstance])
+
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     max_runtime = None
