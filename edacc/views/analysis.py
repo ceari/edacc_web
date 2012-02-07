@@ -617,7 +617,7 @@ def parameter_plot_1d(database, experiment_id):
                 not_(table.c['status'].in_((-1,0,))),
                 table.c['Instances_idInstance'].in_(instance_ids)
             ), from_obj=table.join(table_sc))
-        max_runtime = db.session.connection().execute(s).fetchone()[0]
+        max_runtime = db.session.connection().execute(s).fetchone()[0] or 0.0
 
     return render('/analysis/parameter_plot_1d.html', database=database, db=db, max_runtime=max_runtime,
         experiment=experiment, form=form, GET_data=GET_data)
@@ -676,7 +676,7 @@ def parameter_plot_2d(database, experiment_id):
                 not_(table.c['status'].in_((-1,0,))),
                 table.c['Instances_idInstance'].in_(instance_ids)
             ), from_obj=table.join(table_sc))
-        max_runtime = db.session.connection().execute(s).fetchone()[0]
+        max_runtime = db.session.connection().execute(s).fetchone()[0] or 0.0
 
     return render('/analysis/parameter_plot_2d.html', database=database, db=db, max_runtime=max_runtime,
         experiment=experiment, form=form, GET_data=GET_data)

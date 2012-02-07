@@ -985,7 +985,7 @@ def parameter_plot_1d(database, experiment_id):
 
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job):
+    def plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         if measure == 'par10':
@@ -1037,7 +1037,11 @@ def parameter_plot_1d(database, experiment_id):
 
         return make_plot_response(plots.parameter_plot_1d, data, parameter_name, measure, runtime_cap)
 
-    return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job)
+    if request.args.has_key('pdf'): type = 'pdf'
+    elif request.args.has_key('eps'): type = 'eps'
+    elif request.args.has_key('rscript'): type = 'rscript'
+    else: type = 'png'
+    return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d-img/')
 @require_phase(phases=ANALYSIS2)

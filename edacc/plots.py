@@ -676,30 +676,39 @@ def parameter_plot_1d(data, parameter_name, measure, runtime_cap, filename, form
         grdevices.postscript(file=os.devnull, height=7, width=9)
         file = open(filename, 'w')
 
-    # set margins to fit in labels on the right and top
-    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
-    if format == 'rscript':
-        file.write('par(mar=c(5,4,4,15))\n')
+    try:
+        # set margins to fit in labels on the right and top
+        robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
+        if format == 'rscript':
+            file.write('par(mar=c(5,4,4,15))\n')
 
-    robjects.r.options(scipen=10)
-    if format == 'rscript':
-        file.write('options(scipen=10)\n')
+        robjects.r.options(scipen=10)
+        if format == 'rscript':
+            file.write('options(scipen=10)\n')
 
-    xs = [p[0] for p in data]
-    ys = [min(p[1], runtime_cap) for p in data]
+        xs = [p[0] for p in data]
+        ys = [min(p[1], runtime_cap) for p in data]
 
-    col = 0
-    pch = 3 # 3 looks nice
+        col = 0
+        pch = 3 # 3 looks nice
 
-    # plot running times
-    robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
-        type='p', col=colors[col % len(colors)], las = 1, main=measure + ' runtime against ' + parameter_name,
-        xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([0.0, max(ys)]),
-        xaxs='i', yaxs='i', cex=1.2,
-        xlab=parameter_name, ylab=measure, pch=pch, tck=0.015,
-        **{'cex.axis': 1.2, 'cex.main': 1.5})
+        # plot running times
+        robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
+            type='p', col=colors[col % len(colors)], las = 1, main=measure + ' runtime against ' + parameter_name,
+            xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([0.0, max(ys)]),
+            xaxs='i', yaxs='i', cex=1.2,
+            xlab=parameter_name, ylab=measure, pch=pch, tck=0.015,
+            **{'cex.axis': 1.2, 'cex.main': 1.5})
 
-    grdevices.dev_off()
+        if format == "rscript":
+            file.write("plot(c(%s), c(%s), type='p', col='%s', las=1, main='%s', xlim=c(%f, %f), ylim=c(0, %f), xaxs='i', yaxs='i', cex=1.2, xlab='%s', ylab='%s', pch=%d, tck=0.015, cex.axis=1.2, cex.main=1.5)\n"
+                % (','.join(map(str,xs)), ','.join(map(str, ys)), measure + " runtime against " + parameter_name, min(xs), max(xs), max(ys), parameter_name, measure, pch))
+            file.close()
+
+    except Exception as e:
+        raise e
+    finally:
+        grdevices.dev_off()
 
 @synchronized
 def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap, filename, format='png'):
