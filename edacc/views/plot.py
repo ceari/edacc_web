@@ -39,10 +39,12 @@ def make_plot_response(function, *args, **kwargs):
     elif request.args.has_key('rscript'): type = 'rscript'; mime = 'text/plain'
     else: type = 'png'; mime = 'image/png'
     filename = os.path.join(config.TEMP_DIR, g.unique_id) + '.' + type
+
     try:
         function(*args, filename=filename, format=type, **kwargs)
     except Exception as exception:
         plots.make_error_plot(text=str(exception), filename=filename, format='png')
+        print exception
     headers = Headers()
     headers.add('Content-Disposition', 'attachment', filename=secure_filename('data.' + type))
     response = Response(response=open(filename, 'rb').read(), mimetype=mime, headers=headers)
@@ -1041,6 +1043,7 @@ def parameter_plot_1d(database, experiment_id):
     elif request.args.has_key('eps'): type = 'eps'
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
+    print type
     return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d-img/')

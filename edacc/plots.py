@@ -702,7 +702,7 @@ def parameter_plot_1d(data, parameter_name, measure, runtime_cap, filename, form
 
         if format == "rscript":
             file.write("plot(c(%s), c(%s), type='p', col='%s', las=1, main='%s', xlim=c(%f, %f), ylim=c(0, %f), xaxs='i', yaxs='i', cex=1.2, xlab='%s', ylab='%s', pch=%d, tck=0.015, cex.axis=1.2, cex.main=1.5)\n"
-                % (','.join(map(str,xs)), ','.join(map(str, ys)), measure + " runtime against " + parameter_name, min(xs), max(xs), max(ys), parameter_name, measure, pch))
+                % (','.join(map(str,xs)), ','.join(map(str, ys)), colors[col % len(colors)], measure + " runtime against " + parameter_name, min(xs), max(xs), max(ys), parameter_name, measure, pch))
             file.close()
 
     except Exception as e:
