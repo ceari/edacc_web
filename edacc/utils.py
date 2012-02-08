@@ -80,6 +80,7 @@ def datetimeformat(value, format='%H:%M, %d-%m-%Y'):
     """ Returns the passed datetime value as formatted string according to the formatting string
     :format:
     """
+    if value is None: return ""
     return value.strftime(format)
 
 def competition_phase(value):
