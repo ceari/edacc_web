@@ -873,7 +873,7 @@ def runtime_matrix_plot(database, experiment_id):
     
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def make_rtm_response(experiment_id, last_modified_job, measure, csv=False, type='png'):
+    def make_rtm_response(experiment_id, last_modified_job, measure, num_jobs, csv=False, type='png'):
         solver_configs = sorted(exp.solver_configurations, key=lambda sc: sc.idSolverConfig)
         instances = sorted(exp.instances, key=lambda i: i.idInstance)
         solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
@@ -967,7 +967,7 @@ def runtime_matrix_plot(database, experiment_id):
     elif request.args.has_key('eps'): type = 'eps'
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
-    return make_rtm_response(experiment_id, last_modified_job, measure, request.args.has_key('csv'), type)
+    return make_rtm_response(experiment_id, last_modified_job, measure, exp.get_num_jobs(db), request.args.has_key('csv'), type)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-1d-img/')
 @require_phase(phases=ANALYSIS2)
@@ -987,7 +987,7 @@ def parameter_plot_1d(database, experiment_id):
 
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type):
+    def plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type, num_jobs):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         if measure == 'par10':
@@ -1044,7 +1044,7 @@ def parameter_plot_1d(database, experiment_id):
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
     print type
-    return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type)
+    return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type, exp.get_num_jobs(db))
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d-img/')
 @require_phase(phases=ANALYSIS2)
@@ -1067,7 +1067,7 @@ def parameter_plot_2d(database, experiment_id):
 
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation, type):
+    def plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation, type, num_jobs):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
@@ -1127,4 +1127,4 @@ def parameter_plot_2d(database, experiment_id):
     elif request.args.has_key('eps'): type = 'eps'
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
-    return plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation, type)
+    return plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation, type, exp.get_num_jobs(db))
