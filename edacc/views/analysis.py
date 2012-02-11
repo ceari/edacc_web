@@ -50,7 +50,7 @@ def solver_ranking(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RankingForm(request.args)
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
 
     if form.i.data:
         CACHE_TIME = 7*24*60*60
@@ -146,7 +146,7 @@ def cactus_plot(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.CactusPlotForm(request.args)
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
@@ -292,7 +292,7 @@ def scatter_2solver_1property(database, experiment_id):
     form = forms.TwoSolversOnePropertyScatterPlotForm(request.args)
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -353,7 +353,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
     form.instance_property.choices = instance_properties
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -410,7 +410,7 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     form.result_property1.choices = [('cputime', 'CPU Time')] + result_properties
     form.result_property2.choices = [('cputime', 'CPU Time')] + result_properties
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
@@ -487,7 +487,7 @@ def probabilistic_domination(database, experiment_id):
     form = forms.ProbabilisticDominationForm(request.args)
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     result_properties = db.get_plotable_result_properties() # plotable = numeric
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
@@ -559,7 +559,7 @@ def box_plots(database, experiment_id):
 
     form = forms.BoxPlotForm(request.args)
     form.solver_configs.query = experiment.solver_configurations or EmptyQuery()
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
@@ -596,7 +596,7 @@ def parameter_plot_1d(database, experiment_id):
 
     form = forms.ParameterPlot1DForm(request.args)
     form.parameter.choices = [(p.parameter.idParameter, p.parameter.name) for p in cs_params]
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     max_runtime = None
@@ -636,7 +636,7 @@ def parameter_plot_2d(database, experiment_id):
     form = forms.ParameterPlot2DForm(request.args)
     form.parameter1.choices = [(p.parameter.idParameter, p.parameter.name) for p in cs_params]
     form.parameter2.choices = reversed([(p.parameter.idParameter, p.parameter.name) for p in cs_params])
-    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
 
     table = db.metadata.tables['ExperimentResults']
     time_case = expression.case([
