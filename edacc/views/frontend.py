@@ -480,7 +480,7 @@ def experiment_results_by_instance(database, experiment_id):
         solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     form = forms.ResultByInstanceForm(request.args)
-    form.instance.query = instances or EmptyQuery()
+    form.instance.query = sorted(experiment.get_instances(db), key=lambda i: i.name) or EmptyQuery()
     num_runs = experiment.get_max_num_runs(db)
 
     results = []
