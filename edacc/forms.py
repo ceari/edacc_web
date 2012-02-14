@@ -84,8 +84,12 @@ class SolverForm(Form):
         if not 'INSTANCE' in field.data:
             raise ValidationError('You have to specify INSTANCE as a parameter.')
 
+    def validate_binary(self, field):
+        if not field.data or not field.file.filename.endswith('.zip'):
+            raise ValidationError('The binary has to be a .zip file.')
+
     def validate_code(self, field):
-        if not field.file.filename or not field.file.filename.endswith('.zip'):
+        if field.data and not field.file.filename.endswith('.zip'):
             raise ValidationError('The code archive has to be a .zip file.')
 
 class BenchmarkForm(Form):

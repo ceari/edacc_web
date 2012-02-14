@@ -249,10 +249,10 @@ def submit_solver(database, id=None):
         bin = request.files[form.binary.name].read()
         hash = hashlib.md5()
         hash.update(bin)
-        if id is None and db.session.query(db.SolverBinary) \
-                        .filter_by(md5=hash.hexdigest()).first() is not None:
-            error = 'Solver with this binary (md5 checksum) already exists'
-            valid = False
+        #if id is None and db.session.query(db.SolverBinary) \
+        #                .filter_by(md5=hash.hexdigest()).first() is not None:
+        #    error = 'Solver with this binary (md5 checksum) already exists'
+        #    valid = False
 
         if id is None and db.session.query(db.Solver) \
                         .filter_by(name=name, version=version) \
@@ -292,9 +292,10 @@ def submit_solver(database, id=None):
                 param = db.Parameter()
                 param.name = None if p[0] == '' else p[0]
                 param.prefix = None if p[1] == '' else p[1]
-                param.defaultValue = p[2]
+                param.defaultValue = p[2] or ''
                 param.hasValue = not p[3] # p[3] actually means 'is boolean'
                 param.order = int(p[4])
+                param.space = True
                 param.solver = solver
                 db.session.add(param)
             try:

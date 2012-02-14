@@ -66,7 +66,7 @@ for sig in range(1, 31):
 for sig in range(1, 31):
     JOB_RESULT_CODE_COLOR[-300 - sig] = '#FF0000'
 
-OWN_RESULTS = set([3, 4, 5])        # phases where own results are shown
+OWN_RESULTS = set([2, 3, 4, 5])        # phases where own results are shown
 ALL_RESULTS = set([6, 7])           # phases where all results are shown
 INSTANCE_DETAILS = set([6, 7])      # phases where full access to instance details/downloads is granted
 ANALYSIS1 = set([5, 6, 7])          # phases where some plots are shown (cactus)

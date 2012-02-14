@@ -498,7 +498,7 @@ class EDACCDatabase(object):
         mapper(SolverConfiguration, metadata.tables['SolverConfig'],
             properties = {
                 'parameter_instances': relation(ParameterInstance),
-                'solver_binary': relation(SolverBinary),
+                'solver_binary': relation(SolverBinary, backref="solver_configurations"),
                 'experiment': relation(Experiment),
             }
         )

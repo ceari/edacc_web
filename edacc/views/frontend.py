@@ -64,7 +64,7 @@ def experiments_index(database):
     """Show a list of all experiments in the database."""
     db = models.get_database(database) or abort(404)
 
-    if db.is_competition() and db.competition_phase() not in (3, 4, 5, 6, 7):
+    if db.is_competition() and db.competition_phase() not in OWN_RESULTS.union(ALL_RESULTS):
         # Experiments are only visible in phases 3 through 7 in a competition database
         experiments = []
     else:
@@ -122,7 +122,7 @@ def competition_rules(database):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=(2, 3, 4, 5, 6, 7))
 @require_login
 def experiment(database, experiment_id):
     """ Show menu with links to info and evaluation pages """
@@ -155,7 +155,7 @@ def experiment_solver_configurations(database, experiment_id):
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/instances')
-@require_phase(phases=(3, 4, 5, 6, 7))
+@require_phase(phases=(2, 3, 4, 5, 6, 7))
 @require_login
 def experiment_instances(database, experiment_id):
     """ Show information about all instances used in the experiment """
@@ -497,6 +497,12 @@ def experiment_results_by_instance(database, experiment_id):
                     .order_by('Instances_idInstance', 'run').all():
             results_by_sc[run.SolverConfig_idSolverConfig].append(run)
 
+        min_mean_sc, min_mean = None, 0
+        min_median_sc, min_median = None, 0
+        min_par10_sc, min_par10 = None, 0
+        min_cv_sc, min_cv = None, 0
+        min_qcd_sc, min_qcd = None, 0
+
         for sc in solver_configs:
             runs = results_by_sc[sc.idSolverConfig]
 
@@ -526,11 +532,6 @@ def experiment_results_by_instance(database, experiment_id):
 
 
             results.append((sc, runs + [None] * (num_runs - len(runs)), mean, median, par10, successful, cv, qcd))
-            min_mean_sc, min_mean = None, 0
-            min_median_sc, min_median = None, 0
-            min_par10_sc, min_par10 = None, 0
-            min_cv_sc, min_cv = None, 0
-            min_qcd_sc, min_qcd = None, 0
             for r in results:
                 if r[2] is None or r[5] == 0: continue
                 if min_mean_sc is None or r[2] < min_mean:
@@ -757,7 +758,7 @@ def experiment_results_csv(database, experiment_id):
                     LEFT JOIN StatusCodes ON ExperimentResults.status=StatusCodes.statusCode
                     LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
                     LEFT JOIN SolverBinaries ON SolverBinaries.idSolverBinary = SolverConfig.SolverBinaries_idSolverBinary
-                    LEFT JOIN Solver ON Solver.idSolver = SolverBinaries.idSolverBinary
+                    LEFT JOIN Solver ON Solver.idSolver = SolverBinaries.idSolver
                     LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
                     LEFT JOIN gridQueue ON gridQueue.idgridQueue=ExperimentResults.computeQueue
                     """+prop_joins+""" """ + inst_prop_joins + """
@@ -905,7 +906,7 @@ def experiment_progress_ajax(database, experiment_id):
                     LEFT JOIN StatusCodes ON ExperimentResults.status=StatusCodes.statusCode
                     LEFT JOIN SolverConfig ON ExperimentResults.SolverConfig_idSolverConfig = SolverConfig.idSolverConfig
                     LEFT JOIN SolverBinaries ON SolverBinaries.idSolverBinary = SolverConfig.SolverBinaries_idSolverBinary
-                    LEFT JOIN Solver ON Solver.idSolver = SolverBinaries.idSolverBinary
+                    LEFT JOIN Solver ON Solver.idSolver = SolverBinaries.idSolver
                     LEFT JOIN Instances ON ExperimentResults.Instances_idInstance = Instances.idInstance
                     LEFT JOIN gridQueue ON gridQueue.idgridQueue=ExperimentResults.computeQueue
                     """+prop_joins+"""
@@ -993,9 +994,8 @@ def instance_details(database, instance_id):
     db = models.get_database(database) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
 
-    if db.is_competition() and db.competition_phase() not in INSTANCE_DETAILS:
-        if instance.source_class.user != g.User:
-            abort(403)
+    if db.is_competition() and db.competition_phase() not in INSTANCE_DETAILS and not is_admin():
+        abort(403)
 
     instance_blob = instance.get_instance(db)
     if len(instance_blob) > 1024:
@@ -1021,9 +1021,8 @@ def instance_download(database, instance_id):
     db = models.get_database(database) or abort(404)
     instance = db.session.query(db.Instance).filter_by(idInstance=instance_id).first() or abort(404)
 
-    if db.is_competition() and db.competition_phase() not in INSTANCE_DETAILS:
-        if instance.source_class.user != g.User:
-            abort(403)
+    if db.is_competition() and db.competition_phase() not in INSTANCE_DETAILS and not is_admin():
+        abort(403)
 
     headers = Headers()
     headers.add('Content-Type', 'text/plain')
