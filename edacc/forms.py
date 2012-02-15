@@ -69,7 +69,7 @@ class SolverForm(Form):
     code = FileField('Code')
     description = TextAreaField('Description')
     version = TextField('Version', [Required(ERROR_REQUIRED)])
-    run_path = TextField('Binary name', [Required(ERROR_REQUIRED)])
+    run_path = TextField('Binary name')
     run_command = TextField('Run command')
     authors = TextField('Authors', [Required(ERROR_REQUIRED)])
     parameters = TextField('Parameters', [Required(ERROR_REQUIRED)])
@@ -83,10 +83,6 @@ class SolverForm(Form):
     def validate_parameters(self, field):
         if not 'INSTANCE' in field.data:
             raise ValidationError('You have to specify INSTANCE as a parameter.')
-
-    def validate_binary(self, field):
-        if not field.data or not field.file.filename.endswith('.zip'):
-            raise ValidationError('The binary has to be a .zip file.')
 
     def validate_code(self, field):
         if field.data and not field.file.filename.endswith('.zip'):

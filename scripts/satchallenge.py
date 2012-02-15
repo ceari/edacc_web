@@ -79,20 +79,20 @@ def send_info_mail(solver_binary):
         num_successful += qry.filter(db.ExperimentResult.resultCode.like(u"1%")).count()
         num_crash += qry.filter(db.ExperimentResult.status.in_(constants.STATUS_ERRORS)).count()
 
-    print str(num_successful) + " out of " + str(num_total) + " runs finished successfully in time"
-    print str(num_crash) + " runs crashed"
+    user = solver_binary.solver.user
 
     from email.MIMEText import MIMEText
-
-    msg = MIMEText('Awesome! Your solver binary was executed with the following results:\n' +
+    msg = MIMEText('Dear ' + user.name + ',\n\n' +
+                   'This is an automatically generated e-mail regarding your solver submission to the SAT Challenge 2012\n' +
+                   'Your solver was executed on our execution environment with the following results:\n' +
                    str(num_successful) + " out of " + str(num_total) + " runs finished successfully in time\n" +
-                   str(num_crash) + " runs crashed\n"
+                   str(num_crash) + " runs crashed\n\n" +
+                   'Please have a look at http://edacc3.informatik.uni-ulm.de/SATChallenge2012/experiments/ for detailed information about the test\n'
                    )
-    msg['Subject'] = 'Solver runs finished'
+    msg['Subject'] = '[SAT Challenge 2012] Solver tested'
     msg['From'] = "daniel.diepold@gmail.com"
     msg['Reply-to'] = "daniel.diepold@gmail.com"
     msg['To'] = solver_binary.solver.user.email
-
 
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()

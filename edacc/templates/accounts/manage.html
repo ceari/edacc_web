@@ -2,9 +2,22 @@
 {% block title %}Manage{% endblock %}
 {% block content %}
 <h2>Manage your submitted solvers and benchmarks</h2>
-    <a href="{{url_for('accounts.list_solvers', database=database)}}">List of submitted solvers</a><br/>
+<div>
+    Please note that you can submit multiple solvers while testing the compatibility with our execution environment.<br/>
+    Before the submission deadline please remove all solvers but the ones you wish to enter into the competition.
+</div>
+<ul>
+    <li>
+        <a href="{{url_for('accounts.list_solvers', database=database)}}">List of submitted solvers</a>
+    </li>
+    <li>
+        <a href="{{url_for('accounts.submit_solver', database=database)}}">Submit a solver</a>
+    </li>
+
+</ul>
+
     <!--<a href="{{url_for('accounts.list_benchmarks', database=database)}}">List of submitted benchmarks</a><br/>-->
-    <a href="{{url_for('accounts.submit_solver', database=database)}}">Submit a solver</a><br/>
+
     <!--<a href="{{url_for('accounts.submit_benchmark', database=database)}}">Submit a benchmark</a>-->
 
 {% endblock %}

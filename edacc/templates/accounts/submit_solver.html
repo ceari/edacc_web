@@ -12,13 +12,13 @@
     <form action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
         {{ form.csrf }}
         <table width="800px">
-            {{ render_field(form.name, size=40, maxlength=255) }}
-            {{ render_field(form.version, size=40, maxlength=255) }}
-            {{ render_field(form.authors, size=40, maxlength=255) }}
+            {{ render_field(form.name, size=40, maxlength=255, explanation="Required") }}
+            {{ render_field(form.version, size=40, maxlength=255, explanation="Required") }}
+            {{ render_field(form.authors, size=40, maxlength=255, explanation="Required") }}
             {{ render_field(form.description, cols=38, rows=5) }}
-            {{ render_field(form.binary, size=40, explanation="Please provide a .zip file, even if your solver is only a single executable file.") }}
-            {{ render_field(form.code, size=40, explanation="(.zip file)") }}
-            {{ render_field(form.run_path, size=40, maxlength=255, explanation="Specify the relative path of the solver executable within the submitted Binary .zip file") }}
+            {{ render_field(form.binary, size=40, explanation="Required. If your solver consists of more than one file please provide a .zip archive.") }}
+            {{ render_field(form.code, size=40, explanation="Optional (.zip file)") }}
+            {{ render_field(form.run_path, size=40, maxlength=255, explanation="If your binary is a .zip archive, specify the relative path of the main solver executable within the submitted binary .zip file") }}
             {{ render_field(form.run_command, size=40, maxlength=255, explanation="If your solver has to be run via another program, e.g. if it is a JAR file put 'java -jar' here.") }}
             {{ render_field(form.competition_categories, explanation='Hold the Ctrl key to select multiple categories.') }}
             {{ render_field(form.parameters, size=40) }}

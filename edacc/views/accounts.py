@@ -13,6 +13,9 @@
 import itertools
 import random
 import hashlib
+import zipfile
+import tempfile
+from cStringIO import StringIO
 
 from flask import Module
 from flask import render_template as render, g
@@ -249,10 +252,23 @@ def submit_solver(database, id=None):
         bin = request.files[form.binary.name].read()
         hash = hashlib.md5()
         hash.update(bin)
+        run_path = form.run_path.data
         #if id is None and db.session.query(db.SolverBinary) \
         #                .filter_by(md5=hash.hexdigest()).first() is not None:
         #    error = 'Solver with this binary (md5 checksum) already exists'
         #    valid = False
+
+        if not form.binary.file.filename.endswith('.zip'):
+            tmpfile = StringIO()
+            with zipfile.ZipFile(tmpfile, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
+                zip_file.writestr(form.binary.file.filename, bin)
+            tmpfile.seek(0)
+            bin = tmpfile.read()
+            run_path = form.binary.file.filename
+        else:
+            if not run_path:
+                error = 'Since your binary is a .zip file, please provide the path of the executable within the archive'
+                valid = False
 
         if id is None and db.session.query(db.Solver) \
                         .filter_by(name=name, version=version) \
@@ -268,14 +284,14 @@ def submit_solver(database, id=None):
                 solver_binary = db.SolverBinary()
                 solver_binary.solver = solver
             solver.name = name
-            solver_binary.binaryName = form.run_path.data
+            solver_binary.binaryName = name
             solver_binary.binaryArchive = bin
             solver_binary.md5 = hash.hexdigest()
             solver.description = description
             solver.code = request.files[form.code.name].read()
             solver_binary.version = solver.version = version
             solver_binary.runCommand = form.run_command.data
-            solver_binary.runPath = "/" + form.run_path.data
+            solver_binary.runPath = "/" + run_path
             solver.authors = authors
             solver.user = g.User
             solver.competition_categories = form.competition_categories.data
