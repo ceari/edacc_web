@@ -10,6 +10,8 @@ DB_NAME = "EDACC"
 DB_USER = "edacc"
 DB_PASSWORD = "edaccteam"
 
+base_url = 'http://edacc3.informatik.uni-ulm.de/SATChallenge2012/'
+
 db = models.add_database(DB_USER, DB_PASSWORD, DB_NAME, DB_NAME)
 
 # competition category - test experiment (id, time limit)  mapping
@@ -82,12 +84,12 @@ def send_info_mail(solver_binary):
     user = solver_binary.solver.user
 
     from email.MIMEText import MIMEText
-    msg = MIMEText('Dear ' + user.name + ',\n\n' +
+    msg = MIMEText('Dear ' + user.firstname + " " + user.lastname + ',\n\n' +
                    'This is an automatically generated e-mail regarding your solver submission to the SAT Challenge 2012\n' +
                    'Your solver was executed on our execution environment with the following results:\n' +
                    str(num_successful) + " out of " + str(num_total) + " runs finished successfully in time\n" +
                    str(num_crash) + " runs crashed\n\n" +
-                   'Please have a look at http://edacc3.informatik.uni-ulm.de/SATChallenge2012/experiments/ for detailed information about the test\n'
+                   'Please have a look at ' + base_url + 'experiments/ for detailed information about the test\n'
                    )
     msg['Subject'] = '[SAT Challenge 2012] Solver tested'
     msg['From'] = "daniel.diepold@gmail.com"

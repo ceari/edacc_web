@@ -15,16 +15,19 @@ import random
 import hashlib
 import zipfile
 import tempfile
+import datetime
 from cStringIO import StringIO
 
 from flask import Module
 from flask import render_template as render, g
 from flask import Response, abort, request, session, url_for, redirect, flash
+from flaskext.mail import Message
 from werkzeug import Headers, secure_filename
 
-from edacc import utils, models, forms
+from edacc import utils, models, forms, config
 from edacc.views.helpers import require_phase, require_competition, \
-                                require_login, password_hash
+                                require_login, password_hash, redirect_ssl
+from edacc.web import mail
 
 accounts = Module(__name__)
 
@@ -39,6 +42,7 @@ accounts = Module(__name__)
 @accounts.route('/<database>/register/', methods=['GET', 'POST'])
 @require_phase(phases=(2,))
 @require_competition
+@redirect_ssl
 def register(database):
     """ User registration """
     db = models.get_database(database) or abort(404)
@@ -48,13 +52,12 @@ def register(database):
     if form.validate_on_submit():
         if db.session.query(db.User).filter_by(email=form.email.data) \
                                     .count() > 0:
-            errors.append("An account with this email address already exists")
+            errors.append("An account with this email address already exists. Please check your e-mail account for the activation link.")
 
         try:
             captcha = map(int, form.captcha.data.split())
             if not utils.satisfies(captcha, session['captcha']):
-                errors.append("You can't register to a SAT competition without \
-                    being able to solve a SAT challenge!")
+                errors.append("Wrong solution to the captcha challenge.")
         except:
             errors.append("Wrong format of the solution")
 
@@ -67,6 +70,13 @@ def register(database):
             user.postal_address = form.address.data
             user.affiliation = form.affiliation.data
 
+            hash = hashlib.sha256()
+            hash.update(config.SECRET_KEY)
+            hash.update(user.email)
+            hash.update(str(datetime.datetime.now()))
+            hash.update(user.password)
+            user.activation_hash = hash.hexdigest()
+
             db.session.add(user)
             try:
                 db.session.commit()
@@ -78,7 +88,16 @@ def register(database):
                               db=db, errors=errors, form=form)
 
             session.pop('captcha', None)
-            flash('Account created successfully. You can log in now.')
+
+
+
+            msg = Message("[" + db.label + "] Account activation",
+                          recipients=[user.email])
+            msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" + \
+                       "Please use the following link to activate your account:\n" + \
+                       request.url_root[:-1] + url_for('accounts.activate', database=database, activation_hash=user.activation_hash)
+            mail.send(msg)
+            flash("Account created successfully. An e-mail has been sent to your account with an activation link.")
             return redirect(url_for('frontend.experiments_index',
                                     database=database))
 
@@ -93,9 +112,26 @@ def register(database):
     return render('/accounts/register.html', database=database, db=db,
                   errors=errors, form=form)
 
+@accounts.route('/<database>/activate/<activation_hash>', methods=['GET', 'POST'])
+@require_phase(phases=(2,))
+@require_competition
+def activate(database, activation_hash):
+    db = models.get_database(database) or abort(404)
+    user = db.session.query(db.User).filter_by(activation_hash=activation_hash).first() or abort(404)
+    user.activation_hash = ""
+    try:
+        db.session.commit()
+        flash('Account activated. You can log in now.')
+    except:
+        db.session.rollback()
+        flash('Could not activate account. Please contact an administrator.')
+    return redirect(url_for('frontend.experiments_index',
+        database=database))
+
 
 @accounts.route('/<database>/login/', methods=['GET', 'POST'])
 @require_competition
+@redirect_ssl
 def login(database):
     """ User login form and handling for a specific database. Users can
         only be logged in to one database at a time
@@ -109,7 +145,9 @@ def login(database):
         if user is None:
             error = "Invalid password or username."
         else:
-            if user.password != password_hash(form.password.data):
+            if user.activation_hash:
+                error = "Account not activated yet. Please check your e-mail account, otherwise contact an administrator."
+            elif user.password != password_hash(form.password.data):
                 error = 'Invalid password or username.'
             else:
                 session['logged_in'] = True
@@ -329,6 +367,13 @@ def submit_solver(database, id=None):
 
     return render('/accounts/submit_solver.html', database=database, error=error,
                   db=db, id=id, form=form)
+
+@accounts.route('/<database>/delete-solver/<int:id>', methods=['GET'])
+@require_login
+@require_phase(phases=(2, 4))
+@require_competition
+def delete_solver(database, solver_id):
+    pass
 
 
 @accounts.route('/<database>/manage/solvers/')

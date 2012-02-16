@@ -35,6 +35,7 @@ Dependencies
 - Flask 0.6 (Micro Webframework)
 - Flask-WTF 0.3.3 (Flask extension for WTForms)
 - Flask-Actions 0.5.2 (Flask extension)
+- Flask-Mail (Flask extension)
 - Werkzeug 0.6.2 (Webframework, Flask dependency)
 - Jinja2 2.5 (Template Engine)
 - PyLZMA 0.4.2 (Python LZMA SDK bindings)

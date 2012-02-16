@@ -16,6 +16,7 @@ from jinja2 import FileSystemBytecodeCache
 from werkzeug import ImmutableDict
 from flask import Flask, Request, g
 from flaskext.cache import Cache
+from flaskext.mail import Mail
 from edacc import config, models, utils
 
 try:
@@ -31,6 +32,7 @@ Flask.jinja_options = ImmutableDict({
 app = Flask(__name__)
 app.Debug = config.DEBUG
 cache = Cache()
+mail = Mail()
 
 if config.LOGGING:
     # set up logging if configured
@@ -59,8 +61,16 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=1),
     CACHE_TYPE='filesystem',
     CACHE_DIR=config.TEMP_DIR,
+    MAIL_SERVER=config.MAIL_SERVER,
+    MAIL_PORT=config.MAIL_PORT,
+    MAIL_USE_TLS=config.MAIL_USE_TLS,
+    MAIL_USE_SSL=config.MAIL_USE_SSL,
+    MAIL_USERNAME=config.MAIL_USERNAME,
+    MAIL_PASSWORD=config.MAIL_PASSWORD,
+    DEFAULT_MAIL_SENDER=config.DEFAULT_MAIL_SENDER
 )
 cache.init_app(app)
+mail.init_app(app)
 
 # register view modules
 from edacc.views.admin import admin

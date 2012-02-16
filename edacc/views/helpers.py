@@ -15,9 +15,9 @@
 import hashlib
 from functools import wraps
 
-from flask import abort, session, url_for, redirect, g
+from flask import abort, session, url_for, redirect, g, request
 
-from edacc import config, models
+from edacc import config, models, config
 
 # decorates a decorator function to be able to specify parameters :-)
 decorator_with_args = lambda decorator: lambda *args, **kwargs:\
@@ -35,6 +35,18 @@ def require_admin(f):
                 return redirect(url_for('admin.admin_login'))
             return redirect_f(*args, **kwargs)
         return f(*args, **kwargs)
+    return decorated_f
+
+
+def redirect_ssl(f):
+    @wraps(f)
+    def decorated_f(*args, **kwargs):
+        if request.url.startswith('http://') and not config.DEBUG:
+            def redirect_f(*args, **kwargs):
+                return redirect('https://' + request.url[6:])
+            return redirect_f(*args, **kwargs)
+        else:
+            return f(*args, **kwargs)
     return decorated_f
 
 
