@@ -152,7 +152,8 @@ def verify_user(database, user_id):
         msg = Message("[" + db.label + "] Account verified",
             recipients=[user.email])
         msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" +\
-                   "Your account was verified and you can now log in."
+                   "Your account was verified and you can now log in:\n" +\
+                   request.url_root[:-1] + url_for('accounts.login', database=database)
         mail.send(msg)
         flash('Verified the account.')
     except Exception as e:
