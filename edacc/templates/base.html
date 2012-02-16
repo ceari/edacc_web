@@ -58,6 +58,7 @@
             <a href="{{url_for('accounts.login', database=database)}}">Login</a>
             {% endif %}
             {% if session.logged_in %}Logged in as {{session.email}} (<a href="{{url_for('accounts.logout', database=session.database)}}">Logout</a>) {% endif %}
+            {% if session.admin %}[Admin]{% endif %}
         </span>
     </div>
     <div id="content">
