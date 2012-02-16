@@ -334,8 +334,9 @@ def submit_solver(database, id=None):
 
         if not form.binary.file.filename.endswith('.zip'):
             tmpfile = StringIO()
-            with zipfile.ZipFile(tmpfile, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
-                zip_file.writestr(form.binary.file.filename, bin)
+            zip_file = zipfile.ZipFile(tmpfile, 'w', compression=zipfile.ZIP_DEFLATED)
+            zip_file.writestr(form.binary.file.filename, bin)
+            zip_file.close()
             tmpfile.seek(0)
             bin = tmpfile.read()
             run_path = form.binary.file.filename
