@@ -26,7 +26,7 @@ from werkzeug import Headers, secure_filename
 
 from edacc import utils, models, forms, config
 from edacc.views.helpers import require_phase, require_competition, \
-                                require_login, password_hash, redirect_ssl
+                                require_login, password_hash, redirect_ssl, require_admin
 from edacc.web import mail
 
 accounts = Module(__name__)
@@ -69,6 +69,7 @@ def register(database):
             user.email = form.email.data
             user.postal_address = form.address.data
             user.affiliation = form.affiliation.data
+            user.verified = False
 
             hash = hashlib.sha256()
             hash.update(config.SECRET_KEY)
@@ -88,8 +89,6 @@ def register(database):
                               db=db, errors=errors, form=form)
 
             session.pop('captcha', None)
-
-
 
             msg = Message("[" + db.label + "] Account activation",
                           recipients=[user.email])
@@ -112,7 +111,7 @@ def register(database):
     return render('/accounts/register.html', database=database, db=db,
                   errors=errors, form=form)
 
-@accounts.route('/<database>/activate/<activation_hash>', methods=['GET', 'POST'])
+@accounts.route('/<database>/activate/<activation_hash>')
 @require_phase(phases=(2,))
 @require_competition
 def activate(database, activation_hash):
@@ -121,13 +120,47 @@ def activate(database, activation_hash):
     user.activation_hash = ""
     try:
         db.session.commit()
-        flash('Account activated. You can log in now.')
-    except:
+        user = db.session.query(db.User).filter_by(email=user.email).first()
+        msg = Message("[" + db.label + "][Admin] Account was activated",
+            recipients=[config.DEFAULT_MAIL_SENDER])
+        msg.body = ("The following account was just activated by a user:\n\n" + \
+                   "Last name: %s\n" \
+                   "First name: %s\n" \
+                   "E-mail: %s\n" \
+                   "Postal address: %s\n" \
+                   "Affiliation: %s\n\n\n\n" \
+                   "Use the following link to verify this user: " + request.url_root[:-1] + url_for('accounts.verify_user', database=database, user_id=user.idUser)) \
+                    % (user.lastname, user.firstname, user.email, user.postal_address, user.affiliation)
+        mail.send(msg)
+        flash('Account activated. You will be able to log in when your account was verified by an administrator.')
+    except Exception as e:
         db.session.rollback()
+        print e
         flash('Could not activate account. Please contact an administrator.')
     return redirect(url_for('frontend.experiments_index',
         database=database))
 
+@accounts.route('/<database>/verify-user/<int:user_id>/')
+@require_competition
+@require_admin
+def verify_user(database, user_id):
+    db = models.get_database(database) or abort(404)
+    user = db.session.query(db.User).get(user_id) or abort(404)
+    user.verified = True
+    try:
+        db.session.commit()
+        msg = Message("[" + db.label + "] Account verified",
+            recipients=[user.email])
+        msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" +\
+                   "Your account was verified and you can now log in."
+        mail.send(msg)
+        flash('Verified the account.')
+    except Exception as e:
+        db.session.rollback()
+        flash("Couldn't update verification status of user or send the notification mail: " + str(e))
+
+    return redirect(url_for('frontend.experiments_index',
+        database=database))
 
 @accounts.route('/<database>/login/', methods=['GET', 'POST'])
 @require_competition
@@ -147,6 +180,8 @@ def login(database):
         else:
             if user.activation_hash:
                 error = "Account not activated yet. Please check your e-mail account, otherwise contact an administrator."
+            elif not user.verified:
+                error = "Account was not verified yet. Please wait for an administrator to verify your account. You will be notified by e-mail."
             elif user.password != password_hash(form.password.data):
                 error = 'Invalid password or username.'
             else:

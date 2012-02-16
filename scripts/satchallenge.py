@@ -1,5 +1,7 @@
 import time, sys, random, pickle, smtplib
 from sqlalchemy.sql import not_
+from email.MIMEText import MIMEText
+
 random.seed()
 
 sys.path.append("..")
@@ -26,6 +28,18 @@ try:
 except:
     testing_solvers = set()
     pickle.dump(testing_solvers, open(STATE_FILE, "wb"))
+
+def send_mail(msg, to):
+    msg['From'] = config.DEFAULT_MAIL_SENDER
+    msg['Reply-to'] = config.DEFAULT_MAIL_SENDER
+    msg['To'] = to
+    server = smtplib.SMTP(config.MAIL_SERVER, config.MAIL_PORT)
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+    server.login(config.MAIL_USERNAME, config.MAIL_PASSWORD)
+    server.sendmail(config.DEFAULT_MAIL_SENDER, [to], msg.as_string() )
+    server.close()
 
 def create_test_jobs(competition_category, solver_binary):
     if competition_category.name not in test_experiments: return
@@ -57,7 +71,7 @@ def create_test_jobs(competition_category, solver_binary):
         run.seed = random.randint(1, 123456789)
         run.status = -1
         run.resultCode = 0
-        run.priority = 0
+        run.priority = -1
         run.CPUTimeLimit = experiment_info[1]
         run.wallClockTimeLimit = -1
         run.memoryLimit = -1
@@ -83,7 +97,6 @@ def send_info_mail(solver_binary):
 
     user = solver_binary.solver.user
 
-    from email.MIMEText import MIMEText
     msg = MIMEText('Dear ' + user.firstname + " " + user.lastname + ',\n\n' +
                    'This is an automatically generated e-mail regarding your solver submission to the SAT Challenge 2012\n' +
                    'Your solver was executed on our execution environment with the following results:\n' +
@@ -92,17 +105,7 @@ def send_info_mail(solver_binary):
                    'Please have a look at ' + base_url + 'experiments/ for detailed information about the test\n'
                    )
     msg['Subject'] = '[SAT Challenge 2012] Solver tested'
-    msg['From'] = "daniel.diepold@gmail.com"
-    msg['Reply-to'] = "daniel.diepold@gmail.com"
-    msg['To'] = solver_binary.solver.user.email
-
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.ehlo()
-    server.login("daniel.diepold@gmail.com", "PASSWORD")
-    server.sendmail("daniel.diepold@gmail.com", [solver_binary.solver.user.email], msg.as_string() )
-    server.close()
+    send_mail(msg, solver_binary.solver.user.email)
 
 
 while True:
@@ -117,6 +120,11 @@ while True:
             pickle.dump(testing_solvers, open(STATE_FILE, "wb"))
             for competition_category in solver.competition_categories:
                 create_test_jobs(competition_category, solver_binary)
+
+            # send mail to admin account
+            msg = MIMEText('A solver with ID ' + str(solver.idSolver) +  ' was added')
+            msg['Subject'] = '[SAT Challenge 2012][Admin] A solver was added'
+            send_mail(msg, config.DEFAULT_MAIL_SENDER)
 
     testing_solvers = pickle.load(open(STATE_FILE))
     done_solvers = set()
