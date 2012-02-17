@@ -560,7 +560,7 @@ def property_distribution(results, property_name, log_property, restart_strategy
                          line=3, cex=1.2) # bottom axis label
         robjects.r.mtext('P(X <= x)', side=2, padj=0,
                          line=3, cex=1.2) # left axis label
-        robjects.r.mtext(property_name + ' distribution' + (u', \u03BC_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
+        robjects.r.mtext(property_name + ' distribution' + (u', mu_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
                          padj=1, side=3, line=3, cex=1.7) # plot title
     else:
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
@@ -611,7 +611,7 @@ def kerneldensity(data, property_name, log_property, restart_strategy, filename,
             robjects.r.par(new=1)
             robjects.r.abline(v=best_mean, col='red')
 
-        robjects.r.mtext('Kernel density estimation' + (u', \u03BC_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
+        robjects.r.mtext('Kernel density estimation' + (u', mu_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
                          padj=1, side=3, line=3, cex=1.7) # plot title
     else:
         robjects.r.frame()

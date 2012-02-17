@@ -179,7 +179,7 @@ class RTDPlotForm(Form):
     solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
     result_property = SelectField('Property')
     log_property = BooleanField("Logarithmic property-axis", default=True)
-    restart_strategy = BooleanField(u"Show restart strategy (Mean \u03BC_rs)")
+    restart_strategy = BooleanField(u"Show restart strategy (Mean mu_rs)")
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
