@@ -6,7 +6,8 @@
     {% if id %}
     <div>
         <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
-        You are about to submit a new version of a solver you previously submitted. The old version will be replaced by the new one.
+        You are about to submit a new version of a solver you previously submitted. You will have to upload the binary again and<br/>
+        the old version will be replaced by the new one. All results of the solver will be deleted.
     </div>
     {% endif %}
     <form action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">

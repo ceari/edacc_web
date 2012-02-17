@@ -26,7 +26,8 @@ from werkzeug import Headers, secure_filename
 
 from edacc import utils, models, forms, config
 from edacc.views.helpers import require_phase, require_competition, \
-                                require_login, password_hash, redirect_ssl, require_admin
+                                require_login, password_hash, redirect_ssl,\
+                                require_admin, is_admin
 from edacc.web import mail
 
 accounts = Module(__name__)
@@ -358,6 +359,12 @@ def submit_solver(database, id=None):
                 solver = db.Solver()
                 solver_binary = db.SolverBinary()
                 solver_binary.solver = solver
+            else:
+                for solver_config in solver_binary.solver_configurations:
+                    for pi in solver_config.parameter_instances: db.session.delete(pi)
+                    db.session.delete(solver_config)
+                db.session.commit()
+
             solver.name = name
             solver_binary.binaryName = name
             solver_binary.binaryArchive = bin
@@ -405,12 +412,31 @@ def submit_solver(database, id=None):
     return render('/accounts/submit_solver.html', database=database, error=error,
                   db=db, id=id, form=form)
 
-@accounts.route('/<database>/delete-solver/<int:id>', methods=['GET'])
+@accounts.route('/<database>/delete-solver/<int:solver_id>', methods=['GET'])
 @require_login
 @require_phase(phases=(2, 4))
 @require_competition
 def delete_solver(database, solver_id):
-    pass
+    db = models.get_database(database) or abort(404)
+    solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+    if not is_admin() and solver.user != g.User: abort(401)
+
+    try:
+        for solver_binary in solver.binaries:
+            for solver_config in solver_binary.solver_configurations:
+                for pi in solver_config.parameter_instances: db.session.delete(pi)
+                db.session.delete(solver_config)
+            db.session.delete(solver_binary)
+        for p in solver.parameters: db.session.delete(p)
+        db.session.delete(solver)
+        db.session.commit()
+        flash('Solver deleted successfully.')
+    except Exception as e:
+        print e
+        flash('Could not delete solver. Please contact an administrator.')
+
+    return redirect(url_for('accounts.list_solvers', database=database))
+
 
 
 @accounts.route('/<database>/manage/solvers/')

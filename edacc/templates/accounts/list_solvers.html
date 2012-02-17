@@ -5,7 +5,11 @@
     {% if solvers %}
     <ul>
         {% for solver in solvers %}
-            <li><a href="{{ url_for('frontend.solver_details', database=database, solver_id=solver.idSolver) }}">{{solver.name}}</a></li>
+            <li>
+                <a href="{{ url_for('frontend.solver_details', database=database, solver_id=solver.idSolver) }}">{{solver.name}}</a>
+                <a href="{{ url_for('accounts.submit_solver', database=database, id=solver.idSolver) }}">[Edit]</a>
+                <a href="{{ url_for('accounts.delete_solver', database=database, solver_id=solver.idSolver) }}">[Delete]</a>
+            </li>
         {% endfor %}
     </ul>
     {% else %}
