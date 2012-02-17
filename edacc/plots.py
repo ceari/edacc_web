@@ -8,7 +8,7 @@
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
-import os, math, random
+import os, math, random, numpy
 
 from functools import wraps
 from rpy2 import robjects
@@ -507,7 +507,7 @@ def box_plot(data, property_label, filename, format='png'):
 
 
 @synchronized
-def property_distribution(results, property_name, log_property, filename, format='png'):
+def property_distribution(results, property_name, log_property, restart_strategy, filename, format='png'):
     """Plot of a single property distribution.
 
     :param results: result vector
@@ -538,6 +538,18 @@ def property_distribution(results, property_name, log_property, filename, format
     robjects.r.par(new=1)
 
     if len(results) > 0:
+        if restart_strategy:
+            mean = numpy.mean(results or [0])
+            best_i, best_mean = 0, None
+            for i, t_i in zip(range(1, len(results)+1), sorted(results)):
+                mp = t_i * len(results) / float(i)
+                if best_mean is None or mp - mean < best_mean - mean:
+                    best_mean = mp
+                    best_i = i
+
+            robjects.r.abline(v=best_mean, col='red')
+            robjects.r.par(new=1)
+
         robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results or [0])),
                         main='', xaxt='n', yaxt='n', log=log,
                         xlab='', ylab='', xaxs='i', yaxs='i', las=1,
@@ -548,7 +560,7 @@ def property_distribution(results, property_name, log_property, filename, format
                          line=3, cex=1.2) # bottom axis label
         robjects.r.mtext('P(X <= x)', side=2, padj=0,
                          line=3, cex=1.2) # left axis label
-        robjects.r.mtext(property_name + ' distribution',
+        robjects.r.mtext(property_name + ' distribution' + (u', \u03BC_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
                          padj=1, side=3, line=3, cex=1.7) # plot title
     else:
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
@@ -557,7 +569,7 @@ def property_distribution(results, property_name, log_property, filename, format
 
 
 @synchronized
-def kerneldensity(data, property_name, log_property, filename, format='png'):
+def kerneldensity(data, property_name, log_property, restart_strategy, filename, format='png'):
     """Non-parametric kernel density estimation plot of a result vector.
 
     :param data: result vector
@@ -588,7 +600,18 @@ def kerneldensity(data, property_name, log_property, filename, format='png'):
         # and takes python down with it ...
         #robjects.r("plot(d, main='')")
         # plot labels and axes
-        robjects.r.mtext('Kernel density estimation',
+        if restart_strategy:
+            mean = numpy.mean(data or [0])
+            best_i, best_mean = 0, None
+            for i, t_i in zip(range(1, len(data)+1), sorted(data)):
+                mp = t_i * len(data) / float(i)
+                if best_mean is None or mp - mean < best_mean - mean:
+                    best_mean = mp
+                    best_i = i
+            robjects.r.par(new=1)
+            robjects.r.abline(v=best_mean, col='red')
+
+        robjects.r.mtext('Kernel density estimation' + (u', \u03BC_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
                          padj=1, side=3, line=3, cex=1.7) # plot title
     else:
         robjects.r.frame()

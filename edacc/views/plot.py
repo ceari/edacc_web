@@ -748,6 +748,7 @@ def property_distribution(database, experiment_id):
     instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
 
     log_property = request.args.has_key('log_property')
+    restart_strategy = request.args.has_key('restart_strategy')
     result_property = request.args.get('result_property')
     if result_property != 'cputime':
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
@@ -774,7 +775,7 @@ def property_distribution(database, experiment_id):
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.csv"))
         return Response(response=csv_response.read(), headers=headers)
     else:
-        return make_plot_response(plots.property_distribution, results, result_property_name, log_property)
+        return make_plot_response(plots.property_distribution, results, result_property_name, log_property, restart_strategy)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/kerneldensity-plot/')
 @require_phase(phases=ANALYSIS2)
@@ -786,6 +787,7 @@ def kerneldensity(database, experiment_id):
     instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
 
     log_property = request.args.has_key('log_property')
+    restart_strategy = request.args.has_key('restart_strategy')
     result_property = request.args.get('result_property')
     if result_property != 'cputime':
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
@@ -812,7 +814,7 @@ def kerneldensity(database, experiment_id):
         headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_kerneldensity.csv"))
         return Response(response=csv_response.read(), headers=headers)
     else:
-        return make_plot_response(plots.kerneldensity, results, result_property_name, log_property)
+        return make_plot_response(plots.kerneldensity, results, result_property_name, log_property, restart_strategy)
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/box-plots-plot/')
