@@ -302,12 +302,10 @@ def submit_solver(database, id=None):
 
     if id is not None:
         solver = db.session.query(db.Solver).get(id) or abort(404)
+        if solver.user != g.User: abort(401)
+
         solver_binary = solver.binaries[0]
-        if solver.user != g.User:
-            abort(401)
         form = forms.SolverForm(request.form, solver)
-        form.binary.data = ''
-        form.code.data = ''
         if request.method == 'GET':
             form.parameters.data = ''
     else:
@@ -317,40 +315,44 @@ def submit_solver(database, id=None):
 
     error = None
     if form.validate_on_submit():
+        valid = True # assume valid, try to falsify with the following checks
+
         name = form.name.data
         description = form.description.data
         version = form.version.data
         authors = form.authors.data
         parameters = form.parameters.data
-
-        valid = True
-        bin = request.files[form.binary.name].read()
-        hash = hashlib.md5()
-        hash.update(bin)
         run_path = form.run_path.data
-        #if id is None and db.session.query(db.SolverBinary) \
-        #                .filter_by(md5=hash.hexdigest()).first() is not None:
-        #    error = 'Solver with this binary (md5 checksum) already exists'
-        #    valid = False
 
-        if not form.binary.file.filename.endswith('.zip'):
-            tmpfile = StringIO()
-            zip_file = zipfile.ZipFile(tmpfile, 'w', compression=zipfile.ZIP_DEFLATED)
-            zip_file.writestr(form.binary.file.filename, bin)
-            zip_file.close()
-            tmpfile.seek(0)
-            bin = tmpfile.read()
-            run_path = form.binary.file.filename
-        else:
-            if not run_path:
-                error = 'Since your binary is a .zip file, please provide the path of the executable within the archive'
-                valid = False
-
-        if id is None and db.session.query(db.Solver) \
-                        .filter_by(name=name, version=version) \
-                        .first() is not None:
+        if id is None and db.session.query(db.Solver)\
+                          .filter_by(name=name, version=version)\
+                          .first() is not None:
             error = 'Solver with this name and version already exists'
             valid = False
+
+        bin = None
+        if id is None or (id is not None and form.binary.file):
+            # if this is a new solver or a resubmission with new binary update binary
+            bin = request.files[form.binary.name].read()
+            hash = hashlib.md5()
+            hash.update(bin)
+
+            if not form.binary.file.filename.endswith('.zip'):
+                tmpfile = StringIO()
+                zip_file = zipfile.ZipFile(tmpfile, 'w', compression=zipfile.ZIP_DEFLATED)
+                zip_file.writestr(form.binary.file.filename, bin)
+                zip_file.close()
+                tmpfile.seek(0)
+                bin = tmpfile.read()
+                run_path = form.binary.file.filename
+            else:
+                if not run_path:
+                    error = 'Since your binary is a .zip file, please provide the path of the executable within the archive'
+                    valid = False
+
+        code = None
+        if id is None or (id is not None and form.code.file):
+            code = request.files[form.code.name].read()
 
         params = utils.parse_parameters(parameters)
 
@@ -367,18 +369,21 @@ def submit_solver(database, id=None):
 
             solver.name = name
             solver_binary.binaryName = name
-            solver_binary.binaryArchive = bin
-            solver_binary.md5 = hash.hexdigest()
+            if bin:
+                solver_binary.binaryArchive = bin
+                solver_binary.md5 = hash.hexdigest()
+                solver_binary.runPath = "/" + run_path
+            if code:
+                solver.code = code
             solver.description = description
-            solver.code = request.files[form.code.name].read()
             solver_binary.version = solver.version = version
             solver_binary.runCommand = form.run_command.data
-            solver_binary.runPath = "/" + run_path
             solver.authors = authors
             solver.user = g.User
             solver.competition_categories = form.competition_categories.data
 
             db.session.add(solver)
+            db.session.add(solver_binary)
 
             # on resubmissions delete old parameters
             if id is not None:
