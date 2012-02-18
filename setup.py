@@ -10,7 +10,7 @@ setup(
     platforms="any",
     zip_safe=False,
     install_requires=[
-        "Flask==0.6",
+        "Flask==0.8",
         "SQLAlchemy>=0.6.5",
         "rpy2>=2.1",
         "mysql-python>=1.2",

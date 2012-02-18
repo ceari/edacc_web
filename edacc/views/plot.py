@@ -22,7 +22,7 @@ from sqlalchemy import or_, not_, func
 from sqlalchemy.sql import select, and_, functions, expression, alias
 from sqlalchemy.orm import joinedload_all
 
-from flask import Module, render_template as render
+from flask import Blueprint, render_template as render
 from flask import Response, abort, request, g
 from werkzeug import Headers, secure_filename
 
@@ -32,7 +32,7 @@ from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
 from edacc.constants import ANALYSIS1, ANALYSIS2
 
-plot = Module(__name__)
+plot = Blueprint('plot', __name__, template_folder='static')
 
 def make_plot_response(function, *args, **kwargs):
     if request.args.has_key('pdf'): type = 'pdf'; mime='application/pdf'

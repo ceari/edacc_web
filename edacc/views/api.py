@@ -24,11 +24,11 @@ except:
 
 from sqlalchemy import func
 
-from flask import abort, Module, g
+from flask import abort, Blueprint, g
 
 from edacc import models
 
-api = Module(__name__)
+api = Blueprint('api', __name__, template_folder='static')
 
 # TODO: restricted access
 

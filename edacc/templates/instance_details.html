@@ -20,7 +20,7 @@
     {% endfor %}
 </table>
 
-<a href="{{url_for('instance_download', database=database, instance_id=instance.idInstance)}}">Download</a> instance ({{blob_size|download_size}})
+<a href="{{url_for('frontend.instance_download', database=database, instance_id=instance.idInstance)}}">Download</a> instance ({{blob_size|download_size}})
 
 <div>
 <pre>

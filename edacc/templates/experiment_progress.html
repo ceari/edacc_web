@@ -31,7 +31,7 @@
                 "bStateSave": true,
                 "sDom": '<"clear">Clfrtip',
                 "bProcessing": true,
-                "sAjaxSource": "{{url_for('experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}",
+                "sAjaxSource": "{{url_for('frontend.experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}",
 				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
                     $('td:eq(0)', nRow).html('<a style="color: black;" href="/{{database}}/experiment/{{experiment.idExperiment}}/result/?id='+aData[0]+'">'+aData[0]+'</a>');
                     $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[9]]);
@@ -130,7 +130,7 @@
             $('#get_csv').click(function() {
                 var aoData = getDataTableVars(oTable.fnSettings());
                 var varStr = jQuery.param(aoData);
-                document.location.href = '{{url_for('experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}?'+varStr+'&csv';
+                document.location.href = '{{url_for('frontend.experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}?'+varStr+'&csv';
                 return false;
             });
 
@@ -176,8 +176,8 @@
         You can also set a periodic refresh interval.
     </div>
     <div class="navigation">
-        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
         Progress
     </div>
     <h2>Experiment progress</h2>

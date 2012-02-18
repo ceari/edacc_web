@@ -124,7 +124,7 @@
             {% for experiment in experiments %}
                 <tr>
                     <td>{{ experiment.idExperiment}}</td>
-                    <td><a style="color: black;" title="{{experiment.description}}" href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a></td>
+                    <td><a style="color: black;" title="{{experiment.description}}" href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a></td>
                     <td class="center">{{experiment.date|datetimeformat('%d.%m.%Y')}}</td>
                     <td class="center"></td>
                     <td class="center"></td>

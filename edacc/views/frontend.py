@@ -29,7 +29,7 @@ import time
 import os
 from scipy.stats.mstats import mquantiles
 
-from flask import Module
+from flask import Blueprint
 from flask import render_template as render
 from flask import Response, abort, g, request, redirect, url_for
 from werkzeug import Headers, secure_filename
@@ -46,7 +46,7 @@ from edacc import monitor, clientMonitor
 from edacc import config
 from edacc import config_visualisation
 
-frontend = Module(__name__)
+frontend = Blueprint('frontend', __name__, template_folder='static')
 
 @frontend.route('/impressum')
 def impressum():

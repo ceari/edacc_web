@@ -9,14 +9,14 @@
     :license: MIT, see LICENSE for details.
 """
 
-from flask import Module
+from flask import Blueprint
 from flask import render_template as render
 from flask import request, session, url_for, redirect
 
 from edacc import config, models
 from edacc.views.helpers import require_admin
 
-admin = Module(__name__)
+admin = Blueprint('admin', __name__, template_folder='static')
 
 
 #def render(*args, **kwargs):

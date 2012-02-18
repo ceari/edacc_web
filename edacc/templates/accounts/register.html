@@ -11,7 +11,7 @@
         Passwords are stored as salted SHA-hashes.
     </div>
 
-    <form action="{{url_for('register', database=database)}}" method="post">
+    <form action="{{url_for('accounts.register', database=database)}}" method="post">
         {{ form.csrf }}
         <table>
             {{ render_field(form.lastname, size=40, maxlength=255) }}

@@ -28,8 +28,8 @@
 {% endblock %}
 {% block content %}
     <div class="navigation">
-        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
         Solved instances
     </div>
     <h2>Solved instances</h2>
@@ -50,7 +50,7 @@
             <tbody>
             {% for instance in solved_instances %}
                 <tr>
-                    <td><a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.get_name()}}</a></td>
+                    <td><a href="{{url_for('frontend.instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.get_name()}}</a></td>
                     {% for prop in instance_properties %}
                     <td>{{instance.get_property_value(prop.idProperty, db)}}</td>
                     {% endfor %}

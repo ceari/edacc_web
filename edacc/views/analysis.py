@@ -18,7 +18,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import or_, func, and_, not_
 from sqlalchemy.sql import expression, select
 
-from flask import Module
+from flask import Blueprint
 from flask import render_template as render
 from flask import abort, request, jsonify, Response
 from werkzeug import Headers, secure_filename
@@ -30,7 +30,7 @@ from edacc.constants import RANKING, ANALYSIS1, ANALYSIS2
 from edacc.views import plot
 from edacc.forms import EmptyQuery
 
-analysis = Module(__name__)
+analysis = Blueprint('analysis', __name__, template_folder='static')
 
 #def render(*args, **kwargs):
 #    from tidylib import tidy_document

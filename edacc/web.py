@@ -14,7 +14,7 @@ import uuid, datetime, os
 
 from jinja2 import FileSystemBytecodeCache
 from werkzeug import ImmutableDict
-from flask import Flask, Request, g
+from flask import Flask, Request, g, Blueprint
 from flaskext.cache import Cache
 from flaskext.mail import Mail
 from edacc import config, models, utils
@@ -80,15 +80,15 @@ from edacc.views.analysis import analysis
 from edacc.views.plot import plot
 from edacc.views.api import api
 
-app.register_module(admin)
-app.register_module(accounts)
-app.register_module(frontend)
-app.register_module(analysis)
-app.register_module(plot)
-app.register_module(api)
+app.register_blueprint(admin)
+app.register_blueprint(accounts)
+app.register_blueprint(frontend)
+app.register_blueprint(analysis)
+app.register_blueprint(plot)
+app.register_blueprint(api)
 
 from edacc.plugins.borgexplorer import borgexplorer
-app.register_module(borgexplorer)
+app.register_blueprint(borgexplorer)
 
 app.jinja_env.filters['download_size'] = utils.download_size
 app.jinja_env.filters['job_status_color'] = utils.job_status_color

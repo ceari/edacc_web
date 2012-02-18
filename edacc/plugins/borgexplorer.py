@@ -18,7 +18,7 @@ except:
     try: from simplejson import dumps as json_dumps
     except ImportError: from json import dumps as json_dumps
 
-from flask import Module, abort, request
+from flask import Blueprint, abort, request
 from flask import render_template as render
 from sqlalchemy import not_
 
@@ -42,7 +42,7 @@ def synchronized(f):
             global_lock.release()
     return lockedfunc
 
-borgexplorer = Module(__name__)
+borgexplorer = Blueprint('borgexplorer', __name__, template_folder='static')
 
 @borgexplorer.route('/<database>/experiment/<int:experiment_id>/borg-explorer/')
 def borg_explorer(database, experiment_id):

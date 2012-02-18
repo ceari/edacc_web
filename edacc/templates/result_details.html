@@ -7,7 +7,7 @@
 {% block content %}
     <div class="navigation">
         » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
         Result of {{solver.get_name()}} on {{instance.name}}
     </div>
     <h2>Result of <a href="{{url_for('solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_config.idSolverConfig)}}">{{solver_config.get_name()}}</a> on <a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a>, Run #{{result.run}}</h2>
@@ -65,19 +65,19 @@
     </table>
 
     <h3>Solver output:</h3>
-    (<a href="{{url_for('solver_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
+    (<a href="{{url_for('frontend.solver_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
     <pre>{{solverOutput_text}}</pre>
 
     <h3>Launcher output:</h3>
-    (<a href="{{url_for('launcher_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
+    (<a href="{{url_for('frontend.launcher_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
     <pre>{{launcherOutput_text}}</pre>
 
     <h3>Watcher output:</h3>
-    (<a href="{{url_for('watcher_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
+    (<a href="{{url_for('frontend.watcher_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
     <pre>{{watcherOutput_text}}</pre>
 
     <h3>Verifier output:</h3>
-    (<a href="{{url_for('verifier_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
+    (<a href="{{url_for('frontend.verifier_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
     <pre>{{verifierOutput_text}}</pre>
 
 {% endblock %}

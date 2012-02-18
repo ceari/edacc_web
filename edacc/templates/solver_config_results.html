@@ -32,12 +32,12 @@
 {% endblock %}
 {% block content %}
     <div class="navigation">
-        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
-        <a href="{{url_for('experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results</a> ::
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">Results</a> ::
         {{solver_configuration.get_name()}} on {{instance.name}}
     </div>
-    <h2>Results of <a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{solver_configuration.idSolverConfig}}">{{solver_configuration.get_name()}}</a> (<a href="{{url_for('solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig)}}">Details</a>) on <a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{instance.idInstance}}">{{instance.name}}</a> (<a href="{{url_for('instance_details', database=database, instance_id=instance.idInstance)}}">Details</a>)</h2>
+    <h2>Results of <a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{solver_configuration.idSolverConfig}}">{{solver_configuration.get_name()}}</a> (<a href="{{url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver_configuration.idSolverConfig)}}">Details</a>) on <a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{instance.idInstance}}">{{instance.name}}</a> (<a href="{{url_for('frontend.instance_details', database=database, instance_id=instance.idInstance)}}">Details</a>)</h2>
     <div style="float:left;">
         Completed {{completed}}/{{results|length}} runs<br/>
         Correct answers: {{correct}}/{{results|length}}<br/>
@@ -53,7 +53,7 @@
             <tbody>
                 {% for result in results %}
                     <tr bgcolor="{{result.resultCode|job_result_code_color}}">
-                        <td><a style="color: black;" href="{{url_for('experiment_result', database=database, experiment_id=experiment.idExperiment)}}?id={{ result.idJob }}">{{result.idJob}}</a></td>
+                        <td><a style="color: black;" href="{{url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment)}}?id={{ result.idJob }}">{{result.idJob}}</a></td>
                         <td>{{result.status_code.description}}</td>
                         <td>{{result.get_time()|result_time}}</td>
                         <td>{{result.result_code.description}}</td>

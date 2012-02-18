@@ -18,7 +18,7 @@ import tempfile
 import datetime
 from cStringIO import StringIO
 
-from flask import Module
+from flask import Blueprint
 from flask import render_template as render, g
 from flask import Response, abort, request, session, url_for, redirect, flash
 from flaskext.mail import Message
@@ -30,7 +30,7 @@ from edacc.views.helpers import require_phase, require_competition, \
                                 require_admin, is_admin
 from edacc.web import mail
 
-accounts = Module(__name__)
+accounts = Blueprint('accounts', __name__, template_folder='static')
 
 
 #def render(*args, **kwargs):

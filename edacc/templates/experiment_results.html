@@ -60,8 +60,8 @@
 {% endblock %}
 {% block content %}
     <div class="navigation">
-        » <a href="{{url_for('experiments_index', database=database)}}">Experiments</a> ::
-        <a href="{{url_for('experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
         Results
     </div>
     <h2>Results by solver configuration and instance</h2>
@@ -113,7 +113,7 @@
                 {% if best_sc_by_instance_id[row.instance.idInstance] %}
                     {% for job in row.times %}
                         {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
-                        <td style="text-align: center;"><a style="color: black;" href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
+                        <td style="text-align: center;"><a style="color: black;" href="{{url_for('frontend.solver_config_results', database=database, experiment_id=experiment.idExperiment,
                                 solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">{% if job.time_measure != None %}{{job.time_measure|round(4)}}{% endif %}</a></td>
                         {% endif %}
                     {% endfor %}
@@ -127,7 +127,7 @@
                         {% else %}
                             <td style="text-align: center; background-color: #{{job.bg_color}}">
                         {% endif %}
-                            <a style="color: black;" href="{{url_for('solver_config_results', database=database, experiment_id=experiment.idExperiment,
+                            <a style="color: black;" href="{{url_for('frontend.solver_config_results', database=database, experiment_id=experiment.idExperiment,
                             solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">
                             {% if job.time_measure != None %} {{job.time_measure|round(4)}} {% if form.calculate_dispersion.data %} ({{ job.coeff_variation|round(4) }}, {{ job.quartile_coeff_dispersion|round(4) }}) {% endif %} {% endif %}
                             </a>
