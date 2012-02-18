@@ -4,8 +4,6 @@
 {% block content %}
     <h2>Register</h2>
 
-    <a href="/">Back</a>
-
     <div><img src="{{url_for('static', filename='img/info.png')}}"/>
         After registration you will receive an e-mail with a link you have to follow to activate your account.<br/>
         Furthermore, all registrations have to be verified by the organizers before you can log in.<br/>We will send a notification e-mail when your account is verified.<br/>
@@ -39,7 +37,7 @@
                 </tr>
             {% endif %}
         </table>
-        <input type="submit" value="Submit" />
+        <input type="submit" value="Register" />
     </form>
 
 {% endblock %}

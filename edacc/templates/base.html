@@ -48,8 +48,9 @@
             {% endif %}
             {% endif %}
         {% endif %}
-        <a href="{{url_for('frontend.experiments_index', database=database)}}">Results</a>|
-        <a href="{{url_for('frontend.choose_monitor_mode', database=database)}}">Monitor</a>
+        <a href="{{url_for('frontend.experiments_index', database=database)}}">Results</a>
+        {% if not db.is_competition() or session.admin %}|<a href="{{url_for('frontend.choose_monitor_mode', database=database)}}">Monitor</a>
+        {% endif %}
         {% if db.is_competition() and session.logged_in %}
             |<a href="{{url_for('accounts.manage', database=database)}}">Submission</a>
         {% endif %}

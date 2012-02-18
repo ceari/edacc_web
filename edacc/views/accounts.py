@@ -51,7 +51,7 @@ def register(database):
 
     errors = []
     if form.validate_on_submit():
-        if db.session.query(db.User).filter_by(email=form.email.data) \
+        if db.session.query(db.User).filter_by(email=form.email.data.lower()) \
                                     .count() > 0:
             errors.append("An account with this email address already exists. Please check your e-mail account for the activation link.")
 
@@ -67,7 +67,7 @@ def register(database):
             user.lastname = form.lastname.data
             user.firstname = form.firstname.data
             user.password = password_hash(form.password.data)
-            user.email = form.email.data
+            user.email = form.email.data.lower() # store email in lower case for easier password reset etc
             user.postal_address = form.address.data
             user.affiliation = form.affiliation.data
             user.verified = False
@@ -208,7 +208,7 @@ def logout(database):
 
     session.pop('logged_in', None)
     session.pop('database', None)
-    return redirect('/')
+    return redirect(url_for('frontend.experiments_index', database=database))
 
 
 @accounts.route('/<database>/manage/')
@@ -442,7 +442,68 @@ def delete_solver(database, solver_id):
 
     return redirect(url_for('accounts.list_solvers', database=database))
 
+@accounts.route('/<database>/reset-password/', methods=['GET', 'POST'])
+@require_competition
+def reset_password(database):
+    db = models.get_database(database) or abort(404)
+    form = forms.ResetPasswordForm(request.form)
 
+    if form.validate_on_submit():
+        # find user by lower case email address
+        user = db.session.query(db.User).filter_by(email=form.email.data.lower()).first()
+        if not user or not user.verified:
+            if not user: flash('No account with this e-mail address exists.')
+            if user and not user.verified: flash('Account was not verified yet.')
+            return render('/accounts/reset_password.html', db=db, database=database, form=form)
+
+        hash = hashlib.sha256()
+        hash.update(config.SECRET_KEY)
+        hash.update(user.email)
+        hash.update(str(datetime.datetime.now()))
+        hash.update(user.password)
+        # reuse the activation hash (user should be activated at this point already)
+        user.activation_hash = 'pw_reset_' + hash.hexdigest()
+
+        try:
+            db.session.commit()
+
+            msg = Message("[" + db.label + "] Password reset instructions",
+                recipients=[user.email])
+            msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" +\
+                       "If you did not use the password reset link on the website ignore this mail.\n\n" +\
+                       "To reset your password please use the following link:\n" +\
+                       request.url_root[:-1] + url_for('accounts.change_password', database=database, reset_hash=hash.hexdigest())
+            mail.send(msg)
+
+            flash('E-mail was sent. Please refer to the mail for further instructions.')
+        except Exception as e:
+            print e
+            flash('Could not send reset mail. Please contact an administrator.')
+
+    return render('/accounts/reset_password.html', db=db, database=database, form=form)
+
+@accounts.route('/<database>/change-password/<reset_hash>', methods=['GET', 'POST'])
+@require_competition
+def change_password(database, reset_hash):
+    db = models.get_database(database) or abort(404)
+    user = db.session.query(db.User).filter_by(activation_hash='pw_reset_'+reset_hash).first() or abort(404)
+
+    form = forms.ChangePasswordForm(request.form)
+    if form.validate_on_submit():
+        user.activation_hash = ''
+        user.password = password_hash(form.password.data)
+
+        try:
+            db.session.commit()
+            flash('Password changed.')
+        except Exception as e:
+            print e
+            flash('Could not set password in db. Please contact an administrator.')
+
+        return redirect(url_for('frontend.experiments_index',
+                database=database))
+
+    return render('/accounts/change_password.html', db=db, database=database, form=form, reset_hash=reset_hash)
 
 @accounts.route('/<database>/manage/solvers/')
 @require_login

@@ -13,6 +13,7 @@
         </table>
         <input type="submit" value="Login" />
     </form>
+    <div><a href="{{ url_for('accounts.reset_password', database=database) }}">Forgot your password?</a></div>
     {% if 'csrf' in form.errors %}
         <div class="form_error">
             Missing or invalid CSRF token.

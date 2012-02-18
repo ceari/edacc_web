@@ -45,7 +45,7 @@ class RegistrationForm(Form):
     firstname = TextField('Given Name',
                           [Required(ERROR_REQUIRED),
                            Length(max=255)])
-    email = TextField('Email',
+    email = TextField('e-mail',
                       [Required(ERROR_REQUIRED),
                        Length(max=255),
                        Email(message='Invalid e-mail address.')])
@@ -59,9 +59,19 @@ class RegistrationForm(Form):
     captcha = TextField()
 
 class LoginForm(Form):
-    email = TextField('Email', [Required(ERROR_REQUIRED)])
+    email = TextField('e-mail', [Required(ERROR_REQUIRED)])
     password = PasswordField('Password',
                              [Required(ERROR_REQUIRED)])
+
+class ChangePasswordForm(Form):
+    password = PasswordField('Password',
+        [Required()])
+    password_confirm = PasswordField('Confirm Password',
+        [EqualTo('password',
+            message='Passwords must match.')])
+
+class ResetPasswordForm(Form):
+    email = TextField('e-mail', [Required(ERROR_REQUIRED)])
 
 class SolverForm(Form):
     name = TextField('Name', [Required(ERROR_REQUIRED)])
