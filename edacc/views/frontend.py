@@ -944,7 +944,7 @@ def experiment_progress_ajax(database, experiment_id):
         csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'status code', 'Status'] +
                             ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
                             ['stackSizeLimit', 'computeNode', 'computeNodeIP', 'priority', 'computeQueue ID'] +
-                            [p.name for p in result_properties] + [p.name for p in instance_properties])
+                            [p.name for p in result_properties]) # +  [p.name for p in instance_properties])
         for d in aaData:
             csv_writer.writerow(d)
         csv_response.seek(0)
