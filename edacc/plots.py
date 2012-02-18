@@ -352,11 +352,17 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
         grdevices.postscript(file=filename)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
 
     if len(results1) == len(results2) == 0:
         robjects.r.frame()
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
         grdevices.dev_off()
+
+        if format == "rscript":
+            file.write("frame()\nmtext('not enough data', padj=5, side=3, cex=1.7)\n")
         return
 
     max_x = max([max(results1), max(results2)])
@@ -401,6 +407,23 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
                       col=robjects.StrVector(['red', 'blue']),
                       pch=robjects.IntVector([0,1]), lty=1)
 
+    if format == "rscript":
+        file.write("plot(c(), c(), type='p', col='red', las=1, log='%s', xlim=c(%f, %f), ylim=c(-0.05, 1.05), xaxs='i', yaxs='i', xlab='', ylab='', cex.main=1.5)\n" \
+                    % (log, min_x, max_x))
+        file.write("par(new=T)\n")
+        file.write("plot(ecdf(c(%s), main='', xaxt='n', yaxt='n', log='%s', " \
+                    "xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='red', " \
+                    "xlim=c(%f,%f), ylim=c(-0.05, 1.05))\n" \
+                    % (','.join(map(str, results1)), min_x, max_x))
+        file.write("par(new=T)\n")
+        file.write("plot(ecdf(c(%s), main='', xaxt='n', yaxt='n', log='%s', "\
+                   "xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='red', "\
+                   "xlim=c(%f,%f), ylim=c(-0.05, 1.05))\n"\
+                    % (','.join(map(str, results2)), min_x, max_x))
+        file.write("mtext('%s', side=1, line=3, cex=1.2)\n" % (result_property_name,))
+        file.write("mtext('P(X <= x)', side=2, padj=0, line=3, cex=1.2)\n")
+        file.write("mtext('Result property distribution comparison', padj=1, side=3, line=3, cex=1.7)\n")
+
     grdevices.dev_off()
 
 
@@ -417,6 +440,9 @@ def property_distributions(results, property_name, log_property, filename, forma
         grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
     elif format == 'eps':
         grdevices.postscript(file=filename, height=7, width=9)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
 
     max_x = max([max(r[1] or [0]) for r in results] or [0])
 
@@ -436,6 +462,12 @@ def property_distributions(results, property_name, log_property, filename, forma
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
 
+    if format == "rscript":
+        file.write("par(mar=c(5,4,4,15))\n")
+        file.write("plot(c(), c(), type='p', col='red', las=1, log='%s', xlim=c(%f, %f), ylim=c(-0.05, 1.05), xaxs='i', yaxs='i', xlab='', ylab='', cex.main=1.5)\n" \
+                    % (log, min_x, max_x))
+        file.write("par(new=T)\n")
+
     # list of colors used in the defined order for the different solvers
     colors = [
         'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
@@ -452,7 +484,15 @@ def property_distributions(results, property_name, log_property, filename, forma
                             xaxt='n', yaxt='n',
                             xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(-0.05, 1.05))
             robjects.r.par(new=1)
+
+            if format == "rscript":
+                file.write("ecdf(c(%s), main='', col='%s', pch=%d, log='%s', xlab='', ylab='', xaxs='i', yaxs='i', las=1, xaxt='n', yaxt='n', xlim=c(%f, %f), ylim=c(-0.05, 1.05))\n" \
+                        % (','.join(map(str, res[1])), colors[point_style % len(colors)], point_style, log, min_x, max_x))
+                file.write("par(new=T)\n")
+
             point_style += 1
+
+
 
     # plot labels and axes
     robjects.r.mtext(property_name, side=1,
@@ -468,6 +508,16 @@ def property_distributions(results, property_name, log_property, filename, forma
                       legend=robjects.StrVector([newline_split_string(str(r[0]), 23) for r in results]),
                       col=robjects.StrVector(colors[:len(results)]),
                       pch=robjects.IntVector(range(len(results))), lty=1, **{'y.intersp': 1.4})
+
+    if format == "rscript":
+        file.write("mtext('%s', side=1, line=3, cex=1.2)\n" % (property_name,))
+        file.write("mtext('P(X <= x), side=2, padj=0, line=3, cex=1.2)\n")
+        file.write("mtext('%s distributions', padj=1, side=3, line=3, cex=1.7)\n" % (property_name, ))
+        file.write("par(xpd=T)\n")
+        file.write("legend('right', inset=-0.4, legend=c(%s), col=c(%s), pch=c(%s), lty=1, y.intersp=1.4)\n" \
+                    % (','.join([newline_split_string(str(r[0]), 23) for r in results]),
+                       ','.join(colors[:len(results)]), ','.join(map(str, range(len(results)))),
+            ))
 
     grdevices.dev_off()
 
@@ -486,6 +536,9 @@ def box_plot(data, property_label, filename, format='png'):
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
         grdevices.postscript(file=filename)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
 
     any_data = False
     for key in data:
@@ -498,10 +551,16 @@ def box_plot(data, property_label, filename, format='png'):
                            names=robjects.StrVector([key for key in data]), horizontal=True)
         robjects.r.mtext(property_label, side=1,
                          line=3, cex=1.2) # bottom axis label
+
+        if format == "rscript":
+            file.write("boxplot(c(%s), main='', names=c(%s), horizontal=T)\n" \
+                    % (','.join(map(str, [data[k] for k in data])), ','.join(map(str, [key for key in data]))))
+            file.write("mtext('%s', side=1, line=3, cex=1.2)\n" % (property_label,))
     else:
         robjects.r.frame()
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
-
+        if format == "rscirpt":
+            file.write("frame()\nmtext('not enough data', padj=5, side=3, line=3, cex=1.7)\n")
 
     grdevices.dev_off()
 
@@ -519,6 +578,9 @@ def property_distribution(results, property_name, log_property, restart_strategy
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
         grdevices.postscript(file=filename)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
 
     max_x = max(results or [0])
 
@@ -537,6 +599,11 @@ def property_distribution(results, property_name, log_property, restart_strategy
                     xlab='',ylab='', **{'cex.main': 1.5})
     robjects.r.par(new=1)
 
+    if format == "rscript":
+        file.write("plot(c(), c(), type='p', col='red', las=1, log='%s', xlim=c(%f, %f), ylim=c(-0.05, 1.05), xaxs='i', yaxs='i', xlab='', ylab='', cex.main=1.5)\n" \
+                % (lol, min_x, max_x))
+        file.write("par(new=T)\n")
+
     if len(results) > 0:
         if restart_strategy:
             mean = numpy.mean(results or [0])
@@ -550,6 +617,10 @@ def property_distribution(results, property_name, log_property, restart_strategy
             robjects.r.abline(v=best_mean, col='red')
             robjects.r.par(new=1)
 
+            if format == "rscript":
+                file.write("abline(v=%f, col='red')\n" % (best_mean, ))
+                file.write("par(new=T)\n")
+
         robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results or [0])),
                         main='', xaxt='n', yaxt='n', log=log,
                         xlab='', ylab='', xaxs='i', yaxs='i', las=1,
@@ -562,8 +633,19 @@ def property_distribution(results, property_name, log_property, restart_strategy
                          line=3, cex=1.2) # left axis label
         robjects.r.mtext(property_name + ' distribution' + (u', mu_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
                          padj=1, side=3, line=3, cex=1.7) # plot title
+
+        if format == "rscript":
+            file.write("plot(ecdf(c(%s)), main='', xaxt='n', yaxt='n', log='%s', xlab='', ylab='', xaxs='i', yaxs='i', las=1, xlim=c(%f, %f), ylim=c(-0.05, 1.05))\n"\
+            % (','.join(map(str, results or [0])), log, min_x, max_x))
+            file.write("mtext('%s', side=1, line=3, cex=1.2)\n" % (property_name, ))
+            file.write("mtext('P(X <= x)', side=2, padj=0, line=3, cex=1.2)\n")
+            file.write("mtext('%s', padj=1, side=3, line=3, cex=1.7)\n" \
+                        % (property_name + ' distribution' + (u', mu_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''), ))
     else:
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
+
+        if format == "rscript":
+            file.write("mtext('not enough data', padj=5, side=3, line=3, cex=1.7)\n")
 
     grdevices.dev_off()
 

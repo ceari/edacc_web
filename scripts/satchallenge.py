@@ -98,8 +98,8 @@ def send_info_mail(solver_binary):
     user = solver_binary.solver.user
 
     msg = MIMEText('Dear ' + user.firstname + " " + user.lastname + ',\n\n' +
-                   'This is an automatically generated e-mail regarding your solver submission to the SAT Challenge 2012\n' +
-                   'Your solver was executed on our execution environment with the following results:\n' +
+                   'This is an automatically generated e-mail regarding your solver submission to the SAT Challenge 2012.\n' +
+                   'Your solver was executed in our execution environment with the following results:\n' +
                    str(num_successful) + " out of " + str(num_total) + " runs finished successfully in time\n" +
                    str(num_crash) + " runs crashed\n\n" +
                    'Please have a look at ' + base_url + 'experiments/ for detailed information about the test\n'
