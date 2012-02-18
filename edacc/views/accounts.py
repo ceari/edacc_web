@@ -519,6 +519,13 @@ def list_solvers(database):
                   solvers=solvers, db=db)
 
 
+@accounts.route('/<database>/users/')
+@require_admin
+@require_competition
+def list_users(database):
+    db = models.get_database(database) or abort(404)
+    return render('/accounts/list_users.html', db=db, database=database, users=db.session.query(db.User).all())
+
 @accounts.route('/<database>/manage/benchmarks/')
 @require_login
 @require_competition
