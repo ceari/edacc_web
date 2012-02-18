@@ -607,18 +607,21 @@ def property_distribution(results, property_name, log_property, restart_strategy
     if len(results) > 0:
         if restart_strategy:
             mean = numpy.mean(results or [0])
-            best_i, best_mean = 0, None
+            best_i, best_ti, best_mean = 0, 0, None
             for i, t_i in zip(range(1, len(results)+1), sorted(results)):
                 mp = t_i * len(results) / float(i)
                 if best_mean is None or mp - mean < best_mean - mean:
                     best_mean = mp
                     best_i = i
+                    best_ti = t_i
 
-            robjects.r.abline(v=best_mean, col='red')
+            robjects.r.abline(v=best_ti, col='red')
+            robjects.r.abline(v=best_mean, col='blue')
+            robjects.r.abline(v=mean, col='green')
             robjects.r.par(new=1)
 
             if format == "rscript":
-                file.write("abline(v=%f, col='red')\n" % (best_mean, ))
+                file.write("abline(v=%f, col='red')\n" % (best_ti, ))
                 file.write("par(new=T)\n")
 
         robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results or [0])),
@@ -631,7 +634,7 @@ def property_distribution(results, property_name, log_property, restart_strategy
                          line=3, cex=1.2) # bottom axis label
         robjects.r.mtext('P(X <= x)', side=2, padj=0,
                          line=3, cex=1.2) # left axis label
-        robjects.r.mtext(property_name + ' distribution' + (u', mu_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
+        robjects.r.mtext(property_name + ' distribution' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''),
                          padj=1, side=3, line=3, cex=1.7) # plot title
 
         if format == "rscript":
@@ -640,7 +643,7 @@ def property_distribution(results, property_name, log_property, restart_strategy
             file.write("mtext('%s', side=1, line=3, cex=1.2)\n" % (property_name, ))
             file.write("mtext('P(X <= x)', side=2, padj=0, line=3, cex=1.2)\n")
             file.write("mtext('%s', padj=1, side=3, line=3, cex=1.7)\n" \
-                        % (property_name + ' distribution' + (u', mu_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''), ))
+                        % (property_name + ' distribution' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''), ))
     else:
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
 
@@ -684,16 +687,19 @@ def kerneldensity(data, property_name, log_property, restart_strategy, filename,
         # plot labels and axes
         if restart_strategy:
             mean = numpy.mean(data or [0])
-            best_i, best_mean = 0, None
+            best_i, best_ti, best_mean = 0, 0, None
             for i, t_i in zip(range(1, len(data)+1), sorted(data)):
                 mp = t_i * len(data) / float(i)
                 if best_mean is None or mp - mean < best_mean - mean:
                     best_mean = mp
                     best_i = i
+                    best_ti = t_i
             robjects.r.par(new=1)
-            robjects.r.abline(v=best_mean, col='red')
+            robjects.r.abline(v=best_ti, col='red')
+            robjects.r.abline(v=best_mean, col='blue')
+            robjects.r.abline(v=mean, col='green')
 
-        robjects.r.mtext('Kernel density estimation' + (u', mu_rs = ' + str(round(best_mean, 4)) if restart_strategy else ''),
+        robjects.r.mtext('Kernel density estimation' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''),
                          padj=1, side=3, line=3, cex=1.7) # plot title
     else:
         robjects.r.frame()

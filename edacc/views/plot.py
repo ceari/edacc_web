@@ -20,6 +20,7 @@ random.seed()
 
 from sqlalchemy import or_, not_, func
 from sqlalchemy.sql import select, and_, functions, expression, alias
+from sqlalchemy.orm import joinedload_all
 
 from flask import Module, render_template as render
 from flask import Response, abort, request, g
@@ -756,7 +757,8 @@ def property_distribution(database, experiment_id):
     else:
         result_property_name = 'CPU time (s)'
 
-    results = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
+    results = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult) \
+                                    .options(joinedload_all('properties')) \
                                     .filter_by(experiment=exp,
                                                solver_configuration=sc,
                                                instance=instance).all()]
@@ -795,8 +797,9 @@ def kerneldensity(database, experiment_id):
     else:
         result_property_name = 'CPU time (s)'
 
-    results = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
-                                    .filter_by(experiment=exp,
+    results = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
+                                        .options(joinedload_all('properties')) \
+                                        .filter_by(experiment=exp,
                                                solver_configuration=sc,
                                                instance=instance).all()]
 
