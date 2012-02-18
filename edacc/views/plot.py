@@ -668,12 +668,14 @@ def result_property_comparison_plot(database, experiment_id):
     else:
         result_property_name = 'CPU time (s)'
 
-    results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
-                                    .filter_by(experiment=exp,
+    results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
+                                            .options(joinedload_all('properties'))\
+                                            .filter_by(experiment=exp,
                                                solver_configuration=s1,
                                                instance=instance).all()]
-    results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
-                                    .filter_by(experiment=exp,
+    results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
+                                            .options(joinedload_all('properties'))\
+                                            .filter_by(experiment=exp,
                                                solver_configuration=s2,
                                                instance=instance).all()]
 
@@ -718,8 +720,9 @@ def property_distributions_plot(database, experiment_id):
 
     results = []
     for sc in solver_configs:
-        sc_results = db.session.query(db.ExperimentResult) \
-                        .filter_by(experiment=exp, instance=instance,
+        sc_results = db.session.query(db.ExperimentResult)\
+        .options(joinedload_all('properties'))\
+        .filter_by(experiment=exp, instance=instance,
                                    solver_configuration=sc).all()
         results.append((sc, filter(lambda i: i is not None, [j.get_property_value(result_property, db) for j in sc_results])))
 
@@ -841,7 +844,9 @@ def box_plots(database, experiment_id):
     for sc in solver_configs:
         points = []
         for instance in instances:
-            points += filter(lambda r: r is not None, [res.get_property_value(result_property, db) for res in db.session.query(db.ExperimentResult).filter_by(experiment=exp, instance=instance, solver_configuration=sc).all()])
+            points += filter(lambda r: r is not None, [res.get_property_value(result_property, db) for res in db.session.query(db.ExperimentResult)\
+                                                            .options(joinedload_all('properties')) \
+                                                            .filter_by(experiment=exp, instance=instance, solver_configuration=sc).all()])
         results[str(sc)] = points
 
     if request.args.has_key('csv'):
