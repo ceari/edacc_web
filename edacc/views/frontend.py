@@ -48,6 +48,9 @@ from edacc import config_visualisation
 
 frontend = Module(__name__)
 
+@frontend.route('/impressum')
+def impressum():
+    return render('/impressum.html')
 
 @frontend.route('/')
 def index():

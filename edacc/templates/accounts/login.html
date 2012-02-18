@@ -16,10 +16,10 @@
     <div><a href="{{ url_for('accounts.reset_password', database=database) }}">Forgot your password?</a></div>
     {% if 'csrf' in form.errors %}
         <div class="form_error">
-            Missing or invalid CSRF token.
+            Missing or invalid CSRF token. Refresh the page and try again.
         </div>
     {% endif %}
-    {% if db.competition_phase() == 1 %}
+    {% if db.competition_phase() in (1, 2) %}
         <a href="{{url_for('register', database=database)}}">Register</a>
     {% endif %}
 {% endblock %}
