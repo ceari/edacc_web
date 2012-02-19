@@ -28,7 +28,6 @@
                     "sZeroRecords": "No matching results"
                 },
                 "aoColumns": [{"bSearchable": true},
-                              {% for _ in range(instance_properties|length) %} {"bVisible": false},{% endfor %}
                               {% for i in range(num_runs) %}{"bSortable":false,"bSearchable":false},{% endfor %}
                               {"bSearchable": false}, {"bSearchable": false}, {"bSearchable": false}, {"bSearchable": false}]
             });
@@ -57,11 +56,14 @@
             });
 
             $('#th_par10').tooltip();
+
+            {% if num_runs < 100 %}
             var fixed_header = new FixedHeader(oTable);
             
             $(this).everyTime(1000, function() {
             	fixed_header.fnUpdate();
             });
+            {% endif %}
             
             
         });
@@ -84,9 +86,6 @@
             <thead>
                 <tr>
                     <th>Instance</th>
-                    {% for prop in instance_properties %}
-                    <th>{{prop.name}}</th>
-                    {% endfor %}
                     {% for i in range(num_runs) %}<th>{{i}}</th>{% endfor %}
                     <th title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the experiment's timeout for unsuccessful runs" id="th_par10">penalized avg. runtime</th>
                     <th>Mean</th>
@@ -101,9 +100,6 @@
                         <td nowrap="nowrap">
                             <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{result.0.idInstance}}">{{ result.0.name }}</a>
                         </td>
-	                    {% for prop in instance_properties %}
-	                    <td>{{result.0.get_property_value(prop.idProperty, db)}}</td>
-	                    {% endfor %}
                         {% for run in result.1 %}
                             {% if run == None %}<td></td>
                             {% else %}

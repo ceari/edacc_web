@@ -4,9 +4,25 @@
 {% block head %}
     {{ super() }}
     <script src="{{url_for('static', filename='js/jquery.image_preview.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
+    <link type="text/css" href="{{url_for('static', filename='css/demo_table_jui.css')}}" rel="Stylesheet" />
+    <script src="{{url_for('static', filename='js/jquery-ui-1.8.16.custom.min.js')}}" type="text/javascript"></script>
+
     <script type="text/javascript">
         $(document).ready(function() {
             {% include '/analysis/multiple_instances_filter_js.html' %}
+
+            oTable = $('#table_results').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": true,
+                "bJQueryUI": true,
+                "bStateSave": true,
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                }
+            });
 
         });
     </script>
@@ -40,7 +56,7 @@
 
     {% if form.solver_config1.data and form.solver_config2.data %}
     <img style="clear:both; margin-left:50px;" src="{{url_for('plot.barplot', database=database, experiment_id=experiment.idExperiment, gt=sc1_dom_sc2|length, eq=no_dom|length, lt=sc2_dom_sc1|length)}}" />
-    <table style="clear:both;" class="results">
+    <table id="table_results" style="clear:both;" class="results">
         <thead>
             <tr>
                 <th>{{form.solver_config1.data}} > {{form.solver_config2.data}} ({{sc1_dom_sc2|length}})</th>

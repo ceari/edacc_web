@@ -414,12 +414,12 @@ def result_property_comparison(results1, results2, solver1, solver2, result_prop
         file.write("plot(ecdf(c(%s), main='', xaxt='n', yaxt='n', log='%s', " \
                     "xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='red', " \
                     "xlim=c(%f,%f), ylim=c(-0.05, 1.05))\n" \
-                    % (','.join(map(str, results1)), min_x, max_x))
+                    % (','.join(map(str, results1)), log, min_x, max_x))
         file.write("par(new=T)\n")
         file.write("plot(ecdf(c(%s), main='', xaxt='n', yaxt='n', log='%s', "\
                    "xlab='', ylab='', xaxs='i', yaxs='i', las=1, col='red', "\
                    "xlim=c(%f,%f), ylim=c(-0.05, 1.05))\n"\
-                    % (','.join(map(str, results2)), min_x, max_x))
+                    % (','.join(map(str, results2)), log, min_x, max_x))
         file.write("mtext('%s', side=1, line=3, cex=1.2)\n" % (result_property_name,))
         file.write("mtext('P(X <= x)', side=2, padj=0, line=3, cex=1.2)\n")
         file.write("mtext('Result property distribution comparison', padj=1, side=3, line=3, cex=1.7)\n")
@@ -601,7 +601,7 @@ def property_distribution(results, property_name, log_property, restart_strategy
 
     if format == "rscript":
         file.write("plot(c(), c(), type='p', col='red', las=1, log='%s', xlim=c(%f, %f), ylim=c(-0.05, 1.05), xaxs='i', yaxs='i', xlab='', ylab='', cex.main=1.5)\n" \
-                % (lol, min_x, max_x))
+                % (log, min_x, max_x))
         file.write("par(new=T)\n")
 
     if len(results) > 0:
@@ -666,6 +666,9 @@ def kerneldensity(data, property_name, log_property, restart_strategy, filename,
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
         grdevices.postscript(file=filename)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
 
     if log_property:
         log = 'x'
@@ -679,6 +682,10 @@ def kerneldensity(data, property_name, log_property, restart_strategy, filename,
         #robjects.r.plot(d, main="", log=log, xaxt="n", yaxt="n", xlab="", ylab="", xaxs="i", yaxs="i", las=1)
         #vec = 'c(' + ",".join(map(str, data)) + ')'
         robjects.r.plot(robjects.r.density(robjects.FloatVector(data)), main="", xlab=property_name, log=log)
+
+        if format == "rscript":
+            file.write("plot(density(c(%s)), main='', xlab='%s', log='%s')\n" \
+                    % (','.join(map(str,data)), property_name, log))
         #robjects.r('d <- density('+vec+', bw="nrd0", adjust=1, kernel="gaussian")')
         #robjects.r("d$bws$xnames = '"+property_name+"'")
         # add some pseudo value to data because R crashes when the data is constant
@@ -699,11 +706,25 @@ def kerneldensity(data, property_name, log_property, restart_strategy, filename,
             robjects.r.abline(v=best_mean, col='blue')
             robjects.r.abline(v=mean, col='green')
 
+            if format == "rscript":
+                file.write("par(new=T)\n")
+                file.write("abline(v=%f, col='red')\n" % (best_ti,))
+                file.write("abline(v=%f, col='blue')\n" % (best_mean,))
+                file.write("abline(v=%f, col='green')\n" % (mean,))
+
         robjects.r.mtext('Kernel density estimation' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''),
                          padj=1, side=3, line=3, cex=1.7) # plot title
+
+        if format == "rscript":
+            file.write("mtext('Kernel density estimation%s', padj=1, side=3, line=3, cex=1.7)\n" \
+                        % ((u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''),))
     else:
         robjects.r.frame()
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
+
+        if format == "rscript":
+            file.write("frame()\n")
+            file.write("mtext('not enough data', padj=5, side=3, line=3, cex=1.7)\n")
 
     grdevices.dev_off()
 
@@ -716,10 +737,17 @@ def barplot(values, filename, format='png'):
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
         grdevices.postscript(file=filename)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
 
     robjects.r.par(mar = robjects.FloatVector([2, 2, 2, 2]))
     robjects.r.barplot(robjects.IntVector(values),
                        names=robjects.StrVector(['>', '=?', '<']))
+
+    if format == "rscript":
+        file.write("par(mar=c(2,2,2,2))\n")
+        file.write("barplot(c(%s), names=c('>', '=?', '<'))\n" % (','.join(map(str, values)),))
 
     grdevices.dev_off()
     
@@ -732,15 +760,26 @@ def runtime_matrix_plot(flattened_rtmatrix, num_sorted_solver_configs, num_sorte
         grdevices.bitmap(file=filename, type="pdfwrite")
     elif format == 'eps':
         grdevices.postscript(file=filename)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
     
     if None in flattened_rtmatrix:
         robjects.r.frame()
         robjects.r.mtext('Missing results for some instances\nor configs', padj=5, side=3, line=3, cex=1.7)
         grdevices.dev_off()
+
+        if format == "rscript":
+            file.write("frame()\n")
+            file.write("mtext('Missing results for some instances or configs', padj=5, side=3, line=3, cex=1.7)\n")
         return
 
     m = robjects.r.matrix(robjects.FloatVector(flattened_rtmatrix), nrow=num_sorted_solver_configs)
     m = robjects.r.t(robjects.r.log10(m))
+
+    if format == "rscript":
+        file.write("m = matrix(c(%s), nrow=%d)\n" % (','.join(map(str, flattened_rtmatrix)), num_sorted_solver_configs))
+        file.write("m = t(log10(m))\n")
     
     min_val = math.log10(min(flattened_rtmatrix))
     max_val = math.log10(max(flattened_rtmatrix))
@@ -752,22 +791,44 @@ def runtime_matrix_plot(flattened_rtmatrix, num_sorted_solver_configs, num_sorte
                                 robjects.r.seq(0,1,length=256),
                                 robjects.r.seq(0,1,length=256))
     color_levels = robjects.r.seq(min_val, max_val, length=robjects.r.length(color_ramp))
+
+    if format == "rscript":
+        file.write("layout(matrix(c(1,2), nrow=1, ncol=2), widths=c(4,1), heights=c(1,1))\n")
+        file.write("color_ramp = rgb(seq(0,1,length=256), seq(0,1,length=256), seq(0,1,length=256))\n")
+        file.write("color_levels = seq(%f, %f, length=length(color_ramp))\n" % (min_val, max_val))
+
     
     robjects.r.par(mar = robjects.FloatVector([5,5,2.5,3]))
 
     robjects.r.image(robjects.IntVector(range(1, num_sorted_instances+1)), robjects.IntVector(range(1, num_sorted_solver_configs+1)),
                      m, col=color_ramp, xlab="", ylab="", ylim=robjects.IntVector([num_sorted_solver_configs, 1]),
                      zlim=robjects.FloatVector([min_val, max_val]))
+
+    if format == "rscript":
+        file.write("par(mar=c(5,5,2.5,3))\n")
+        file.write("image(c(%s), c(%s), m, col=color_ramp, xlab='', ylab='', ylim=c(%d, 1), zlim=c(%f, %f))\n" \
+                    % (','.join(map(str, range(1, num_sorted_instances+1))), ','.join(map(str, range(1, num_sorted_solver_configs+1))),
+                        num_sorted_solver_configs, min_val, max_val))
     
     robjects.r.mtext("instance (sorted by %s)" % (measure,), side=1, line=3, cex=1.2) # bottom axis label
     robjects.r.mtext("config (sorted by %s)" % (measure,), side=2, line=3, cex=1.2) # left axis label
     robjects.r.title('Runtime Matrix Plot', cex=1.4)
+
+    if format == "rscript":
+        file.write("mtext('instance (sorted by %s)', side=1, line=3, cex=1.2)\n" % (measure,))
+        file.write("mtext('config (sorted by %s)', side=2, line=3, cex=1.2)\n" % (measure,))
+        file.write("title('Runtime Matrix Plot', cex=1.4)\n")
     
     robjects.r.par(mar = robjects.FloatVector([5,2.5,2.5,3]))
     robjects.r.image(1, color_levels, robjects.r.matrix(data=color_levels, ncol=robjects.r.length(color_levels), nrow=1),
                      col=color_ramp, xlab="", ylab="", xaxt="n")
     robjects.r.layout(1)
-    
+
+    if format == "rscript":
+        file.write("par(mar=c(5,2.5,2.5,3))\n")
+        file.write("image(1, color_levels, matrix(data=color_levels, ncol=length(color_levels), nrow=1), col=color_ramp, xlab='', ylab='', xaxt='n')\n")
+        file.write("layout(1)\n")
+
     grdevices.dev_off()
 
 @synchronized
@@ -917,8 +978,10 @@ def make_error_plot(text, filename, format='png'):
     elif format == 'rscript':
         grdevices.postscript(file=os.devnull, height=7, width=9)
         file = open(filename, 'w')
-        file.close()
     try:
         robjects.r.plot(0, xaxt='n', yaxt='n', bty='n', pch='', ylab='', xlab='', main=text)
+        if format == "rscript":
+            file.write('error.')
+            file.close()
     finally:
         grdevices.dev_off()

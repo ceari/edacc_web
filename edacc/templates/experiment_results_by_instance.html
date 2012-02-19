@@ -24,7 +24,11 @@
                               {% for i in range(experiment.get_max_num_runs(db)) %}{"bSearchable":false},{% endfor %}
                               {"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false} ]
             });
+
+            {% if experiment.get_max_num_runs(db) < 100 %}
+            // fixed header is pretty slow for many columns ...
             new FixedHeader(oTable);
+            {% endif %}
 
             $('#th_par10').tooltip();
         });

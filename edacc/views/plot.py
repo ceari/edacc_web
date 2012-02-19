@@ -45,7 +45,7 @@ def make_plot_response(function, *args, **kwargs):
         function(*args, filename=filename, format=type, **kwargs)
     except Exception as exception:
         plots.make_error_plot(text=str(exception), filename=filename, format='png')
-        print exception
+        print str(exception)
     headers = Headers()
     headers.add('Content-Disposition', 'attachment', filename=secure_filename('data.' + type))
     response = Response(response=open(filename, 'rb').read(), mimetype=mime, headers=headers)
