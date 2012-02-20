@@ -48,9 +48,13 @@ from edacc import config_visualisation
 
 frontend = Blueprint('frontend', __name__, template_folder='static')
 
+@frontend.route('/impressum/<lang>')
 @frontend.route('/impressum')
-def impressum():
-    return render('/impressum.html')
+def impressum(lang=None):
+    if lang == "en":
+        return render('/impressum_en.html')
+    else:
+        return render('/impressum.html')
 
 @frontend.route('/')
 def index():
