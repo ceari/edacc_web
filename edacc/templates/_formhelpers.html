@@ -1,4 +1,4 @@
-{% macro render_field(field, explanation=None) %}
+{% macro render_field(field, explanation=None, side_explanation=None) %}
 <tr>
   <td style="vertical-align: middle;">{{ field.label }}</td>
   <td>
@@ -8,9 +8,12 @@
       </ul>
     {% endif %}
     {{ field(**kwargs)|safe }}
+    {% if side_explanation %}
+        {{ side_explanation|safe }}
+    {% endif %}
     {% if explanation %}
     <br/>
-    {{ explanation }}
+    {{ explanation|safe }}
     {% endif %}
   </td>
 </tr>

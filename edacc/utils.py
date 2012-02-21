@@ -62,6 +62,22 @@ def parameter_string(solver_config):
                 args.append(p.value or "")
     return " ".join(args)
 
+def parameter_template(solver):
+    """ Returns a string of the solver configuration parameters """
+    parameters = solver.parameters
+    args = []
+    for p in parameters:
+        if p.prefix: args.append(p.prefix)
+        if p.space and p.prefix and p.hasValue: args.append(" ")
+        if p.name == 'seed':
+            args.append("SEED")
+        if p.name == 'instance':
+            args.append("INSTANCE")
+        if p.hasValue:
+            args.append(p.defaultValue or "")
+        args.append(" ")
+    return "".join(args)
+
 def result_time(time):
     """ Returns a representation of the time value. If time is None
         a dash character is returned, otherwise the time is returned """

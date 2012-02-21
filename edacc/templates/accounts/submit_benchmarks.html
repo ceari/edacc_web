@@ -1,0 +1,91 @@
+{% from "_formhelpers.html" import render_field %}
+{% extends "/base.html" %}
+{% block title %}Submit Benchmarks{% endblock %}
+{% block head %}
+    {{ super() }}
+    <!-- Load Queue widget CSS and jQuery -->
+    <style type="text/css">@import url({{ url_for('static', filename='plupload/js/jquery.plupload.queue/css/jquery.plupload.queue.css')}});</style>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+
+    <!-- Third party script for BrowserPlus runtime (Google Gears included in Gears runtime now) -->
+    <script type="text/javascript" src="http://bp.yahooapis.com/2.4.21/browserplus-min.js"></script>
+
+
+    <script type="text/javascript" src="{{ url_for('static', filename='plupload/js/plupload.full.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='plupload/js/jquery.plupload.queue/jquery.plupload.queue.js') }}"></script>
+
+    <script type="text/javascript">
+        // Setup html5 version
+        $('document').ready(function() {
+
+            $("#uploader").pluploadQueue({
+                // General settings
+                runtimes : 'html5,flash',
+                url : '{{url_for('accounts.upload_benchmarks', database=database)}}',
+                max_file_size : '500mb',
+                unique_names : true,
+
+                // Specify what files to browse for
+                filters : [
+                    {title : "Zip files", extensions : "zip,tar.gz,tar.bz2,7z,rar,xz"}
+                ],
+
+                // Flash settings
+                flash_swf_url : '{{ url_for('static', filename='plupload/js/plupload.flash.swf') }}',
+
+                // Silverlight settings
+                silverlight_xap_url : '{{ url_for('static', filename='plupload/js/plupload.silverlight.xap') }}'
+            });
+
+            $('#upload_form').submit(function(e) {
+                var uploader = $('#uploader').pluploadQueue();
+
+                // Files in queue upload them first
+                if (uploader.files.length > 0) {
+                    // When all files are uploaded submit form
+                    uploader.bind('StateChanged', function() {
+                        if (uploader.files.length === (uploader.total.uploaded + uploader.total.failed)) {
+                            $('form')[0].submit();
+                        }
+                    });
+
+                    uploader.start();
+                }
+
+                return false;
+            });
+
+            try {
+                $('div.plupload_header_title').html("Select benchmark archives");
+                $('div.plupload_header_text').html("");
+            } catch (e) {
+
+            }
+
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <h2>Submit Benchmarks</h2>
+    <div>
+        <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
+        Add the benchmark archives you want to upload to the form below and select the category they belong to.<br/>
+        Once you have added all files press Submit. Note that you can start the upload of the queued files using the<br/>
+        "Start upload" button but you have to use the Submit button at the end to make the submission valid and assign<br/>
+        all uploaded files to the category.<br/>
+        Accepted files: .zip, .tar.gz, .tar.bz2, .7z, .rar, .xz<br/>
+        Size limit: 500 MB per upload
+    </div>
+    <form id="upload_form" action="{{url_for('accounts.submit_benchmarks', database=database)}}" method="post" enctype="multipart/form-data">
+        {{ form.csrf }}
+        <table width="800px">
+            <tr>
+                <td colspan="2"><div id="uploader">You browser doesn't seem to support any of the uploader implementations (HTML5, Flash)</div></td>
+            </tr>
+            {{ render_field(form.category, size=5, maxlength=255) }}
+        </table>
+        <input type="submit" value="Submit" />
+    </form>
+
+    {% if error %}{{error}}{% endif %}
+{% endblock %}

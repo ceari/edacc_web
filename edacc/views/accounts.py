@@ -16,6 +16,7 @@ import hashlib
 import zipfile
 import tempfile
 import datetime
+import os
 from cStringIO import StringIO
 
 from flask import Blueprint
@@ -71,6 +72,7 @@ def register(database):
             user.postal_address = form.address.data
             user.affiliation = form.affiliation.data
             user.verified = False
+            user.accepted_terms = form.accepted_terms.data
 
             hash = hashlib.sha256()
             hash.update(config.SECRET_KEY)
@@ -220,71 +222,125 @@ def manage(database):
 
     return render('/accounts/manage.html', database=database, db=db)
 
-
-@accounts.route('/<database>/submit-benchmark/', methods=['GET', 'POST'])
+@accounts.route('/<database>/submit-benchmarks/', methods=['GET', 'POST'])
 @require_login
 @require_phase(phases=(2,))
 @require_competition
-def submit_benchmark(database):
+def submit_benchmarks(database):
+    db = models.get_database(database) or abort(404)
+    form = forms.BenchmarksForm(request.form)
+
+    if form.validate_on_submit():
+        upload_dir = os.path.join(config.UPLOAD_FOLDER, database, str(g.User.idUser))
+        move_dir = os.path.join(config.UPLOAD_FOLDER, database, secure_filename(form.category.data), str(g.User.idUser))
+        try: os.makedirs(upload_dir, mode=0700)
+        except: pass
+        try: os.makedirs(move_dir, mode=0700)
+        except: pass
+
+        try:
+            for file in session.get('benchmarks', list()):
+                try:
+                    os.rename(os.path.join(upload_dir, file), os.path.join(move_dir, file))
+                except Exception as ex:
+                    print ex
+
+            flash('Benchmark submission successful.')
+            session.pop('benchmarks', None)
+            return redirect(url_for('frontend.experiments_index', database=database))
+
+        except Exception as ex:
+            print ex
+            flash('Error occured when trying to move the uploaded files.')
+
+    return render('/accounts/submit_benchmarks.html', db=db, database=database, form=form)
+
+@accounts.route('/<database>/upload-benchmarks/', methods=['GET', 'POST'])
+@require_login
+@require_phase(phases=(2,))
+@require_competition
+def upload_benchmarks(database):
     db = models.get_database(database) or abort(404)
 
-    form = forms.BenchmarkForm(request.form)
-    form.source_class.query = db.session.query(db.InstanceClass).filter_by(user=g.User)
-    form.benchmark_type.query = db.session.query(db.BenchmarkType).filter_by(user=g.User)
+    if request.files:
+        upload_dir = os.path.join(config.UPLOAD_FOLDER, database, str(g.User.idUser))
+        filename = secure_filename(request.files['file'].filename)
+        # save list of uploaded files in user session so we can track them until form submission
+        benchmarks = session.get('benchmarks', list())
+        benchmarks.append(filename)
+        session['benchmarks'] = benchmarks
+        try:
+            os.makedirs(upload_dir, mode=0700)
+        except:
+            pass
+        request.files['file'].save(os.path.join(upload_dir, filename))
 
-    error = None
-    if form.validate_on_submit():
-        name = form.name.data.strip()
-        instance_name = form.instance.file.filename
-        instance_blob = form.instance.file.read()
+    return 'success'
 
-        md5sum = hashlib.md5()
-        md5sum.update(instance_blob)
-        md5sum = md5sum.hexdigest()
-
-        instance = db.Instance()
-        instance.name = str(g.User.idUser) + "_" + (secure_filename(instance_name) if name == '' else secure_filename(name))
-        if db.session.query(db.Instance).filter_by(name=instance.name).first() is not None:
-            error = 'A benchmark with this name already exists.'
-
-        instance.instance = instance_blob
-        instance.md5 = md5sum
-        db.session.add(instance)
-
-        if form.benchmark_type.data is None:
-            benchmark_type = db.BenchmarkType()
-            db.session.add(benchmark_type)
-            benchmark_type.name = secure_filename(form.new_benchmark_type.data)
-            benchmark_type.user = g.User
-            instance.benchmark_type = benchmark_type
-        else:
-            instance.benchmark_type = form.benchmark_type.data
-
-        if form.source_class.data is None:
-            source_class = db.InstanceClass()
-            db.session.add(source_class)
-            source_class.name = form.new_source_class.data
-            source_class.description = form.new_source_class_description.data
-            source_class.parent = None
-            source_class.user = g.User
-            instance.instance_classes.append(source_class)
-        else:
-            instance.instance_classes.append(source_class)
-
-        if not error:
-            try:
-                db.session.commit()
-                flash('Benchmark submitted.')
-                return redirect(url_for('accounts.submit_benchmark',
-                                        database=database))
-            except:
-                db.session.rollback()
-                flash('An error occured during benchmark submission.')
-                return redirect(url_for('frontend.experiments_index',
-                                        database=database))
-
-    return render('/accounts/submit_benchmark.html', db=db, database=database,
-                  form=form, error=error)
+#@accounts.route('/<database>/submit-benchmark/', methods=['GET', 'POST'])
+#@require_login
+#@require_phase(phases=(2,))
+#@require_competition
+#def submit_benchmark(database):
+#    db = models.get_database(database) or abort(404)
+#
+#    form = forms.BenchmarkForm(request.form)
+#    form.source_class.query = db.session.query(db.InstanceClass).filter_by(user=g.User)
+#    form.benchmark_type.query = db.session.query(db.BenchmarkType).filter_by(user=g.User)
+#
+#    error = None
+#    if form.validate_on_submit():
+#        name = form.name.data.strip()
+#        instance_name = form.instance.file.filename
+#        instance_blob = form.instance.file.read()
+#
+#        md5sum = hashlib.md5()
+#        md5sum.update(instance_blob)
+#        md5sum = md5sum.hexdigest()
+#
+#        instance = db.Instance()
+#        instance.name = str(g.User.idUser) + "_" + (secure_filename(instance_name) if name == '' else secure_filename(name))
+#        if db.session.query(db.Instance).filter_by(name=instance.name).first() is not None:
+#            error = 'A benchmark with this name already exists.'
+#
+#        instance.instance = instance_blob
+#        instance.md5 = md5sum
+#        db.session.add(instance)
+#
+#        if form.benchmark_type.data is None:
+#            benchmark_type = db.BenchmarkType()
+#            db.session.add(benchmark_type)
+#            benchmark_type.name = secure_filename(form.new_benchmark_type.data)
+#            benchmark_type.user = g.User
+#            instance.benchmark_type = benchmark_type
+#        else:
+#            instance.benchmark_type = form.benchmark_type.data
+#
+#        if form.source_class.data is None:
+#            source_class = db.InstanceClass()
+#            db.session.add(source_class)
+#            source_class.name = form.new_source_class.data
+#            source_class.description = form.new_source_class_description.data
+#            source_class.parent = None
+#            source_class.user = g.User
+#            instance.instance_classes.append(source_class)
+#        else:
+#            instance.instance_classes.append(source_class)
+#
+#        if not error:
+#            try:
+#                db.session.commit()
+#                flash('Benchmark submitted.')
+#                return redirect(url_for('accounts.submit_benchmark',
+#                                        database=database))
+#            except:
+#                db.session.rollback()
+#                flash('An error occured during benchmark submission.')
+#                return redirect(url_for('frontend.experiments_index',
+#                                        database=database))
+#
+#    return render('/accounts/submit_benchmark.html', db=db, database=database,
+#                  form=form, error=error)
 
 
 @accounts.route('/<database>/submit-solver/<int:id>', methods=['GET', 'POST'])
@@ -304,10 +360,11 @@ def submit_solver(database, id=None):
         solver = db.session.query(db.Solver).get(id) or abort(404)
         if solver.user != g.User: abort(401)
 
-        solver_binary = solver.binaries[0]
+        solver_binary = solver.binaries[0] if solver.binaries else None
         form = forms.SolverForm(request.form, solver)
         if request.method == 'GET':
-            form.parameters.data = ''
+            form.parameters.data = utils.parameter_template(solver)
+            form.description_pdf.data = ''
     else:
         form = forms.SolverForm(request.form)
 
@@ -330,8 +387,12 @@ def submit_solver(database, id=None):
             error = 'Solver with this name and version already exists'
             valid = False
 
+        if id is None and not form.code.file and not form.binary.file:
+            error = 'Please provide either a binary or the code (or both).'
+            valid = False
+
         bin = None
-        if id is None or (id is not None and form.binary.file):
+        if (id is None or (id is not None and form.binary.file)) and form.binary.file:
             # if this is a new solver or a resubmission with new binary update binary
             bin = request.files[form.binary.name].read()
             hash = hashlib.md5()
@@ -354,36 +415,50 @@ def submit_solver(database, id=None):
         if id is None or (id is not None and form.code.file):
             code = request.files[form.code.name].read()
 
+        description_pdf = None
+        if id is None or (id is not None and form.description_pdf.file):
+            description_pdf = request.files[form.description_pdf.name].read()
+        if id is None and not form.description_pdf.file:
+            valid = False
+            error = "Please provide a description pdf."
+
         params = utils.parse_parameters(parameters)
 
         if valid:
             if id is None:
                 solver = db.Solver()
-                solver_binary = db.SolverBinary()
-                solver_binary.solver = solver
+                if bin:
+                    solver_binary = db.SolverBinary()
+                    solver_binary.solver = solver
             else:
-                for solver_config in solver_binary.solver_configurations:
-                    for pi in solver_config.parameter_instances: db.session.delete(pi)
-                    db.session.delete(solver_config)
-                db.session.commit()
+                if solver_binary:
+                    for solver_config in solver_binary.solver_configurations:
+                        for pi in solver_config.parameter_instances: db.session.delete(pi)
+                        db.session.delete(solver_config)
+                    db.session.commit()
 
             solver.name = name
-            solver_binary.binaryName = name
+            if bin:
+                solver_binary.binaryName = name
             if bin:
                 solver_binary.binaryArchive = bin
                 solver_binary.md5 = hash.hexdigest()
                 solver_binary.runPath = "/" + run_path
             if code:
                 solver.code = code
+            if description_pdf:
+                solver.description_pdf = description_pdf
             solver.description = description
-            solver_binary.version = solver.version = version
-            solver_binary.runCommand = form.run_command.data
+            if bin:
+                solver_binary.version = solver.version = version
+                solver_binary.runCommand = form.run_command.data
             solver.authors = authors
             solver.user = g.User
             solver.competition_categories = form.competition_categories.data
 
             db.session.add(solver)
-            db.session.add(solver_binary)
+            if bin:
+                db.session.add(solver_binary)
 
             # on resubmissions delete old parameters
             if id is not None:
@@ -526,19 +601,19 @@ def list_users(database):
     db = models.get_database(database) or abort(404)
     return render('/accounts/list_users.html', db=db, database=database, users=db.session.query(db.User).all())
 
-@accounts.route('/<database>/manage/benchmarks/')
-@require_login
-@require_competition
-def list_benchmarks(database):
-    """ Lists all benchmarks that the currently logged in user submitted to the
-        database
-    """
-    db = models.get_database(database) or abort(404)
-    user_source_classes = db.session.query(db.InstanceClass).filter_by(user=g.User).all()
-    instances = list(itertools.chain(*[sc.source_instances for sc in user_source_classes]))
-
-    return render('/accounts/list_benchmarks.html', database=database,
-                  db=db, instances=instances)
+#@accounts.route('/<database>/manage/benchmarks/')
+#@require_login
+#@require_competition
+#def list_benchmarks(database):
+#    """ Lists all benchmarks that the currently logged in user submitted to the
+#        database
+#    """
+#    db = models.get_database(database) or abort(404)
+#    user_source_classes = db.session.query(db.InstanceClass).filter_by(user=g.User).all()
+#    instances = list(itertools.chain(*[sc.source_instances for sc in user_source_classes]))
+#
+#    return render('/accounts/list_benchmarks.html', database=database,
+#                  db=db, instances=instances)
 
 
 @accounts.route('/<database>/download-solver/<int:id>/')

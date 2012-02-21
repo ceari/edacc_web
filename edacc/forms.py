@@ -56,6 +56,7 @@ class RegistrationForm(Form):
                                         message='Passwords must match.')])
     address = TextAreaField('Postal Address')
     affiliation = TextAreaField('Affiliation')
+    accepted_terms = BooleanField('I have read, understood and accepted the terms and conditions.', [Required(ERROR_REQUIRED)])
     captcha = TextField()
 
 class LoginForm(Form):
@@ -78,6 +79,7 @@ class SolverForm(Form):
     binary = FileField('Binary')
     code = FileField('Code')
     description = TextAreaField('Description')
+    description_pdf = FileField('Description (PDF)')
     version = TextField('Version', [Required(ERROR_REQUIRED)])
     run_path = TextField('Binary name')
     run_command = TextField('Run command')
@@ -97,6 +99,10 @@ class SolverForm(Form):
     def validate_code(self, field):
         if field.data and not field.file.filename.endswith('.zip'):
             raise ValidationError('The code archive has to be a .zip file.')
+
+    def validate_description_pdf(self, field):
+        if field.data and not field.file.filename.endswith('.pdf'):
+            raise ValidationError('Please provide a .pdf file.')
 
 class BenchmarkForm(Form):
     instance = FileField('File')
@@ -124,6 +130,19 @@ class BenchmarkForm(Form):
     def validate_instance(self, field):
         if not field.file.filename:
             raise ValidationError(ERROR_REQUIRED)
+
+class BenchmarksForm(Form):
+    #benchmarks = FileField('File')
+    category = SelectField('Category', [Required(ERROR_REQUIRED)], choices=[('random', 'Random SAT+UNSAT'), ('application', 'Application SAT+UNSAT'),
+                                                ('combinatorial', 'Hard Combinatorial SAT+UNSAT')], default='random')
+
+    #def validate_benchmarks(self, field):
+    #    if not field.file.filename:
+    #        raise ValidationError(ERROR_REQUIRED)
+    #    filename = field.file.filename
+    #    if not (filename.endswith('.zip') or filename.endswith('.7z') or filename.endswith('.tar.gz') \
+    #        or filename.endswith('.tar.bz2') or filename.endswith('.rar')):
+    #        raise ValidationError("Please submit one of the supported archive types.")
 
 class ResultBySolverForm(Form):
     solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))

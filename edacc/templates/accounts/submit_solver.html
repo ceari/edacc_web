@@ -16,7 +16,8 @@
             {{ render_field(form.name, size=40, maxlength=255, explanation="Required") }}
             {{ render_field(form.version, size=40, maxlength=255, explanation="Required") }}
             {{ render_field(form.authors, size=40, maxlength=255, explanation="Required") }}
-            {{ render_field(form.description, cols=38, rows=5) }}
+            {{ render_field(form.description, cols=38, rows=5, explanation="Optional short description") }}
+            {{ render_field(form.description_pdf, explanation="Required .pdf file") }}
             {{ render_field(form.binary, size=40, explanation="Required. If your solver consists of more than one file please provide a .zip archive.") }}
             {{ render_field(form.code, size=40, explanation="Optional (.zip file)") }}
             {{ render_field(form.run_path, size=40, maxlength=255, explanation="If your binary is a .zip archive, specify the relative path of the main solver executable within the submitted binary .zip file") }}
@@ -35,7 +36,8 @@
                 </td>
             </tr>
         </table>
+        {% if error %}<div style="color: red;"><b>Error: {{error}}</b></div>{% endif %}
         <input type="submit" value="Submit" />
     </form>
-    {% if error %}{{error}}{% endif %}
+
 {% endblock %}

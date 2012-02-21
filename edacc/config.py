@@ -40,12 +40,25 @@ DATABASE_PORT       = 3306
 # Used to log into the admin interface
 ADMIN_PASSWORD = 'affe42'
 
+# mail server that can be used by the web frontend
+MAIL_SERVER = "smtp.googlemail.com"
+MAIL_PORT = 587
+MAIL_USE_TLS = True
+MAIL_USE_SSL = False
+MAIL_USERNAME = "name@gmail.com"
+MAIL_PASSWORD = "pw"
+DEFAULT_MAIL_SENDER="bla@gmail.com"
+
+# folder used to upload benchmarks to
+UPLOAD_FOLDER = "/tmp"
+
 # List of databases this server connects to at startup
 # Format: Tuples of username, password, database, label (used on the pages), hidden
 DEFAULT_DATABASES = (
     ('username', 'password', 'db name', 'db label', False),
 )
 
+# override config with local config, if present
 try:
     from edacc.local_config import *
 except ImportError:

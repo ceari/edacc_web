@@ -52,8 +52,8 @@ for username, password, database, label, hidden in config.DEFAULT_DATABASES:
 
 
 class LimitedRequest(Request):
-    """ extending Flask's request class to limit form uploads to 100 MB """
-    max_form_memory_size = 100 * 1024 * 1024
+    """ extending Flask's request class to limit form uploads to 500 MB """
+    max_form_memory_size = 500 * 1024 * 1024
 
 app.request_class = LimitedRequest
 app.config.update(

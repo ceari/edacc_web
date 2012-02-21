@@ -56,6 +56,11 @@ def impressum(lang=None):
     else:
         return render('/impressum.html')
 
+
+@frontend.route('/privacy')
+def privacy():
+    return render('/privacy.html')
+
 @frontend.route('/')
 def index():
     """ Show a list of all served databases """
