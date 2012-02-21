@@ -365,6 +365,8 @@ def submit_solver(database, id=None):
         if request.method == 'GET':
             form.parameters.data = utils.parameter_template(solver)
             form.description_pdf.data = ''
+            form.binary.data = ''
+            form.code.data = ''
     else:
         form = forms.SolverForm(request.form)
 
