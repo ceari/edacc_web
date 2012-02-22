@@ -1,5 +1,29 @@
 {% extends "base.html" %}
 {% block title %}{{solver_config.get_name()}} Details{% endblock %}
+{% block head %}
+    {{ super() }}
+    <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
+    <link type="text/css" href="{{url_for('static', filename='css/demo_table_jui.css')}}" rel="Stylesheet" />
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery-ui-1.8.16.custom.min.js')}}" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+             var oTable = $('#parameters').dataTable({
+                "bJQueryUI": true,
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": true,
+                "bInfo": true,
+                "oLanguage": {
+                    "sZeroRecords": "No parameters"
+                }
+            });
+            new FixedHeader(oTable);
+        });
+    </script>
+{% endblock %}
 {% block content %}
 <div class="navigation">
     » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
@@ -28,9 +52,30 @@
     </tr>
 </table>
 
-<h3>specified parameters</h3>
-{% for parameter in parameters %}
-{{parameter.parameter.name}}, {{parameter.parameter.prefix}}, value: {% if not parameter.parameter.hasValue %}Flag set{% else %}{{parameter.value}}{% endif %}<br/>
-{% endfor %}
-Launch Command: {{solver_config|launch_command}}
+<strong>Launch Command: {{solver_config|launch_command}}</strong>
+
+<h3>Specified parameters</h3>
+
+ <table id="parameters"  class="display">
+    <thead>
+        <tr>
+            <th>Order</th>
+            <th>Name</th>
+            <th>Prefix</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for parameter in parameters %}
+        <tr>
+            <td>{{ parameter.parameter.order }}</td>
+            <td style="text-align:center;">{{ parameter.parameter.name }}</td>
+            <td style="text-align:center;">{{parameter.parameter.prefix or ''}}</td>
+            <td style="text-align:center;">{% if not parameter.parameter.hasValue %}{{ '\u2713' }}{% else %}{{parameter.value}}{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+ </table>
+
+
 {% endblock %}
