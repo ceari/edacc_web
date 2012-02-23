@@ -69,6 +69,8 @@
             <table id="form_table">
                 {{ render_field(form.parameter) }}
                 {{ render_field(form.measure) }}
+                {{ render_field(form.log_x) }}
+                {{ render_field(form.log_y) }}
                 {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
                 <tr name="tr_instances_filter">
                     <td style="vertical-align: middle;">Filter instances</td>

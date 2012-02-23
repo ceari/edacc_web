@@ -71,4 +71,4 @@ ALL_RESULTS = set([6, 7])           # phases where all results are shown
 INSTANCE_DETAILS = set([6, 7])      # phases where full access to instance details/downloads is granted
 ANALYSIS1 = set([5, 6, 7])          # phases where some plots are shown (cactus)
 ANALYSIS2 = set([6, 7])             # phases where the other plots are shown
-RANKING = set([6, 7])               # phases where ranking is shown
+RANKING = set([2, 3, 4, 5, 6, 7])               # phases where ranking is shown

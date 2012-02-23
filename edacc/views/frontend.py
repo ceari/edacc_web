@@ -143,7 +143,7 @@ def experiment(database, experiment_id):
 
     return render('experiment.html', experiment=experiment, database=database,
                   db=db, OWN_RESULTS=OWN_RESULTS, ALL_RESULTS=ALL_RESULTS,
-                  ANALYSIS1=ANALYSIS1, ANALYSIS2=ANALYSIS2, RANKING=RANKING)
+                  ANALYSIS1=ANALYSIS1, ANALYSIS2=ANALYSIS2, RANKING=RANKING, is_admin=is_admin)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/solver-configurations')
@@ -237,6 +237,9 @@ def experiment_results(database, experiment_id):
     else:
         instances = experiment.instances
 
+    if not form.cost.data:
+        form.cost.data = 'cputime'
+
     if form.solver_configs.data:
         solver_configs = form.solver_configs.data
     else:
@@ -245,7 +248,7 @@ def experiment_results(database, experiment_id):
     instances_dict = dict((i.idInstance, i) for i in instances)
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
     
-    results_by_instance, S, C = experiment.get_result_matrix(db, solver_configs, instances)
+    results_by_instance, S, C = experiment.get_result_matrix(db, solver_configs, instances, cost=form.cost.data)
 
     times_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
     cv_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())

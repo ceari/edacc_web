@@ -991,13 +991,15 @@ def parameter_plot_1d(database, experiment_id):
     measure = request.args.get('measure', 'par10')
     instance_ids = map(int, request.args.getlist('i'))
     runtime_cap = float(request.args.get('runtime_cap'))
+    log_param = request.args.has_key('log_x')
+    log_cost = request.args.has_key('log_y')
 
     last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified))\
         .filter_by(experiment=exp).first()
 
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type, num_jobs):
+    def plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type, num_jobs, log_param, log_cost):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         if measure == 'par10':
@@ -1047,14 +1049,14 @@ def parameter_plot_1d(database, experiment_id):
                 cost = numpy.median(solver_config_times[sc])
             data.append((sc_param_values[sc], cost))
 
-        return make_plot_response(plots.parameter_plot_1d, data, parameter_name, measure, runtime_cap)
+        return make_plot_response(plots.parameter_plot_1d, data, parameter_name, measure, runtime_cap, log_param, log_cost)
 
     if request.args.has_key('pdf'): type = 'pdf'
     elif request.args.has_key('eps'): type = 'eps'
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
     print type
-    return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type, exp.get_num_jobs(db))
+    return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type, exp.get_num_jobs(db), log_param, log_cost)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d-img/')
 @require_phase(phases=ANALYSIS2)
@@ -1069,6 +1071,9 @@ def parameter_plot_2d(database, experiment_id):
     parameter1_name = db.session.query(db.Parameter).get(parameter1_id).name
     parameter2_name = db.session.query(db.Parameter).get(parameter2_id).name
     measure = request.args.get('measure', 'par10')
+    log_x = request.args.has_key('log_x')
+    log_y = request.args.has_key('log_y')
+    log_cost = request.args.has_key('log_cost')
     instance_ids = map(int, request.args.getlist('i'))
     runtime_cap = float(request.args.get('runtime_cap'))
 
@@ -1077,7 +1082,9 @@ def parameter_plot_2d(database, experiment_id):
 
     CACHE_TIME = 14*24*60*60
     @cache.memoize(timeout=CACHE_TIME)
-    def plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation, type, num_jobs):
+    def plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids,
+                   runtime_cap, last_modified_job, surface_interpolation, type, num_jobs,
+                   log_x, log_y, log_cost):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         table_sc_params1 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param1")
@@ -1131,10 +1138,12 @@ def parameter_plot_2d(database, experiment_id):
                 cost = numpy.median(solver_config_times[sc])
             data.append(sc_param_values[sc] + (cost,))
 
-        return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap=runtime_cap)
+        return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure,
+            surface_interpolation, runtime_cap=runtime_cap, log_x=log_x, log_y=log_y, log_cost=log_cost)
 
     if request.args.has_key('pdf'): type = 'pdf'
     elif request.args.has_key('eps'): type = 'eps'
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
-    return plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap, last_modified_job, surface_interpolation, type, exp.get_num_jobs(db))
+    return plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap,
+        last_modified_job, surface_interpolation, type, exp.get_num_jobs(db), log_x, log_y, log_cost)

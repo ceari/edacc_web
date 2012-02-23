@@ -146,9 +146,11 @@ class BenchmarksForm(Form):
 
 class ResultBySolverForm(Form):
     solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
+    cost = SelectField('Cost', choices = [('cpu', 'CPU Time'), ('walltime', 'Walltime'), ('cost', 'Cost')])
 
 class ResultByInstanceForm(Form):
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
+    cost = SelectField('Cost', choices = [('cpu', 'CPU Time'), ('walltime', 'Walltime'), ('cost', 'Cost')])
 
 class TwoSolversOnePropertyScatterPlotForm(Form):
     solver_config1 = QuerySelectField('First Solver Configuration', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
@@ -234,6 +236,7 @@ class RankingForm(Form):
 
 class ResultsBySolverAndInstanceForm(Form):
     solver_configs = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(str(sc), MAX_SC_LEN))
+    cost = SelectField('Cost', choices = [('cpu', 'CPU Time'), ('walltime', 'Walltime'), ('cost', 'Cost')])
     display_measure = SelectField('Display measure', default='par10',
                                   choices=[('mean', 'mean'), ('median', 'median'),
                                     ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
@@ -249,6 +252,9 @@ class RuntimeMatrixPlotForm(Form):
 class ParameterPlot2DForm(Form):
     parameter1 = SelectField('First parameter')
     parameter2 = SelectField('Second parameter')
+    log_x = BooleanField("Logarithmic x-axis")
+    log_y = BooleanField("Logarithmic y-axis")
+    log_cost = BooleanField("Logarithmic cost")
     measure = SelectField('Measure', default='par10',
         choices=[('mean', 'mean'), ('median', 'median'),
             ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
@@ -258,6 +264,8 @@ class ParameterPlot2DForm(Form):
 
 class ParameterPlot1DForm(Form):
     parameter = SelectField('First parameter')
+    log_x = BooleanField("Logarithmic parameter-axis")
+    log_y = BooleanField("Logarithmic cost-axis")
     measure = SelectField('Measure', default='par10',
         choices=[('mean', 'mean'), ('median', 'median'),
             ('par10', 'par10'), ('min', 'min'), ('max', 'max')])

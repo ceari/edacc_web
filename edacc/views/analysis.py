@@ -25,7 +25,7 @@ from werkzeug import Headers, secure_filename
 
 from edacc import models, forms, ranking, statistics
 from edacc.web import cache
-from edacc.views.helpers import require_phase, require_login
+from edacc.views.helpers import require_phase, require_login, is_admin
 from edacc.constants import RANKING, ANALYSIS1, ANALYSIS2
 from edacc.views import plot
 from edacc.forms import EmptyQuery
@@ -53,11 +53,15 @@ def solver_ranking(database, experiment_id):
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
 
     if form.i.data:
+        solver_configs = experiment.solver_configurations
+        if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+            solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
+
         CACHE_TIME = 7*24*60*60
         @cache.memoize(timeout=CACHE_TIME)
-        def cached_ranking(database, experiment_id, sc_names, last_modified_job, job_count, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
+        def cached_ranking(database, experiment_id, solver_configs, sc_names, last_modified_job, job_count, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
-            ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data)
+            ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs)
             ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data, form.calculate_average_dev.data)
 
@@ -122,7 +126,7 @@ def solver_ranking(database, experiment_id):
                                 .filter_by(experiment=experiment).first()
         job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
 
-        return cached_ranking(database, experiment_id, ''.join(sc.get_name() for sc in experiment.solver_configurations),
+        return cached_ranking(database, experiment_id, solver_configs, ''.join(sc.get_name() for sc in experiment.solver_configurations),
                               last_modified_job, job_count, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               'csv' in request.args, 'latex' in request.args)

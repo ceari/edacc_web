@@ -64,7 +64,7 @@ def require_phase(f, phases):
     @wraps(f)
     def decorated_f(*args, **kwargs):
         db = models.get_database(kwargs['database']) or abort(404)
-        if db.is_competition() and db.competition_phase() not in phases:
+        if db.is_competition() and not is_admin() and db.competition_phase() not in phases:
             abort(403)
         return f(*args, **kwargs)
     return decorated_f

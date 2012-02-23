@@ -832,11 +832,7 @@ def runtime_matrix_plot(flattened_rtmatrix, num_sorted_solver_configs, num_sorte
     grdevices.dev_off()
 
 @synchronized
-def parameter_plot_1d(data, parameter_name, measure, runtime_cap, filename, format='png'):
-    """ Scatter plot of the points given in the list :points:
-        Each element of points should be a tuple (x, y).
-        Returns a list with the points in device (pixel) coordinates.
-    """
+def parameter_plot_1d(data, parameter_name, measure, runtime_cap, log_x, log_y, filename, format='png'):
     if format == 'png':
         grdevices.png(file=filename, units="px", width=1200,
             height=600, type="cairo")
@@ -864,30 +860,29 @@ def parameter_plot_1d(data, parameter_name, measure, runtime_cap, filename, form
         col = 0
         pch = 3 # 3 looks nice
 
+        log = ''
+        if log_x: log += 'x'
+        if log_y: log += 'y'
+
         # plot running times
-        robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
+        robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), log=log,
             type='p', col=colors[col % len(colors)], las = 1, main=measure + ' runtime against ' + parameter_name,
-            xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([0.0, max(ys)]),
+            xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([0.0 if not log_y else 0.000000001, max(ys)]),
             xaxs='i', yaxs='i', cex=1.2,
             xlab=parameter_name, ylab=measure, pch=pch, tck=0.015,
             **{'cex.axis': 1.2, 'cex.main': 1.5})
 
         if format == "rscript":
-            file.write("plot(c(%s), c(%s), type='p', col='%s', las=1, main='%s', xlim=c(%f, %f), ylim=c(0, %f), xaxs='i', yaxs='i', cex=1.2, xlab='%s', ylab='%s', pch=%d, tck=0.015, cex.axis=1.2, cex.main=1.5)\n"
-                % (','.join(map(str,xs)), ','.join(map(str, ys)), colors[col % len(colors)], measure + " runtime against " + parameter_name, min(xs), max(xs), max(ys), parameter_name, measure, pch))
+            file.write("plot(c(%s), c(%s), log='%s', type='p', col='%s', las=1, main='%s', xlim=c(%f, %f), ylim=c("+str(0.0 if not log_y else 0.000000001) + ", %f), xaxs='i', yaxs='i', cex=1.2, xlab='%s', ylab='%s', pch=%d, tck=0.015, cex.axis=1.2, cex.main=1.5)\n"
+                % (','.join(map(str,xs)), ','.join(map(str, ys)), log, colors[col % len(colors)], measure + " runtime against " + parameter_name, min(xs), max(xs), max(ys), parameter_name, measure, pch))
             file.close()
-
-    except Exception as e:
-        raise e
+    except Exception as ex:
+        raise ex
     finally:
         grdevices.dev_off()
 
 @synchronized
-def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap, filename, format='png'):
-    """ Scatter plot of the points given in the list :points:
-        Each element of points should be a tuple (x, y).
-        Returns a list with the points in device (pixel) coordinates.
-    """
+def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_interpolation, runtime_cap, log_x, log_y, log_cost, filename, format='png'):
     if format == 'png':
         grdevices.png(file=filename, units="px", width=1000,
             height=800, type="cairo")
@@ -914,36 +909,53 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
         xs = [p[0] for p in data]
         ys = [p[1] for p in data]
         costs = [min(p[2], runtime_cap) for p in data]
+
+        log = ''
+        if log_x: log += 'x'
+        if log_y: log += 'y'
+        if log_cost:
+            costs = map(lambda x: 0.0 if x <= 0.000000001 else math.log10(x), costs)
+
         min_cost_point = data[costs.index(min(costs))]
+
+        #if log_x: min_cost_point = 0.0 if min_cost_point[0] <= 0.000000001 else math.log10(min_cost_point[0]), min_cost_point[1], min_cost_point[2]
+        #if log_y: min_cost_point = min_cost_point[0], 0.0 if min_cost_point[1] <= 0.000000001 else math.log10(min_cost_point[1]), min_cost_point[2]
+        if log_cost: min_cost_point = min_cost_point[0], min_cost_point[1], 0.0 if min_cost_point[2] <= 0.000000001 else math.log10(min_cost_point[2])
 
         if not surface_interpolation:
             min_cost = min(costs)
-            max_cost = max(costs)
+            max_cost = max(costs) + 0.0000000001
             costs = map(lambda c: 1 + int( (c - min_cost) * (200.0/(max_cost-min_cost))), costs)
             cols = robjects.r("heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]")
             title = "Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4))
 
             if format == 'rscript':
                 file.write("cols = heat.colors(256)[c(" + ','.join(map(str, costs)) + ")]\n")
-                file.write("plot(c(%s), c(%s), type='p', col=cols, pch=19, xlab='%s', ylab='%s', xaxs='i', yaxs='i', cex=1.5, xlim=c(%f, %f), ylim=c(%f, %f), main='%s')\n"\
-                % (','.join(map(str, xs)), ','.join(map(str, ys)), parameter1_name, parameter2_name, min(xs), max(xs), min(ys), max(ys), title))
+                file.write("plot(c(%s), c(%s), log='%s', type='p', col=cols, pch=19, xlab='%s', ylab='%s', xaxs='i', yaxs='i', cex=1.5, xlim=c(%f, %f), ylim=c(%f, %f), main='%s')\n"\
+                % (','.join(map(str, xs)), ','.join(map(str, ys)), log, parameter1_name, parameter2_name, min(xs), max(xs), min(ys), max(ys), title))
                 file.write("par(new=1)\n")
                 file.write("points(c(%f), c(%f), type='p', pch=3, col='red', cex=3)\n" % (min_cost_point[0], min_cost_point[1]))
                 file.close()
 
-            robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), type='p', col=cols, pch=19,
+            robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys), log=log, type='p', col=cols, pch=19,
                 xlab=parameter1_name, ylab=parameter2_name, xaxs='i', yaxs='i', cex=1.5,
                 xlim=robjects.FloatVector([min(xs), max(xs)]), ylim=robjects.FloatVector([min(ys), max(ys)]),
                 main=title)
             robjects.r.par(new=1)
-            robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]), type='p', pch=3, col='red', cex=3)
+            robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]),  type='p', pch=3, col='red', cex=3)
         else:
+            xs = map(lambda x: 0.0 if x <= 0.000000001 else math.log10(x), xs)
+            ys = map(lambda x: 0.0 if x <= 0.000000001 else math.log10(x), ys)
+
             min_x, max_x = min(xs), max(xs)
             min_y, max_y = min(ys), max(ys)
+
             surf = akima.interp(robjects.FloatVector(xs), robjects.FloatVector(ys), robjects.FloatVector(costs),
                             xo=robjects.r.seq(min_x, max_x, (max_x - min_x) / 1000.0), yo=robjects.r.seq(min_y, max_y, (max_y - min_y) / 800.0),
                             duplicate="mean")
             title = "Minimum: (%s, %s) with cost: %s" % (round(min_cost_point[0], 4), round(min_cost_point[1], 4), round(min_cost_point[2], 4))
+
+            if log_cost: measure = 'log10(' + measure + ')'
 
             if format == 'rscript':
                 file.write("surf = interp(c(%s), c(%s), c(%s), xo=seq(%f, %f, %f), yo=seq(%f, %f, %f), duplicate='mean')\n"\

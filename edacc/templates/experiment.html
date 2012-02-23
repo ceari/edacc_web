@@ -84,7 +84,7 @@
     {% endif %}
 
     <h2>Information about solvers and instances</h2>
-    {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}
+    {% if is_admin() or not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}
     <a href="{{url_for('frontend.experiment_solver_configurations', database=database, experiment_id=experiment.idExperiment)}}">List of solver configurations used</a><br/>
     {% endif %}
     <a href="{{url_for('frontend.experiment_instances', database=database, experiment_id=experiment.idExperiment)}}">List of instances used</a><br/>
@@ -98,7 +98,7 @@
     <a href="{{ url_for('frontend.solved_instances', database=database, experiment_id=experiment.idExperiment) }}">Solved instances</a><br/>
     {% endif %}
 
-    {% if not db.is_competition() or db.competition_phase() in ANALYSIS2 %}
+    {% if is_admin() or not db.is_competition() or db.competition_phase() in ANALYSIS2 %}
         <h2>Analysis</h2>
         <a href="{{url_for('analysis.box_plots', database=database, experiment_id=experiment.idExperiment)}}">Box plots - Box plots of the results of solvers on instances</a><br/>
         <a href="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - One result property of two solvers (e.g. CPU time vs. CPU time)</a><br/>
@@ -123,7 +123,7 @@
     {% endif %}
 
 
-    {% if not db.is_competition() or db.competition_phase() in RANKING %}
+    {% if is_admin() or not db.is_competition() or db.competition_phase() in RANKING %}
     <h2>Ranking</h2>
     <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Ranking</a><br/>
     {% endif %}

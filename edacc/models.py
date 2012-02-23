@@ -20,7 +20,7 @@ from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
 from sqlalchemy.orm import relation, relationship, joinedload_all
-from sqlalchemy.sql import and_, not_, select
+from sqlalchemy.sql import and_, not_, select, label, expression
 from sqlalchemy import schema
 
 from edacc import config, utils
@@ -209,7 +209,7 @@ class EDACCDatabase(object):
                 total_size = sum(i[0] for i in instance_sizes or [(0,)])
                 return total_size
             
-            def get_result_matrix(self, db, solver_configs, instances):
+            def get_result_matrix(self, db, solver_configs, instances, cost='cpu'):
                 """ Returns the results as matrix of lists of result tuples, i.e.
                     Dict<idInstance, Dict<idSolverConfig, List of runs>> """
                 num_successful = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
@@ -219,9 +219,19 @@ class EDACCDatabase(object):
                 instance_ids = [i.idInstance for i in instances]
                 table = db.metadata.tables['ExperimentResults']
                 table_result_codes = db.metadata.tables['ResultCodes']
-                s = select([table.c['idJob'], table.c['resultCode'], table.c['resultTime'], table.c['status'],
+                if cost == 'cpu':
+                    cost_column = 'resultTime'
+                    cost_limit_column = table.c['CPUTimeLimit']
+                elif cost == 'walltime':
+                    cost_column = 'wallTime'
+                    cost_limit_column = table.c['wallClockTimeLimit']
+                else:
+                    cost_column = 'cost'
+                    inf = float('inf')
+                    cost_limit_column = table.c['CPUTimeLimit']
+                s = select([table.c['idJob'], table.c['resultCode'], expression.label('cost', table.c[cost_column]), table.c['status'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
-                            table_result_codes.c['description'], table.c['CPUTimeLimit']],
+                            table_result_codes.c['description'], expression.label('limit', cost_limit_column)],
                             and_(table.c['Experiment_idExperiment'] == self.idExperiment,
                                 table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                                 table.c['Instances_idInstance'].in_(instance_ids)),
@@ -233,8 +243,8 @@ class EDACCDatabase(object):
                     if str(r.resultCode).startswith('1'): num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     if r.status not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
-                        Run(r.idJob, r[6], r.resultCode, None if r.status <= 0 else r.resultTime, str(r.resultCode).startswith('1'),
-                            r.resultTime if str(r.resultCode).startswith('1') else r.CPUTimeLimit * 10,
+                        Run(r.idJob, r[6], r.resultCode, None if r.status <= 0 else r.cost, str(r.resultCode).startswith('1'),
+                            r.cost if str(r.resultCode).startswith('1') else (inf if cost_column == 'cost' else r.limit) * 10,
                             r.SolverConfig_idSolverConfig, r.Instances_idInstance))
                 return M, num_successful, num_completed
                     
