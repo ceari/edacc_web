@@ -410,6 +410,7 @@ def experiment_results_by_solver(database, experiment_id):
         var_by_instance = {} # variance over the runs per instance
         std_by_instance = {}
         runs_by_instance = {}
+        jobs_by_instance = {}
         for r in ers:
             if not r.instance in runs_by_instance:
                 runs_by_instance[r.instance] = [r]

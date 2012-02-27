@@ -74,7 +74,11 @@
                                 {% if run.get_time() %}
                                 <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ run.get_time()|result_time|round(3)}}</a></td>
                                 {% else %}
+                                    {% if run.status == 0 %}
+                                    <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">running</a></td>
+                                    {% else %}
                                     <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">-</a></td>
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         {% endfor %}

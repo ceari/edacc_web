@@ -229,21 +229,21 @@ class EDACCDatabase(object):
                     cost_column = 'cost'
                     inf = float('inf')
                     cost_limit_column = table.c['CPUTimeLimit']
-                s = select([table.c['idJob'], table.c['resultCode'], expression.label('cost', table.c[cost_column]), table.c['status'],
+                s = select([table.c['idJob'], table.c['status'], table.c['resultCode'], expression.label('cost', table.c[cost_column]), table.c['status'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
                             table_result_codes.c['description'], expression.label('limit', cost_limit_column)],
                             and_(table.c['Experiment_idExperiment'] == self.idExperiment,
                                 table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                                 table.c['Instances_idInstance'].in_(instance_ids)),
                             from_obj=table.join(table_result_codes))
-                Run = namedtuple('Run', ['idJob', 'result_code_description', 'resultCode', 'resultTime', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance'])
+                Run = namedtuple('Run', ['idJob', 'status', 'result_code_description', 'resultCode', 'resultTime', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance'])
                 for r in db.session.connection().execute(s):
                     if r.Instances_idInstance not in M: continue
                     if r.SolverConfig_idSolverConfig not in M[r.Instances_idInstance]: continue
                     if str(r.resultCode).startswith('1'): num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     if r.status not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
-                        Run(r.idJob, r[6], r.resultCode, None if r.status <= 0 else r.cost, str(r.resultCode).startswith('1'),
+                        Run(r.idJob, r.status, r[7], r.resultCode, None if r.status <= 0 else r.cost, str(r.resultCode).startswith('1'),
                             r.cost if str(r.resultCode).startswith('1') else (inf if cost_column == 'cost' else r.limit) * 10,
                             r.SolverConfig_idSolverConfig, r.Instances_idInstance))
                 return M, num_successful, num_completed

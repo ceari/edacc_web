@@ -115,7 +115,7 @@
                     {% for job in row.times %}
                         {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
                         <td style="text-align: center;"><a style="color: black;" href="{{url_for('frontend.solver_config_results', database=database, experiment_id=experiment.idExperiment,
-                                solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">{% if job.time_measure != None %}{{job.time_measure|round(4)}}{% endif %}</a></td>
+                                solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">{% if job.time_measure != None %}{{job.time_measure|round(4)}}{% else %}{% if job.first_job.status == 0 %}running{% endif %}{% endif %}</a></td>
                         {% endif %}
                     {% endfor %}
                 {% else %}
@@ -130,7 +130,8 @@
                         {% endif %}
                             <a style="color: black;" href="{{url_for('frontend.solver_config_results', database=database, experiment_id=experiment.idExperiment,
                             solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">
-                            {% if job.time_measure != None %} {{job.time_measure|round(4)}} {% if form.calculate_dispersion.data %} ({{ job.coeff_variation|round(4) }}, {{ job.quartile_coeff_dispersion|round(4) }}) {% endif %} {% endif %}
+                            {% if job.time_measure != None %} {{job.time_measure|round(4)}} {% if form.calculate_dispersion.data %} ({{ job.coeff_variation|round(4) }}, {{ job.quartile_coeff_dispersion|round(4) }}) {% endif %}
+                            {% else %}n/a{% endif %}
                             </a>
                         </td>
                     {% elif job.total == 1 %}
@@ -142,6 +143,8 @@
                             <a style="color: black;" href="{{base_result_details_url}}?id={{job.first_job.idJob}}">
                                 {% if job.time_measure != None %}
                                 {{job.time_measure|round(4)}} {{job.first_job.result_code_description}}
+                                {% else %}
+                                    {% if job.first_job.status == 0 %}running{% endif %}
                                 {% endif %}
                             </a>
                         </td>
