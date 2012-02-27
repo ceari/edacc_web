@@ -43,7 +43,7 @@ def redirect_ssl(f):
     def decorated_f(*args, **kwargs):
         if request.url.startswith('http://') and not config.DEBUG:
             def redirect_f(*args, **kwargs):
-                return redirect('https://' + request.url[6:])
+                return redirect('https://' + request.url[7:])
             return redirect_f(*args, **kwargs)
         else:
             return f(*args, **kwargs)
