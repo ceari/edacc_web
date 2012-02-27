@@ -1,6 +1,6 @@
-{% macro render_field(field, explanation=None, side_explanation=None) %}
+{% macro render_field(field, explanation=None, side_explanation=None, required=False) %}
 <tr>
-  <td style="vertical-align: middle;">{{ field.label }}</td>
+  <td style="vertical-align: middle;">{{ field.label }}{% if required %} <strong>*</strong>{% endif %}</td>
   <td>
     {% if field.errors %}
       <ul class="errors">

@@ -9,8 +9,8 @@
         <td>{{solver.name}}</td>
     </tr>
     <tr class="odd">
-        <td>Type:</td>
-        <td>{{solver.type}}</td>
+        <td>Categories:</td>
+        <td>{{', '.join(categories)}}</td>
     </tr>
     <tr class="even">
         <td>Version:</td>
@@ -25,6 +25,24 @@
         <td>{{solver.authors}}</td>
     </tr>
 </table>
+<div>
+    <strong>Launch command: {{ solver.binaries[0].runCommand }} .{{ solver.binaries[0].runPath }} {{ solver|parameter_template }}</strong>
+</div>
+<div>
+
+        <ul>
+            {% if solver.binaries %}
+            <li><a href="{{ url_for('frontend.solver_binary_download', database=database, solver_binary_id=solver.binaries[0].idSolverBinary) }}">Download</a> solver binary</li>
+            {% endif %}
+            {% if solver.code %}
+            <li><a href="{{ url_for('frontend.solver_code_download', database=database, solver_id=solver.idSolver) }}">Download</a> solver code</li>
+            {% endif %}
+            {% if solver.description_pdf %}
+            <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=solver.idSolver) }}">Download</a> solver description PDF</li>
+            {% endif %}
+        </ul>
+
+</div>
 
 
 {% endblock %}

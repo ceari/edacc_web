@@ -1073,10 +1073,56 @@ def solver_configuration_details(database, experiment_id, solver_configuration_i
 def solver_details(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+    categories = map(str, solver.competition_categories)
 
     if not is_admin() and solver.user != g.User: abort(401)
 
-    return render('solver_details.html', database=database, db=db, solver=solver)
+    return render('solver_details.html', database=database, db=db, solver=solver, categories=categories)
+
+@frontend.route('/<database>/solver-binary-download/<int:solver_binary_id>')
+@require_competition
+@require_login
+def solver_binary_download(database, solver_binary_id):
+    db = models.get_database(database) or abort(404)
+    solver_binary = db.session.query(db.SolverBinary).get(solver_binary_id) or abort(404)
+
+    if not is_admin() and solver_binary.solver.user != g.User: abort(401)
+
+    headers = Headers()
+    headers.add('Content-Type', 'application/zip')
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename(solver_binary.binaryName + '.zip'))
+
+    return Response(response=solver_binary.binaryArchive, headers=headers)
+
+@frontend.route('/<database>/solver-code-download/<int:solver_id>')
+@require_competition
+@require_login
+def solver_code_download(database, solver_id):
+    db = models.get_database(database) or abort(404)
+    solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+
+    if not is_admin() and solver.user != g.User: abort(401)
+
+    headers = Headers()
+    headers.add('Content-Type', 'application/zip')
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename(solver.name + '_code.zip'))
+
+    return Response(response=solver.code, headers=headers)
+
+@frontend.route('/<database>/solver-description-download/<int:solver_id>')
+@require_competition
+@require_login
+def solver_description_download(database, solver_id):
+    db = models.get_database(database) or abort(404)
+    solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+
+    if not is_admin() and solver.user != g.User: abort(401)
+
+    headers = Headers()
+    headers.add('Content-Type', 'application/pdf')
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename(solver.name + '_description.pdf'))
+
+    return Response(response=solver.description_pdf, headers=headers)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/')

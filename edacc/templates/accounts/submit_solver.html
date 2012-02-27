@@ -1,8 +1,52 @@
 {% from "_formhelpers.html" import render_field %}
 {% extends "base.html" %}
 {% block title %}Submit Solver{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#solver_form").submit(function() {
+                if (!$.trim($('#name').val())) {
+                    alert("Name is required.");
+                    return false;
+                }
+                if (!$.trim($('#version').val())) {
+                    alert("Version is required.");
+                    return false;
+                }
+                if (!$.trim($('#authors').val())) {
+                    alert("Authors is required.");
+                    return false;
+                }
+                {% if not id %} // only check for uploads on new solvers
+                if (!$.trim($('#description_pdf').val())) {
+                    alert("Description PDF is required.");
+                    return false;
+                }
+                if (!$.trim($('#binary').val()) && !$.trim($('#code').val())) {
+                    alert("Please upload either a binary or code, or both.");
+                    return false;
+                }
+                {% endif %}
+                if (!$('#competition_categories').val()) {
+                    alert("You have to specify at least one competition category.");
+                    return false;
+                }
+                if (!$.trim($('#parameters').val())) {
+                    alert("You have to specify INSTANCE as parameter.");
+                    return false;
+                }
+
+            });
+        });
+    </script>
+{% endblock %}
 {% block content %}
     <h2>Submit Solver</h2>
+    <div>
+        <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
+        Fields marked with <strong>*</strong> are required. You have to submit either a binary or code, or both.
+    </div>
     {% if id %}
     <div>
         <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
@@ -10,20 +54,20 @@
         If you don't provide a new binary or code the old one will be used.
     </div>
     {% endif %}
-    <form action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
+    <form id="solver_form" action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
         {{ form.csrf }}
         <table width="800px">
-            {{ render_field(form.name, size=40, maxlength=255, explanation="Required") }}
-            {{ render_field(form.version, size=40, maxlength=255, explanation="Required") }}
-            {{ render_field(form.authors, size=40, maxlength=255, explanation="Required") }}
+            {{ render_field(form.name, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
+            {{ render_field(form.version, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
+            {{ render_field(form.authors, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
             {{ render_field(form.description, cols=38, rows=5, explanation="Optional short description") }}
-            {{ render_field(form.description_pdf, explanation="Required .pdf file") }}
+            {{ render_field(form.description_pdf, explanation="<strong>Required</strong> .pdf file", required=True) }}
             {{ render_field(form.binary, size=40, explanation="If your solver consists of more than one file please provide a .zip archive.") }}
             {{ render_field(form.code, size=40, explanation="Optional (.zip file)") }}
             {{ render_field(form.run_path, size=40, maxlength=255, explanation="If your binary is a .zip archive, specify the relative path of the main solver executable within the submitted binary .zip file") }}
             {{ render_field(form.run_command, size=40, maxlength=255, explanation="If your solver has to be run via another program, e.g. if it is a JAR file put 'java -jar' here.") }}
-            {{ render_field(form.competition_categories, explanation='Hold the Ctrl key to select multiple categories.') }}
-            {{ render_field(form.parameters, size=40) }}
+            {{ render_field(form.competition_categories, explanation='<strong>Required</strong>. Hold the Ctrl key to select multiple categories.', required=True) }}
+            {{ render_field(form.parameters, size=40, explanation="<strong>Required</strong>", required=True) }}
             <tr>
                 <td></td>
                 <td>Please provide the parameters your solver should use here.
@@ -37,7 +81,7 @@
             </tr>
         </table>
         {% if error %}<div style="color: red;"><b>Error: {{error}}</b></div>{% endif %}
-        <input type="submit" value="Submit" />
+        <input id="submit" type="submit" value="Submit" />
     </form>
 
 {% endblock %}

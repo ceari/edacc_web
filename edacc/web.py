@@ -99,6 +99,7 @@ app.jinja_env.filters['competition_phase'] = utils.competition_phase
 app.jinja_env.filters['result_time'] = utils.result_time
 app.jinja_env.filters['render_formula'] = utils.render_formula
 app.jinja_env.filters['truncate_name'] = utils.truncate_name
+app.jinja_env.filters['parameter_template'] = utils.parameter_template
 
 if config.PIWIK:
     @app.before_request
