@@ -229,7 +229,7 @@ class EDACCDatabase(object):
                     cost_column = 'cost'
                     inf = float('inf')
                     cost_limit_column = table.c['CPUTimeLimit']
-                s = select([table.c['idJob'], table.c['status'], table.c['resultCode'], expression.label('cost', table.c[cost_column]), table.c['status'],
+                s = select([table.c['idJob'], table.c['resultCode'], expression.label('cost', table.c[cost_column]), table.c['status'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
                             table_result_codes.c['description'], expression.label('limit', cost_limit_column)],
                             and_(table.c['Experiment_idExperiment'] == self.idExperiment,
@@ -243,7 +243,7 @@ class EDACCDatabase(object):
                     if str(r.resultCode).startswith('1'): num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     if r.status not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
-                        Run(r.idJob, r.status, r[7], r.resultCode, None if r.status <= 0 else r.cost, str(r.resultCode).startswith('1'),
+                        Run(r.idJob, r.status, r[6], r.resultCode, None if r.status <= 0 else r.cost, str(r.resultCode).startswith('1'),
                             r.cost if str(r.resultCode).startswith('1') else (inf if cost_column == 'cost' else r.limit) * 10,
                             r.SolverConfig_idSolverConfig, r.Instances_idInstance))
                 return M, num_successful, num_completed
