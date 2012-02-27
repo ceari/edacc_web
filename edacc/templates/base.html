@@ -38,10 +38,11 @@
     </div>
     <div id="navigation">
         {% if db.is_competition() %}
-            <a href="{{url_for('frontend.competition_overview', database=database)}}">Overview</a>|
+            <a href=http://baldur.iti.kit.edu/SAT-Challenge-2012/>Information</a>|
+            <!--<a href="{{url_for('frontend.competition_overview', database=database)}}">Overview</a>|
             <a href="{{url_for('frontend.competition_schedule', database=database)}}">Schedule</a>|
             <a href="{{url_for('frontend.competition_rules', database=database)}}">Rules</a>|
-            <a href="{{url_for('frontend.categories', database=database)}}">Categories</a>|
+            <a href="{{url_for('frontend.categories', database=database)}}">Categories</a>|-->
             {% if db.is_competition() and not session.logged_in %}
             {% if db.competition_phase() in (2,) %}
             <a href="{{url_for('accounts.register', database=database)}}">Register</a>|
