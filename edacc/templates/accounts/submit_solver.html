@@ -52,7 +52,7 @@
     <div>
         <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
         You are about to submit a new version of a solver you previously submitted. All results of the solver will be deleted.<br/>
-        If you don't provide a new binary or code the old one will be used.
+        If you don't provide a new binary, code or description pdf, the old one will be used.
     </div>
     {% endif %}
     <form id="solver_form" action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
