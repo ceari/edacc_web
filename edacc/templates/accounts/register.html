@@ -8,24 +8,24 @@
         After registration you will receive an e-mail with a link you have to follow to activate your account.<br/>
         Furthermore, all registrations have to be verified by the organizers before you can log in.<br/>We will send a notification e-mail when your account is verified.<br/>
         All information submitted here is only accessible by the organizers.<br/>
-        Passwords are stored as salted SHA-hashes.
+        Passwords are stored as salted SHA-hashes. Fields marked with <strong>*</strong> are required.
     </div>
 
     <form action="{{url_for('accounts.register', database=database)}}" method="post">
         {{ form.csrf }}
         <table>
-            {{ render_field(form.lastname, size=40, maxlength=255) }}
-            {{ render_field(form.firstname, size=40, maxlength=255) }}
-            {{ render_field(form.email, size=40, maxlength=255) }}
-            {{ render_field(form.password, size=40, maxlength=255) }}
-            {{ render_field(form.password_confirm, size=40, maxlength=255) }}
+            {{ render_field(form.lastname, size=40, maxlength=255, required=True) }}
+            {{ render_field(form.firstname, size=40, maxlength=255, required=True) }}
+            {{ render_field(form.email, size=40, maxlength=255, required=True) }}
+            {{ render_field(form.password, size=40, maxlength=255, required=True) }}
+            {{ render_field(form.password_confirm, size=40, maxlength=255, required=True) }}
             {{ render_field(form.address, cols=30, rows=5) }}
             {{ render_field(form.affiliation, cols=30, rows=5) }}
             <tr>
-                <td>Give a solution<br/>(Spam bot protection)</td>
+                <td>Give a solution <strong>*</strong><br/>(Spam bot protection)</td>
                 <td>{{session.captcha|render_formula}}<br/>(space-separated, e.g. 1 0 1 for A=1, B=0, C=1<br/> Don't use your solver for this!)<br/><input size="40" type="text" name="captcha" /></td>
             </tr>
-            {{ render_field(form.accepted_terms, side_explanation='<a href="' + url_for("frontend.privacy") + '">Terms and conditions, privacy notice</a>') }}
+            {{ render_field(form.accepted_terms, required=True, side_explanation='<a href="' + url_for("frontend.privacy") + '">Terms and conditions, privacy notice</a>') }}
             {% if errors %}
                 <tr>
                     <td colspan="2">

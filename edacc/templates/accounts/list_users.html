@@ -6,9 +6,15 @@
     <ul>
         {% for user in users %}
             <li>
-                {{ user.email }} - {{ user.firstname }} {{ user.lastname }}<br/><br/>
-                {{ user.address }}<br/><br/>
-                {{ user.affiliation }}
+                <h3>{{ user.email }} - {{ user.firstname }} {{ user.lastname }}
+                {% if not user.activation_hash %}
+                {% if user.verified %}[Verified]{% else %}<a href={{ url_for('accounts.verify_user',database=database, user_id=user.idUser) }}>Verify user</a>{% endif %}
+                {% else %}
+                Not activated yet.
+                {% endif %}
+                </h3>
+                <p>{{ user.address }}</p>
+                <p>{{ user.affiliation }}</p>
             </li>
         {% endfor %}
     </ul>

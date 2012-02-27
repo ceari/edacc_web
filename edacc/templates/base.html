@@ -54,6 +54,9 @@
         {% if db.is_competition() and session.logged_in %}
             |<a href="{{url_for('accounts.manage', database=database)}}">Submission</a>
         {% endif %}
+        {% if db.is_competition() and session.admin %}
+            |<a href={{ url_for('accounts.list_users', database=database) }}>Users</a>
+        {% endif %}
         <span id="admin_login">
             {% if db.is_competition() and not session.logged_in and not db.competition_phase() == 1 %}
             <a href="{{url_for('accounts.login', database=database)}}">Login</a>
