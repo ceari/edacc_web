@@ -489,7 +489,7 @@ def submit_solver(database, id=None):
 
             flash('Solver submitted successfully')
             return redirect(url_for('accounts.list_solvers',
-                                    database=database))
+                                    database=database, user_id=None))
 
     return render('/accounts/submit_solver.html', database=database, error=error,
                   db=db, id=id, form=form)
@@ -501,7 +501,7 @@ def submit_solver(database, id=None):
 def delete_solver(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
-    if not is_admin() and solver.user != g.User: abort(401)
+    if solver.user != g.User: abort(401)
 
     try:
         for solver_binary in solver.binaries:
@@ -517,7 +517,7 @@ def delete_solver(database, solver_id):
         print e
         flash('Could not delete solver. Please contact an administrator.')
 
-    return redirect(url_for('accounts.list_solvers', database=database))
+    return redirect(url_for('accounts.list_solvers', database=database, user_id=None))
 
 @accounts.route('/<database>/reset-password/', methods=['GET', 'POST'])
 @require_competition
@@ -582,15 +582,18 @@ def change_password(database, reset_hash):
 
     return render('/accounts/change_password.html', db=db, database=database, form=form, reset_hash=reset_hash)
 
-@accounts.route('/<database>/manage/solvers/')
+@accounts.route('/<database>/manage/solvers/<int:user_id>')
 @require_login
 @require_competition
-def list_solvers(database):
-    """ Lists all solvers that the currently logged in user submitted to
+def list_solvers(database, user_id=None):
+    """ Lists all solvers that the user submitted to
         the database
     """
     db = models.get_database(database) or abort(404)
-    solvers = db.session.query(db.Solver).filter_by(user=g.User).all()
+    if is_admin() and user_id:
+        solvers = db.session.query(db.Solver).filter_by(User_idUser=user_id).all()
+    else:
+        solvers = db.session.query(db.Solver).filter_by(user=g.User).all()
 
     return render('/accounts/list_solvers.html', database=database,
                   solvers=solvers, db=db)

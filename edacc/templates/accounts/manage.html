@@ -8,7 +8,7 @@
 </div>
 <ul>
     <li>
-        <a href="{{url_for('accounts.list_solvers', database=database)}}">List of submitted solvers</a>
+        <a href="{{url_for('accounts.list_solvers', database=database, user_id=g.User.idUser)}}">List of submitted solvers</a>
     </li>
     <li>
         <a href="{{url_for('accounts.submit_solver', database=database)}}">Submit a solver</a>

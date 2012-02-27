@@ -15,6 +15,7 @@
                 </h3>
                 <p>{{ user.address }}</p>
                 <p>{{ user.affiliation }}</p>
+                <p><a href={{ url_for('accounts.list_solvers', database=database, user_id=user.idUser) }}>Show submitted solvers</a></p>
             </li>
         {% endfor %}
     </ul>
