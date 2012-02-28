@@ -26,7 +26,7 @@ from werkzeug import Headers, secure_filename
 from edacc import models, forms, ranking, statistics
 from edacc.web import cache
 from edacc.views.helpers import require_phase, require_login, is_admin
-from edacc.constants import RANKING, ANALYSIS1, ANALYSIS2
+from edacc.constants import RANKING, ANALYSIS1, ANALYSIS2, OWN_RESULTS
 from edacc.views import plot
 from edacc.forms import EmptyQuery
 
