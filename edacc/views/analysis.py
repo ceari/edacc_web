@@ -19,7 +19,7 @@ from sqlalchemy import or_, func, and_, not_
 from sqlalchemy.sql import expression, select
 
 from flask import Blueprint
-from flask import render_template as render
+from flask import render_template as render, g
 from flask import abort, request, jsonify, Response
 from werkzeug import Headers, secure_filename
 
