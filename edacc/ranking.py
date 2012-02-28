@@ -110,6 +110,8 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [i.idSolverConfig for i in solver_configs]
 
+    if not solver_config_ids: return []
+
     table = db.metadata.tables['ExperimentResults']
     c_solver_config_id = table.c['SolverConfig_idSolverConfig']
     c_result_time = table.c['resultTime']
@@ -156,6 +158,8 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
 def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in ranked_solvers]
+    if not solver_config_ids: return []
+    
     max_num_runs = experiment.get_max_num_runs(db)
     max_num_runs_per_solver = max_num_runs * len(instance_ids)
 
