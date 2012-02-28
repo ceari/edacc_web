@@ -489,7 +489,7 @@ def submit_solver(database, id=None):
 
             flash('Solver submitted successfully')
             return redirect(url_for('accounts.list_solvers',
-                                    database=database, user_id=None))
+                                    database=database, user_id=g.User.idUser))
 
     return render('/accounts/submit_solver.html', database=database, error=error,
                   db=db, id=id, form=form)
