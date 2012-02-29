@@ -582,6 +582,7 @@ def change_password(database, reset_hash):
 
     return render('/accounts/change_password.html', db=db, database=database, form=form, reset_hash=reset_hash)
 
+@accounts.route('/<database>/manage/solvers/')
 @accounts.route('/<database>/manage/solvers/<int:user_id>')
 @require_login
 @require_competition
