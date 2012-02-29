@@ -435,6 +435,8 @@ def submit_solver(database, id=None):
             else:
                 if solver_binary:
                     for solver_config in solver_binary.solver_configurations:
+                        for pi in solver_config.parameter_instances: db.session.delete(pi)
+                        db.session.commit()
                         db.session.delete(solver_config)
                     db.session.commit()
 
@@ -505,15 +507,18 @@ def delete_solver(database, solver_id):
     try:
         for solver_binary in solver.binaries:
             for solver_config in solver_binary.solver_configurations:
+                for pi in solver_config.parameter_instances: db.session.delete(pi)
+                db.session.commit()
                 db.session.delete(solver_config)
+            db.session.commit()
             db.session.delete(solver_binary)
         for p in solver.parameters: db.session.delete(p)
         db.session.delete(solver)
         db.session.commit()
         flash('Solver deleted successfully.')
     except Exception as e:
-        db.session.rollback()
         print e
+        db.session.rollback()
         flash('Could not delete solver. Please contact an administrator.')
 
     return redirect(url_for('accounts.list_solvers', database=database, user_id=None))
