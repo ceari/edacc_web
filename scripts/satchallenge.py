@@ -109,6 +109,7 @@ def send_info_mail(solver_binary):
 
 
 while True:
+    db.session.remove()
     for solver_binary in db.session.query(db.SolverBinary):
         if solver_binary.solver.user is None: continue # only consider solvers from users
         solver = solver_binary.solver
