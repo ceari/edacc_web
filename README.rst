@@ -139,7 +139,7 @@ same machine that the EDACC database runs on::
     </VirtualHost>
 
     - Install dependencies and create a virtual environment for Python libraries:
-    > apt-get install python-pip python-virtualenv python-scipy python-pygame python-imaging python-numpy
+    > apt-get install python-pip python-virtualenv python-scipy python-pygame python-imaging python-numpy python-lxml
     > virtualenv /srv/edacc_web/env
     > apt-get build-dep python-mysqldb
     > apt-get install r-base
@@ -148,7 +148,7 @@ same machine that the EDACC database runs on::
     > source /srv/edacc_web/env/bin/activate
     > pip install mysql-python
     > pip install rpy2
-    > pip install flask flask-wtf flask-actions lxml
+    > pip install flask flask-wtf flask-actions flask-mail flask-cache
     > pip install sqlalchemy pylzma
 
     - Install R libraries ("R" launches the R interpreter):
