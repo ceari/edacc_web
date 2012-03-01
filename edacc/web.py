@@ -58,7 +58,7 @@ class LimitedRequest(Request):
 app.request_class = LimitedRequest
 app.config.update(
     SECRET_KEY = config.SECRET_KEY,
-    PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=1),
+    PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=14),
     CACHE_TYPE='filesystem',
     CACHE_DIR=config.TEMP_DIR,
     MAIL_SERVER=config.MAIL_SERVER,

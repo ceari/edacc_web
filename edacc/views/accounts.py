@@ -194,6 +194,7 @@ def login(database):
                 session['idUser'] = user.idUser
                 session['email'] = user.email
                 session['db'] = str(db)
+                session.permanent = True
                 flash('Login successful')
                 return redirect(url_for('frontend.experiments_index',
                                         database=database))

@@ -100,6 +100,7 @@ def admin_login():
             error = 'Invalid password'
         else:
             session['admin'] = True
+            session.permanent = True
             return redirect(url_for('admin.databases'))
     return render('/admin/login.html', error=error)
 
