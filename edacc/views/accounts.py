@@ -217,6 +217,7 @@ def logout(database):
 @accounts.route('/<database>/manage/')
 @require_login
 @require_competition
+@redirect_ssl
 def manage(database):
     """ Management for users with links to solver and benchmark submission """
     db = models.get_database(database) or abort(404)

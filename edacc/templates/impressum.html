@@ -31,7 +31,9 @@
     </script>
 </head>
 <body>
-<div id="c196853" class="csc-default"><h1>Impressum</h1><h2>Herausgeber</h2>
+<a href="{{ url_for('frontend.impressum', lang='en') }}">In English</a>
+
+<h1>Impressum</h1><h2>Herausgeber</h2>
     <p> Universität Ulm<br />89069 Ulm<br />Telefon +49 (0)731/50-10<br />Telefax +49 (0)731/50-22038<br />Umsatzsteueridentifikationsnummer DE173703203
 
     </p>
@@ -46,7 +48,10 @@
 
     <p>Verantwortlich im Sinne des Presserechts für die WWW-Seiten innerhalb der Domäne: edacc3.informatik.uni-ulm.de
     </p>
-    <p><img src="fileadmin/img/icons/mail.gif" alt="" />Adrian Balint<br />Universität Ulm - Institut für Theoretische Informatik<br />Albert-Einstein-Allee 11<br />89069 Ulm<br />Telefon +49 (0)731/5024105<br />Telefax +49 (0)731/5024102</p></div><!--DMAILER_SECTION_BOUNDARY_END--><!--DMAILER_SECTION_BOUNDARY_--><div id="c196860" class="csc-default"><h3>Zuständige Aufsichtsbehörde</h3>
+    <p><a href="javascript:linkTo_UnCryptMailto('ocknvq,wyg0uejqgpkpiBwpk/wno0fg');" title="Prof. Dr. Uwe Schöning" class="mail"><img src="fileadmin/img/icons/mail.gif" alt="" />Prof. Dr. Uwe Schöning</a><br />Universität Ulm<br />Institut für Theoretische Informatik<br />89069 Ulm<br />Telefon +49 (0)731/50-24100<br />Telefax +49 (0)731/50-24102</p>
+
+
+    <h3>Zuständige Aufsichtsbehörde</h3>
     <p> Ministerium für Wissenschaft, Forschung und Kunst Baden-Württemberg<br />Königstraße 46<br />70173 Stuttgart
     </p>
     <h2>Copyright</h2>
@@ -69,12 +74,25 @@
     <h3>Haftungsausschluss bei fremden Inhalten</h3>
     <p>Die Universität Ulm ist als Inhaltsanbieter für die eigenen Inhalte, die sie zur Nutzung bereithält, nach den allgemeinen Gesetzen verantwortlich. Von diesen eigenen Inhalten sind Querverweise auf die von anderen Anbietern bereitgehaltenen Inhalte zu unterscheiden. Diese fremden Inhalte stammen weder von der Universität Ulm, noch hat die Universität Ulm die Möglichkeit, den Inhalt von Seiten Dritter zu beeinflussen.
     </p>
-    <p>Fremde Inhalte auf Seiten innerhalb der Domäne <a href="http://edacc3.informatik.uni-ulm.de" target="_self">edacc3.informatik.uni-ulm.de</a> werde auch in den Bereichen: &quot;Solver output&quot; und &quot;Watcher output&quot; dargestellt. Die Information die in diesen Bereichen dargestellt wird spiegeln nicht die Meinung der Universität Ulm wider, sondern dienen lediglich der&nbsp; Reproduzierbarkeit von Ergebnissen.
+    <p>Fremde Inhalte auf Seiten innerhalb der Domäne {{ request.url_root[7:-1] }} werden auch in den Bereichen: &quot;Solver output&quot; und &quot;Watcher output&quot; dargestellt. Die Information die in diesen Bereichen dargestellt wird spiegeln nicht die Meinung der Universität Ulm wider, sondern dienen lediglich der&nbsp; Reproduzierbarkeit von Ergebnissen.
     </p>
 
     <p>Die Inhalte fremder Seiten, auf die die Universität Ulm mittels Links  hinweist, spiegeln nicht die Meinung der Universität Ulm wider, sondern  dienen lediglich der Information und der Darstellung von  Zusammenhängen.
     </p>
-    <p>Diese Feststellungen gelten für alle innerhalb des eigenen  Internetangebotes gesetzten Links und Verweise sowie für Fremdeinträge  in Gästebüchern, Diskussionsforen und Mailinglisten, die von der  Universität Ulm eingerichtet wurden. Für illegale, fehlerhafte oder  unvollständige Inhalte und insbesondere für Schäden, die aus der Nutzung  oder Nichtnutzung solcherart dargebotener Informationen entstehen,  haftet allein der Anbieter der Seite, auf welche verwiesen wurde.</p></div><!--DMAILER_SECTION_BOUNDARY_END--><!--DMAILER_SECTION_BOUNDARY_--><div id="c196849" class="csc-default"><h2>Konzeption, Realisierung und Gestaltung </h2>
+    <p>Diese Feststellungen gelten für alle innerhalb des eigenen  Internetangebotes gesetzten Links und Verweise sowie für Fremdeinträge  in Gästebüchern, Diskussionsforen und Mailinglisten, die von der  Universität Ulm eingerichtet wurden. Für illegale, fehlerhafte oder  unvollständige Inhalte und insbesondere für Schäden, die aus der Nutzung  oder Nichtnutzung solcherart dargebotener Informationen entstehen,  haftet allein der Anbieter der Seite, auf welche verwiesen wurde.</p></div><!--DMAILER_SECTION_BOUNDARY_END--><!--DMAILER_SECTION_BOUNDARY_--><div id="c196849" class="csc-default">
+
+
+    <div id="c197470" class="csc-default"><h1>Datenschutzerklärung für die Universität Ulm</h1>
+        <p>Bei jedem Zugriff auf eine Seite der Universität Ulm und bei jedem Abruf einer Datei werden zu statistischen Zwecken und zur Fehlersuche folgende Daten protokolliert und ausgewertet:</p><ul><li>Datum und Uhrzeit</li><li>IP-Adresse des aufrufenden Programms</li><li>Unsere Webserveradresse</li><li>abgerufene Datei (Zugriffsadresse)</li><li>HTTP Statuskode</li><li>Umfang der übermittelten Daten (in Bytes)</li><li>„Referer“ Adresse, falls vorhanden</li><li>Browsertyp, falls vorhanden</li></ul>
+        <p>Die Informationsangebote der Universität Ulm setzen teilweise JavaScript-Funktionen für eine ansprechende Darstellung der Informationsseiten und verschiedene Navigationshilfen ein. Alle relevanten Informationen sind jedoch auch ohne JavaScript zugänglich.
+        </p>
+        <p>Auf einigen Seiten setzen wir Cookies ein um Loginsitzungen zu ermöglichen und Zustände von Tabellen wie Sortierrichtung etc. über Seitenaufrufe hinweg zu speichern. Eine Auswertung dieses Cookies findet nicht statt.
+        </p>
+        <p>Soweit Sie über E-Mail mit der Universität Ulm kommunizieren, wird die Universität die dabei übermittelten personenbezogenen Daten ausschließlich zweckgebunden verwenden.
+        </p>
+        <p>Die Universität Ulm übernimmt keine Verantwortung für die Inhalte oder für die Privacy Policy der externen Ressourcen. </p></div>
+
+    <h2>Konzeption, Realisierung und Gestaltung </h2>
     <p>Daniel Diepold - Institut für Theoretische Informatik
     </p>
     <h3>Piwik</h3>
@@ -84,6 +102,5 @@
     </p>
 
     <iframe frameborder="no" width="600px" height="200px" src="http://{{g.PIWIK_URL}}index.php?module=CoreAdminHome&action=optOut&language=en"></iframe>
-</div>
 </body>
 </html>
