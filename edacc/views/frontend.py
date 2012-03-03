@@ -37,6 +37,7 @@ from werkzeug import Headers, secure_filename
 from edacc import utils, models
 from sqlalchemy.orm import joinedload, joinedload_all
 from sqlalchemy import func, text as sqla_text
+from sqlalchemy.sql import not_
 from edacc.constants import *
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
@@ -1002,6 +1003,51 @@ def solver_config_results(database, experiment_id, solver_configuration_id, inst
                   correct=correct, results=jobs, completed=completed,
                   database=database, db=db)
 
+@frontend.route('/<database>/experiment/<int:experiment_id>/configuration-results-csv')
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
+@require_login
+def configuration_results_csv(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+    if not experiment.configuration_scenario: abort(404)
+
+    solver_configs = [sc for sc in experiment.solver_configurations if sc.solver_binary == experiment.configuration_scenario.solver_binary]
+    solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
+    configurable_parameters = [p.parameter for p in experiment.configuration_scenario.parameters if p.configurable and p.parameter.name not in ('instance', 'seed')]
+    configurable_parameters_ids = [p.idParameter for p in configurable_parameters]
+    parameter_instances = db.session.query(db.ParameterInstance).options(joinedload('parameter')).filter(db.ParameterInstance.SolverConfig_idSolverConfig.in_(solver_config_ids)).all()
+
+    results = db.session.query(db.ExperimentResult).filter_by(experiment=experiment) \
+                        .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
+                        .filter(not_(db.ExperimentResult.status.in_([-1, 0]))).all()
+
+    results_by_solver = dict((id, list()) for id in solver_config_ids)
+    for res in results:
+        results_by_solver[res.SolverConfig_idSolverConfig].append(res)
+
+    parameter_values = dict()
+    for pv in parameter_instances:
+        if pv.Parameters_idParameter not in configurable_parameters_ids: continue
+        if pv.SolverConfig_idSolverConfig not in parameter_values:
+            parameter_values[pv.SolverConfig_idSolverConfig] = dict()
+        parameter_values[pv.SolverConfig_idSolverConfig][pv.Parameters_idParameter] = pv.value
+
+
+    csv_response = StringIO.StringIO()
+    csv_writer = csv.writer(csv_response)
+    csv_writer.writerow(['Name', '#Results', 'Cost'] + [p.name for p in configurable_parameters])
+    for solver_config in solver_configs:
+        if results_by_solver[solver_config.idSolverConfig]:
+            cost = sum([r.get_time() for r in results_by_solver[solver_config.idSolverConfig]]) / len(results_by_solver[solver_config.idSolverConfig])
+        else:
+            cost = 'na'
+        row = [solver_config.name, str(len(results_by_solver[solver_config.idSolverConfig])), str(cost)] + [parameter_values[solver_config.idSolverConfig][p.idParameter] for p in configurable_parameters]
+        csv_writer.writerow(row)
+    csv_response.seek(0)
+    headers = Headers()
+    headers.add('Content-Type', 'text/csv')
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename(experiment.name) + "_data.csv")
+    return Response(response=csv_response.read(), headers=headers)
 
 @frontend.route('/<database>/instance/<int:instance_id>')
 @require_login
