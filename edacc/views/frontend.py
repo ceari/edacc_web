@@ -1047,7 +1047,7 @@ def configuration_results_csv(database, experiment_id):
                 sc_cost = sum([r.cost for r in results_by_solver[solver_config.idSolverConfig]]) / len(results_by_solver[solver_config.idSolverConfig])
         else:
             sc_cost = 'na'
-        row = [solver_config.name, str(len(results_by_solver[solver_config.idSolverConfig])), str(sc_cost)] + [parameter_values[solver_config.idSolverConfig][p.idParameter] for p in configurable_parameters]
+        row = [solver_config.name, str(len(results_by_solver[solver_config.idSolverConfig])), str(sc_cost)] + [parameter_values[solver_config.idSolverConfig].get(p.idParameter, '') for p in configurable_parameters]
         csv_writer.writerow(row)
     csv_response.seek(0)
     headers = Headers()
