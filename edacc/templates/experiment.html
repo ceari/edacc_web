@@ -96,6 +96,9 @@
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a><br/>
     <a href="{{ url_for('frontend.unsolved_instances', database=database, experiment_id=experiment.idExperiment) }}">Unsolved instances</a><br/>
     <a href="{{ url_for('frontend.solved_instances', database=database, experiment_id=experiment.idExperiment) }}">Solved instances</a><br/>
+    {% if experiment.configurationExp %}
+    <a href="{{ url_for('frontend.configuration_results_csv', database=database, experiment_id=experiment.idExperiment) }}">Configuration results CSV</a>
+    {% endif %}
     {% endif %}
 
     {% if is_admin() or not db.is_competition() or db.competition_phase() in ANALYSIS2 %}

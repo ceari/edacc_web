@@ -1011,6 +1011,8 @@ def configuration_results_csv(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     if not experiment.configuration_scenario: abort(404)
 
+    cost = request.args.get('cost', 'cpu')
+
     solver_configs = [sc for sc in experiment.solver_configurations if sc.solver_binary == experiment.configuration_scenario.solver_binary]
     solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
     configurable_parameters = [p.parameter for p in experiment.configuration_scenario.parameters if p.configurable and p.parameter.name not in ('instance', 'seed')]
@@ -1032,21 +1034,25 @@ def configuration_results_csv(database, experiment_id):
             parameter_values[pv.SolverConfig_idSolverConfig] = dict()
         parameter_values[pv.SolverConfig_idSolverConfig][pv.Parameters_idParameter] = pv.value
 
-
     csv_response = StringIO.StringIO()
     csv_writer = csv.writer(csv_response)
     csv_writer.writerow(['Name', '#Results', 'Cost'] + [p.name for p in configurable_parameters])
     for solver_config in solver_configs:
         if results_by_solver[solver_config.idSolverConfig]:
-            cost = sum([r.get_time() for r in results_by_solver[solver_config.idSolverConfig]]) / len(results_by_solver[solver_config.idSolverConfig])
+            if cost == 'cpu':
+                sc_cost = sum([r.get_time() if str(r.resultCode).startswith('1') else r.CPUTimeLimit for r in results_by_solver[solver_config.idSolverConfig]]) / len(results_by_solver[solver_config.idSolverConfig])
+            elif cost == 'walltime':
+                sc_cost = sum([r.wallTime if str(r.resultCode).startswith('1') else r.wallClockTimeLimit for r in results_by_solver[solver_config.idSolverConfig]]) / len(results_by_solver[solver_config.idSolverConfig])
+            elif cost == 'cost':
+                sc_cost = sum([r.cost for r in results_by_solver[solver_config.idSolverConfig]]) / len(results_by_solver[solver_config.idSolverConfig])
         else:
-            cost = 'na'
-        row = [solver_config.name, str(len(results_by_solver[solver_config.idSolverConfig])), str(cost)] + [parameter_values[solver_config.idSolverConfig][p.idParameter] for p in configurable_parameters]
+            sc_cost = 'na'
+        row = [solver_config.name, str(len(results_by_solver[solver_config.idSolverConfig])), str(sc_cost)] + [parameter_values[solver_config.idSolverConfig][p.idParameter] for p in configurable_parameters]
         csv_writer.writerow(row)
     csv_response.seek(0)
     headers = Headers()
     headers.add('Content-Type', 'text/csv')
-    headers.add('Content-Disposition', 'attachment', filename=secure_filename(experiment.name) + "_data.csv")
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename(experiment.name) + "_configuration_results.csv")
     return Response(response=csv_response.read(), headers=headers)
 
 @frontend.route('/<database>/instance/<int:instance_id>')
