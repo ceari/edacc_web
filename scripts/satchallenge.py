@@ -7,19 +7,9 @@ random.seed()
 sys.path.append("..")
 
 from edacc import models, config, constants
-
-DB_NAME = "EDACC"
-DB_USER = "edacc"
-DB_PASSWORD = "edaccteam"
-
-base_url = 'http://edacc3.informatik.uni-ulm.de/SATChallenge2012/'
+from satchallenge_config import *
 
 db = models.add_database(DB_USER, DB_PASSWORD, DB_NAME, DB_NAME)
-
-# competition category - test experiment (id, time limit)  mapping
-test_experiments = {
-    "Random SAT": (8, 30),
-}
 
 STATE_FILE = "satchallenge.state"
 
