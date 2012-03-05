@@ -38,7 +38,35 @@
                 }
             });
 
-            $('#')
+            function update_launch_command() {
+                if ($('#run_path').val().trim() != '') {
+                    binary_name = $('#run_path').val();
+                } else if ($('#binary').val()) {
+                    binary_name = $('#binary').val();
+                } else {
+                    binary_name = 'submitted_binary_name';
+                }
+
+                $('#launch_command_preview').html($('#run_command').val() + ' /internal/path/to/solver/folder/' +  binary_name + ' ' + $('#parameters').val());
+            }
+
+            $('#run_command').keyup(function() {
+                update_launch_command();
+            });
+
+            $('#run_path').keyup(function() {
+                update_launch_command();
+            });
+
+            $('#parameters').keyup(function() {
+                update_launch_command();
+            });
+
+            $('#binary').change(function() {
+                update_launch_command();
+            });
+
+            update_launch_command();
         });
     </script>
 {% endblock %}
@@ -66,7 +94,10 @@
             {{ render_field(form.binary, size=40, explanation="If your solver consists of more than one file please provide a .zip archive.") }}
             {{ render_field(form.code, size=40, explanation="Optional (.zip file)") }}
             {{ render_field(form.run_path, size=40, maxlength=255, explanation="If your binary is a .zip archive, specify the relative path of the main solver executable within the submitted binary .zip file") }}
-            {{ render_field(form.run_command, size=40, maxlength=255, explanation="If your solver has to be run via another program, e.g. if it is a JAR file put 'java -jar' here.") }}
+            {{ render_field(form.run_command, size=40, maxlength=255, explanation="If your solver has to be run via another program, e.g. if it is a JAR file put 'java -jar' here. Alternatively you can use a wrapper script as main solver binary.") }}
+            <tr>
+                <td>Launch command preview:</td><td><span id="launch_command_preview"></span></td>
+            </tr>
             {{ render_field(form.competition_categories, explanation='<strong>Required</strong>. Hold the Ctrl key to select multiple categories.', required=True) }}
             {{ render_field(form.parameters, size=40, explanation="<strong>Required</strong>", required=True) }}
             <tr>

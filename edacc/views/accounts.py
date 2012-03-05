@@ -194,6 +194,7 @@ def login(database):
                 session['idUser'] = user.idUser
                 session['email'] = user.email
                 session['db'] = str(db)
+                session['admin'] = user.admin
                 session.permanent = True
                 flash('Login successful')
                 return redirect(url_for('frontend.experiments_index',
@@ -211,6 +212,7 @@ def logout(database):
 
     session.pop('logged_in', None)
     session.pop('database', None)
+    session.pop('admin', None)
     return redirect(url_for('frontend.experiments_index', database=database))
 
 
@@ -443,23 +445,25 @@ def submit_solver(database, id=None):
                     db.session.commit()
 
             solver.name = name
-            if bin:
-                solver_binary.binaryName = name
-            if bin:
-                solver_binary.binaryArchive = bin
-                solver_binary.md5 = hash.hexdigest()
-                solver_binary.runPath = "/" + run_path
-            if code:
-                solver.code = code
-            if description_pdf:
-                solver.description_pdf = description_pdf
             solver.description = description
-            if bin:
-                solver_binary.version = solver.version = version
-                solver_binary.runCommand = form.run_command.data
             solver.authors = authors
             solver.user = g.User
             solver.competition_categories = form.competition_categories.data
+
+            if bin:
+                # new or updated binary
+                solver_binary.binaryName = name
+                solver_binary.binaryArchive = bin
+                solver_binary.md5 = hash.hexdigest()
+                solver_binary.runPath = "/" + run_path
+                solver_binary.version = solver.version = version
+                solver_binary.runCommand = form.run_command.data
+            if code:
+                # new or updated code
+                solver.code = code
+            if description_pdf:
+                # new or updated description pdf
+                solver.description_pdf = description_pdf
 
             db.session.add(solver)
             if bin:

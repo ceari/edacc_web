@@ -95,6 +95,7 @@ def require_login(f):
 
         if session.get('logged_in') and session.get('idUser', None) is not None:
             g.User = db.session.query(db.User).get(session['idUser'])
+            if g.User.admin: session['admin'] = True
         else:
             g.User = None
 
