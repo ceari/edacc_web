@@ -93,7 +93,7 @@ def require_login(f):
     def decorated_f(*args, **kwargs):
         db = models.get_database(kwargs['database']) or abort(404)
 
-        if session.get('logged_in') and session.get('idUser', None) is not None:
+        if session.get('logged_in'):
             g.User = db.session.query(db.User).get(session['idUser'])
             if g.User.admin: session['admin'] = True
         else:
