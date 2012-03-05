@@ -63,8 +63,8 @@ def create_test_jobs(competition_category, solver_binary):
         run.resultCode = 0
         run.priority = -1
         run.CPUTimeLimit = experiment_info[1]
-        run.wallClockTimeLimit = -1
-        run.memoryLimit = -1
+        run.wallClockTimeLimit = experiment_info[2]
+        run.memoryLimit = experiment_info[3]
         run.stackSizeLimit = -1
         run.output = db.ExperimentResultOutput()
         db.session.add(run)
