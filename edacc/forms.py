@@ -63,6 +63,7 @@ class LoginForm(Form):
     email = TextField('e-mail', [Required(ERROR_REQUIRED)])
     password = PasswordField('Password',
                              [Required(ERROR_REQUIRED)])
+    permanent_login = BooleanField('Remember me')
 
 class ChangePasswordForm(Form):
     password = PasswordField('Password',

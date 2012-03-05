@@ -9,6 +9,7 @@
         <table>
             {{ render_field(form.email) }}
             {{ render_field(form.password) }}
+            {{ render_field(form.permanent_login) }}
             {% if error %}<tr><td colspan="2"><div class="form_error">{{ error }}</div></td></tr>{% endif %}
         </table>
         <input type="submit" value="Login" />
