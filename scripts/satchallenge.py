@@ -113,7 +113,7 @@ while True:
                 create_test_jobs(competition_category, solver_binary)
 
             # send mail to admin account
-            msg = MIMEText('Solver ' + solver.name + ' with ID ' + str(solver.idSolver) +  ' was added and test jobs generated.')
+            msg = MIMEText('Solver with ID ' + str(solver.idSolver) +  ' was added and test jobs generated.')
             msg['Subject'] = '[SAT Challenge 2012][Admin] A solver was added'
             msg.set_charset('utf8')
             send_mail(msg, config.DEFAULT_MAIL_SENDER)
