@@ -62,7 +62,7 @@ def create_test_jobs(competition_category, solver_binary):
         run.seed = random.randint(1, 123456789)
         run.status = -1
         run.resultCode = 0
-        run.priority = -1
+        run.priority = 0
         run.CPUTimeLimit = experiment_info[1]
         run.wallClockTimeLimit = experiment_info[2]
         run.memoryLimit = experiment_info[3]
