@@ -104,14 +104,14 @@ while True:
         if solver_binary.solver.user is None: continue # only consider solvers from users
         solver = solver_binary.solver
         if db.session.query(db.SolverConfiguration).filter_by(solver_binary=solver_binary).count() == 0:
-            print solver.name + " appears to be a new solver"
+            print solver.name + " appears to be a new solver. Adding to all test experiments based on its competition cateogries."
             testing_solvers.add(solver_binary.idSolverBinary)
             pickle.dump(testing_solvers, open(STATE_FILE, "wb"))
             for competition_category in solver.competition_categories:
                 create_test_jobs(competition_category, solver_binary)
 
             # send mail to admin account
-            msg = MIMEText('A solver with ID ' + str(solver.idSolver) +  ' was added')
+            msg = MIMEText('Solver ' + solver.name + ' with ID ' + str(solver.idSolver) +  ' was added and test jobs generated.')
             msg['Subject'] = '[SAT Challenge 2012][Admin] A solver was added'
             send_mail(msg, config.DEFAULT_MAIL_SENDER)
 
