@@ -70,18 +70,18 @@
 
     <h3>Solver output:</h3>
     (<a href="{{url_for('frontend.solver_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
-    <pre>{{solverOutput_text}}</pre>
+    <pre>{{solverOutput_text.decode("utf-8")}}</pre>
 
     <h3>Launcher output:</h3>
     (<a href="{{url_for('frontend.launcher_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
-    <pre>{{launcherOutput_text}}</pre>
+    <pre>{{launcherOutput_text.decode("utf-8")}}</pre>
 
     <h3>Watcher output:</h3>
     (<a href="{{url_for('frontend.watcher_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
-    <pre>{{watcherOutput_text}}</pre>
+    <pre>{{watcherOutput_text.decode("utf-8")}}</pre>
 
     <h3>Verifier output:</h3>
     (<a href="{{url_for('frontend.verifier_output_download', database=database, experiment_id=experiment.idExperiment, result_id=result.idJob)}}">Download</a>)
-    <pre>{{verifierOutput_text}}</pre>
+    <pre>{{verifierOutput_text.decode("utf-8")}}</pre>
 
 {% endblock %}
