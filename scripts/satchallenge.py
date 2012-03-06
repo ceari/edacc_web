@@ -23,6 +23,7 @@ def send_mail(msg, to):
     msg['From'] = config.DEFAULT_MAIL_SENDER
     msg['Reply-to'] = config.DEFAULT_MAIL_SENDER
     msg['To'] = to
+    msg.set_charset('utf8')
     server = smtplib.SMTP(config.MAIL_SERVER, config.MAIL_PORT)
     server.ehlo()
     server.starttls()
@@ -95,6 +96,7 @@ def send_info_mail(solver_binary):
                    'Please have a look at ' + base_url + 'experiments/ for detailed information about the test\n'
                    )
     msg['Subject'] = '[SAT Challenge 2012] Solver tested'
+    msg.set_charset('utf8')
     send_mail(msg, solver_binary.solver.user.email)
 
 
@@ -113,6 +115,7 @@ while True:
             # send mail to admin account
             msg = MIMEText('Solver ' + solver.name + ' with ID ' + str(solver.idSolver) +  ' was added and test jobs generated.')
             msg['Subject'] = '[SAT Challenge 2012][Admin] A solver was added'
+            msg.set_charset('utf8')
             send_mail(msg, config.DEFAULT_MAIL_SENDER)
 
     testing_solvers = pickle.load(open(STATE_FILE))
