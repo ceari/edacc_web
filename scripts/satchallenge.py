@@ -88,12 +88,12 @@ def send_info_mail(solver_binary):
 
     user = solver_binary.solver.user
 
-    msg = MIMEText('Dear ' + user.firstname + " " + user.lastname + ',\n\n' +
+    msg = MIMEText(('Dear ' + user.firstname + " " + user.lastname + ',\n\n' +
                    'This is an automatically generated e-mail regarding your solver submission to the SAT Challenge 2012.\n' +
                    'Your solver was executed in our execution environment with the following results:\n' +
                    str(num_successful) + " out of " + str(num_total) + " runs finished successfully in time\n" +
                    str(num_crash) + " runs crashed\n\n" +
-                   'Please have a look at ' + base_url + 'experiments/ for detailed information about the test\n'
+                   'Please have a look at ' + base_url + 'experiments/ for detailed information about the test\n').encode('utf8'), 'plain', 'utf8'
                    )
     msg['Subject'] = '[SAT Challenge 2012] Solver tested'
     msg.set_charset('utf8')
@@ -113,7 +113,7 @@ while True:
                 create_test_jobs(competition_category, solver_binary)
 
             # send mail to admin account
-            msg = MIMEText('Solver with ID ' + str(solver.idSolver) +  ' was added and test jobs generated.')
+            msg = MIMEText('Solver with ID ' + str(solver.idSolver) +  ' was added and test jobs generated.'.encode('utf8'), 'plain', 'utf8')
             msg['Subject'] = '[SAT Challenge 2012][Admin] A solver was added'
             msg.set_charset('utf8')
             send_mail(msg, config.DEFAULT_MAIL_SENDER)
