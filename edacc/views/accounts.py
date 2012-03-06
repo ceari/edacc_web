@@ -371,6 +371,8 @@ def submit_solver(database, id=None):
             form.description_pdf.data = ''
             form.binary.data = ''
             form.code.data = ''
+            form.run_command.data = solver.runCommand
+            form.run_path.data = solver.runPath
     else:
         form = forms.SolverForm(request.form)
 
