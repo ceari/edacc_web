@@ -462,7 +462,7 @@ def property_distribution(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDPlotForm(request.args)
-    form.instance.query = experiment.get_instances(db) or EmptyQuery()
+    form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])

@@ -500,7 +500,7 @@ def experiment_results_by_solver(database, experiment_id):
     return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
                   form=form, results=results, num_runs=num_runs,
-                  instance_properties=db.get_instance_properties(), name_by_instance=name_by_instance)
+                  instance_properties=db.get_instance_properties())
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-instance')

@@ -749,7 +749,9 @@ def property_distribution(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
-    instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
+    instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(int(id) for id in request.args.getlist('i'))).all()
+    instance_ids = [i.idInstance for i in instances]
+    #instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
 
     log_property = request.args.has_key('log_property')
     restart_strategy = request.args.has_key('restart_strategy')
@@ -763,15 +765,14 @@ def property_distribution(database, experiment_id):
     results = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult) \
                                     .options(joinedload_all('properties')) \
                                     .filter_by(experiment=exp,
-                                               solver_configuration=sc,
-                                               instance=instance).all()]
+                                               solver_configuration=sc).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()]
 
     results = filter(lambda r: r is not None, results)
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow([result_property_name + ' of ' + str(sc) + ' on ' + str(instance)])
+        csv_writer.writerow([result_property_name + ' of ' + str(sc)])
         csv_writer.writerow(map(str, results))
         csv_response.seek(0)
 
@@ -789,7 +790,8 @@ def kerneldensity(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
-    instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
+    instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(int(id) for id in request.args.getlist('i'))).all()
+    instance_ids = [i.idInstance for i in instances]
 
     log_property = request.args.has_key('log_property')
     restart_strategy = request.args.has_key('restart_strategy')
@@ -803,15 +805,14 @@ def kerneldensity(database, experiment_id):
     results = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
                                         .options(joinedload_all('properties')) \
                                         .filter_by(experiment=exp,
-                                               solver_configuration=sc,
-                                               instance=instance).all()]
+                                               solver_configuration=sc).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()]
 
     results = filter(lambda r: r is not None, results)
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow([result_property_name + ' of ' + str(sc) + ' on ' + str(instance)])
+        csv_writer.writerow([result_property_name + ' of ' + str(sc)])
         csv_writer.writerow(map(str, results))
         csv_response.seek(0)
 
