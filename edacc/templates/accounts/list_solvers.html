@@ -13,6 +13,6 @@
         {% endfor %}
     </ul>
     {% else %}
-    You haven't submitted any solvers yet.
+    {{ (user.firstname + ' ' + user.lastname + " hasn't") if user != g.User else "You haven't"}} submitted any solvers yet.
     {% endif %}
 {% endblock %}

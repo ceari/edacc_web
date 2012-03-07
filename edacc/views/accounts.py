@@ -603,12 +603,14 @@ def list_solvers(database, user_id=None):
         the database
     """
     db = models.get_database(database) or abort(404)
+    user = db.session.query(db.User).get(user_id or g.User.idUser) or abort(404)
+
     if is_admin() and user_id:
         solvers = db.session.query(db.Solver).filter_by(User_idUser=user_id).all()
     else:
         solvers = db.session.query(db.Solver).filter_by(user=g.User).all()
 
-    return render('/accounts/list_solvers.html', database=database,
+    return render('/accounts/list_solvers.html', database=database, user=user,
                   solvers=solvers, db=db)
 
 
