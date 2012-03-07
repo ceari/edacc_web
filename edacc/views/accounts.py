@@ -250,6 +250,13 @@ def submit_benchmarks(database):
                     print ex
 
             flash('Benchmark submission successful.')
+            try:
+                msg = Message("[" + db.label + "][Admin] Benchmarks submitted",
+                    recipients=[config.DEFAULT_MAIL_SENDER])
+                msg.body = ("The user %s %s with id %d just submitted some benchmarks" % (g.User.firstname, g.User.lastname, g.User.idUser))
+                mail.send(msg)
+            except:
+                pass
             session.pop('benchmarks', None)
             return redirect(url_for('frontend.experiments_index', database=database))
 
