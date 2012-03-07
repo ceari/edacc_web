@@ -496,7 +496,7 @@ def submit_solver(database, id=None):
                 return render('/accounts/submit_solver.html', database=database,
                               error=error, db=db, id=id, form=form)
 
-            flash('Solver submitted successfully')
+            flash('Solver submitted successfully. Test jobs will be generated within the next minute. You will be notified by email once they are computed. Please check the Results page at any time for the computation progress.')
             return redirect(url_for('accounts.list_solvers',
                                     database=database, user_id=g.User.idUser))
 
