@@ -34,10 +34,10 @@
                 "sAjaxSource": "{{url_for('frontend.experiment_progress_ajax', database=database, experiment_id=experiment.idExperiment)}}",
 				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
                     $('td:eq(0)', nRow).html('<a style="color: black;" href="/{{database}}/experiment/{{experiment.idExperiment}}/result/?id='+aData[0]+'">'+aData[0]+'</a>');
-                    $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[9]]);
+                    $(nRow).attr("bgcolor", JOB_STATUS_COLOR[aData[11]]);
                     return nRow;
 				},
-                "aoColumns": [null, null, null, null, null, null, null, null, null, {"bVisible": false},
+                "aoColumns": [null, null, null, null, null, null, null, null, null, null, null, {"bVisible": false},
                              {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
                              {"bVisible": false}, {"bVisible": false}, {"bVisible": false},
                              {% for prop in db.get_result_properties() %}{"bVisible": false}, {%endfor%}]
@@ -192,7 +192,9 @@
                 <th>Solver</th>
                 <th>Instance</th>
                 <th>Run</th>
-                <th>Time</th>
+                <th>CPU Time</th>
+                <th>Walltime</th>
+                <th>Cost</th>
                 <th>Seed</th>
                 <th>Status</th>
                 <th>Running</th>

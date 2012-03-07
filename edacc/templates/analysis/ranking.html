@@ -78,6 +78,7 @@
                         Example: (numAtoms &gt;= 6000 && numAtoms &lt;= 8000 && name.match(/k3/))
                     </td>
                 </tr>
+                {{ render_field(form.cost) }}
                 {{ render_field(form.calculate_average_dev, explanation="Averaged instance runtime dispersion measures")}}
                 {{ render_field(form.penalized_average_runtime, explanation="10 * run's CPU time limit for unsuccessful runs")}}
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
@@ -100,8 +101,8 @@
                 <th># of successful runs</th>
                 <th>% of all runs</th>
                 <th>% of VBS runs</th>
-                <th>cumulated CPU time</th>
-                <th>avg. CPU time per successful run</th>
+                <th>cumulated cost</th>
+                <th>avg. cost per successful run</th>
                 {% if form.calculate_average_dev.data %}
                 <th>avg. deviation of successful runs</th>
                 <th>avg. coefficient of variation</th>

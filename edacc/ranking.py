@@ -12,7 +12,7 @@
 import numpy
 from scipy.stats.mstats import mquantiles
 
-from sqlalchemy.sql import select, and_, functions, not_
+from sqlalchemy.sql import select, and_, functions, not_, expression
 
 
 def avg_point_biserial_correlation_ranking(db, experiment, instances):
@@ -102,7 +102,7 @@ def avg_point_biserial_correlation_ranking(db, experiment, instances):
     # List of solvers sorted by their rank. Best solver first.
     return list(sorted(experiment.solver_configurations, cmp=comp))
 
-def number_of_solved_instances_ranking(db, experiment, instances, solver_configs):
+def number_of_solved_instances_ranking(db, experiment, instances, solver_configs, cost='cpu'):
     """ Ranking by the number of instances correctly solved.
         This is determined by an resultCode that starts with '1' and a 'finished' status
         of a job.
@@ -120,8 +120,18 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
     c_status = table.c['status']
     c_instance_id = table.c['Instances_idInstance']
     c_solver_config_id = table.c['SolverConfig_idSolverConfig']
+    if cost == 'cpu':
+        cost_column = 'resultTime'
+        cost_limit_column = table.c['CPUTimeLimit']
+    elif cost == 'walltime':
+        cost_column = 'wallTime'
+        cost_limit_column = table.c['wallClockTimeLimit']
+    else:
+        cost_column = 'cost'
+        inf = float('inf')
+        cost_limit_column = table.c['CPUTimeLimit']
 
-    s = select([c_solver_config_id, functions.sum(c_result_time), functions.count()], \
+    s = select([c_solver_config_id, functions.sum(table.c[cost_column]), functions.count()], \
         and_(c_experiment_id==experiment.idExperiment, c_result_code.like(u'1%'), c_status==1,
              c_instance_id.in_(instance_ids), c_solver_config_id.in_(solver_config_ids))) \
         .select_from(table) \
@@ -147,7 +157,7 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
         if num_solved_s1 > num_solved_s2: return 1
         elif num_solved_s1 < num_solved_s2: return -1
         else:
-            # break ties by cumulative CPU time over all solved instances
+            # break ties by cumulative cost over all solved instances
             if results.has_key(s1.idSolverConfig) and results.has_key(s2.idSolverConfig):
                 return sgn(results[s2.idSolverConfig][0] - results[s1.idSolverConfig][0])
             else:
@@ -155,7 +165,7 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
 
     return list(sorted(experiment.solver_configurations,cmp=comp,reverse=True))
 
-def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev):
+def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev, cost):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in ranked_solvers]
     if not solver_config_ids: return []
@@ -163,10 +173,25 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     max_num_runs = experiment.get_max_num_runs(db)
     max_num_runs_per_solver = max_num_runs * len(instance_ids)
 
+    table = db.metadata.tables['ExperimentResults']
+    if cost == 'cpu':
+        cost_column = table.c['resultTime']
+        cost_property = db.ExperimentResult.resultTime
+        cost_limit_column = table.c['CPUTimeLimit']
+    elif cost == 'walltime':
+        cost_column = table.c['wallTime']
+        cost_property = db.ExperimentResult.wallTime
+        cost_limit_column = table.c['wallClockTimeLimit']
+    else:
+        cost_column = table.c['cost']
+        cost_property = db.ExperimentResult.cost
+        inf = float('inf')
+        cost_limit_column = table.c['CPUTimeLimit']
+
     vbs_num_solved = 0
     vbs_cumulated_cpu = 0
     from sqlalchemy import func, or_, not_
-    best_instance_runtimes = db.session.query(func.min(db.ExperimentResult.resultTime)) \
+    best_instance_runtimes = db.session.query(func.min(cost_property)) \
         .filter_by(experiment=experiment) \
         .filter(db.ExperimentResult.resultCode.like(u'1%')) \
         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
@@ -196,7 +221,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
     # single query fetch of all/most required data
     table = db.metadata.tables['ExperimentResults']
-    s = select([table.c['resultTime'],
+    s = select([expression.label('cost', cost_column),
                 table.c['SolverConfig_idSolverConfig'],
                 table.c['Instances_idInstance']],
                 and_(table.c['resultCode'].like(u'1%'),
@@ -216,7 +241,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
     if calculate_avg_stddev:
         finished_runs_by_solver_and_instance = {}
-        s = select([table.c['resultTime'],
+        s = select([expression.label('cost', cost_column),
                     table.c['SolverConfig_idSolverConfig'],
                     table.c['Instances_idInstance']],
             and_(table.c['Instances_idInstance'].in_(instance_ids),
@@ -233,7 +258,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
     if calculate_par10:
         failed_runs_by_solver = dict((sc.idSolverConfig, list()) for sc in ranked_solvers)
-        s = select([table.c['CPUTimeLimit'], table.c['SolverConfig_idSolverConfig']],
+        s = select([expression.label('cost_limit', cost_limit_column), table.c['SolverConfig_idSolverConfig']],
                     and_(table.c['Experiment_idExperiment']==experiment.idExperiment,
                         table.c['Instances_idInstance'].in_(instance_ids),
                         table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
@@ -255,7 +280,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                                 for run in ilist]
         else:
             successful_runs = []
-        successful_runs_sum = sum(j.resultTime for j in successful_runs)
+        successful_runs_sum = sum(j.cost for j in successful_runs)
 
         penalized_average_runtime = 0.0
         if calculate_par10:
@@ -263,7 +288,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                 # this should mean there are no jobs of this solver yet
                 penalized_average_runtime = 0.0
             else:
-                penalized_average_runtime = (sum([j.CPUTimeLimit*10.0 for j in failed_runs_by_solver[solver.idSolverConfig]]) + successful_runs_sum) \
+                penalized_average_runtime = (sum([j.cost_limit*10.0 for j in failed_runs_by_solver[solver.idSolverConfig]]) + successful_runs_sum) \
                                             / (len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]))
 
         avg_stddev_runtime = 0.0

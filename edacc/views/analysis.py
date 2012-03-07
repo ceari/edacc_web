@@ -59,15 +59,16 @@ def solver_ranking(database, experiment_id):
 
         CACHE_TIME = 7*24*60*60
         @cache.memoize(timeout=CACHE_TIME)
-        def cached_ranking(database, experiment_id, solver_configs, sc_names, last_modified_job, job_count, form_i_data, form_par, form_avg_dev, csv_response=False, latex_response=False):
+        def cached_ranking(database, experiment_id, solver_configs, sc_names, last_modified_job,
+                           job_count, form_i_data, form_par, form_avg_dev, cost, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
-            ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs)
+            ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
             ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
-                                                    form.penalized_average_runtime.data, form.calculate_average_dev.data)
+                                                    form.penalized_average_runtime.data, form.calculate_average_dev.data, cost)
 
             if csv_response:
                 head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
-                                     'cumulated CPU time', 'avg. CPU time per successful run']
+                                     'cumulated cost', 'avg. cost per successful run']
 
                 if form.calculate_average_dev.data:
                     head.append('avg. deviation of successful runs')
@@ -95,7 +96,7 @@ def solver_ranking(database, experiment_id):
                 return Response(response=csv_response.read(), headers=headers)
             elif latex_response:
                 head = ['\\#', 'Solver', '\\# of successful runs', '\\% of all runs', '\\% of VBS runs',
-                                     'cumulated CPU time', 'avg. CPU time per successful run']
+                                     'cumulated cost', 'avg. cost per successful run']
 
                 if form.calculate_average_dev.data:
                     head.append('avg. deviation of successful runs')
@@ -128,7 +129,7 @@ def solver_ranking(database, experiment_id):
 
         return cached_ranking(database, experiment_id, solver_configs, ''.join(sc.get_name() for sc in experiment.solver_configurations),
                               last_modified_job, job_count, [i.idInstance for i in form.i.data],
-                              form.penalized_average_runtime.data, form.calculate_average_dev.data,
+                              form.penalized_average_runtime.data, form.calculate_average_dev.data, form.cost.data,
                               'csv' in request.args, 'latex' in request.args)
 
     return render('/analysis/ranking.html', database=database, db=db,

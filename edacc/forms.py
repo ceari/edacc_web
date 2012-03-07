@@ -234,6 +234,7 @@ class RankingForm(Form):
     calculate_average_dev = BooleanField('Calculate dispersion measures', default=False)
     penalized_average_runtime = BooleanField('Calculate penalized average runtime', default=True)
     instance_filter = TextField('Filter Instances')
+    cost = SelectField('Cost', choices = [('cpu', 'CPU Time'), ('walltime', 'Walltime'), ('cost', 'Cost')])
 
 class ResultsBySolverAndInstanceForm(Form):
     solver_configs = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))

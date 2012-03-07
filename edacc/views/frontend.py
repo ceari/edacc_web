@@ -756,7 +756,7 @@ def experiment_results_csv(database, experiment_id):
     conn = db.session.connection()
     base_query = """SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
                        SolverConfig.name, Instances.name,
-                       ExperimentResults.run, ExperimentResults.resultTime,
+                       ExperimentResults.run, ExperimentResults.resultTime, ExperimentResults.wallTime, ExperimentResults.cost,
                        ExperimentResults.seed, ExperimentResults.status,
                        ExperimentResults.resultCode,
                        StatusCodes.description, ResultCodes.description,
@@ -791,7 +791,7 @@ def experiment_results_csv(database, experiment_id):
 
     csv_response = StringIO.StringIO()
     csv_writer = csv.writer(csv_response)
-    csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'status code', 'result code', 'Status'] +
+    csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Walltime', 'Cost', 'Seed', 'status code', 'result code', 'Status'] +
                         ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
                         ['stackSizeLimit', 'computeNode', 'computeNodeIP',
                          'priority', 'computeQueue ID'] +
@@ -826,7 +826,8 @@ def experiment_progress_ajax(database, experiment_id):
     # dummy column ("") in the middle for correct indexing in the ORDER part since
     # that column is hidden in the jquery table
     columns = ["ExperimentResults.idJob", "SolverConfig.name", "Instances.name",
-               "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.seed",
+               "ExperimentResults.run", "ExperimentResults.resultTime", "ExperimentResults.wallTime", "ExperimentResults.cost",
+               "ExperimentResults.seed",
                "StatusCodes.description",
                "runningTime",
                "ResultCodes.description", "ExperimentResults.status",
@@ -895,7 +896,7 @@ def experiment_progress_ajax(database, experiment_id):
             if direction in ('asc', 'desc'):
                 order += direction + ", "
         order = order[:-2]
-    print order
+
     limit = ""
     if request.args.get('iDisplayStart', '') != '' and int(request.args.get('iDisplayLength', -1)) != -1:
         limit = "LIMIT %s, %s"
@@ -905,7 +906,7 @@ def experiment_progress_ajax(database, experiment_id):
     conn = db.session.connection()
     res = conn.execute("""SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
                        SolverConfig.name, Instances.name,
-                       ExperimentResults.run, ExperimentResults.resultTime,
+                       ExperimentResults.run, ExperimentResults.resultTime, ExperimentResults.wallTime, ExperimentResults.cost,
                        ExperimentResults.seed,
                        StatusCodes.description,
                        CASE
@@ -946,16 +947,16 @@ def experiment_progress_ajax(database, experiment_id):
             running = "not running"
 
         aaData.append([job.idJob, job[1], job[2], job[3],
-                job[4], job[5], job[6], running, job[8], job[9], \
-                job[10], job[11], job[12], job[13], job[14], job[15], job[16], job[17] ] \
-                + [job[i] for i in xrange(18, 18+len(result_properties))]
+                job[4], job[5], job[6], job[7], job[8], running, job[10], job[11], \
+                job[12], job[13], job[14], job[15], job[16], job[17], job[18], job[19] ] \
+                + [job[i] for i in xrange(20, 20+len(result_properties))]
                 #+ [job[i] for i in xrange(20+len(result_properties), 19+len(result_properties)+len(instance_properties))]
             )
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Seed', 'status code', 'Status'] +
+        csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Walltime', 'Cost', 'Seed', 'status code', 'Status'] +
                             ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
                             ['stackSizeLimit', 'computeNode', 'computeNodeIP', 'priority', 'computeQueue ID'] +
                             [p.name for p in result_properties]) # +  [p.name for p in instance_properties])
