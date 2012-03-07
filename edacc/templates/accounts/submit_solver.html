@@ -78,9 +78,9 @@
     </div>
     {% if id %}
     <div>
-        <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
-        You are about to submit a new version of a solver you previously submitted. All results of the solver will be deleted.<br/>
-        If you don't provide a new binary, code or description pdf, the old one will be used.
+        <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" /><strong>
+        You are about to submit a new version of a solver you previously submitted. All results of the solver will be deleted and new test jobs generated.<br/>
+        If you don't provide a new binary, code or description pdf, the old one will be used.</strong>
     </div>
     {% endif %}
     <form id="solver_form" action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
@@ -90,7 +90,7 @@
             {{ render_field(form.version, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
             {{ render_field(form.authors, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
             {{ render_field(form.description, cols=38, rows=5, explanation="Optional short description") }}
-            {{ render_field(form.description_pdf, explanation="<strong>Required</strong> .pdf file", required=True) }}
+            {{ render_field(form.description_pdf, size=40, explanation="<strong>Required</strong> .pdf file", required=True) }}
             {{ render_field(form.binary, size=40, explanation="If your solver consists of more than one file please provide a .zip archive.") }}
             {{ render_field(form.code, size=40, explanation="Optional (.zip file)") }}
             {{ render_field(form.run_path, size=40, maxlength=255, explanation="If your binary is a .zip archive, specify the relative path of the main solver executable within the submitted binary .zip file") }}
