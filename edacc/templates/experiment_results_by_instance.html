@@ -41,7 +41,7 @@
         Results by Instance
     </div>
     <form method="get" action="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}">
-        Instance: {{form.instance}}
+        Instance: {{form.instance}} Cost: {{ form.cost }}
         <input type="submit" value="Show" />
         <input type="submit" name="details" value="Show instance details" />
         <input type="submit" name="csv" value="CSV"/>
@@ -66,13 +66,13 @@
                     {% set rowloop = loop %}
                     <tr class="{{'odd' if rowloop.index0 % 2 == 1 else 'even'}}">
                         <td>
-                            <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{result.0.idSolverConfig}}">{{ result.0}}</a>
+                            <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{result.0.idSolverConfig}}&cost={{ form.cost.data }}">{{ result.0}}</a>
                         </td>
                         {% for run in result[1] %}
                             {% if run == None %}<td></td>
                             {% else %}
-                                {% if run.get_time() %}
-                                <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ run.get_time()|result_time|round(3)}}</a></td>
+                                {% if run.cost %}
+                                <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ run.cost|result_time|round(3)}}</a></td>
                                 {% else %}
                                     {% if run.status == 0 %}
                                     <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">running</a></td>

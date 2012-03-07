@@ -37,7 +37,7 @@ from werkzeug import Headers, secure_filename
 from edacc import utils, models
 from sqlalchemy.orm import joinedload, joinedload_all
 from sqlalchemy import func, text as sqla_text
-from sqlalchemy.sql import not_
+from sqlalchemy.sql import not_, expression, select, and_
 from edacc.constants import *
 from edacc.views.helpers import require_phase, require_competition
 from edacc.views.helpers import require_login, is_admin
@@ -401,10 +401,29 @@ def experiment_results_by_solver(database, experiment_id):
                                     database=database, experiment_id=experiment.idExperiment,
                                     solver_configuration_id=solver_config.idSolverConfig))
 
-        ers = db.session.query(db.ExperimentResult).options(joinedload_all('instance.properties')) \
-                                .filter_by(experiment=experiment,
-                                    solver_configuration=solver_config) \
-                                .order_by('ExperimentResults.Instances_idInstance', 'run').all()
+        table = db.metadata.tables['ExperimentResults']
+        table_result_codes = db.metadata.tables['ResultCodes']
+        table_instances = db.metadata.tables['Instances']
+        if form.cost.data == 'cpu':
+            cost_property = db.ExperimentResult.resultTime
+            cost_column = table.c['resultTime']
+            cost_limit_column = table.c['CPUTimeLimit']
+        elif form.cost.data == 'walltime':
+            cost_property = db.ExperimentResult.wallTime
+            cost_column = table.c['wallTime']
+            cost_limit_column = table.c['wallClockTimeLimit']
+        else:
+            cost_property = db.ExperimentResult.cost
+            cost_column = table.c['cost']
+            cost_limit_column = table.c['CPUTimeLimit']
+
+        s = select([expression.label('cost', expression.case([(table.c['status'] > 0 , cost_column)], else_=None)), table.c['resultCode'], table.c['idJob'],
+                    table.c['Instances_idInstance'], table.c['status'], table_instances.c['name'],
+                    expression.label('limit', cost_limit_column)],
+            and_(table.c['SolverConfig_idSolverConfig'] == solver_config.idSolverConfig,
+                table.c['Experiment_idExperiment']==experiment_id
+            ),
+            from_obj=table.join(table_result_codes).join(table_instances)).order_by(table.c['run'])
 
         mean_by_instance = {}
         par10_by_instance = {} # penalized average runtime (timeout * 10 for unsuccessful runs) by instance
@@ -412,11 +431,13 @@ def experiment_results_by_solver(database, experiment_id):
         std_by_instance = {}
         runs_by_instance = {}
         jobs_by_instance = {}
-        for r in ers:
-            if not r.instance in runs_by_instance:
-                runs_by_instance[r.instance] = [r]
+        name_by_instance = {}
+        for r in db.session.connection().execute(s):
+            name_by_instance[r.Instances_idInstance] = r.name
+            if not r.Instances_idInstance in runs_by_instance:
+                runs_by_instance[r.Instances_idInstance] = [r]
             else:
-                runs_by_instance[r.instance].append(r)
+                runs_by_instance[r.Instances_idInstance].append(r)
 
         for instance in runs_by_instance.keys():
             total_time, count = 0.0, 0
@@ -424,29 +445,29 @@ def experiment_results_by_solver(database, experiment_id):
             for run in runs_by_instance[instance]:
                 count += 1
                 if run.status != 1 or not str(run.resultCode).startswith('1'):
-                    runtimes.append(run.get_penalized_time(10))
+                    runtimes.append(run.limit * 10.0)
                 else:
-                    runtimes.append(run.resultTime)
+                    runtimes.append(run.cost)
             total_time = sum(runtimes)
 
-            var_by_instance[instance.idInstance] = numpy.var(runtimes) if runtimes else 'n/a'
-            std_by_instance[instance.idInstance] = numpy.std(runtimes) if runtimes else 'n/a'
-            mean_by_instance[instance.idInstance] = total_time / count if count > 0 else 'n/a'
+            var_by_instance[instance] = numpy.var(runtimes) if runtimes else 'n/a'
+            std_by_instance[instance] = numpy.std(runtimes) if runtimes else 'n/a'
+            mean_by_instance[instance] = total_time / count if count > 0 else 'n/a'
             # fill up runs_by_instance with None's up to num_runs
             runs_by_instance[instance] += [None] * (num_runs - count)
-            par10_by_instance[instance.idInstance] = total_time / float(count) if count != 0 else 0
+            par10_by_instance[instance] = total_time / float(count) if count != 0 else 0
 
-        results = sorted(runs_by_instance.items(), key=lambda i: i[0].idInstance)
+        results = sorted(runs_by_instance.items(), key=lambda i: i[0])
 
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'] + ['Variance'])
-            results = [[res[0].name] + [('' if r.get_time() is None else round(r.get_time(), 3)) for r in res[1]] +
-                       ['' if par10_by_instance[res[0].idInstance] is None else round(par10_by_instance[res[0].idInstance], 4)] +
-                       ['' if mean_by_instance[res[0].idInstance] is None else round(mean_by_instance[res[0].idInstance], 4)] +
-                       ['' if var_by_instance[res[0].idInstance] is None else round(var_by_instance[res[0].idInstance], 4)] +
-                       ['' if std_by_instance[res[0].idInstance] is None else round(std_by_instance[res[0].idInstance], 4)] for res in results]
+            results = [[name_by_instance[res[0]]] + [('' if r.cost is None else round(r.cost, 3)) for r in res[1]] +
+                       ['' if par10_by_instance[res[0]] is None else round(par10_by_instance[res[0]], 4)] +
+                       ['' if mean_by_instance[res[0]] is None else round(mean_by_instance[res[0]], 4)] +
+                       ['' if var_by_instance[res[0]] is None else round(var_by_instance[res[0]], 4)] +
+                       ['' if std_by_instance[res[0]] is None else round(std_by_instance[res[0]], 4)] for res in results]
 
             if request.args.get('sort_by_instance_name', None):
                 sort_dir = request.args.get('sort_by_instance_name_dir', 'asc')
@@ -474,12 +495,12 @@ def experiment_results_by_solver(database, experiment_id):
                   solver_configs=solver_configs, experiment=experiment,
                   form=form, results=results, par10_by_instance=par10_by_instance, num_runs=num_runs,
                   var_by_instance=var_by_instance, std_by_instance=std_by_instance, mean_by_instance=mean_by_instance,
-                  instance_properties=db.get_instance_properties())
+                  instance_properties=db.get_instance_properties(), name_by_instance=name_by_instance)
 
     return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,
                   form=form, results=results, num_runs=num_runs,
-                  instance_properties=db.get_instance_properties())
+                  instance_properties=db.get_instance_properties(), name_by_instance=name_by_instance)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-instance')
@@ -509,9 +530,31 @@ def experiment_results_by_instance(database, experiment_id):
 
         solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
         results_by_sc = dict((id, list()) for id in solver_config_ids)
-        for run in db.session.query(db.ExperimentResult).filter_by(experiment=experiment, instance=instance) \
-                    .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
-                    .order_by('Instances_idInstance', 'run').all():
+
+        table = db.metadata.tables['ExperimentResults']
+        table_result_codes = db.metadata.tables['ResultCodes']
+        if form.cost.data == 'cpu':
+            cost_property = db.ExperimentResult.resultTime
+            cost_column = table.c['resultTime']
+            cost_limit_column = table.c['CPUTimeLimit']
+        elif form.cost.data == 'walltime':
+            cost_property = db.ExperimentResult.wallTime
+            cost_column = table.c['wallTime']
+            cost_limit_column = table.c['wallClockTimeLimit']
+        else:
+            cost_property = db.ExperimentResult.cost
+            cost_column = table.c['cost']
+            cost_limit_column = table.c['CPUTimeLimit']
+
+        s = select([expression.label('cost', expression.case([(table.c['status'] > 0 , cost_column)], else_=None)), table.c['resultCode'], table.c['idJob'],
+                    table.c['SolverConfig_idSolverConfig'], table.c['status'],
+                    expression.label('limit', cost_limit_column)],
+                    and_(table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
+                        table.c['Experiment_idExperiment']==experiment_id,
+                        table.c['Instances_idInstance']==instance.idInstance
+                        ),
+                    from_obj=table.join(table_result_codes)).order_by(table.c['Instances_idInstance'], table.c['run'])
+        for run in db.session.connection().execute(s):
             results_by_sc[run.SolverConfig_idSolverConfig].append(run)
 
         min_mean_sc, min_mean = None, 0
@@ -526,18 +569,18 @@ def experiment_results_by_instance(database, experiment_id):
             mean, median, par10, cv, qcd = None, None, None, None, None
             successful = len([j for j in runs if str(j.resultCode).startswith("1")])
             if len(runs) > 0:
-                runtimes = [j.get_time() for j in runs]
+                runtimes = [j.cost for j in runs]
                 runtimes = filter(lambda t: t is not None, runtimes)
                 count = 0
                 if len(runtimes) > 0:
                     par10 = 0.0
                 for j in runs:
-                    if j.get_time() is not None:
+                    if j.cost is not None:
                         count += 1
                         if not str(j.resultCode).startswith('1') or j.status != 1:
-                            par10 += j.get_penalized_time(10)
+                            par10 += j.limit * 10.0
                         else:
-                            par10 += j.get_time()
+                            par10 += j.cost
                 if count > 0:
                     par10 /= count
                 if len(runtimes) > 0:
@@ -567,7 +610,7 @@ def experiment_results_by_instance(database, experiment_id):
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Solver'] + ['Run %d' % r for r in xrange(num_runs)] + ['Mean', 'Median', 'penalized avg. runtime', 'coeff. of variation', 'quartile coeff. of dispersion'])
             for res in results:
-                csv_writer.writerow([str(res[0])] + [('' if r.get_time() is None else round(r.get_time(),4)) for r in res[1]] + map(lambda x: '' if x is None else round(x, 3), [res[2], res[3], res[4], res[6], res[7]]))
+                csv_writer.writerow([str(res[0])] + [('' if r.cost is None else round(r.cost,4)) for r in res[1]] + map(lambda x: '' if x is None else round(x, 3), [res[2], res[3], res[4], res[6], res[7]]))
             csv_response.seek(0)
 
             headers = Headers()
