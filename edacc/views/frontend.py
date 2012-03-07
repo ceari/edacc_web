@@ -239,7 +239,7 @@ def experiment_results(database, experiment_id):
         instances = experiment.instances
 
     if not form.cost.data:
-        form.cost.data = 'cputime'
+        form.cost.data = 'cpu'
 
     if form.solver_configs.data:
         solver_configs = form.solver_configs.data
@@ -404,6 +404,7 @@ def experiment_results_by_solver(database, experiment_id):
         table = db.metadata.tables['ExperimentResults']
         table_result_codes = db.metadata.tables['ResultCodes']
         table_instances = db.metadata.tables['Instances']
+        if not form.cost.data: form.cost.data = 'cpu'
         if form.cost.data == 'cpu':
             cost_property = db.ExperimentResult.resultTime
             cost_column = table.c['resultTime']
@@ -533,6 +534,7 @@ def experiment_results_by_instance(database, experiment_id):
 
         table = db.metadata.tables['ExperimentResults']
         table_result_codes = db.metadata.tables['ResultCodes']
+        if not form.cost.data: form.cost.data = 'cpu'
         if form.cost.data == 'cpu':
             cost_property = db.ExperimentResult.resultTime
             cost_column = table.c['resultTime']
