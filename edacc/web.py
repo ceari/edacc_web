@@ -35,7 +35,7 @@ app = Flask(__name__)
 app.Debug = config.DEBUG
 cache = Cache()
 mail = Mail()
-session_store = FilesystemStore(config.TEMP_DIR)
+session_store = FilesystemStore(config.TEMP_DIR, perm=0600)
 
 if config.LOGGING:
     # set up logging if configured
