@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 {% block title %}List of submitted solvers{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript">
+        var doConfirm = function(id) {
+            if (confirm("Do you really want to delete this solver?")) return true;
+            else return false;
+        }
+    </script>
+{% endblock %}
 {% block content %}
 <h2>List of submitted solvers</h2>
     {% if solvers %}
@@ -8,7 +17,7 @@
             <li>
                 <a href="{{ url_for('frontend.solver_details', database=database, solver_id=solver.idSolver) }}">{{solver.name}}</a>
                 <a href="{{ url_for('accounts.submit_solver', database=database, id=solver.idSolver) }}">[Edit]</a>
-                <a href="{{ url_for('accounts.delete_solver', database=database, solver_id=solver.idSolver) }}">[Delete]</a>
+                <a onclick="return doConfirm(this.id);" href="{{ url_for('accounts.delete_solver', database=database, solver_id=solver.idSolver) }}">[Delete]</a>
             </li>
         {% endfor %}
     </ul>
