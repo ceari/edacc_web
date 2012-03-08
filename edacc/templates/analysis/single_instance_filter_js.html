@@ -6,7 +6,7 @@ instances[{{loop.index0}}]["idInstance"] = {{instance.idInstance}};
 instances[{{loop.index0}}]["name"] = "{{instance.get_name()}}";
 {% set outer_loop = loop %}
     {% for prop in instance_properties %}
-        instances[{{outer_loop.index0}}]["{{prop.name}}"] = {% if isinstance(instance.get_property_value(prop.idProperty, db), str) %}"{{instance.get_property_value(prop.idProperty, db)}}"{% else %}{{instance.get_property_value(prop.idProperty, db) or 0}}{% endif %};
+        instances[{{outer_loop.index0}}]["{{prop.name}}"] = {% if prop.is_plotable() %}{{instance.get_property_value(prop.idProperty, db) or 0}}{% else %}"{{instance.get_property_value(prop.idProperty, db)}}"{% endif %};
     {% endfor %}
 {% endfor %}
 {% endautoescape %}
