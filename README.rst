@@ -36,6 +36,7 @@ Dependencies
 - Flask-WTF 0.3.3 (Flask extension for WTForms)
 - Flask-Actions 0.5.2 (Flask extension)
 - Flask-Mail (Flask extension)
+- Flask-KVSession (Flask extension)
 - Werkzeug 0.8 (Webframework, Flask dependency)
 - Jinja2 2.5 (Template Engine)
 - PyLZMA 0.4.2 (Python LZMA SDK bindings)

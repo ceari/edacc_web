@@ -17,6 +17,7 @@ setup(
         "Flask-WTF>=0.5.2",
         "Flask-Actions>=0.5.2",
         "Flask-Cache==0.3.3",
+        "Flask-KVSession",
         "flask-mail",
         "PyLZMA>=0.4.2",
         "PIL>=1.1.7",

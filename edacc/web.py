@@ -17,6 +17,8 @@ from werkzeug import ImmutableDict
 from flask import Flask, Request, g, Blueprint
 from flaskext.cache import Cache
 from flaskext.mail import Mail
+from simplekv.fs import FilesystemStore
+from flaskext.kvsession import KVSessionExtension
 from edacc import config, models, utils
 
 try:
@@ -33,6 +35,7 @@ app = Flask(__name__)
 app.Debug = config.DEBUG
 cache = Cache()
 mail = Mail()
+session_store = FilesystemStore(config.TEMP_DIR)
 
 if config.LOGGING:
     # set up logging if configured
@@ -71,6 +74,7 @@ app.config.update(
 )
 cache.init_app(app)
 mail.init_app(app)
+KVSessionExtension(session_store, app)
 
 # register view modules
 from edacc.views.admin import admin
