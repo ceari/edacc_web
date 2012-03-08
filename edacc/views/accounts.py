@@ -628,19 +628,24 @@ def list_users(database):
     db = models.get_database(database) or abort(404)
     return render('/accounts/list_users.html', db=db, database=database, users=db.session.query(db.User).all())
 
-#@accounts.route('/<database>/manage/benchmarks/')
-#@require_login
-#@require_competition
-#def list_benchmarks(database):
-#    """ Lists all benchmarks that the currently logged in user submitted to the
-#        database
-#    """
-#    db = models.get_database(database) or abort(404)
-#    user_source_classes = db.session.query(db.InstanceClass).filter_by(user=g.User).all()
-#    instances = list(itertools.chain(*[sc.source_instances for sc in user_source_classes]))
-#
-#    return render('/accounts/list_benchmarks.html', database=database,
-#                  db=db, instances=instances)
+@accounts.route('/<database>/manage/benchmarks/')
+@require_login
+@require_competition
+def list_benchmarks(database):
+    """ Lists all benchmarks that the currently logged in user submitted.
+    """
+    db = models.get_database(database) or abort(404)
+    uploaded_files = {}
+    directory = os.path.join(config.UPLOAD_FOLDER, database)
+    for file in os.listdir(directory):
+        if os.path.isdir(os.path.join(directory, file)):
+            for user_dir in os.listdir(os.path.join(directory, file)):
+                if user_dir == str(g.User.idUser):
+                    if not file in uploaded_files: uploaded_files[file] = list()
+                    uploaded_files[file] = os.listdir(os.path.join(directory, file, user_dir))
+
+    return render('/accounts/list_benchmarks.html', database=database,
+                  db=db, uploaded_files=uploaded_files)
 
 
 @accounts.route('/<database>/download-solver/<int:id>/')

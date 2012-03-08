@@ -134,8 +134,11 @@ class BenchmarkForm(Form):
 
 class BenchmarksForm(Form):
     #benchmarks = FileField('File')
-    category = SelectField('Category', [Required(ERROR_REQUIRED)], choices=[('random', 'Random SAT+UNSAT'), ('application', 'Application SAT+UNSAT'),
-                                                ('combinatorial', 'Hard Combinatorial SAT+UNSAT')], default='random')
+    category = SelectField('Category', [Required(ERROR_REQUIRED)],
+        choices=[('random', 'Random SAT+UNSAT'), ('random_sat', 'Random SAT'), ('random_unsat', 'Random UNSAT'),
+        ('application', 'Application SAT+UNSAT'), ('application_sat', 'Application SAT'), ('application_unsat', 'Application UNSAT'),
+        ('combinatorial', 'Hard Combinatorial SAT+UNSAT'), ('combinatorial_sat', 'Hard Combinatorial SAT'), ('combinatorial_unsat', 'Hard Combinatorial UNSAT')],
+        default='random')
 
     #def validate_benchmarks(self, field):
     #    if not field.file.filename:

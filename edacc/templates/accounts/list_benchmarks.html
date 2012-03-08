@@ -2,10 +2,14 @@
 {% block title %}List of submitted benchmarks{% endblock %}
 {% block content %}
 <h2>List of submitted benchmarks</h2>
-    {% if instances %}
+    <div>
+        <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
+        Please <a href="mailto:edacc.contact@googlemail.com">contact</a> the technical assistants if you want us to delete submitted benchmarks.
+    </div>
+    {% if uploaded_files %}
     <ul>
-        {% for instance in instances %}
-            <li><a href="{{url_for('frontend.instance_details', database=database, instance_id=instance.idInstance)}}">{{instance.name}}</a></li>
+        {% for k, v in uploaded_files.iteritems() %}
+            <li>{{k}}: {{ ','.join(v) }}</li>
         {% endfor %}
     </ul>
     {% else %}

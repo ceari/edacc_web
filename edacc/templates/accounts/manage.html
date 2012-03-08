@@ -1,19 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Manage{% endblock %}
 {% block content %}
-<h2>Solver submission</h2>
+<h2>Solver and benchmark submission</h2>
 <div>
     Note that you can submit multiple solvers while testing the compatibility with our execution environment.<br/>
     Before the submission deadline please remove all solvers but the ones you wish to enter into the competition.
 </div>
 <ul>
     <li>
-        <a href="{{url_for('accounts.list_solvers', database=database, user_id=g.User.idUser)}}">List of submitted solvers</a>
-    </li>
-    <li>
         <a href="{{url_for('accounts.submit_solver', database=database)}}">Submit a solver</a>
     </li>
-    <li> <a href="{{url_for('accounts.submit_benchmarks', database=database)}}">Submit benchmarks</a></li>
+    <li>
+        <a href="{{url_for('accounts.list_solvers', database=database, user_id=g.User.idUser)}}">List of submitted solvers</a>
+    </li>
+
+    <li>
+        <a href="{{url_for('accounts.submit_benchmarks', database=database)}}">Submit benchmarks</a>
+    </li>
+    <li>
+        <a href="{{url_for('accounts.list_benchmarks', database=database)}}">List of submitted benchmarks</a>
+    </li>
 
 </ul>
 

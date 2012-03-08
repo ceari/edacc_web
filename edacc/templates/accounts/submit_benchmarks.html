@@ -23,7 +23,7 @@
 
                 // Specify what files to browse for
                 filters : [
-                    {title : "Zip files", extensions : "zip,tar.gz,tar.bz2,7z,rar,xz"}
+                    {title : "Zip files", extensions : "zip,tar.gz,tar.bz2,7z,rar,xz,tgz"}
                 ],
 
                 // Flash settings
@@ -65,12 +65,13 @@
     <h2>Submit Benchmarks</h2>
     <div>
         <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
-        Add the benchmark archives you want to upload to the form below and select the category they belong to.<br/>
+        Add the benchmark archives you want to upload to the form below and select the category they belong to (or best fit).<br/>
         Once you have added all files press Submit. Note that you can start the upload of the queued files using the<br/>
         "Start upload" button but you have to use the Submit button at the end to make the submission valid and assign<br/>
         all uploaded files to the category.<br/>
-        Accepted files: .zip, .tar.gz, .tar.bz2, .7z, .rar, .xz<br/>
-        Size limit: 500 MB per upload
+        Accepted files: .zip, .tar.gz, .tar.bz2, .7z, .rar, .xz, .tgz<br/>
+        Size limit: 500 MB per upload<br/>
+        Please include benchmark descriptions simply as text or PDF file in the submitted archive.
     </div>
     <form id="upload_form" action="{{url_for('accounts.submit_benchmarks', database=database)}}" method="post" enctype="multipart/form-data">
         {{ form.csrf }}
