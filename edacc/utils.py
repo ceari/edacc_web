@@ -55,6 +55,8 @@ def parameter_string(solver_config):
             args.append("<seed>")
         if p.parameter.name == 'instance':
             args.append("<instance>")
+        if p.parameter.name == 'tempdir':
+            args.append("<tempdir>")
         if p.parameter.hasValue:
             if p.value == "": # if value not set, use default value from parameters table
                 args.append(p.parameter.defaultValue or "")
@@ -71,6 +73,8 @@ def parameter_template(solver):
         if p.space and p.prefix and p.hasValue: args.append(" ")
         if p.name == 'seed':
             args.append("SEED")
+        if p.name == 'tempdir':
+            args.append("TEMPDIR")
         if p.name == 'instance':
             args.append("INSTANCE")
         if p.hasValue:
@@ -120,7 +124,7 @@ def parse_parameters(parameters):
     while i < len(parameters):
         if parameters[i].startswith('-'):
             # prefixed parameter
-            if i+1 < len(parameters) and (parameters[i+1].lower() == 'seed' or parameters[i+1].lower() == 'instance'):
+            if i+1 < len(parameters) and (parameters[i+1].lower() in ('seed', 'instance', 'tempdir')):
                 pname = parameters[i+1].lower()
                 prefix = parameters[i]
                 default_value = ''
@@ -142,7 +146,7 @@ def parse_parameters(parameters):
                     i += 2
         else:
             # parameter without prefix
-            if parameters[i].lower() == 'seed' or parameters[i].lower() == 'instance':
+            if parameters[i].lower() in ('seed', 'instance', 'tempdir'):
                 pname = parameters[i].lower()
                 prefix = ''
                 default_value = ''
