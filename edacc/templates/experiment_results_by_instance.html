@@ -1,4 +1,5 @@
 {% from "_formhelpers.html" import render_field %}
+{% set num_runs = experiment.get_max_num_runs(db) %}
 {% extends "base.html" %}
 {% block title %}Results by Instance{% endblock %}
 {% block head %}
@@ -21,11 +22,14 @@
                     "sZeroRecords": "No matching results"
                 },
                 "aoColumns": [{"bSearchable": true},
-                              {% for i in range(experiment.get_max_num_runs(db)) %}{"bSearchable":false},{% endfor %}
-                              {"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false} ]
+                              {% for i in range(num_runs) %}{"bSearchable":false},{% endfor %}
+                               {% if num_runs > 1 %}
+                                    {"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false}
+                               {%  endif %}
+                            ]
             });
 
-            {% if experiment.get_max_num_runs(db) < 100 %}
+            {% if num_runs <= 100 %}
             // fixed header is pretty slow for many columns ...
             new FixedHeader(oTable);
             {% endif %}
@@ -51,14 +55,16 @@
             <thead>
                 <tr>
                     <th>Run</th>
-                    {% for run in range(experiment.get_max_num_runs(db)) %}
+                    {% for run in range(num_runs) %}
                     <th nowrap="nowrap">{{run}}</th>
                     {% endfor %}
+                    {% if num_runs > 1 %}
                     <th>Mean</th>
                     <th>Median</th>
                     <th id="th_par10" title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the job's cpu time limit for unsuccessful runs">par10</th>
                     <th>Coeff. of variation</th>
                     <th>Quartile coeff. of dispersion</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -82,11 +88,13 @@
                                 {% endif %}
                             {% endif %}
                         {% endfor %}
+                        {% if num_runs > 1 %}
                         <td style="{{'background-color: yellow;' if result[0] == min_mean_sc else ''}}">{{result[2]|round(4) if result[2] else ''}}</td>
                         <td style="{{'background-color: yellow;' if result[0] == min_median_sc else ''}}">{{result[3]|round(4) if result[3] else ''}}</td>
                         <td style="{{'background-color: yellow;' if result[0] == min_par10_sc else ''}}">{{result[4]|round(4) if result[4] else ''}}</td>
                         <td style="{{'background-color: yellow;' if result[0] == min_cv_sc else ''}}">{{result[6]|round(4) if result[6] else ''}}</td>
                         <td style="{{'background-color: yellow;' if result[0] == min_qcd_sc else ''}}">{{result[7]|round(4) if result[7] else ''}}</td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>

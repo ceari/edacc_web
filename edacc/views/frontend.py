@@ -445,8 +445,8 @@ def experiment_results_by_solver(database, experiment_id):
             total_time, count = 0.0, 0
             runtimes = []
             for run in runs_by_instance[instance]:
-                if not run.cost: continue
                 count += 1
+                if run.cost is None: continue
                 if run.status != 1 or not str(run.resultCode).startswith('1'):
                     runtimes.append(run.limit * 10.0)
                 else:
