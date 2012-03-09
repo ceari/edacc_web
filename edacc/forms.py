@@ -182,7 +182,7 @@ class OneSolverInstanceAgainstResultPropertyPlotForm(Form):
     instance_property = SelectField('Instance Property')
     instance_filter = TextField('Filter Instances')
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
-    xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='')
+    xscale = RadioField('X-axis scale', choices=[('', 'linear'), ('log', 'log')], default='log')
     yscale = RadioField('Y-axis scale', choices=[('', 'linear'), ('log', 'log')], default='log')
     run = SelectField('Plot for run')
 

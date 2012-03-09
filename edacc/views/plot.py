@@ -849,7 +849,7 @@ def box_plots(database, experiment_id):
             points += filter(lambda r: r is not None, [res.get_property_value(result_property, db) for res in db.session.query(db.ExperimentResult)\
                                                             .options(joinedload_all('properties')) \
                                                             .filter_by(experiment=exp, instance=instance, solver_configuration=sc).all()])
-        results[str(sc)] = points
+        results[sc.name] = points
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
