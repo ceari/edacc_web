@@ -149,7 +149,7 @@ same machine that the EDACC database runs on::
     > source /srv/edacc_web/env/bin/activate
     > pip install mysql-python
     > pip install rpy2
-    > pip install flask flask-wtf flask-actions flask-mail flask-cache
+    > pip install flask flask-wtf flask-actions flask-mail flask-cache flask-kvsession
     > pip install sqlalchemy pylzma
 
     - Install R libraries ("R" launches the R interpreter):

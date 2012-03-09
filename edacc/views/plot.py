@@ -16,7 +16,6 @@ import numpy
 import StringIO
 import csv
 import random
-random.seed()
 
 from sqlalchemy import or_, not_, func
 from sqlalchemy.sql import select, and_, functions, expression, alias
@@ -31,6 +30,8 @@ from edacc.web import cache
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
 from edacc.constants import ANALYSIS1, ANALYSIS2
+
+random.seed()
 
 plot = Blueprint('plot', __name__, template_folder='static')
 
