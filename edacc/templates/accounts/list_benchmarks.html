@@ -13,6 +13,10 @@
         {% endfor %}
     </ul>
     {% else %}
+    {% if user_id %}
+    No benchmarks submitted yet.
+    {% else %}
     You haven't submitted any benchmarks yet.
+    {% endif %}
     {% endif %}
 {% endblock %}

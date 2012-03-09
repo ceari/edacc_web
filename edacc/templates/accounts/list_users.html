@@ -15,7 +15,9 @@
                 </h3>
                 <p>{{ user.address }}</p>
                 <p>{{ user.affiliation }}</p>
-                <p><a href={{ url_for('accounts.list_solvers', database=database, user_id=user.idUser) }}>Show submitted solvers ({{ user.solvers|length }})</a></p>
+                <p>Show submitted <a href={{ url_for('accounts.list_solvers', database=database, user_id=user.idUser) }}>solvers ({{ user.solvers|length }})</a> / <a href={{ url_for('accounts.list_benchmarks', database=database, user_id=user.idUser) }}>benchmarks</a>
+                </p>
+
             </li>
         {% endfor %}
     </ul>

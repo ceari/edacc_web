@@ -629,9 +629,10 @@ def list_users(database):
     return render('/accounts/list_users.html', db=db, database=database, users=db.session.query(db.User).all())
 
 @accounts.route('/<database>/manage/benchmarks/')
+@accounts.route('/<database>/manage/benchmarks/<int:user_id>')
 @require_login
 @require_competition
-def list_benchmarks(database):
+def list_benchmarks(database, user_id=None):
     """ Lists all benchmarks that the currently logged in user submitted.
     """
     db = models.get_database(database) or abort(404)
@@ -640,12 +641,12 @@ def list_benchmarks(database):
     for file in os.listdir(directory):
         if os.path.isdir(os.path.join(directory, file)):
             for user_dir in os.listdir(os.path.join(directory, file)):
-                if user_dir == str(g.User.idUser):
+                if (is_admin() and user_id) or user_dir == str(g.User.idUser):
                     if not file in uploaded_files: uploaded_files[file] = list()
                     uploaded_files[file] = os.listdir(os.path.join(directory, file, user_dir))
 
     return render('/accounts/list_benchmarks.html', database=database,
-                  db=db, uploaded_files=uploaded_files)
+                  db=db, uploaded_files=uploaded_files, user_id=user_id)
 
 
 @accounts.route('/<database>/download-solver/<int:id>/')
