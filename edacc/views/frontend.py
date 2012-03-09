@@ -238,8 +238,7 @@ def experiment_results(database, experiment_id):
     else:
         instances = experiment.instances
 
-    if not form.cost.data:
-        form.cost.data = 'cpu'
+    form_cost = form.cost.data or 'cpu'
 
     if form.solver_configs.data:
         solver_configs = form.solver_configs.data
@@ -249,7 +248,7 @@ def experiment_results(database, experiment_id):
     instances_dict = dict((i.idInstance, i) for i in instances)
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
     
-    results_by_instance, S, C = experiment.get_result_matrix(db, solver_configs, instances, cost=form.cost.data)
+    results_by_instance, S, C = experiment.get_result_matrix(db, solver_configs, instances, cost=form_cost)
 
     times_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
     cv_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
@@ -404,12 +403,12 @@ def experiment_results_by_solver(database, experiment_id):
         table = db.metadata.tables['ExperimentResults']
         table_result_codes = db.metadata.tables['ResultCodes']
         table_instances = db.metadata.tables['Instances']
-        if not form.cost.data: form.cost.data = 'cpu'
-        if form.cost.data == 'cpu':
+        form_cost = form.cost.data or 'cpu'
+        if form_cost == 'cpu':
             cost_property = db.ExperimentResult.resultTime
             cost_column = table.c['resultTime']
             cost_limit_column = table.c['CPUTimeLimit']
-        elif form.cost.data == 'walltime':
+        elif form_cost == 'walltime':
             cost_property = db.ExperimentResult.wallTime
             cost_column = table.c['wallTime']
             cost_limit_column = table.c['wallClockTimeLimit']
@@ -534,12 +533,12 @@ def experiment_results_by_instance(database, experiment_id):
 
         table = db.metadata.tables['ExperimentResults']
         table_result_codes = db.metadata.tables['ResultCodes']
-        if not form.cost.data: form.cost.data = 'cpu'
-        if form.cost.data == 'cpu':
+        form_cost = form.cost.data or 'cpu'
+        if form_cost == 'cpu':
             cost_property = db.ExperimentResult.resultTime
             cost_column = table.c['resultTime']
             cost_limit_column = table.c['CPUTimeLimit']
-        elif form.cost.data == 'walltime':
+        elif form_cost == 'walltime':
             cost_property = db.ExperimentResult.wallTime
             cost_column = table.c['wallTime']
             cost_limit_column = table.c['wallClockTimeLimit']
