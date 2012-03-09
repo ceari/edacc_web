@@ -641,7 +641,7 @@ def list_benchmarks(database, user_id=None):
     for file in os.listdir(directory):
         if os.path.isdir(os.path.join(directory, file)):
             for user_dir in os.listdir(os.path.join(directory, file)):
-                if (is_admin() and user_id) or user_dir == str(g.User.idUser):
+                if (is_admin() and user_id and user_dir == str(user_id)) or user_dir == str(g.User.idUser):
                     if not file in uploaded_files: uploaded_files[file] = list()
                     uploaded_files[file] = os.listdir(os.path.join(directory, file, user_dir))
 
