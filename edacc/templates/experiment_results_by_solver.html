@@ -101,7 +101,8 @@
                             <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{result.0}}&cost={{ form.cost.data }}">{{ name_by_instance[result.0] }}</a>
                         </td>
                         {% for run in result.1 %}
-                            {% if run == None %}<td></td>
+                            {% if run == None %}
+                                <td></td>
                             {% else %}
                                 {% if run.status == 0  %}
                                     <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">running</a></td>
@@ -111,9 +112,6 @@
                             {% endif %}
                         {% endfor %}
                         <td nowrap="nowrap" style="text-align: center;">{{ par10_by_instance[result.0]|round(3) }}</td>
-                        <!--<td nowrap="nowrap" style="text-align: center;">{{ mean_by_instance[result.0]|round(3) }}</td>
-                        <td nowrap="nowrap" style="text-align: center;">{{ var_by_instance[result.0]|round(3) }}</td>
-                        <td nowrap="nowrap" style="text-align: center;">{{ std_by_instance[result.0]|round(3) }}</td>-->
                     </tr>
                 {% endfor %}
             </tbody>
