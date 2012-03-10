@@ -78,7 +78,7 @@
                             {% if run == None %}<td></td>
                             {% else %}
                                 {% if run.cost %}
-                                <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ run.cost|result_time|round(3)}}</a></td>
+                                <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ run.cost|result_time|round(3)}} {{ run.result_code_description }}</a></td>
                                 {% else %}
                                     {% if run.status == 0 %}
                                     <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">running</a></td>

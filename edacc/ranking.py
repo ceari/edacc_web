@@ -102,7 +102,7 @@ def avg_point_biserial_correlation_ranking(db, experiment, instances):
     # List of solvers sorted by their rank. Best solver first.
     return list(sorted(experiment.solver_configurations, cmp=comp))
 
-def number_of_solved_instances_ranking(db, experiment, instances, solver_configs, cost='cpu'):
+def number_of_solved_instances_ranking(db, experiment, instances, solver_configs, cost='resultTime'):
     """ Ranking by the number of instances correctly solved.
         This is determined by an resultCode that starts with '1' and a 'finished' status
         of a job.
@@ -120,10 +120,10 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
     c_status = table.c['status']
     c_instance_id = table.c['Instances_idInstance']
     c_solver_config_id = table.c['SolverConfig_idSolverConfig']
-    if cost == 'cpu':
+    if cost == 'resultTime':
         cost_column = 'resultTime'
         cost_limit_column = table.c['CPUTimeLimit']
-    elif cost == 'walltime':
+    elif cost == 'wallTime':
         cost_column = 'wallTime'
         cost_limit_column = table.c['wallClockTimeLimit']
     else:
@@ -174,11 +174,11 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     max_num_runs_per_solver = max_num_runs * len(instance_ids)
 
     table = db.metadata.tables['ExperimentResults']
-    if cost == 'cpu':
+    if cost == 'resultTime':
         cost_column = table.c['resultTime']
         cost_property = db.ExperimentResult.resultTime
         cost_limit_column = table.c['CPUTimeLimit']
-    elif cost == 'walltime':
+    elif cost == 'wallTime':
         cost_column = table.c['wallTime']
         cost_property = db.ExperimentResult.wallTime
         cost_limit_column = table.c['wallClockTimeLimit']

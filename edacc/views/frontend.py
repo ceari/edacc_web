@@ -239,7 +239,7 @@ def experiment_results(database, experiment_id):
         instances = experiment.instances
 
     form_cost = form.cost.data
-    if form_cost == 'None': form_cost = 'cpu'
+    if form_cost == 'None': form_cost = experiment.defaultCost
 
     if form.solver_configs.data:
         solver_configs = form.solver_configs.data
@@ -405,12 +405,12 @@ def experiment_results_by_solver(database, experiment_id):
         table_result_codes = db.metadata.tables['ResultCodes']
         table_instances = db.metadata.tables['Instances']
         form_cost = form.cost.data
-        if form_cost == 'None': form_cost = 'cpu'
-        if form_cost == 'cpu':
+        if form_cost == 'None': form_cost = experiment.defaultCost
+        if form_cost == 'resultTime':
             cost_property = db.ExperimentResult.resultTime
             cost_column = table.c['resultTime']
             cost_limit_column = table.c['CPUTimeLimit']
-        elif form_cost == 'walltime':
+        elif form_cost == 'wallTime':
             cost_property = db.ExperimentResult.wallTime
             cost_column = table.c['wallTime']
             cost_limit_column = table.c['wallClockTimeLimit']
@@ -420,7 +420,7 @@ def experiment_results_by_solver(database, experiment_id):
             cost_limit_column = table.c['CPUTimeLimit']
 
         s = select([expression.label('cost', expression.case([(table.c['status'] > 0 , cost_column)], else_=None)), table.c['resultCode'], table.c['idJob'],
-                    table.c['Instances_idInstance'], table.c['status'], table_instances.c['name'],
+                    table.c['Instances_idInstance'], table.c['status'], table_instances.c['name'], expression.label('result_code_description', table_result_codes.c['description']),
                     expression.label('limit', cost_limit_column)],
             and_(table.c['SolverConfig_idSolverConfig'] == solver_config.idSolverConfig,
                 table.c['Experiment_idExperiment']==experiment_id
@@ -537,12 +537,12 @@ def experiment_results_by_instance(database, experiment_id):
         table = db.metadata.tables['ExperimentResults']
         table_result_codes = db.metadata.tables['ResultCodes']
         form_cost = form.cost.data
-        if form_cost == 'None': form_cost = 'cpu'
-        if form_cost == 'cpu':
+        if form_cost == 'None': form_cost = experiment.defaultCost
+        if form_cost == 'resultTime':
             cost_property = db.ExperimentResult.resultTime
             cost_column = table.c['resultTime']
             cost_limit_column = table.c['CPUTimeLimit']
-        elif form_cost == 'walltime':
+        elif form_cost == 'wallTime':
             cost_property = db.ExperimentResult.wallTime
             cost_column = table.c['wallTime']
             cost_limit_column = table.c['wallClockTimeLimit']
@@ -552,7 +552,7 @@ def experiment_results_by_instance(database, experiment_id):
             cost_limit_column = table.c['CPUTimeLimit']
 
         s = select([expression.label('cost', expression.case([(table.c['status'] > 0 , cost_column)], else_=None)), table.c['resultCode'], table.c['idJob'],
-                    table.c['SolverConfig_idSolverConfig'], table.c['status'],
+                    table.c['SolverConfig_idSolverConfig'], table.c['status'], expression.label('result_code_description', table_result_codes.c['description']),
                     expression.label('limit', cost_limit_column)],
                     and_(table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                         table.c['Experiment_idExperiment']==experiment_id,

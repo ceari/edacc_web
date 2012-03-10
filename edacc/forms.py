@@ -150,11 +150,11 @@ class BenchmarksForm(Form):
 
 class ResultBySolverForm(Form):
     solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
-    cost = SelectField('Cost', choices = [('cpu', 'CPU Time'), ('walltime', 'Walltime'), ('cost', 'Cost')])
+    cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])
 
 class ResultByInstanceForm(Form):
     instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance)
-    cost = SelectField('Cost', choices = [('cpu', 'CPU Time'), ('walltime', 'Walltime'), ('cost', 'Cost')])
+    cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])
 
 class TwoSolversOnePropertyScatterPlotForm(Form):
     solver_config1 = QuerySelectField('First Solver Configuration', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
@@ -238,11 +238,11 @@ class RankingForm(Form):
     calculate_average_dev = BooleanField('Calculate dispersion measures', default=False)
     penalized_average_runtime = BooleanField('Calculate penalized average runtime', default=True)
     instance_filter = TextField('Filter Instances')
-    cost = SelectField('Cost', choices = [('cpu', 'CPU Time'), ('walltime', 'Walltime'), ('cost', 'Cost')])
+    cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])
 
 class ResultsBySolverAndInstanceForm(Form):
     solver_configs = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
-    cost = SelectField('Cost', choices = [('cpu', 'CPU Time'), ('walltime', 'Walltime'), ('cost', 'Cost')])
+    cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])
     display_measure = SelectField('Display measure', default='par10',
                                   choices=[('mean', 'mean'), ('median', 'median'),
                                     ('par10', 'par10'), ('min', 'min'), ('max', 'max')])

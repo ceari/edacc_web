@@ -209,7 +209,7 @@ class EDACCDatabase(object):
                 total_size = sum(i[0] for i in instance_sizes or [(0,)])
                 return total_size
             
-            def get_result_matrix(self, db, solver_configs, instances, cost='cpu'):
+            def get_result_matrix(self, db, solver_configs, instances, cost='resultTime'):
                 """ Returns the results as matrix of lists of result tuples, i.e.
                     Dict<idInstance, Dict<idSolverConfig, List of runs>> """
                 num_successful = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
@@ -219,10 +219,10 @@ class EDACCDatabase(object):
                 instance_ids = [i.idInstance for i in instances]
                 table = db.metadata.tables['ExperimentResults']
                 table_result_codes = db.metadata.tables['ResultCodes']
-                if cost == 'cpu':
+                if cost == 'resultTime':
                     cost_column = 'resultTime'
                     cost_limit_column = table.c['CPUTimeLimit']
-                elif cost == 'walltime':
+                elif cost == 'wallTime':
                     cost_column = 'wallTime'
                     cost_limit_column = table.c['wallClockTimeLimit']
                 else:
