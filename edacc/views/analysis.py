@@ -50,6 +50,7 @@ def solver_ranking(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RankingForm(request.args)
+    if form.cost.data == 'None': form.cost.data = experiment.defaultCost
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
 
     if form.i.data:

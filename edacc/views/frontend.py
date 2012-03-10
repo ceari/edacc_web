@@ -230,6 +230,7 @@ def experiment_results(database, experiment_id):
         solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     form = forms.ResultsBySolverAndInstanceForm(request.args)
+    if form.cost.data == 'None': form.cost.data = experiment.defaultCost
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.solver_configs.query = solver_configs or EmptyQuery()
 
@@ -391,6 +392,7 @@ def experiment_results_by_solver(database, experiment_id):
         solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     form = forms.ResultBySolverForm(request.args)
+    if form.cost.data == 'None': form.cost.data = experiment.defaultCost
     form.solver_config.query = solver_configs or EmptyQuery()
 
     results = []
@@ -521,6 +523,7 @@ def experiment_results_by_instance(database, experiment_id):
         solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     form = forms.ResultByInstanceForm(request.args)
+    if form.cost.data == 'None': form.cost.data = experiment.defaultCost
     form.instance.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     num_runs = experiment.get_max_num_runs(db)
 
