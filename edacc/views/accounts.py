@@ -149,6 +149,11 @@ def activate(database, activation_hash):
 def verify_user(database, user_id):
     db = models.get_database(database) or abort(404)
     user = db.session.query(db.User).get(user_id) or abort(404)
+    if user.verified:
+        flash('User already verified.')
+        return redirect(url_for('frontend.experiments_index',
+            database=database))
+    
     user.verified = True
     try:
         db.session.commit()

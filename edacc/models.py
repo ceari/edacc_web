@@ -208,6 +208,76 @@ class EDACCDatabase(object):
                               c_id.in_(instance_ids)).select_from(table)).fetchall()
                 total_size = sum(i[0] for i in instance_sizes or [(0,)])
                 return total_size
+
+            def get_results_by_instance(self, db, solver_configs, instance, penalize_incorrect, penalize_factor=1,
+                                        result_property='resultTime'):
+                results_by_instance = dict((sc.idSolverConfig, dict()) for sc in solver_configs)
+                if not solver_configs: return results_by_instance
+                solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
+
+                table = db.metadata.tables['ExperimentResults']
+                table_result_codes = db.metadata.tables['ResultCodes']
+                table_status_codes = db.metadata.tables['StatusCodes']
+                c = table.c
+                c_rc = table_result_codes.c
+                c_sc = table_status_codes.c
+
+                if result_property == 'resultTime':
+                    c_cost = c['resultTime']
+                    c_limit = c['CPUTimeLimit']
+                    pass
+                elif result_property == 'wallTime':
+                    c_cost = c['wallTime']
+                    c_limit = c['wallClockTimeLimit']
+                    pass
+                elif result_property == 'cost':
+                    c_cost = c['cost']
+                    c_limit = -1
+                    pass
+                else:
+                    # result property table
+                    c_cost = 0
+                    c_limit = -1
+                    pass
+
+                join_expression = table.join(table_result_codes).join(table_status_codes)
+                select_statement = select([
+                    c['idJob'],
+                    c['status'],
+                    c['resultCode'],
+                    expression.label('result_code_description', c_rc['description']),
+                    expression.label('status_code_description', c_sc['description']),
+                    c['Instances_idInstance'],
+                    c['SolverConfig_idSolverConfig'],
+                    c['run'],
+                    expression.label('cost',
+                        expression.case([(
+                            c['status'] > 0, # only consider cost of "finished" jobs
+                            c_cost if not penalize_incorrect else \
+                                expression.case(
+                                    [(table.c['resultCode'].like('1%'), c_cost)],
+                                    else_=c_limit * penalize_factor
+                                )
+                        )],
+                        else_=None)
+                    ),
+                    c_limit,
+                    ],
+                    and_(
+                        c['Experiment_idExperiment']==self.idExperiment,
+                        c['Instances_idInstance']==instance.idInstance,
+                        c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
+
+                    ),
+                    from_obj=join_expression,
+                )
+
+                results = db.session.connection().execute(select_statement)
+                for row in results:
+                    results_by_instance[row.SolverConfig_idSolverConfig][row.run] = row
+
+                return results_by_instance
+
             
             def get_result_matrix(self, db, solver_configs, instances, cost='resultTime'):
                 """ Returns the results as matrix of lists of result tuples, i.e.
