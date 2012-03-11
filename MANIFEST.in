@@ -3,3 +3,4 @@ recursive-include edacc/static *
 include server.py
 include README.rst
 include LICENSE
+exclude edacc/local_config.py

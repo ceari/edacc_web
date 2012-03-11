@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="edacc_web",
-    version="1.0",
+    version="2.0",
     author="Daniel Diepold",
     long_description="EDACC Web Frontend",
     packages=["edacc", "edacc.views", "edacc.plugins"],

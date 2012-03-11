@@ -153,7 +153,7 @@ def verify_user(database, user_id):
         flash('User already verified.')
         return redirect(url_for('frontend.experiments_index',
             database=database))
-    
+
     user.verified = True
     try:
         db.session.commit()
