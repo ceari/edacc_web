@@ -122,7 +122,7 @@ def parse_parameters(parameters):
     params = []
     i = 0
     while i < len(parameters):
-        if parameters[i].startswith('-'):
+        if parameters[i].startswith('-') and not "=" in parameters[i]:
             # prefixed parameter
             if i+1 < len(parameters) and (parameters[i+1].lower() in ('seed', 'instance', 'tempdir')):
                 pname = parameters[i+1].lower()
