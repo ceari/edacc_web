@@ -137,26 +137,35 @@ def parse_parameters(parameters):
                 if i+1 == len(parameters) or parameters[i+1].startswith('-'):
                     boolean = True
                     default_value = ''
-                    params.append((pname, prefix, default_value, boolean, i))
+                    params.append((pname, prefix, default_value, boolean, i, True))
                     i += 1
                 else:
                     boolean = False
                     default_value = parameters[i+1]
-                    params.append((pname, prefix, default_value, boolean, i))
+                    params.append((pname, prefix, default_value, boolean, i, True))
                     i += 2
         else:
-            # parameter without prefix
-            if parameters[i].lower() in ('seed', 'instance', 'tempdir'):
-                pname = parameters[i].lower()
-                prefix = ''
+            if "=" in parameters[i] and ("INSTANCE" in parameters[i] or "SEED" in parameters[i] or "TEMPDIR" in parameters[i]):
+                pname = parameters[i].split("=")[1].lower()
+                prefix = parameters[i].split("=")[0] + "="
                 default_value = ''
                 boolean = False
+                space = False
             else:
-                pname = parameters[i]
-                prefix = parameters[i]
-                default_value = ''
-                boolean = True
-            params.append((pname, prefix, default_value, boolean, i))
+                # parameter without prefix
+                if parameters[i].lower() in ('seed', 'instance', 'tempdir'):
+                    pname = parameters[i].lower()
+                    prefix = ''
+                    default_value = ''
+                    boolean = False
+                    space = True
+                else:
+                    pname = parameters[i]
+                    prefix = parameters[i]
+                    default_value = ''
+                    boolean = True
+                    space = True
+            params.append((pname, prefix, default_value, boolean, i, space))
             i += 1
     return params
 

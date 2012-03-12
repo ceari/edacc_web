@@ -495,7 +495,7 @@ def submit_solver(database, id=None):
                 param.defaultValue = p[2] or ''
                 param.hasValue = not p[3] # p[3] actually means 'is boolean'
                 param.order = int(p[4])
-                param.space = True
+                param.space = p[5]
                 param.solver = solver
                 db.session.add(param)
             try:
