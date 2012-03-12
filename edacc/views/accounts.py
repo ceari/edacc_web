@@ -463,15 +463,14 @@ def submit_solver(database, id=None):
             solver.authors = authors
             solver.user = g.User
             solver.competition_categories = form.competition_categories.data
-
+            solver_binary.binaryName = name
+            solver_binary.runPath = run_path
+            solver_binary.version = solver.version = version
+            solver_binary.runCommand = form.run_command.data
             if bin:
                 # new or updated binary
-                solver_binary.binaryName = name
                 solver_binary.binaryArchive = bin
                 solver_binary.md5 = hash.hexdigest()
-                solver_binary.runPath = run_path
-                solver_binary.version = solver.version = version
-                solver_binary.runCommand = form.run_command.data
             if code:
                 # new or updated code
                 solver.code = code
