@@ -129,7 +129,7 @@ def parse_parameters(parameters):
                 prefix = parameters[i]
                 default_value = ''
                 boolean = False
-                params.append((pname, prefix, default_value, boolean, i))
+                params.append((pname, prefix, default_value, boolean, i, True))
                 i += 2
             else:
                 pname = parameters[i]
