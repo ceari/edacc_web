@@ -450,6 +450,8 @@ def submit_solver(database, id=None):
                 if bin:
                     solver_binary = db.SolverBinary()
                     solver_binary.solver = solver
+                else:
+                    solver_binary = None
             else:
                 if solver_binary:
                     for solver_config in solver_binary.solver_configurations:
