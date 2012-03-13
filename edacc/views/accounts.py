@@ -383,8 +383,9 @@ def submit_solver(database, id=None):
             form.description_pdf.data = ''
             form.binary.data = ''
             form.code.data = ''
-            form.run_command.data = solver_binary.runCommand
-            form.run_path.data = solver_binary.runPath
+            if solver_binary:
+                form.run_command.data = solver_binary.runCommand
+                form.run_path.data = solver_binary.runPath
     else:
         form = forms.SolverForm(request.form)
 
@@ -459,16 +460,20 @@ def submit_solver(database, id=None):
                         db.session.commit()
                         db.session.delete(solver_config)
                     db.session.commit()
+                if not solver_binary and bin:
+                    solver_binary = db.SolverBinary()
+                    solver_binary.solver = solver
 
             solver.name = name
             solver.description = description
             solver.authors = authors
             solver.user = g.User
+            solver.version = version
             solver.competition_categories = form.competition_categories.data
             if solver_binary:
                 solver_binary.binaryName = name
                 solver_binary.runPath = run_path
-                solver_binary.version = solver.version = version
+                solver_binary.version = version
                 solver_binary.runCommand = form.run_command.data
             if bin:
                 # new or updated binary
@@ -510,7 +515,7 @@ def submit_solver(database, id=None):
                 return render('/accounts/submit_solver.html', database=database,
                               error=error, db=db, id=id, form=form)
 
-            flash('Solver submitted successfully. Test jobs will be generated within the next minute. You will be notified by email once they are computed. Please check the Results page at any time for the computation progress.')
+            flash('Solver submitted successfully. If you provided a binary, test jobs will be generated within the next minute. You will be notified by email once they are computed. Please check the Results page at any time for the computation progress.')
             return redirect(url_for('accounts.list_solvers',
                                     database=database, user_id=g.User.idUser))
 

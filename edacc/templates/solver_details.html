@@ -26,7 +26,9 @@
     </tr>
 </table>
 <div>
+    {% if solver.binaries %}
     <strong>Launch command: {{ solver.binaries[0].runCommand or '' }} .{{ solver.binaries[0].runPath or ''}} {{ solver|parameter_template }}</strong>
+    {% endif %}
 </div>
 <div>
     <ul>
