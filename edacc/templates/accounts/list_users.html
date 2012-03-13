@@ -1,25 +1,60 @@
 {% extends "base.html" %}
 {% block title %}Users{% endblock %}
+{% block head %}
+    {{ super() }}
+    <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
+    <link type="text/css" href="{{url_for('static', filename='css/demo_table_jui.css')}}" rel="Stylesheet" />
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery-ui-1.8.16.custom.min.js')}}" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            oTable = $('#table_users').dataTable({
+                "bJQueryUI": true,
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bStateSave": true,
+                "bFilter": true,
+                "bInfo": true,
+                "oLanguage": {
+                    "sZeroRecords": "No matching results"
+                }
+            });
+            new FixedHeader( oTable );
+        });
+    </script>
+{% endblock %}
 {% block content %}
 <h2>Users</h2>
     {% if users %}
-    <ul>
-        {% for user in users %}
-            <li>
-                <h3>{{ user.email }} - {{ user.firstname }} {{ user.lastname }}
-                {% if not user.activation_hash %}
-                {% if user.verified %}[Verified]{% else %}<a href={{ url_for('accounts.verify_user',database=database, user_id=user.idUser) }}>Verify user</a>{% endif %}
+    <table id="table_users" class="display">
+        <thead>
+            <tr>
+                <th>e-mail</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Affiliation</th>
+                <th>Status</th>
+                <th>Admin</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>{{ user.lastname }}, {{ user.firstname }}</td>
+                <td>{{ user.postal_address }}</td>
+                <td>{{ user.affiliation }}</td>
+                <td>                {% if not user.activation_hash %}
+                    {% if user.verified %}Verified{% else %}<a href={{ url_for('accounts.verify_user',database=database, user_id=user.idUser) }}>Verify user</a>{% endif %}
                 {% else %}
-                Not activated yet.
-                {% endif %}
-                </h3>
-                <p>{{ user.address }}</p>
-                <p>{{ user.affiliation }}</p>
-                <p>Show submitted <a href={{ url_for('accounts.list_solvers', database=database, user_id=user.idUser) }}>solvers ({{ user.solvers|length }})</a> / <a href={{ url_for('accounts.list_benchmarks', database=database, user_id=user.idUser) }}>benchmarks</a>
-                </p>
-
-            </li>
-        {% endfor %}
-    </ul>
+                    Not activated yet.
+                {% endif %}</td>
+                <td>{{ 'Yes' if user.admin else '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% endif %}
 {% endblock %}
