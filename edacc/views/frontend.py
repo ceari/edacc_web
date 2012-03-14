@@ -694,7 +694,8 @@ def experiment_list_stats_ajax(database, experiment_id):
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
 def experiment_stats_ajax(database, experiment_id):
-    """ Returns JSON-serialized stats about the experiment's progress
+    """
+    Returns JSON-serialized stats about the experiment's progress
     such as number of jobs, number of running jobs, ...
     """
     db = models.get_database(database) or abort(404)

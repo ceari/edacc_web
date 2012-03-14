@@ -43,7 +43,7 @@
         <tbody>
             {% for user in users %}
             <tr>
-                <td>{{ user.email }}</td>
+                <td><a href="mailto:{{ user.email }}">{{ user.email }}</a></td>
                 <td>{{ user.lastname }}, {{ user.firstname }}</td>
                 <td>{{ user.postal_address }}</td>
                 <td>{{ user.affiliation }}</td>
@@ -53,10 +53,14 @@
                     Not activated yet.
                 {% endif %}</td>
                 <td>{{ 'Yes' if user.admin else '' }}</td>
-                <td>Show submitted <a href={{ url_for('accounts.list_solvers', database=database, user_id=user.idUser) }}>solvers ({{ user.solvers|length }})</a> / <a href={{ url_for('accounts.list_benchmarks', database=database, user_id=user.idUser) }}>benchmarks</a></td>
+                <td><a href={{ url_for('accounts.list_solvers', database=database, user_id=user.idUser) }}>Solvers ({{ user.solvers|length }})</a> / <a href={{ url_for('accounts.list_benchmarks', database=database, user_id=user.idUser) }}>Benchmarks</a></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     {% endif %}
+<h2>Email addresses (Admins <strong>excluded</strong>)</h2>
+{% for u in users %}{% if not u.admin %}{{ u.email }}, {% endif %}{% endfor %}
+    <h2>Email addresses (Admins <strong>included</strong>)</h2>
+    {% for u in users %}{{ u.email }}, {% endfor %}
 {% endblock %}
