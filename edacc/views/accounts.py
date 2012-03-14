@@ -627,6 +627,7 @@ def list_solvers(database, user_id=None):
     if is_admin() and user_id:
         solvers = db.session.query(db.Solver).filter_by(User_idUser=user_id).all()
     else:
+        if user_id and g.User.idUser != user_id: abort(401)
         solvers = db.session.query(db.Solver).filter_by(user=g.User).all()
 
     return render('/accounts/list_solvers.html', database=database, user=user,
