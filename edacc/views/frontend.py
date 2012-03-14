@@ -455,9 +455,9 @@ def experiment_results_by_solver(database, experiment_id):
                     runtimes.append(run.cost)
             total_time = sum(runtimes)
 
-            var_by_instance[instance] = numpy.var(runtimes) if runtimes else 'n/a'
-            std_by_instance[instance] = numpy.std(runtimes) if runtimes else 'n/a'
-            mean_by_instance[instance] = total_time / count if count > 0 else 'n/a'
+            var_by_instance[instance] = numpy.var(runtimes) if runtimes else None
+            std_by_instance[instance] = numpy.std(runtimes) if runtimes else None
+            mean_by_instance[instance] = total_time / count if count > 0 else None
             # fill up runs_by_instance with None's up to num_runs
             runs_by_instance[instance] += [None] * (num_runs - count)
             par10_by_instance[instance] = total_time / float(count) if count != 0 else 0
@@ -470,9 +470,7 @@ def experiment_results_by_solver(database, experiment_id):
             csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'] + ['Variance'])
             results = [[name_by_instance[res[0]]] + [('' if r.cost is None else round(r.cost, 3)) for r in res[1]] +
                        ['' if par10_by_instance[res[0]] is None else round(par10_by_instance[res[0]], 4)] +
-                       ['' if mean_by_instance[res[0]] is None else round(mean_by_instance[res[0]], 4)] +
-                       ['' if var_by_instance[res[0]] is None else round(var_by_instance[res[0]], 4)] +
-                       ['' if std_by_instance[res[0]] is None else round(std_by_instance[res[0]], 4)] for res in results]
+                       ['' if var_by_instance[res[0]] is None else round(var_by_instance[res[0]], 4)] for res in results]
 
             if request.args.get('sort_by_instance_name', None):
                 sort_dir = request.args.get('sort_by_instance_name_dir', 'asc')
