@@ -60,7 +60,7 @@
     </table>
     {% endif %}
 <h2>Email addresses (Admins <strong>excluded</strong>)</h2>
-{% for u in users %}{% if not u.admin %}{{ u.email }}, {% endif %}{% endfor %}
-    <h2>Email addresses (Admins <strong>included</strong>)</h2>
-    {% for u in users %}{{ u.email }}, {% endfor %}
+<a href="mailto:?bcc={% for u in users %}{% if not u.admin %}{{ u.email }}, {% endif %}{% endfor %}">{% for u in users %}{{ u.email }}, {% endfor %}</a>
+<h2>Email addresses (Admins <strong>included</strong>)</h2>
+<a href="mailto:?bcc={% for u in users %}{{ u.email }}, {% endfor %}">{% for u in users %}{{ u.email }}, {% endfor %}</a>
 {% endblock %}
