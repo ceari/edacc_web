@@ -419,6 +419,14 @@ def submit_solver(database, id=None):
             hash = hashlib.md5()
             hash.update(bin)
 
+            # save the binary in the FS as log
+            store_path = os.path.join(config.UPLOAD_FOLDER, 'solvers', secure_filename(str(g.User.idUser) + '-' + g.User.lastname), 'bin')
+            try:
+                os.makedirs(store_path)
+            except: pass
+            with open(os.path.join(store_path, hash.hexdigest()), 'wb') as f:
+                f.write(bin)
+
             if not form.binary.file.filename.endswith('.zip'):
                 tmpfile = StringIO()
                 zip_file = zipfile.ZipFile(tmpfile, 'w', compression=zipfile.ZIP_DEFLATED)
@@ -435,6 +443,14 @@ def submit_solver(database, id=None):
         code = None
         if id is None or (id is not None and form.code.file):
             code = request.files[form.code.name].read()
+
+            # save the code in the FS as log
+            store_path = os.path.join(config.UPLOAD_FOLDER, 'solvers', secure_filename(str(g.User.idUser) + '-' + g.User.lastname), 'code')
+            try:
+                os.makedirs(store_path)
+            except: pass
+            with open(os.path.join(store_path, hash.hexdigest()), 'wb') as f:
+                f.write(code)
 
         description_pdf = None
         if id is None or (id is not None and form.description_pdf.file):
