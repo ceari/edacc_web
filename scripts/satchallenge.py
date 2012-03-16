@@ -62,7 +62,7 @@ def create_test_jobs(competition_category, solver_binary):
         run.seed = random.randint(1, 123456789)
         run.status = -1
         run.resultCode = 0
-        run.priority = 0
+        run.priority = -1
         run.CPUTimeLimit = experiment_info[1]
         run.wallClockTimeLimit = experiment_info[2]
         run.memoryLimit = experiment_info[3]
@@ -91,7 +91,8 @@ def send_info_mail(solver_binary):
     msg = MIMEText(('Dear ' + user.firstname + " " + user.lastname + ',\n\n' +
                    'This is an automatically generated e-mail regarding your solver submission to the SAT Challenge 2012.\n' +
                    'Your solver was executed in our execution environment with the following results:\n' +
-                   str(num_successful) + " out of " + str(num_total) + " runs finished successfully in time\n" +
+                   str(num_total - num_crash) + " runs finished without crashing\n" +
+                   str(num_successful) + " out of " + str(num_total) + " runs produced a correct result in time\n" +
                    str(num_crash) + " runs crashed\n\n" +
                    'Please have a look at ' + base_url + 'experiments/ for detailed information about the test\n').encode('utf8'), 'plain', 'utf8'
                    )
