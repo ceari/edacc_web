@@ -443,13 +443,15 @@ def submit_solver(database, id=None):
         code = None
         if id is None or (id is not None and form.code.file):
             code = request.files[form.code.name].read()
+            code_hash = hashlib.md5()
+            code_hash.update(bin)
 
             # save the code in the FS as log
             store_path = os.path.join(config.UPLOAD_FOLDER, 'solvers', secure_filename(str(g.User.idUser) + '-' + g.User.lastname), 'code')
             try:
                 os.makedirs(store_path)
             except: pass
-            with open(os.path.join(store_path, hash.hexdigest()), 'wb') as f:
+            with open(os.path.join(store_path, code_hash.hexdigest()), 'wb') as f:
                 f.write(code)
 
         description_pdf = None
