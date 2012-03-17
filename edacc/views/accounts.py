@@ -444,7 +444,7 @@ def submit_solver(database, id=None):
         if id is None or (id is not None and form.code.file):
             code = request.files[form.code.name].read()
             code_hash = hashlib.md5()
-            code_hash.update(bin)
+            code_hash.update(code)
 
             # save the code in the FS as log
             store_path = os.path.join(config.UPLOAD_FOLDER, 'solvers', secure_filename(str(g.User.idUser) + '-' + g.User.lastname), 'code')
