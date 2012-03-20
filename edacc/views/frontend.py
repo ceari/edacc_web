@@ -376,6 +376,52 @@ def experiment_results(database, experiment_id):
                     avg_cv_by_solver=avg_cv_by_solver, avg_qcd_by_solver=avg_qcd_by_solver,
                     base_result_details_url=base_result_details_url)
 
+
+@frontend.route('/<database>/experiment/<int:experiment_id>/results/full-csv')
+@require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
+@require_login
+def experiment_results_full_csv(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    solver_configs = db.session.query(db.SolverConfiguration).options(joinedload_all('solver_binary'))\
+    .filter_by(experiment=experiment).all()
+
+    # if competition db, show only own solvers unless phase is 6 or 7
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+        solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
+
+    solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
+
+    results, _, _ = experiment.get_result_matrix(db, solver_configs, experiment.instances, cost=request.args.get('cost', 'resultTime'))
+    name_by_instance = dict((i.idInstance, i.name) for i in experiment.instances)
+
+    csv_response = StringIO.StringIO()
+    csv_writer = csv.writer(csv_response)
+    csv_writer.writerow(['Experiment: ' + experiment.name,])
+    csv_writer.writerow([''] + [sc.name for sc in solver_configs])
+    for idInstance in results.iterkeys():
+        max_runs = 0
+        for idSolverConfig in solver_config_ids:
+            max_runs = max(max_runs, len(results[idInstance][idSolverConfig]))
+        for run in range(max_runs):
+            row = [name_by_instance[idInstance] + ((u' attempt #' + str((run+1))) if max_runs > 1 else '')]
+            for idSolverConfig in solver_config_ids:
+                if run < len(results[idInstance][idSolverConfig]):
+                    row.append(str(results[idInstance][idSolverConfig][run].resultTime or u''))
+                else: row.append(u"")
+            csv_writer.writerow(row)
+
+
+    csv_response.seek(0)
+    headers = Headers()
+    headers.add('Content-Type', 'text/csv')
+    headers.add('Content-Disposition', 'attachment',
+        filename=secure_filename(experiment.name + "_full_results.csv"))
+    return Response(response=csv_response.read(), headers=headers)
+
+
+
 @frontend.route('/<database>/experiment/<int:experiment_id>/results-by-solver/')
 @require_phase(phases=OWN_RESULTS.union(ALL_RESULTS))
 @require_login
