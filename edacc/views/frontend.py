@@ -405,7 +405,7 @@ def experiment_results_full_csv(database, experiment_id):
         for idSolverConfig in solver_config_ids:
             max_runs = max(max_runs, len(results[idInstance][idSolverConfig]))
         for run in range(max_runs):
-            row = [name_by_instance[idInstance].encode('utf-8) + ((u' attempt #' + str((run+1))) if max_runs > 1 else '')]
+            row = [name_by_instance[idInstance].encode('utf-8') + ((u' attempt #' + str((run+1))) if max_runs > 1 else '')]
             for idSolverConfig in solver_config_ids:
                 if run < len(results[idInstance][idSolverConfig]):
                     row.append(str(results[idInstance][idSolverConfig][run].resultTime or u''))
