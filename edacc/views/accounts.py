@@ -526,6 +526,11 @@ def submit_solver(database, id=None):
                 db.session.add(param)
             try:
                 db.session.commit()
+                if code:
+                    msg = Message("[" + db.label + "][Admin] Code submitted",
+                        recipients=[config.DEFAULT_MAIL_SENDER])
+                    msg.body = ("The user %s %s just submitted code for the solver with id %d" % (g.User.firstname, g.User.lastname, solver.idSolver))
+                    mail.send(msg)
             except Exception as e:
                 print e
                 db.session.rollback()
