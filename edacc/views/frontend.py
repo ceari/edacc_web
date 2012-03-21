@@ -246,6 +246,10 @@ def experiment_results(database, experiment_id):
         solver_configs = form.solver_configs.data
     else:
         solver_configs = []
+        
+    # if competition db, show only own solvers unless phase is 6 or 7
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+        solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     instances_dict = dict((i.idInstance, i) for i in instances)
     solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
@@ -444,6 +448,8 @@ def experiment_results_by_solver(database, experiment_id):
     results = []
     if form.solver_config.data:
         solver_config = form.solver_config.data
+        if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+            if solver_config.solver_binary.solver.user != g.User: abort(401)
         if 'details' in request.args:
             return redirect(url_for('frontend.solver_configuration_details',
                                     database=database, experiment_id=experiment.idExperiment,
