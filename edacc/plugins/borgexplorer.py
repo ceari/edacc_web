@@ -61,7 +61,7 @@ def borg_explorer_data(database, experiment_id):
         return json_dumps([{"path": experiment.name, "name": experiment.name}])
 
     @synchronized
-    @cache.memoize(600)
+    #@cache.memoize(600)
     def get_data(database, experiment_id):
         runs = db.session.query(db.ExperimentResult) \
                                 .filter(db.ExperimentResult.Experiment_idExperiment==experiment_id) \
