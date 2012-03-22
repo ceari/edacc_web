@@ -246,7 +246,7 @@ def experiment_results(database, experiment_id):
         solver_configs = form.solver_configs.data
     else:
         solver_configs = []
-        
+
     # if competition db, show only own solvers unless phase is 6 or 7
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)

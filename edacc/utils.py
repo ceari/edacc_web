@@ -68,7 +68,7 @@ def parameter_template(solver):
     """ Returns a string of the solver configuration parameters """
     parameters = solver.parameters
     args = []
-    for p in parameters:
+    for p in sorted(parameters, key=lambda p: p.order):
         if p.prefix: args.append(p.prefix)
         if p.space and p.prefix and p.hasValue: args.append(" ")
         if p.name == 'seed':
