@@ -104,7 +104,7 @@ def require_login(f):
                 return redirect(url_for('accounts.login',
                                         database=kwargs['database']))
 
-            if not session.get('logged_in') or \
+            if not g.User or not session.get('logged_in') or \
                 session.get('idUser', None) is None:
                 return redirect_f(*args, **kwargs)
             if session.get('database') != kwargs['database']:

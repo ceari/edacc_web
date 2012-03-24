@@ -374,7 +374,7 @@ def submit_solver(database, id=None):
 
     if id is not None:
         solver = db.session.query(db.Solver).get(id) or abort(404)
-        if solver.user != g.User: abort(401)
+        if solver.user.idUser != g.User.idUser: abort(401)
 
         solver_binary = solver.binaries[0] if solver.binaries else None
         form = forms.SolverForm(request.form, solver)
@@ -552,7 +552,7 @@ def submit_solver(database, id=None):
 def delete_solver(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
-    if solver.user != g.User: abort(401)
+    if solver.user.idUser != g.User.idUser: abort(401)
 
     try:
         for solver_binary in solver.binaries:
@@ -683,39 +683,3 @@ def list_benchmarks(database, user_id=None):
 
     return render('/accounts/list_benchmarks.html', database=database,
                   db=db, uploaded_files=uploaded_files, user_id=user_id)
-
-
-@accounts.route('/<database>/download-solver/<int:id>/')
-@require_login
-@require_competition
-def download_solver(database, id):
-    """ Lets a user download the binaries of his own solvers """
-    db = models.get_database(database) or abort(404)
-    solver = db.session.query(db.Solver).get(id) or abort(404)
-    if solver.user != g.User:
-        abort(401)
-
-    headers = Headers()
-    headers.add('Content-Type', 'text/plain')
-    headers.add('Content-Disposition', 'attachment',
-                filename=solver.binaryName)
-
-    return Response(response=solver.binaries[0].binaryArchive, headers=headers)
-
-
-@accounts.route('/<database>/download-solver-code/<int:id>/')
-@require_login
-@require_competition
-def download_solver_code(database, id):
-    """ Lets a user download the binaries of his own solvers """
-    db = models.get_database(database) or abort(404)
-    solver = db.session.query(db.Solver).get(id) or abort(404)
-    if solver.user != g.User:
-        abort(401)
-
-    headers = Headers()
-    headers.add('Content-Type', 'text/plain')
-    headers.add('Content-Disposition', 'attachment',
-                filename=solver.name + ".zip")
-
-    return Response(response=solver.code, headers=headers)

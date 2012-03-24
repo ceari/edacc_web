@@ -56,7 +56,7 @@ def solver_ranking(database, experiment_id):
     if form.i.data:
         solver_configs = experiment.solver_configurations
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
-            solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
+            solver_configs = filter(lambda sc: sc.solver_binary.solver.user.idUser == g.User.idUser, solver_configs)
 
         #CACHE_TIME = 7*24*60*60
         #@cache.memoize(timeout=CACHE_TIME)
