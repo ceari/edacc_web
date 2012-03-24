@@ -195,6 +195,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         .filter_by(experiment=experiment) \
         .filter(db.ExperimentResult.resultCode.like(u'1%')) \
         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+        .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
         .group_by(db.ExperimentResult.Instances_idInstance).all()
 
     vbs_num_solved = len(best_instance_runtimes) * max_num_runs
