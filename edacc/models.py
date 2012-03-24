@@ -288,7 +288,7 @@ class EDACCDatabase(object):
                 solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
                 instance_ids = [i.idInstance for i in instances]
                 if not solver_config_ids or not instance_ids:
-                    return M
+                    return M, 0, 0
                 table = db.metadata.tables['ExperimentResults']
                 table_result_codes = db.metadata.tables['ResultCodes']
                 if cost == 'resultTime':
