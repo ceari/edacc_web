@@ -163,7 +163,7 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
             else:
                 return 0
 
-    return list(sorted(experiment.solver_configurations,cmp=comp,reverse=True))
+    return list(sorted(solver_configs,cmp=comp,reverse=True))
 
 def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev, cost):
     instance_ids = [i.idInstance for i in instances]

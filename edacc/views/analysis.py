@@ -130,7 +130,7 @@ def solver_ranking(database, experiment_id):
                                 .filter_by(experiment=experiment).first()
         job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
 
-        return cached_ranking(database, experiment_id, solver_configs, ''.join(sc.get_name() for sc in experiment.solver_configurations),
+        return cached_ranking(database, experiment_id, solver_configs, ''.join(sc.get_name() for sc in solver_configs),
                               last_modified_job, job_count, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data, form.cost.data,
                               'csv' in request.args, 'latex' in request.args)
