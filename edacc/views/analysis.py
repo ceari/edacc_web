@@ -19,7 +19,7 @@ from sqlalchemy import or_, func, and_, not_
 from sqlalchemy.sql import expression, select
 
 from flask import Blueprint
-from flask import render_template as render, g
+from flask import render_template as render, g, session
 from flask import abort, request, jsonify, Response
 from werkzeug import Headers, secure_filename
 
@@ -57,6 +57,8 @@ def solver_ranking(database, experiment_id):
         solver_configs = experiment.solver_configurations
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
+
+        print request.remote_addr, g.User.lastname, g.User.idUser, session.get('admin', False), [sc.idSolverConfig for sc in solver_configs]
 
         #CACHE_TIME = 7*24*60*60
         #@cache.memoize(timeout=CACHE_TIME)
