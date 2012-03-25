@@ -547,7 +547,7 @@ def submit_solver(database, id=None):
 
 @accounts.route('/<database>/delete-solver/<int:solver_id>', methods=['GET'])
 @require_login
-@require_phase(phases=(2, 4))
+@require_phase(phases=(2,))
 @require_competition
 def delete_solver(database, solver_id):
     db = models.get_database(database) or abort(404)
