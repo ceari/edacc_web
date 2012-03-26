@@ -686,3 +686,39 @@ def list_benchmarks(database, user_id=None):
 
     return render('/accounts/list_benchmarks.html', database=database,
                   db=db, uploaded_files=uploaded_files, user_id=user_id)
+
+@accounts.route('/<database>/manage/admin-benchmarks/')
+@require_login
+@require_admin
+@require_competition
+def admin_list_benchmarks(database):
+    """ Lists all benchmarks that the currently logged in user submitted.
+    """
+    db = models.get_database(database) or abort(404)
+    uploaded_files = {}
+    directory = os.path.join(config.UPLOAD_FOLDER, database)
+    for file in os.listdir(directory):
+        if os.path.isdir(os.path.join(directory, file)):
+            for user_dir in os.listdir(os.path.join(directory, file)):
+                if not file in uploaded_files: uploaded_files[file] = list()
+                files = os.listdir(os.path.join(directory, file, user_dir))
+                files_full_path = [os.path.join(directory, file, user_dir, f) for f in files]
+                uploaded_files[file] = zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path], user_dir)
+
+    return render('/accounts/admin_list_benchmarks.html', database=database,
+        db=db, uploaded_files=uploaded_files)
+
+@accounts.route('/<database>/manage/admin-download-benchmark/<category>/<user_dir>/<filename>')
+@require_login
+@require_admin
+@require_competition
+def admin_download_benchmark(database, category, user_dir, filename):
+    directory = os.path.join(config.UPLOAD_FOLDER, database)
+
+    import mimetypes
+
+    headers = Headers()
+    headers.add('Content-Type', mimetypes.guess_type(filename))
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename(filename))
+
+    return Response(response=open(os.path.join(directory, category, user_dir, filename), 'rb'), headers=headers)
