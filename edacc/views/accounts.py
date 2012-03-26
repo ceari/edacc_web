@@ -703,7 +703,7 @@ def admin_list_benchmarks(database):
                 if not file in uploaded_files: uploaded_files[file] = list()
                 files = os.listdir(os.path.join(directory, file, user_dir))
                 files_full_path = [os.path.join(directory, file, user_dir, f) for f in files]
-                uploaded_files[file] = zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path], user_dir)
+                uploaded_files[file] = zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path], [user_dir] * len(files))
 
     return render('/accounts/admin_list_benchmarks.html', database=database,
         db=db, uploaded_files=uploaded_files)
