@@ -9,7 +9,7 @@
     {% if uploaded_files %}
     <ul>
         {% for k, v in uploaded_files.iteritems() %}
-            <li>{{k}}: {{ ','.join(v) }}</li>
+            <li>{{k}}: {% for f in v %}{{ f.0 }} ({{ f.1 }}),{% endfor %}</li>
         {% endfor %}
     </ul>
     {% else %}

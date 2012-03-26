@@ -12,6 +12,7 @@
 
 import itertools
 import random
+import time
 import hashlib
 import zipfile
 import tempfile
@@ -679,7 +680,9 @@ def list_benchmarks(database, user_id=None):
             for user_dir in os.listdir(os.path.join(directory, file)):
                 if (is_admin() and user_id and user_dir == str(user_id)) or (not user_id and user_dir == str(g.User.idUser)):
                     if not file in uploaded_files: uploaded_files[file] = list()
-                    uploaded_files[file] = os.listdir(os.path.join(directory, file, user_dir))
+                    files = os.listdir(os.path.join(directory, file, user_dir))
+                    files_full_path = [os.path.join(directory, file, user_dir, f) for f in files]
+                    uploaded_files[file] = zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path])
 
     return render('/accounts/list_benchmarks.html', database=database,
                   db=db, uploaded_files=uploaded_files, user_id=user_id)
