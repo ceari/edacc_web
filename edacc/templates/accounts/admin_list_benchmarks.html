@@ -5,7 +5,7 @@
     {% if uploaded_files %}
     <ul>
         {% for k, v in uploaded_files.iteritems() %}
-            <li>{{k}}: {% for f in v %}<a href="{{url_for('accounts.admin_download_benchmark', database=database, category=k, user_dir=f.2, filename=f.0)}}">{{ f.0 }} ({{ f.1 }})</a>,{% endfor %}</li>
+            <li>{{k}}: {% for f in v %}<a href="{{url_for('accounts.admin_download_benchmark', database=database, category=k, user_dir=f.2, filename=f.0)}}">{{ f.0 }} ({{ f.1 }}, {{ f.3|download_size }})</a>,{% endfor %}</li>
         {% endfor %}
     </ul>
     {% else %}
