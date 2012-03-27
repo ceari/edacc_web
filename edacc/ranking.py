@@ -243,6 +243,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     if calculate_avg_stddev:
         finished_runs_by_solver_and_instance = {}
         s = select([expression.label('cost', cost_column),
+                    expression.label('cost_limit', cost_limit_column),
                     table.c['SolverConfig_idSolverConfig'],
                     table.c['Instances_idInstance']],
             and_(table.c['Instances_idInstance'].in_(instance_ids),
