@@ -138,7 +138,13 @@
                         {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
                             <td style="text-align: center; background-color: yellow;">
                         {% else %}
+                            {% if job.first_job.status == 0 %}
+                            <td style="text-align: center; background-color: orange">
+                            {% elif job.first_job.status == -1 %}
+                            <td style="text-align: center; background-color: #FF8040">
+                            {% else %}
                             <td style="text-align: center; background-color: {{job.first_job.resultCode|job_result_code_color}}">
+                            {% endif %}
                         {% endif %}
                             <a style="color: black;" href="{{base_result_details_url}}?id={{job.first_job.idJob}}">
                                 {% if job.time_measure != None %}
@@ -198,6 +204,7 @@
                 <td style="padding: 2px; background-color: {{(0)|job_result_code_color}}">Unknown result</td>
                 <td style="padding: 2px; background-color: yellow">Best runtime</td>
                 <td style="padding: 2px; background-color: #FF8040">not processed yet</td>
+                <td style="padding: 2px; background-color: orange">running</td>
             </tr>
         </table>
     </div>
