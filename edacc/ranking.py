@@ -257,23 +257,23 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                 finished_runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance] = []
             finished_runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance].append(run)
 
-    if calculate_par10:
-        failed_runs_by_solver = dict((sc.idSolverConfig, list()) for sc in ranked_solvers)
-        s = select([expression.label('cost_limit', cost_limit_column), table.c['SolverConfig_idSolverConfig']],
-                    and_(table.c['Experiment_idExperiment']==experiment.idExperiment,
-                        table.c['Instances_idInstance'].in_(instance_ids),
-                        table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
-                        and_(
-                            or_(
-                                table.c['status']!=1,
-                                not_(table.c['resultCode'].like(u'1%'))
-                            ),
-                            not_(table.c['status'].in_([-1,0]))
-                        )
-                    )).select_from(table)
-        failed_runs = db.session.connection().execute(s)
-        for run in failed_runs:
-            failed_runs_by_solver[run.SolverConfig_idSolverConfig].append(run)
+    failed_runs_by_solver = dict((sc.idSolverConfig, list()) for sc in ranked_solvers)
+    s = select([expression.label('cost', cost_column),
+                expression.label('cost_limit', cost_limit_column), table.c['SolverConfig_idSolverConfig']],
+                and_(table.c['Experiment_idExperiment']==experiment.idExperiment,
+                    table.c['Instances_idInstance'].in_(instance_ids),
+                    table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
+                    and_(
+                        or_(
+                            table.c['status']!=1,
+                            not_(table.c['resultCode'].like(u'1%'))
+                        ),
+                        not_(table.c['status'].in_([-1,0]))
+                    )
+                )).select_from(table)
+    failed_runs = db.session.connection().execute(s)
+    for run in failed_runs:
+        failed_runs_by_solver[run.SolverConfig_idSolverConfig].append(run)
 
     for solver in ranked_solvers:
         if runs_by_solver_and_instance.has_key(solver.idSolverConfig):
@@ -291,6 +291,8 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             else:
                 penalized_average_runtime = (sum([j.cost_limit*10.0 for j in failed_runs_by_solver[solver.idSolverConfig]]) + successful_runs_sum) \
                                             / (len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]))
+
+        median_runtime = numpy.median([j.cost for j in failed_runs_by_solver[solver.idSolverConfig] + successful_runs])
 
         avg_stddev_runtime = 0.0
         avg_cv = 0.0
@@ -318,11 +320,12 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             0 if len(successful_runs) == 0 else len(successful_runs) / float(max_num_runs_per_solver),
             0 if vbs_num_solved == 0 else len(successful_runs) / float(vbs_num_solved),
             successful_runs_sum,
-            numpy.average([j[0] or 0.0 for j in successful_runs] or 0),
+            #numpy.average([j[0] or 0.0 for j in successful_runs] or 0),
+            median_runtime,
             avg_stddev_runtime,
             avg_cv,
             avg_qcd,
-            penalized_average_runtime
+            penalized_average_runtime,
         ))
 
     #if calculate_par10: data.sort(key=lambda x: x[7])
