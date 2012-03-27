@@ -69,7 +69,7 @@ def solver_ranking(database, experiment_id):
 
             if csv_response:
                 head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
-                                     'cumulated cost', 'avg. cost per successful run']
+                                     'cumulated cost', 'median runtime']
 
                 if form.calculate_average_dev.data:
                     head.append('avg. deviation of successful runs')
@@ -97,7 +97,7 @@ def solver_ranking(database, experiment_id):
                 return Response(response=csv_response.read(), headers=headers)
             elif latex_response:
                 head = ['\\#', 'Solver', '\\# of successful runs', '\\% of all runs', '\\% of VBS runs',
-                                     'cumulated cost', 'avg. cost per successful run']
+                                     'cumulated cost', 'median runtime']
 
                 if form.calculate_average_dev.data:
                     head.append('avg. deviation of successful runs')
