@@ -105,7 +105,9 @@
                                 <td></td>
                             {% else %}
                                 {% if run.status == 0  %}
-                                    <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">running</a></td>
+                                    <td style="text-align: center; background-color: orange;"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">running</a></td>
+                                {% elif run.status == -1 %}
+                                    <td style="text-align: center; background-color: #FF8040;"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">-</a></td>
                                 {% else %}
                                     <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ (run.cost|result_time) if not run.cost else (run.cost|result_time|round(3))}} {{ run.result_code_description }}</a></td>
                                 {% endif %}
@@ -124,6 +126,8 @@
                     <td style="padding: 2px; background-color: {{(-21)|job_result_code_color}}">time limit exceeded</td>
                     <td style="padding: 2px; background-color: {{(1)|job_result_code_color}}">Correct answer</td>
                     <td style="padding: 2px; background-color: {{(0)|job_result_code_color}}">Unknown result</td>
+                    <td style="padding: 2px; background-color: orange">running</td>
+                    <td style="padding: 2px; background-color: #FF8040">not processed yet</td>
                 </tr>
             </table>
         </div>
