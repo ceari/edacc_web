@@ -243,7 +243,6 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     if calculate_avg_stddev:
         finished_runs_by_solver_and_instance = {}
         s = select([expression.label('cost', cost_column),
-                    expression.label('cost_limit', cost_limit_column),
                     table.c['SolverConfig_idSolverConfig'],
                     table.c['Instances_idInstance']],
             and_(table.c['Instances_idInstance'].in_(instance_ids),
@@ -293,7 +292,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                 penalized_average_runtime = (sum([j.cost_limit*10.0 for j in failed_runs_by_solver[solver.idSolverConfig]]) + successful_runs_sum) \
                                             / (len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]))
 
-        median_runtime = numpy.median([j.cost_limit for j in failed_runs_by_solver[solver.idSolverConfig] + successful_runs])
+        median_runtime = numpy.median([j.cost_limit for j in failed_runs_by_solver[solver.idSolverConfig]] + [j.cost for j in successful_runs])
 
         avg_stddev_runtime = 0.0
         avg_cv = 0.0
