@@ -72,6 +72,7 @@
 <h2>Troubleshooting</h2>
 <div style="width: 600px;">
     <ul>
+        <li>Immediate solver crashes (close to 0 walltime) with the result "SIGSEGV" often indicate that the binary is not compatible with the kernel ("FATAL: Kernel too old").</li>
         <li>If your solver runs crash or only produce "unknown" results please first make sure that the parameters of your solver were parsed and used correctly. See Results->Experiment->List of solver configurations used->Select your solver.</li>
         <li>Check the individual runs by clicking on the ID in the "Live information about experiment progress" table or on a run in any of the result pages. The exact launch command appears in the "Launcher output" section.</li>
         <li>The "run command" in the solver submission form should only be used for interpreters/VMs like java or python, i.e. programs that are available system-wide.</li>
