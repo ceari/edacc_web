@@ -74,7 +74,11 @@
     <h2>Submit Solver</h2>
     <div>
         <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
-        Fields marked with <strong>*</strong> are required. You have to submit either a binary or code, or both.
+        Fields marked with <strong>*</strong> are required. You have to submit either a binary or code, or both.<br/>
+        <strong>Regarding temporary files:</strong> Please note that you should use the directory given as parameter TEMPDIR,<br/>
+        which will be a unique and clean directory for every solver run. Because your solver might concurrently run more than<br/>
+        once on a machine, simply using /tmp might result in conflicts. You should also avoid to write to your solver's own<br/>
+        directory for the same reason.
     </div>
     {% if id %}
     <div>
