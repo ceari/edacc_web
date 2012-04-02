@@ -682,7 +682,6 @@ def list_benchmarks(database, user_id=None):
                     if not file in uploaded_files: uploaded_files[file] = list()
                     files = os.listdir(os.path.join(directory, file, user_dir))
                     files_full_path = [os.path.join(directory, file, user_dir, f) for f in files]
-                    if not file in uploaded_files: uploaded_files[file] = list()
                     uploaded_files[file] += zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path])
 
     return render('/accounts/list_benchmarks.html', database=database,
@@ -705,7 +704,7 @@ def admin_list_benchmarks(database):
                 files = os.listdir(os.path.join(directory, file, user_dir))
                 files_full_path = [os.path.join(directory, file, user_dir, f) for f in files]
                 files_sizes = [os.stat(f).st_size for f in files_full_path]
-                uploaded_files[file] = zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path], [user_dir] * len(files), files_sizes)
+                uploaded_files[file] += zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path], [user_dir] * len(files), files_sizes)
 
     return render('/accounts/admin_list_benchmarks.html', database=database,
         db=db, uploaded_files=uploaded_files)
