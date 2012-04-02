@@ -548,7 +548,7 @@ def submit_solver(database, id=None):
 
 @accounts.route('/<database>/delete-solver/<int:solver_id>', methods=['GET'])
 @require_login
-@require_phase(phases=(2,))
+@require_phase(phases=(2, 4))
 @require_competition
 def delete_solver(database, solver_id):
     db = models.get_database(database) or abort(404)
@@ -682,7 +682,8 @@ def list_benchmarks(database, user_id=None):
                     if not file in uploaded_files: uploaded_files[file] = list()
                     files = os.listdir(os.path.join(directory, file, user_dir))
                     files_full_path = [os.path.join(directory, file, user_dir, f) for f in files]
-                    uploaded_files[file] = zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path])
+                    if not file in uploaded_files: uploaded_files[file] = list()
+                    uploaded_files[file] += zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path])
 
     return render('/accounts/list_benchmarks.html', database=database,
                   db=db, uploaded_files=uploaded_files, user_id=user_id)
