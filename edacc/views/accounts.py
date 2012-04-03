@@ -727,3 +727,21 @@ def admin_download_benchmark(database, category, user_dir, filename):
     headers.add('Content-Disposition', 'attachment', filename=secure_filename(filename))
 
     return Response(response=open(os.path.join(directory, category, user_dir, filename), 'rb'), headers=headers)
+
+@accounts.route('/<database>/manage/admin-toggle-solver-freeze/<int:solver_id>/')
+@require_login
+@require_admin
+@require_competition
+def admin_toggle_solver_freeze(database, solver_id):
+    db = models.get_database(database) or abort(404)
+    solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+
+    solver.competition_frozen = not solver.competition_frozen
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        flash('DB error when commiting. Rolled back.')
+
+    return redirect(url_for('frontend.solver_details',
+        database=database, solver_id=solver_id))

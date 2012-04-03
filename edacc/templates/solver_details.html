@@ -29,6 +29,11 @@
     {% if solver.binaries %}
     <strong>Launch command: {{ solver.binaries[0].runCommand or '' }} {{ solver.binaries[0].runPath or ''}} {{ solver|parameter_template }}</strong>
     {% endif %}
+    {% if session.admin %}
+        <p>
+        <a href="{{url_for('accounts.admin_toggle_solver_freeze', database=database, solver_id=solver.idSolver)}}">Solver is {{ 'frozen' if solver.competition_frozen else 'not frozen'}}</a> (Click to toggle)
+        </p>
+    {% endif %}
 </div>
 <div>
     <ul>
