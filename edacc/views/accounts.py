@@ -376,6 +376,10 @@ def submit_solver(database, id=None):
     if id is not None:
         solver = db.session.query(db.Solver).get(id) or abort(404)
         if solver.user.idUser != g.User.idUser: abort(401)
+        if db.competition_phase() == 4 and solver.competition_frozen:
+            flash('This solver was found to be compatible with our execution environment, i.e. has no crashed test runs or test runs with unknown result, and can not be updated anymore. Please contact the organizers if there\'s a reason to submit a new version.')
+            return redirect(url_for('accounts.list_solvers',
+                database=database, user_id=g.User.idUser))
 
         solver_binary = solver.binaries[0] if solver.binaries else None
         form = forms.SolverForm(request.form, solver)
