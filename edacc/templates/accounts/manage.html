@@ -1,6 +1,43 @@
 {% extends "base.html" %}
 {% block title %}Manage{% endblock %}
 {% block content %}
+<h2>Solver and benchmark submission</h2>
+<div>
+    <strong>3. April: Due to a scheduled cluster maintenance solvers can't be tested during the next few days.</strong>
+    <br/><br/>
+</div>
+<div>
+    Note that you can submit multiple solvers while testing the compatibility with our execution environment.<br/>
+    Before the submission deadline please remove all solvers but the ones you wish to enter into the competition.<br/>
+</div>
+<ul>
+    <li>
+        <a href="{{url_for('accounts.submit_solver', database=database)}}">Submit a solver</a>
+    </li>
+    <li>
+        <a href="{{url_for('accounts.list_solvers', database=database, user_id=g.User.idUser)}}">List of submitted solvers</a>
+    </li>
+
+    <li>
+        <a href="{{url_for('accounts.submit_benchmarks', database=database)}}">Submit benchmarks</a>
+    </li>
+    <li>
+        <a href="{{url_for('accounts.list_benchmarks', database=database)}}">List of submitted benchmarks</a>
+    </li>
+
+</ul>
+
+<h2>Troubleshooting</h2>
+<div style="width: 600px;">
+    <ul>
+        <li>Immediate solver crashes (close to 0 walltime) with the result "SIGSEGV" often indicate that the binary is not compatible with the kernel ("FATAL: Kernel too old").</li>
+        <li>If your solver runs crash or only produce "unknown" results please first make sure that the parameters of your solver were parsed and used correctly. See Results->Experiment->List of solver configurations used->Select your solver.</li>
+        <li>Check the individual runs by clicking on the ID in the "Live information about experiment progress" table or on a run in any of the result pages. The exact launch command appears in the "Launcher output" section.</li>
+        <li>The "run command" in the solver submission form should only be used for interpreters/VMs like java or python, i.e. programs that are available system-wide.</li>
+        <li>Don't hesitate to contact us if there are problems.</li>
+    </ul>
+</div>
+<hr/>
     <div style="width:900px;">
         <p>
             Dear SAT Challenge 2012 Registrants,<br/>
@@ -47,37 +84,4 @@
         </p>
         </p>
     </div>
-<h2>Solver and benchmark submission</h2>
-<div>
-    Note that you can submit multiple solvers while testing the compatibility with our execution environment.<br/>
-    Before the submission deadline please remove all solvers but the ones you wish to enter into the competition.<br/>
-</div>
-<ul>
-    <li>
-        <a href="{{url_for('accounts.submit_solver', database=database)}}">Submit a solver</a>
-    </li>
-    <li>
-        <a href="{{url_for('accounts.list_solvers', database=database, user_id=g.User.idUser)}}">List of submitted solvers</a>
-    </li>
-
-    <li>
-        <a href="{{url_for('accounts.submit_benchmarks', database=database)}}">Submit benchmarks</a>
-    </li>
-    <li>
-        <a href="{{url_for('accounts.list_benchmarks', database=database)}}">List of submitted benchmarks</a>
-    </li>
-
-</ul>
-
-<h2>Troubleshooting</h2>
-<div style="width: 600px;">
-    <ul>
-        <li>Immediate solver crashes (close to 0 walltime) with the result "SIGSEGV" often indicate that the binary is not compatible with the kernel ("FATAL: Kernel too old").</li>
-        <li>If your solver runs crash or only produce "unknown" results please first make sure that the parameters of your solver were parsed and used correctly. See Results->Experiment->List of solver configurations used->Select your solver.</li>
-        <li>Check the individual runs by clicking on the ID in the "Live information about experiment progress" table or on a run in any of the result pages. The exact launch command appears in the "Launcher output" section.</li>
-        <li>The "run command" in the solver submission form should only be used for interpreters/VMs like java or python, i.e. programs that are available system-wide.</li>
-        <li>Don't hesitate to contact us if there are problems.</li>
-    </ul>
-</div>
-
 {% endblock %}
