@@ -5,6 +5,7 @@
     <h2>Login to {{db}}</h2>
 
     <form action="{{url_for('accounts.login', database=database)}}" method="post">
+        {{form.csrf}}
         <table>
             {{ render_field(form.email, size=40) }}
             {{ render_field(form.password, size=40) }}
