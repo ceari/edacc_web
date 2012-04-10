@@ -180,7 +180,7 @@ def login(database):
         only be logged in to one database at a time
     """
     db = models.get_database(database) or abort(404)
-    form = forms.LoginForm()
+    form = forms.LoginForm(csrf_enabled=False)
 
     error = None
     if form.validate_on_submit():
