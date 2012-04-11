@@ -234,7 +234,7 @@ def manage(database):
 
 @accounts.route('/<database>/submit-benchmarks/', methods=['GET', 'POST'])
 @require_login
-@require_phase(phases=(2, 4))
+@require_phase(phases=(2, 4, 5))
 @require_competition
 def submit_benchmarks(database):
     db = models.get_database(database) or abort(404)
@@ -274,7 +274,7 @@ def submit_benchmarks(database):
 
 @accounts.route('/<database>/upload-benchmarks/', methods=['GET', 'POST'])
 @require_login
-@require_phase(phases=(2, 4))
+@require_phase(phases=(2, 4, 5))
 @require_competition
 def upload_benchmarks(database):
     db = models.get_database(database) or abort(404)
