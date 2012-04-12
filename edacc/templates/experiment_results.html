@@ -55,6 +55,11 @@
             });
 
             fixed_header.fnUpdate();
+
+            $.ctrl('A', function() {
+                $('#solver_configs option').attr("selected", "selected");
+                return false;
+            });
         });
     </script>
 {% endblock %}
