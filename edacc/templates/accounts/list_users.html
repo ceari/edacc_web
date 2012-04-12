@@ -59,6 +59,8 @@
         </tbody>
     </table>
     {% endif %}
+<h2>Information</h2>
+<a href="{{ url_for('accounts.list_solver_descriptions', database=database) }}">List of submitted descriptions</a>
 <h2>Email addresses (Admins <strong>excluded</strong>)</h2>
 <a href="mailto:?bcc={% for u in users %}{% if not u.admin %}{{ u.email }};{% endif %}{% endfor %}">{% for u in users %}{% if not u.admin %}{{ u.email }}, {% endif %}{% endfor %}</a>
 <h2>Email addresses (Admins <strong>included</strong>)</h2>

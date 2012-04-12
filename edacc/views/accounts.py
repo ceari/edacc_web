@@ -550,6 +550,23 @@ def submit_solver(database, id=None):
     return render('/accounts/submit_solver.html', database=database, error=error,
                   db=db, id=id, form=form)
 
+
+@accounts.route('/<database>/list-solver-descriptions/', methods=['GET'])
+@require_login
+@require_admin
+def list_solver_descriptions(database):
+    db = models.get_database(database) or abort(404)
+
+    solvers = [s for s in db.session.query(db.Solver).all() if s.User_idUser]
+
+    solvers_by_category = dict()
+    for category in db.session.query(db.CompetitionCategory).all():
+        solvers_by_category[category] = [s for s in category.solvers if s.User_idUser]
+
+    return render('/accounts/list_solver_descriptions.html', database=database,
+        db=db, solvers=solvers, solvers_by_category=solvers_by_category)
+
+
 @accounts.route('/<database>/delete-solver/<int:solver_id>', methods=['GET'])
 @require_login
 @require_phase(phases=(2, 4))

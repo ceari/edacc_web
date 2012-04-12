@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}List of submitted descriptions{% endblock %}
+{% block content %}
+    <h2>List of submitted descriptions</h2>
+    <h3>By Solver</h3>
+    <ul>
+    {% for s in solvers %}
+        {% if s.description_pdf %}
+            <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=s.idSolver) }}">{{ s.name }}</a>  (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
+        {% else %}
+            <li><span style="color: red">{{ s.name }} (missing)</span> (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
+        {% endif %}
+    {% endfor %}
+    </ul>
+    <h3>By category</h3>
+    {% for c in solvers_by_category %}
+        <p>{{ c.name }}</p>
+        <ul>
+        {% for s in solvers %}
+            {% if s.description_pdf %}
+            <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=s.idSolver) }}">{{ s.name }}</a> (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
+            {% else %}
+                <li><span style="color: red">{{ s.name }} (missing)</span> (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+    {% endfor %}
+{% endblock %}
