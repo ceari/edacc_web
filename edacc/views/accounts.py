@@ -561,9 +561,9 @@ def list_solver_descriptions(database):
 
     solvers_by_category = dict()
     for category in db.session.query(db.CompetitionCategory).all():
-        solvers_by_category[category] = set(s for s in category.solvers if s.User_idUser)
+        solvers_by_category[category] = [s for s in category.solvers if s.User_idUser]
 
-    return render('/accounts/list_solver_descriptions.html', database=database,
+    return render('/accounts/list_solver_descriptions.html', database=database, categories=sorted(solvers_by_category.keys(), key=lambda c: c.name),
         db=db, solvers=solvers, solvers_by_category=solvers_by_category, sorted=sorted)
 
 
