@@ -16,7 +16,7 @@
     {% for c in sorted(solvers_by_category.keys()) %}
         <p>{{ c.name }}</p>
         <ul>
-        {% for s in solvers %}
+        {% for s in solvers_by_category[c] %}
             {% if s.description_pdf %}
             <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=s.idSolver) }}">{{ s.name }}</a> (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
             {% else %}
