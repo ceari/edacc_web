@@ -4,6 +4,30 @@
     <h2>List of submitted descriptions</h2>
     <h3>By Solver</h3>
     <ul>
+        {% for s in filtered_solvers %}
+            {% if s.description_pdf %}
+                <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=s.idSolver) }}">{{ s.name }}</a>  (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
+            {% else %}
+                <li><span style="color: red">{{ s.name }} (missing)</span> (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <h3>By category</h3>
+    {% for c in categories %}
+        <p>{{ c.name }}</p>
+        <ul>
+            {% for s in filtered_solvers_by_category[c] %}
+                {% if s.description_pdf %}
+                    <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=s.idSolver) }}">{{ s.name }}</a> (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
+                {% else %}
+                    <li><span style="color: red">{{ s.name }} (missing)</span> (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endfor %}
+
+    <h3>With duplicates by solver</h3>
+    <ul>
     {% for s in solvers %}
         {% if s.description_pdf %}
             <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=s.idSolver) }}">{{ s.name }}</a>  (<a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a>)</li>
@@ -12,7 +36,7 @@
         {% endif %}
     {% endfor %}
     </ul>
-    <h3>By category</h3>
+    <h3>With duplicates by category</h3>
     {% for c in categories %}
         <p>{{ c.name }}</p>
         <ul>

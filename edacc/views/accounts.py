@@ -558,13 +558,24 @@ def list_solver_descriptions(database):
     db = models.get_database(database) or abort(404)
 
     solvers = [s for s in db.session.query(db.Solver).all() if s.User_idUser]
+    filtered_solvers = []
+    for s in solvers:
+        if not any(ss.description_pdf == s.description_pdf and s.description_pdf for ss in filtered_solvers):
+            filtered_solvers.append(s)
+
 
     solvers_by_category = dict()
+    filtered_solvers_by_category = dict()
     for category in db.session.query(db.CompetitionCategory).all():
         solvers_by_category[category] = [s for s in category.solvers if s.User_idUser]
+        filtered_solvers_by_category[category] = []
+        for s in solvers_by_category[category]:
+            if not any(ss.description_pdf == s.description_pdf and s.description_pdf for ss in filtered_solvers_by_category[category]):
+                filtered_solvers_by_category[category].append(s)
 
     return render('/accounts/list_solver_descriptions.html', database=database, categories=sorted(solvers_by_category.keys(), key=lambda c: c.name),
-        db=db, solvers=solvers, solvers_by_category=solvers_by_category, sorted=sorted)
+        db=db, solvers=solvers, solvers_by_category=solvers_by_category, sorted=sorted, filtered_solvers=filtered_solvers,
+        filtered_solvers_by_category=filtered_solvers_by_category)
 
 
 @accounts.route('/<database>/delete-solver/<int:solver_id>', methods=['GET'])
