@@ -13,7 +13,7 @@
     {% endfor %}
     </ul>
     <h3>By category</h3>
-    {% for c in solvers_by_category %}
+    {% for c in sorted(solvers_by_category.keys()) %}
         <p>{{ c.name }}</p>
         <ul>
         {% for s in solvers %}
