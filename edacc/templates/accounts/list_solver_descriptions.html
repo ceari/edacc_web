@@ -42,12 +42,12 @@
             <td><a href="{{ url_for('frontend.solver_details', database=database, solver_id=s.idSolver) }}">{{ s.name }}</a></td>
             <td><a href="mailto:{{ s.user.email }}">{{ s.user.lastname}}, {{ s.user.firstname }}</a></td>
             <td><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=s.idSolver) }}">Download</a></td>
-            <td>{% for c in s.competition_categories %}{{ c.name }} {% endfor %}</td>
+            <td>{% for c in s.competition_categories %}{{ c.name }}, {% endfor %}</td>
         </tr>
         {% endfor %}
     </tbody>
     </table>
-    
+
     <h3>By Solver</h3>
     <ul>
         {% for s in filtered_solvers %}
