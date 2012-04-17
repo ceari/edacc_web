@@ -38,8 +38,9 @@
                     "bFilter": true,
                     "bStateSave": true,
                     "bInfo": true,
-                    "aaSorting": [[2,'desc']],
+                    "aaSorting": [[3,'desc']],
                     "aoColumns": [
+                        null,
                         null,
                         null,
                         null,
@@ -97,6 +98,7 @@
         <thead>
             <tr>
                 <th>#</th>
+                <th>Careful ranking</th>
                 <th>Solver</th>
                 <th># of successful runs</th>
                 <th>% of all runs</th>
@@ -117,6 +119,7 @@
         {% for sc in data %}
             <tr>
                 <td>{{loop.index}}</td>
+                <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(careful_rank[sc.0]+1)}}{% else %}1{% endif %}</td>
                 <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}&cost={{ form.cost.data }}">{{sc.0}}</a>{% else %}{{sc.0}}{% endif %}</td>
                 <td>{{sc.1}}</td>
                 <td>{{(sc.2 * 100.0)|round(2)}} %</td>

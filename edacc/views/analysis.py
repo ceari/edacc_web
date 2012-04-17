@@ -67,6 +67,14 @@ def solver_ranking(database, experiment_id):
             ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data, form.calculate_average_dev.data, cost)
 
+            carefully_ranked_solvers = ranking.careful_ranking(db, experiment, form.i.data, solver_configs, cost)
+            careful_rank = dict()
+            careful_rank_counter = 0
+            for tied_solvers in carefully_ranked_solvers:
+                careful_rank_counter += 1
+                for solver in tied_solvers: careful_rank[solver] = careful_rank_counter
+
+
             if csv_response:
                 head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
                                      'cumulated cost', 'median cost']
@@ -122,6 +130,7 @@ def solver_ranking(database, experiment_id):
 
             return render('/analysis/ranking.html', database=database, db=db,
                           experiment=experiment, ranked_solvers=ranked_solvers,
+                          careful_rank=careful_rank,
                           data=ranking_data, form=form, instance_properties=db.get_instance_properties())
 
         last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \

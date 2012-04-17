@@ -9,7 +9,7 @@
     :copyright: (c) 2010 by Daniel Diepold.
     :license: MIT, see LICENSE for details.
 """
-import numpy
+import numpy, math
 from scipy.stats.mstats import mquantiles
 
 from sqlalchemy.sql import select, and_, functions, not_, expression
@@ -102,6 +102,7 @@ def avg_point_biserial_correlation_ranking(db, experiment, instances):
     # List of solvers sorted by their rank. Best solver first.
     return list(sorted(experiment.solver_configurations, cmp=comp))
 
+
 def number_of_solved_instances_ranking(db, experiment, instances, solver_configs, cost='resultTime'):
     """ Ranking by the number of instances correctly solved.
         This is determined by an resultCode that starts with '1' and a 'finished' status
@@ -164,6 +165,7 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
                 return 0
 
     return list(sorted(solver_configs,cmp=comp,reverse=True))
+
 
 def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev, cost):
     instance_ids = [i.idInstance for i in instances]
@@ -330,3 +332,119 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
     #if calculate_par10: data.sort(key=lambda x: x[7])
     return data
+
+
+def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime", noise=1.0):
+    instance_ids = [i.idInstance for i in instances]
+    solver_config_ids = [s.idSolverConfig for s in solver_configs]
+
+    results, _, _ = experiment.get_result_matrix(db, solver_configs, instances, cost)
+
+    alpha = math.sqrt(noise / 2.0)
+    raw = dict()
+    for s1 in solver_configs:
+        for s2 in solver_configs:
+            if (s1, s2) in raw: continue
+            raw[(s1, s2)] = 0
+            raw[(s2, s1)] = 0
+            for idInstance in instance_ids:
+                for r1, r2 in zip(results[idInstance][s1.idSolverConfig], results[idInstance][s2.idSolverConfig]):
+                    e1 = (r1.penalized_time10 + r2.penalized_time10) / 2.0
+                    delta = alpha * math.sqrt(e1)
+                    if r1.penalized_time10 < e1 - delta:
+                        raw[(s1, s2)] += 1
+                        raw[(s2, s1)] -= 1
+                    elif r2.penalized_time10 < e1 - delta:
+                        raw[(s2, s1)] += 1
+                        raw[(s1, s2)] -= 1
+            #print s1.name, s2.name, raw[(s1, s2)]
+
+    edges = set()
+    vertices = set(solver_configs)
+    M = dict()
+    for s1 in solver_configs:
+        M[s1] = dict()
+        for s2 in solver_configs:
+            if s1 == s2: M[s1][s2] = 0; continue
+            M[s1][s2] = 1 if raw[(s1, s2)] > 0 else 0.5 if raw[(s1, s2)] == 0 else 0
+            if M[s1][s2] == 1:
+                edges.add((s1, s2))
+            elif M[s1][s2] == 0.5:
+                edges.add((s1, s2))
+                edges.add((s2, s1))
+
+#    print "            ",
+#    for s in solver_configs:
+#        print s.name, "  ",
+#    print "\n"
+#    for s in solver_configs:
+#        print s.name, "  ",
+#        for s2 in solver_configs:
+#            print M[s][s2], "               ",
+#        print "\n"
+
+    indices = dict((v, -1) for v in vertices)
+    lowlinks = indices.copy()
+    index = 0
+    stack = []
+    connected_components = []
+
+    def strongly_connected(v, index):
+        indices[v] = index
+        lowlinks[v] = index
+        index += 1
+        stack.append(v)
+
+        for v, w in (e for e in edges if e[0] == v):
+            if indices[w] < 0:
+                strongly_connected(w, index)
+                lowlinks[v] = min(lowlinks[v], lowlinks[w])
+            elif w in stack:
+                lowlinks[v] = min(lowlinks[v], indices[w])
+
+        if indices[v] == lowlinks[v]:
+            connected_components.append([])
+            while stack[-1] != v:
+                connected_components[-1].append(stack.pop())
+            connected_components[-1].append(stack.pop())
+
+    for v in vertices:
+        if indices[v] < 0:
+            strongly_connected(v, index)
+
+    scc_edges = set()
+    for comp in connected_components:
+        for s1 in comp:
+            for s2 in solver_configs:
+                if s1 == s2: continue
+                if M[s1][s2] == 1 and s2 not in comp:
+                    scc_edges.add((frozenset(comp), frozenset([c for c in connected_components if s2 in c][0])))
+
+    #for edge in scc_edges:
+    #    print "(", [s.name for s in edge[0]], ", ", [s.name for s in edge[1]], ")"
+
+    def topological_sort():
+        l = []
+        visited = set()
+        s = set()
+        for comp in connected_components:
+            outgoingEdges = False
+            for edge in scc_edges:
+                if frozenset(edge[0]) == frozenset(comp): outgoingEdges = True
+            if not outgoingEdges:
+                s.add(frozenset(comp))
+
+        def visit(n):
+            if n not in visited:
+                visited.add(n)
+                for edge in scc_edges:
+                    if frozenset(edge[1]) == frozenset(n):
+                        visit(frozenset(edge[0]))
+                l.append(n)
+        for n in s:
+            visit(n)
+        return l
+
+    l = topological_sort()
+
+    return l
