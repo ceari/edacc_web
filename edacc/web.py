@@ -35,7 +35,7 @@ app = Flask(__name__)
 app.Debug = config.DEBUG
 cache = Cache()
 mail = Mail()
-session_store = FilesystemStore(config.TEMP_DIR, perm=0600)
+#session_store = FilesystemStore(config.TEMP_DIR, perm=0600)
 
 if config.LOGGING:
     # set up logging if configured
@@ -74,7 +74,7 @@ app.config.update(
 )
 cache.init_app(app)
 mail.init_app(app)
-KVSessionExtension(session_store, app)
+#KVSessionExtension(session_store, app)
 
 # register view modules
 from edacc.views.admin import admin
