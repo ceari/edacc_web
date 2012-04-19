@@ -229,7 +229,7 @@ def experiment_results(database, experiment_id):
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-    form = forms.ResultsBySolverAndInstanceForm(request.args)
+    form = forms.ResultsBySolverAndInstanceForm(request.args, csrf_enabled=False)
     if form.cost.data == 'None': form.cost.data = experiment.defaultCost
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.solver_configs.query = solver_configs or EmptyQuery()
@@ -251,134 +251,146 @@ def experiment_results(database, experiment_id):
     if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
         solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-    instances_dict = dict((i.idInstance, i) for i in instances)
-    solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
-    
-    results_by_instance, S, C = experiment.get_result_matrix(db, solver_configs, instances, cost=form_cost)
+    if form.solver_configs.data:
+        instances_dict = dict((i.idInstance, i) for i in instances)
+        solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
 
-    times_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
-    cv_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
-    qcd_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
-    results = []
-    best_sc_by_instance_id = {}
-    for idInstance in instances_dict.iterkeys():
-        row = []
-        if idInstance not in results_by_instance: continue
-        rs = results_by_instance[idInstance]
-        best_sc_by_instance_id[idInstance] = None
-        best_sc_time = None
+        results_by_instance, S, C = experiment.get_result_matrix(db, solver_configs, instances, cost=form_cost)
 
-        for solver_config in solver_configs:
-            idSolverConfig = solver_config.idSolverConfig
-            jobs = rs.get(idSolverConfig, [])
+        times_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
+        cv_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
+        qcd_by_solver = dict((sc_id, list()) for sc_id in solver_configs_dict.iterkeys())
+        results = []
+        best_sc_by_instance_id = {}
+        for idInstance in instances_dict.iterkeys():
+            row = []
+            if idInstance not in results_by_instance: continue
+            rs = results_by_instance[idInstance]
+            best_sc_by_instance_id[idInstance] = None
+            best_sc_time = None
 
-            completed = C[idInstance][idSolverConfig]
-            successful = S[idInstance][idSolverConfig]
-            runtimes = [j.resultTime for j in jobs if j.resultTime is not None]
+            for solver_config in solver_configs:
+                idSolverConfig = solver_config.idSolverConfig
+                jobs = rs.get(idSolverConfig, [])
 
-            time_measure = None
-            coeff_variation = None
-            quartile_coeff_dispersion = None
-            if len(runtimes) > 0:
-                if form.display_measure.data == 'mean':
-                    time_measure = numpy.average(runtimes)
-                elif form.display_measure.data == 'median':
-                    time_measure = numpy.median(runtimes)
-                elif form.display_measure.data == 'min':
-                    time_measure = min(runtimes)
-                elif form.display_measure.data == 'max':
-                    time_measure = max(runtimes)
-                elif form.display_measure.data == 'par10' or form.display_measure.data is None:
-                    time_measure = numpy.average([j.penalized_time10 for j in jobs] or [0])
+                completed = C[idInstance][idSolverConfig]
+                successful = S[idInstance][idSolverConfig]
+                runtimes = [j.resultTime for j in jobs if j.resultTime is not None]
 
-                times_by_solver[idSolverConfig].append(time_measure)
-                if form.calculate_dispersion.data:
-                    coeff_variation = numpy.std(runtimes) / numpy.average(runtimes)
-                    quantiles = mquantiles(runtimes, [0.25, 0.5, 0.75])
-                    quartile_coeff_dispersion = (quantiles[2] - quantiles[0]) / quantiles[1]
+                time_measure = None
+                coeff_variation = None
+                quartile_coeff_dispersion = None
+                if len(runtimes) > 0:
+                    if form.display_measure.data == 'mean':
+                        time_measure = numpy.average(runtimes)
+                    elif form.display_measure.data == 'median':
+                        time_measure = numpy.median(runtimes)
+                    elif form.display_measure.data == 'min':
+                        time_measure = min(runtimes)
+                    elif form.display_measure.data == 'max':
+                        time_measure = max(runtimes)
+                    elif form.display_measure.data == 'par10' or form.display_measure.data is None:
+                        time_measure = numpy.average([j.penalized_time10 for j in jobs] or [0])
 
-                    cv_by_solver[idSolverConfig].append(coeff_variation)
-                    qcd_by_solver[idSolverConfig].append(quartile_coeff_dispersion)
+                    times_by_solver[idSolverConfig].append(time_measure)
+                    if form.calculate_dispersion.data:
+                        coeff_variation = numpy.std(runtimes) / numpy.average(runtimes)
+                        quantiles = mquantiles(runtimes, [0.25, 0.5, 0.75])
+                        quartile_coeff_dispersion = (quantiles[2] - quantiles[0]) / quantiles[1]
 
-            if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and successful > 0:
-                best_sc_time = time_measure
-                best_sc_by_instance_id[idInstance] = solver_config.idSolverConfig
+                        cv_by_solver[idSolverConfig].append(coeff_variation)
+                        qcd_by_solver[idSolverConfig].append(quartile_coeff_dispersion)
 
-            if completed > 0:
-                red = (1.0, 0, 0.0)
-                green = (0.0, 0.8, 0.2) # darker green
-                t = successful/float(completed)
-                bg_color = ((green[0] - red[0]) * t + red[0], (green[1] - red[1]) * t + red[1], (green[2] - red[2]) * t + red[2])
-                bg_color = hex((int(bg_color[0] * 255) << 16) + (int(bg_color[1] * 255) << 8) + (int(bg_color[2] * 255)))[2:].zfill(6) # remove leading 0x
-            else:
-                bg_color = 'FF8040' #orange
+                if (best_sc_by_instance_id[idInstance] is None or time_measure < best_sc_time) and successful > 0:
+                    best_sc_time = time_measure
+                    best_sc_by_instance_id[idInstance] = solver_config.idSolverConfig
 
-            row.append({'time_measure': time_measure ,
-                        'coeff_variation': coeff_variation,
-                        'quartile_coeff_dispersion': quartile_coeff_dispersion,
-                        'successful': successful,
-                        'completed': completed,
-                        'bg_color': bg_color,
-                        'total': len(jobs),
-                        # needed for alternative presentation if there's only 1 run:
-                        'first_job': (None if len(jobs) == 0 else jobs[0]),
-                        'solver_config': solver_config,
-                        })
-        results.append({'instance': instances_dict[idInstance], 'times': row, 'best_time': best_sc_time})
-
-    sum_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
-    avg_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
-    avg_cv_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
-    avg_qcd_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
-
-    for idSolverConfig in solver_configs_dict.iterkeys():
-        sum_by_solver[idSolverConfig] = sum(times_by_solver[idSolverConfig])
-        avg_by_solver[idSolverConfig] = numpy.average(times_by_solver[idSolverConfig])
-        avg_cv_by_solver[idSolverConfig] = numpy.average(cv_by_solver[idSolverConfig])
-        avg_qcd_by_solver[idSolverConfig] = numpy.average(qcd_by_solver[idSolverConfig])
-
-    if request.args.has_key('csv'):
-        csv_response = StringIO.StringIO()
-        csv_writer = csv.writer(csv_response)
-
-        csv_writer.writerow(['Measure: ' + (form.display_measure.data or 'par10')])
-        head = ['Instance', 'Best time']
-        for sc in solver_configs_dict.values():
-            head += [str(sc)]
-        csv_writer.writerow(head)
-
-        for row in results:
-            write_row = [row['instance'].name, str(row['best_time'])]
-            for sc_results in row['times']:
-                if form.calculate_dispersion.data:
-                    write_row.append(str(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '') + " (%.4f, %.4f)" % (sc_results['coeff_variation'], sc_results['quartile_coeff_dispersion']))
+                if completed > 0:
+                    red = (1.0, 0, 0.0)
+                    green = (0.0, 0.8, 0.2) # darker green
+                    t = successful/float(completed)
+                    bg_color = ((green[0] - red[0]) * t + red[0], (green[1] - red[1]) * t + red[1], (green[2] - red[2]) * t + red[2])
+                    bg_color = hex((int(bg_color[0] * 255) << 16) + (int(bg_color[1] * 255) << 8) + (int(bg_color[2] * 255)))[2:].zfill(6) # remove leading 0x
                 else:
-                    write_row.append(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '')
-            csv_writer.writerow(write_row)
+                    bg_color = 'FF8040' #orange
 
-        csv_writer.writerow(['Average', ''] + map(lambda x: str(round(x, 4)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
-        csv_writer.writerow(['Sum', ''] + map(lambda x: str(round(x, 4)), [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
-        if form.calculate_dispersion.data:
-            csv_writer.writerow(['Avg. coefficient of variation', ''] + map(lambda x: str(round(x, 4)), [avg_cv_by_solver[sc.idSolverConfig] for sc in solver_configs]))
-            csv_writer.writerow(['Avg. quartile coefficient of dispersion', ''] + map(lambda x: str(round(x, 4)), [avg_qcd_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+                row.append({'time_measure': time_measure ,
+                            'coeff_variation': coeff_variation,
+                            'quartile_coeff_dispersion': quartile_coeff_dispersion,
+                            'successful': successful,
+                            'completed': completed,
+                            'bg_color': bg_color,
+                            'total': len(jobs),
+                            # needed for alternative presentation if there's only 1 run:
+                            'first_job': (None if len(jobs) == 0 else jobs[0]),
+                            'solver_config': solver_config,
+                            })
+            results.append({'instance': instances_dict[idInstance], 'times': row, 'best_time': best_sc_time})
 
-        csv_response.seek(0)
-        headers = Headers()
-        headers.add('Content-Type', 'text/csv')
-        headers.add('Content-Disposition', 'attachment',
-                    filename=secure_filename(experiment.name + "_results.csv"))
-        return Response(response=csv_response.read(), headers=headers)
+        sum_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+        avg_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+        avg_cv_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+        avg_qcd_by_solver = dict((sc_id, 0) for sc_id in solver_configs_dict.iterkeys())
+
+        for idSolverConfig in solver_configs_dict.iterkeys():
+            sum_by_solver[idSolverConfig] = sum(times_by_solver[idSolverConfig])
+            avg_by_solver[idSolverConfig] = numpy.average(times_by_solver[idSolverConfig])
+            avg_cv_by_solver[idSolverConfig] = numpy.average(cv_by_solver[idSolverConfig])
+            avg_qcd_by_solver[idSolverConfig] = numpy.average(qcd_by_solver[idSolverConfig])
+
+        if request.args.has_key('csv'):
+            csv_response = StringIO.StringIO()
+            csv_writer = csv.writer(csv_response)
+
+            csv_writer.writerow(['Measure: ' + (form.display_measure.data or 'par10')])
+            head = ['Instance', 'Best time']
+            for sc in solver_configs_dict.values():
+                head += [str(sc)]
+            csv_writer.writerow(head)
+
+            for row in results:
+                write_row = [row['instance'].name, str(row['best_time'])]
+                for sc_results in row['times']:
+                    if form.calculate_dispersion.data:
+                        write_row.append(str(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '') + " (%.4f, %.4f)" % (sc_results['coeff_variation'], sc_results['quartile_coeff_dispersion']))
+                    else:
+                        write_row.append(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '')
+                csv_writer.writerow(write_row)
+
+            csv_writer.writerow(['Average', ''] + map(lambda x: str(round(x, 4)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+            csv_writer.writerow(['Sum', ''] + map(lambda x: str(round(x, 4)), [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+            if form.calculate_dispersion.data:
+                csv_writer.writerow(['Avg. coefficient of variation', ''] + map(lambda x: str(round(x, 4)), [avg_cv_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+                csv_writer.writerow(['Avg. quartile coefficient of dispersion', ''] + map(lambda x: str(round(x, 4)), [avg_qcd_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+
+            csv_response.seek(0)
+            headers = Headers()
+            headers.add('Content-Type', 'text/csv')
+            headers.add('Content-Disposition', 'attachment',
+                        filename=secure_filename(experiment.name + "_results.csv"))
+            return Response(response=csv_response.read(), headers=headers)
+
+        base_result_details_url = url_for('frontend.experiment_result', database=database, experiment_id=experiment_id)
+        return render('experiment_results.html', experiment=experiment,
+                        instances=instances, solver_configs=solver_configs,
+                        solver_configs_dict=solver_configs_dict,
+                        instance_properties=db.get_instance_properties(),
+                        instances_dict=instances_dict, best_sc_by_instance_id=best_sc_by_instance_id,
+                        results=results, database=database, db=db, form=form,
+                        sum_by_solver=sum_by_solver, avg_by_solver=avg_by_solver,
+                        avg_cv_by_solver=avg_cv_by_solver, avg_qcd_by_solver=avg_qcd_by_solver,
+                        base_result_details_url=base_result_details_url)
 
     base_result_details_url = url_for('frontend.experiment_result', database=database, experiment_id=experiment_id)
     return render('experiment_results.html', experiment=experiment,
-                    instances=instances, solver_configs=solver_configs,
-                    solver_configs_dict=solver_configs_dict,
-                    instance_properties=db.get_instance_properties(),
-                    instances_dict=instances_dict, best_sc_by_instance_id=best_sc_by_instance_id,
-                    results=results, database=database, db=db, form=form,
-                    sum_by_solver=sum_by_solver, avg_by_solver=avg_by_solver,
-                    avg_cv_by_solver=avg_cv_by_solver, avg_qcd_by_solver=avg_qcd_by_solver,
-                    base_result_details_url=base_result_details_url)
+        instances=instances, solver_configs=solver_configs,
+        solver_configs_dict=None,
+        instance_properties=db.get_instance_properties(),
+        instances_dict=None, best_sc_by_instance_id=None,
+        results=None, database=database, db=db, form=form,
+        sum_by_solver=None, avg_by_solver=None,
+        avg_cv_by_solver=None, avg_qcd_by_solver=None,
+        base_result_details_url=base_result_details_url)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/results/full-csv')

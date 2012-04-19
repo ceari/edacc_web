@@ -12,6 +12,8 @@
         
     <script type="text/javascript">
         $(document).ready(function(){
+            $('#optional_instance_filter').hide();
+
             jQuery.fn.dataTableExt.oSort['anchor-numeric-asc']  = function(x,y) {
                 fx = parseFloat($(x).html());
                 fy = parseFloat($(y).html());
@@ -27,26 +29,33 @@
                 return ((fx < fy) ?  1 : ((fx > fy) ? -1 : 0));
             };
 
-			//$('#toggle_sorting').click(function() {
-	            var oTable = $('#table_results').dataTable({
-	                "bPaginate": false,
-	                "bLengthChange": false,
-                    "bStateSave": true,
-	                "bFilter": true,
-                    "bJQueryUI": true,
-	                "oLanguage": {
-	                    "sZeroRecords": "No matching results"
-	                },
-	                "aoColumns": [null, {"sType": "anchor-numeric"}, {% for i in range(1, solver_configs|length + 1) %} {"sType": "anchor-numeric"},{% endfor %}]
-	            });
-                $('#toggle_sorting').hide();
-	            var fixed_header = new FixedHeader(oTable);
-	            fixed_header.fnUpdate();
-			//});
-			
-            {% include '/analysis/multiple_instances_filter_js.html' %}
+            {% if results %}
+                {% if results|length * solver_configs|length > 10000 %}
+                $('#toggle_sorting').click(function() {
+                {% endif %}
 
-            $('#optional_instance_filter').hide();
+                    var oTable = $('#table_results').dataTable({
+                        "bPaginate": false,
+                        "bLengthChange": false,
+                        "bStateSave": true,
+                        "bFilter": true,
+                        "bJQueryUI": true,
+                        "oLanguage": {
+                            "sZeroRecords": "No matching results"
+                        },
+                        "aoColumns": [null, {"sType": "anchor-numeric"}, {% for i in range(1, solver_configs|length + 1) %} {"sType": "anchor-numeric"},{% endfor %}]
+                    });
+
+                    $('#toggle_sorting').hide();
+
+                    var fixed_header = new FixedHeader(oTable);
+
+                {% if results|length * solver_configs|length > 10000 %}
+                });
+                {% endif %}
+            {% endif %}
+
+            {% include '/analysis/multiple_instances_filter_js.html' %}
             
             $('#toggle_instance_filter').click(function() {
                 $('#optional_instance_filter').toggle();
@@ -54,14 +63,35 @@
                 return false;
             });
 
-            fixed_header.fnUpdate();
-
             $.ctrl('A', function() {
                 $('#solver_configs option').attr("selected", "selected");
                 return false;
             });
+
+            {% if results %}
+                fixed_header.fnUpdate();
+                fixed_header.fnPosition();
+            {% endif %}
         });
     </script>
+    <style type="text/css">
+        #table_results td {
+            white-space: nowrap;
+            text-align: center;
+        }
+        #table_results a:link {
+            color: black;
+        }
+        #table_results a:visited {
+            color: black;
+        }
+        #table_results a:hover {
+            color: black;
+        }
+        #table_results a:active {
+            color: black;
+        }
+    </style>
 {% endblock %}
 {% block content %}
     <div class="navigation">
@@ -96,8 +126,9 @@
             <input type="submit" name="submit" value="Show"/></td><td><input type="submit" name="csv" value="Export CSV"/>
         </form>
         <a href="JavaScript:void(0);" id="toggle_instance_filter">Show/Hide instance filter</a><br/>
-        <!--<a href="JavaScript:void(0);" id="toggle_sorting">Enable sorting of table (consider using a browser with a fast Javascript engine)</a>-->
     </div>
+    {% if results %}
+    <a href="JavaScript:void(0);" id="toggle_sorting">Enable sorting of table (consider using a browser with a fast Javascript engine)</a>
     <table class="display" id="table_results">
         <thead>
             <tr>
@@ -115,11 +146,11 @@
         <tbody>
         {% for row in results %}
             <tr>
-                <td nowrap="nowrap"><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{row.instance.idInstance}}">{{row.instance.name}}</a></td>
+                <td style="text-align: left;"><a href="{{url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{row.instance.idInstance}}">{{row.instance.name}}</a></td>
                 {% if best_sc_by_instance_id[row.instance.idInstance] %}
                     {% for job in row.times %}
                         {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
-                        <td style="text-align: center;"><a style="color: black;" href="{{url_for('frontend.solver_config_results', database=database, experiment_id=experiment.idExperiment,
+                        <td><a href="{{url_for('frontend.solver_config_results', database=database, experiment_id=experiment.idExperiment,
                                 solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">{% if job.time_measure != None %}{{job.time_measure|round(4)}}{% else %}{% if job.first_job.status == 0 %}running{% endif %}{% endif %}</a></td>
                         {% endif %}
                     {% endfor %}
@@ -129,9 +160,9 @@
                 {% for job in row.times %}
                     {% if job.total > 1 %}
                         {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
-                            <td style="text-align: center; background-color: yellow;">
+                            <td style="background-color: yellow;">
                         {% else %}
-                            <td style="text-align: center; background-color: #{{job.bg_color}}">
+                            <td style="background-color: #{{job.bg_color}}">
                         {% endif %}
                             <a style="color: black;" href="{{url_for('frontend.solver_config_results', database=database, experiment_id=experiment.idExperiment,
                             solver_configuration_id=job.solver_config.idSolverConfig, instance_id=row.instance.idInstance)}}">
@@ -141,17 +172,17 @@
                         </td>
                     {% elif job.total == 1 %}
                         {% if job.solver_config.idSolverConfig == best_sc_by_instance_id[row.instance.idInstance] %}
-                            <td style="text-align: center; background-color: yellow;">
+                            <td style="background-color: yellow;">
                         {% else %}
                             {% if job.first_job.status == 0 %}
-                            <td style="text-align: center; background-color: orange">
+                            <td style="background-color: orange">
                             {% elif job.first_job.status == -1 %}
-                            <td style="text-align: center; background-color: #FF8040">
+                            <td style="background-color: #FF8040">
                             {% else %}
-                            <td style="text-align: center; background-color: {{job.first_job.resultCode|job_result_code_color}}">
+                            <td style="background-color: {{job.first_job.resultCode|job_result_code_color}}">
                             {% endif %}
                         {% endif %}
-                            <a style="color: black;" href="{{base_result_details_url}}?id={{job.first_job.idJob}}">
+                            <a href="{{base_result_details_url}}?id={{job.first_job.idJob}}">
                                 {% if job.time_measure != None %}
                                 {{job.time_measure|round(4)}} {{job.first_job.result_code_description}}
                                 {% else %}
@@ -163,7 +194,6 @@
                         <td></td>
                     {% endif %}
                 {% endfor %}
-                
             </tr>
         {% endfor %}
         </tbody>
@@ -213,4 +243,5 @@
             </tr>
         </table>
     </div>
+    {% endif %}
 {% endblock %}
