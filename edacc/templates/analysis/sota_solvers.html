@@ -11,6 +11,21 @@
 
     <script type="text/javascript">
         $(document).ready(function(){
+            jQuery.fn.dataTableExt.oSort['anchor-numeric-asc']  = function(x,y) {
+                fx = parseFloat($(x).html());
+                fy = parseFloat($(y).html());
+                if (isNaN(fx)) fx = 0;
+                if (isNaN(fy)) fy = 0;
+                return ((fx < fy) ? -1 : ((fx > fy) ?  1 : 0));
+            };
+            jQuery.fn.dataTableExt.oSort['anchor-numeric-desc'] = function(x,y) {
+                fx = parseFloat($(x).html());
+                fy = parseFloat($(y).html());
+                if (isNaN(fx)) fx = 0;
+                if (isNaN(fy)) fy = 0;
+                return ((fx < fy) ?  1 : ((fx > fy) ? -1 : 0));
+            };
+
             {% if form.i.data %}
                 $(document).ready(function() {
                     var oTable = $('#sota_table').dataTable({
@@ -21,7 +36,8 @@
                         "bJQueryUI": true,
                         "bFilter": true,
                         "bStateSave": true,
-                        "bInfo": true
+                        "bInfo": true,
+                        "aoColumns": [null, {"sType": "anchor-numeric"}]
                     });
                     new FixedHeader( oTable );
                 });
@@ -73,7 +89,7 @@
             {% for solver in sota_solvers %}
             <tr>
                 <td><a href="{{ url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver.idSolverConfig) }}">{{ solver.name }}</a></td>
-                <td><a href="{{ url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment) }}?{{unique_params_by_sc[solver]}}">{{ unique_solver_contribs[solver]|length }}</a></td>
+                <td>{% if unique_solver_contribs[solver] %}<a href="{{ url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment) }}?{{unique_params_by_sc[solver]}}">{{ unique_solver_contribs[solver]|length }}</a>{% else %}0{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>
