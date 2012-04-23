@@ -240,6 +240,10 @@ class RankingForm(Form):
     instance_filter = TextField('Filter Instances')
     cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])
 
+class SOTAForm(Form):
+    i = QuerySelectMultipleField('Instances', get_label=lambda i: i.get_name(), get_pk=lambda i: i.idInstance, allow_blank=True)
+    instance_filter = TextField('Filter Instances')
+
 class ResultsBySolverAndInstanceForm(Form):
     solver_configs = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
     cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])

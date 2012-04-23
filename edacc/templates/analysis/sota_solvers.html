@@ -1,0 +1,83 @@
+{% from "_formhelpers.html" import render_field, render_radio_field %}
+{% extends "base.html" %}
+{% block title %}State of the art solvers{% endblock %}
+{% block head %}
+    {{ super() }}
+    <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
+    <link type="text/css" href="{{url_for('static', filename='css/demo_table_jui.css')}}" rel="Stylesheet" />
+    <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery-ui-1.8.16.custom.min.js')}}" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            {% if form.i.data %}
+                $(document).ready(function() {
+                    var oTable = $('#sota_table').dataTable({
+                        "bPaginate": true,
+                        "iDisplayLength": 1000,
+                        "aLengthMenu": [1000, 5000, 10000],
+                        "bLengthChange": false,
+                        "bJQueryUI": true,
+                        "bFilter": true,
+                        "bStateSave": true,
+                        "bInfo": true
+                    });
+                    new FixedHeader( oTable );
+                });
+            {% endif %}
+
+            {% include '/analysis/multiple_instances_filter_js.html' %}
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="navigation">
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        SOTA Solvers
+    </div>
+    <h2>State-of-the-Art Solvers</h2>
+    <div style="margin-left: 5px;">
+        <form method="get" action="{{url_for('analysis.sota_solvers', database=database, experiment_id=experiment.idExperiment)}}">
+            <table id="form_table">
+                {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
+                <tr>
+                    <td style="vertical-align: middle;">Filter instances</td>
+                    <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
+                        JS expression filter. Valid variables are name, {% for prop in instance_properties %}{{prop.name}}, {% endfor %} <br/>
+                        Example: (numAtoms &gt;= 6000 && numAtoms &lt;= 8000 && name.match(/k3/))
+                    </td>
+                </tr>
+                <tr><td colspan="2"><input type="submit" value="Show" /></td></tr>
+            </table>
+        </form>
+    </div>
+    <div>
+        A solver is considered state-of-the-art if no other solver solves a strict superset of the instances it solves.<br/>
+        Unique solver contribution is the number of instances only solved by this solver.
+    </div>
+
+    {% if form.i.data  %}
+    <div style="margin: 3px;">
+        <a href="{{ url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment) }}?{{results_params}}">Show SOTA solver results</a> on the selected instances
+    </div>
+    <table id="sota_table" class="display">
+        <thead>
+            <tr>
+                <th>Solver Configuration</th>
+                <th>Unique solver contributions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for solver in sota_solvers %}
+            <tr>
+                <td><a href="{{ url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=solver.idSolverConfig) }}">{{ solver.name }}</a></td>
+                <td><a href="{{ url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment) }}?{{unique_params_by_sc[solver]}}">{{ unique_solver_contribs[solver]|length }}</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+{% endblock %}

@@ -27,7 +27,7 @@ $.ctrl = function(key, callback, args) {
     });
 };
 
-$.ctrl('A', function() {
+$('#i').bind('keypress', 'ctrl+a', function() {
     $('#i option').attr("selected", "selected");
     return false;
 });

@@ -145,6 +145,35 @@ def solver_ranking(database, experiment_id):
     return render('/analysis/ranking.html', database=database, db=db,
               experiment=experiment, form=form, instance_properties=db.get_instance_properties())
 
+@analysis.route('/<database>/experiment/<int:experiment_id>/sota/')
+@require_phase(phases=ANALYSIS1)
+@require_login
+def sota_solvers(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    form = forms.SOTAForm(request.args)
+    form.i.query = experiment.get_instances(db) or EmptyQuery()
+
+    if form.i.data:
+        sota_solvers = experiment.get_sota_solvers(db, form.i.data)
+        unique_solver_contribs = experiment.unique_solver_contributions(db, form.i.data)
+        results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
+        results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)
+
+        unique_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
+        unique_params_by_sc = dict()
+        for sc in unique_solver_contribs:
+            unique_params_by_sc[sc] = unique_params + '&' + '&'.join("i=%d" % (i,) for i in unique_solver_contribs[sc])
+
+        return render("/analysis/sota_solvers.html", database=database, db=db, form=form,
+            instance_properties=db.get_instance_properties(), experiment=experiment,
+            sota_solvers=sota_solvers, results_params=results_params, unique_solver_contribs=unique_solver_contribs,
+            unique_params_by_sc=unique_params_by_sc)
+
+    return render("/analysis/sota_solvers.html", database=database, db=db, form=form,
+        instance_properties=db.get_instance_properties(), experiment=experiment,
+        sota_solvers=None)
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/cactus/')
 @require_phase(phases=ANALYSIS1)

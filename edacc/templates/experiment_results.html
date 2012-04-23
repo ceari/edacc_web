@@ -63,7 +63,7 @@
                 return false;
             });
 
-            $.ctrl('A', function() {
+            $('#solver_configs').bind('keypress', 'ctrl+a', function() {
                 $('#solver_configs option').attr("selected", "selected");
                 return false;
             });
