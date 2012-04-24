@@ -335,7 +335,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     return data
 
 
-def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime", noise=1.0):
+def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime", noise=1.0, break_ties=False):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in solver_configs]
 
@@ -441,11 +441,18 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
                 for edge in scc_edges:
                     if frozenset(edge[1]) == frozenset(n):
                         visit(frozenset(edge[0]))
-                l.append(n)
+                l.append(list(n))
         for n in s:
             visit(n)
         return l
 
     l = topological_sort()
+
+    if break_ties:
+        tie_break = dict()
+        for comp in l:
+            for solver in comp:
+                tie_break[solver] = sum(raw[(solver, s_j)] for s_j in comp)
+            comp.sort(key=lambda sc: tie_break[sc], reverse=True)
 
     return l

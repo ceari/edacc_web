@@ -58,21 +58,26 @@ def solver_ranking(database, experiment_id):
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-        #CACHE_TIME = 7*24*60*60
-        #@cache.memoize(timeout=CACHE_TIME)
+        CACHE_TIME = 7*24*60*60 if not db.is_competition() else 1
+        @cache.memoize(timeout=CACHE_TIME)
         def cached_ranking(database, experiment_id, solver_configs, sc_names, last_modified_job,
-                           job_count, form_i_data, form_par, form_avg_dev, cost, csv_response=False, latex_response=False):
+                           job_count, form_i_data, form_par, form_avg_dev, form_break_ties, cost, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
             ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data, form.calculate_average_dev.data, cost)
 
-            carefully_ranked_solvers = ranking.careful_ranking(db, experiment, form.i.data, solver_configs, cost)
+            carefully_ranked_solvers = ranking.careful_ranking(db, experiment, form.i.data, solver_configs, cost, break_ties=form_break_ties)
             careful_rank = dict()
-            careful_rank_counter = 0
+            careful_rank_counter = 1 # 1 is VBS
             for tied_solvers in carefully_ranked_solvers:
                 careful_rank_counter += 1
-                for solver in tied_solvers: careful_rank[solver] = careful_rank_counter
+                careful_rank_comp_counter = 1
+                for solver in tied_solvers:
+                    careful_rank[solver] = careful_rank_counter
+                    if form_break_ties and len(tied_solvers) > 1:
+                        careful_rank[solver] = str(careful_rank[solver]) + "_" + str(careful_rank_comp_counter)
+                        careful_rank_comp_counter += 1
 
 
             if csv_response:
@@ -139,7 +144,8 @@ def solver_ranking(database, experiment_id):
 
         return cached_ranking(database, experiment_id, solver_configs, ''.join(sc.get_name() for sc in solver_configs),
                               last_modified_job, job_count, [i.idInstance for i in form.i.data],
-                              form.penalized_average_runtime.data, form.calculate_average_dev.data, form.cost.data,
+                              form.penalized_average_runtime.data, form.calculate_average_dev.data,
+                              form.break_careful_ties.data, form.cost.data,
                               'csv' in request.args, 'latex' in request.args)
 
     return render('/analysis/ranking.html', database=database, db=db,

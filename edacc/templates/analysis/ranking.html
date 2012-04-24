@@ -26,6 +26,38 @@
             return ((x < y) ?  1 : ((x > y) ? -1 : 0));
         };
 
+        jQuery.fn.dataTableExt.oSort['underscore-asc']  = function(a,b) {
+            var x = a.split("_");
+            var y = b.split("_");
+            if (x.length == 2) {
+                x = parseInt(x[0]) * {{ data|length }} + parseInt(x[1]);
+            } else {
+                x = parseInt(x[0]) * {{ data|length }};
+            }
+            if (y.length == 2) {
+                y = parseInt(y[0]) * {{ data|length }} + parseInt(y[1]);
+            } else {
+                y = parseInt(y[0]) * {{ data|length }};
+            }
+            return ((x < y) ? -1 : ((x > y) ?  1 : 0));
+        };
+
+        jQuery.fn.dataTableExt.oSort['underscore-desc'] = function(a,b) {
+            var x = a.split("_");
+            var y = b.split("_");
+            if (x.length == 2) {
+                x = parseInt(x[0]) * {{ data|length }} + parseInt(x[1]);
+            } else {
+                x = parseInt(x[0]) * {{ data|length }};
+            }
+            if (y.length == 2) {
+                y = parseInt(y[0]) * {{ data|length }} + parseInt(y[1]);
+            } else {
+                y = parseInt(y[0]) * {{ data|length }};
+            }
+            return ((x < y) ?  1 : ((x > y) ? -1 : 0));
+        };
+
         $(document).ready(function(){
             {% if data %}
             $(document).ready(function() {
@@ -41,7 +73,7 @@
                     "aaSorting": [[3,'desc']],
                     "aoColumns": [
                         null,
-                        null,
+                        { "sType": "underscore" },
                         null,
                         null,
                         { "sType": "percent" },
@@ -82,6 +114,7 @@
                 {{ render_field(form.cost) }}
                 {{ render_field(form.calculate_average_dev, explanation="Averaged instance runtime dispersion measures")}}
                 {{ render_field(form.penalized_average_runtime, explanation="10 * run's CPU time limit for unsuccessful runs")}}
+                {{ render_field(form.break_careful_ties)}}
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
             </table>
         </form>
@@ -119,7 +152,7 @@
         {% for sc in data %}
             <tr>
                 <td>{{loop.index}}</td>
-                <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(careful_rank[sc.0]+1)}}{% else %}1{% endif %}</td>
+                <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(careful_rank[sc.0])}}{% else %}1{% endif %}</td>
                 <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}&cost={{ form.cost.data }}">{{sc.0}}</a>{% else %}{{sc.0}}{% endif %}</td>
                 <td>{{sc.1}}</td>
                 <td>{{(sc.2 * 100.0)|round(2)}} %</td>
