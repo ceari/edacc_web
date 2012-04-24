@@ -11,6 +11,7 @@
 """
 import numpy, math
 from scipy.stats.mstats import mquantiles
+from itertools import izip
 
 from sqlalchemy.sql import select, and_, functions, not_, expression
 
@@ -338,18 +339,21 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime", noise=1.0, break_ties=False):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in solver_configs]
+    sc_by_id = dict()
+    for sc in solver_configs:
+        sc_by_id[sc.idSolverConfig] = sc
 
     results, _, _ = experiment.get_result_matrix(db, solver_configs, instances, cost)
 
     alpha = math.sqrt(noise / 2.0)
     raw = dict()
-    for s1 in solver_configs:
-        for s2 in solver_configs:
+    for s1 in solver_config_ids:
+        for s2 in solver_config_ids:
             if (s1, s2) in raw: continue
             raw[(s1, s2)] = 0
             raw[(s2, s1)] = 0
             for idInstance in instance_ids:
-                for r1, r2 in zip(results[idInstance][s1.idSolverConfig], results[idInstance][s2.idSolverConfig]):
+                for r1, r2 in izip(results[idInstance][s1], results[idInstance][s2]):
                     e1 = (r1.penalized_time10 + r2.penalized_time10) / 2.0
                     delta = alpha * math.sqrt(e1)
                     if r1.penalized_time10 < e1 - delta:
@@ -358,14 +362,13 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
                     elif r2.penalized_time10 < e1 - delta:
                         raw[(s2, s1)] += 1
                         raw[(s1, s2)] -= 1
-            #print s1.name, s2.name, raw[(s1, s2)]
 
     edges = set()
-    vertices = set(solver_configs)
+    vertices = set(solver_config_ids)
     M = dict()
-    for s1 in solver_configs:
+    for s1 in solver_config_ids:
         M[s1] = dict()
-        for s2 in solver_configs:
+        for s2 in solver_config_ids:
             if s1 == s2: M[s1][s2] = 0; continue
             M[s1][s2] = 1 if raw[(s1, s2)] > 0 else 0.5 if raw[(s1, s2)] == 0 else 0
             if M[s1][s2] == 1:
@@ -384,6 +387,10 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
 #            print M[s][s2], "               ",
 #        print "\n"
 
+    outedges_by_node = dict((v, list()) for v in vertices)
+    for e in edges:
+        outedges_by_node[e[0]].append(e)
+
     indices = dict((v, -1) for v in vertices)
     lowlinks = indices.copy()
     index = 0
@@ -396,7 +403,7 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
         index += 1
         stack.append(v)
 
-        for v, w in (e for e in edges if e[0] == v):
+        for v, w in outedges_by_node[v]:
             if indices[w] < 0:
                 strongly_connected(w, index)
                 lowlinks[v] = min(lowlinks[v], lowlinks[w])
@@ -416,7 +423,7 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
     scc_edges = set()
     for comp in connected_components:
         for s1 in comp:
-            for s2 in solver_configs:
+            for s2 in solver_config_ids:
                 if s1 == s2: continue
                 if M[s1][s2] == 1 and s2 not in comp:
                     scc_edges.add((frozenset(comp), frozenset([c for c in connected_components if s2 in c][0])))
@@ -455,4 +462,4 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
                 tie_break[solver] = sum(raw[(solver, s_j)] for s_j in comp)
             comp.sort(key=lambda sc: tie_break[sc], reverse=True)
 
-    return l
+    return [[sc_by_id[sc] for sc in comp] for comp in l]

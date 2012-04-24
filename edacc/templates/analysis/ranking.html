@@ -70,10 +70,10 @@
                     "bFilter": true,
                     "bStateSave": true,
                     "bInfo": true,
-                    "aaSorting": [[3,'desc']],
+                    "aaSorting": [[1,'desc']],
                     "aoColumns": [
                         null,
-                        { "sType": "underscore" },
+                        {% if form.careful_ranking.data %}{ "sType": "underscore" },{% endif %}
                         null,
                         null,
                         { "sType": "percent" },
@@ -114,6 +114,7 @@
                 {{ render_field(form.cost) }}
                 {{ render_field(form.calculate_average_dev, explanation="Averaged instance runtime dispersion measures")}}
                 {{ render_field(form.penalized_average_runtime, explanation="10 * run's CPU time limit for unsuccessful runs")}}
+                {{ render_field(form.careful_ranking)}}
                 {{ render_field(form.break_careful_ties)}}
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
             </table>
@@ -131,7 +132,7 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th>Careful ranking</th>
+                {% if form.careful_ranking.data %}<th>Careful ranking</th>{% endif %}
                 <th>Solver</th>
                 <th># of successful runs</th>
                 <th>% of all runs</th>
@@ -152,7 +153,7 @@
         {% for sc in data %}
             <tr>
                 <td>{{loop.index}}</td>
-                <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(careful_rank[sc.0])}}{% else %}1{% endif %}</td>
+                {% if form.careful_ranking.data %}<td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(careful_rank[sc.0])}}{% else %}1{% endif %}</td>{% endif %}
                 <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}&cost={{ form.cost.data }}">{{sc.0}}</a>{% else %}{{sc.0}}{% endif %}</td>
                 <td>{{sc.1}}</td>
                 <td>{{(sc.2 * 100.0)|round(2)}} %</td>
