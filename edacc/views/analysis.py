@@ -38,6 +38,35 @@ analysis = Blueprint('analysis', __name__, template_folder='static')
 #    doc, errs = tidy_document(res)
 #    return doc
 
+@analysis.route('/<database>/experiment/<int:experiment_id>/careful-ranking/')
+@require_phase(phases=RANKING)
+@require_login
+def careful_solver_ranking(database, experiment_id):
+    """
+        Display the raw-scores matrix that is calculated for the careful ranking
+    """
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    form = forms.RankingForm(request.args)
+    form.i.query = experiment.get_instances(db) or EmptyQuery()
+
+    if form.i.data:
+        if form.cost.data == 'None': form.cost.data = experiment.defaultCost
+
+        solver_configs = experiment.solver_configurations
+        if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+            solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
+
+        carefully_ranked_solvers, raw_scores, dom_matrix = ranking.careful_ranking(db, experiment, form.i.data,
+                solver_configs, form.cost.data, noise=form.careful_ranking_noise.data, break_ties=form.break_careful_ties.data)
+
+        return render("/analysis/careful_ranking.html", db=db, experiment=experiment, database=database,
+            raw_scores=raw_scores, solver_configs=solver_configs, dom_matrix=dom_matrix)
+
+    return render("/analysis/careful_ranking.html", db=db, experiment=experiment, database=database)
+
+
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/ranking/')
 @require_phase(phases=RANKING)
@@ -61,7 +90,7 @@ def solver_ranking(database, experiment_id):
         CACHE_TIME = 7*24*60*60 if not db.is_competition() else 1
         @cache.memoize(timeout=CACHE_TIME)
         def cached_ranking(database, experiment_id, solver_configs, sc_names, last_modified_job,
-                           job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
+                           job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking, careful_ranking_noise,
                            form_break_ties, cost, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
@@ -70,7 +99,8 @@ def solver_ranking(database, experiment_id):
 
             careful_rank = dict()
             if form_careful_ranking:
-                carefully_ranked_solvers = ranking.careful_ranking(db, experiment, form.i.data, solver_configs, cost, break_ties=form_break_ties)
+                carefully_ranked_solvers, _, _ = ranking.careful_ranking(db, experiment, form.i.data,
+                    solver_configs, cost, noise=careful_ranking_noise, break_ties=form_break_ties)
                 careful_rank_counter = 1 # 1 is VBS
                 for tied_solvers in carefully_ranked_solvers:
                     careful_rank_counter += 1
@@ -135,10 +165,11 @@ def solver_ranking(database, experiment_id):
                 headers.add('Content-Type', 'text/plain')
                 return Response(response=table, headers=headers)
 
+            GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
             return render('/analysis/ranking.html', database=database, db=db,
                           experiment=experiment, ranked_solvers=ranked_solvers,
                           careful_rank=careful_rank,
-                          data=ranking_data, form=form, instance_properties=db.get_instance_properties())
+                          data=ranking_data, form=form, instance_properties=db.get_instance_properties(), GET_data=GET_data)
 
         last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
                                 .filter_by(experiment=experiment).first()
@@ -147,7 +178,7 @@ def solver_ranking(database, experiment_id):
         return cached_ranking(database, experiment_id, solver_configs, ''.join(sc.get_name() for sc in solver_configs),
                               last_modified_job, job_count, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
-                              form.careful_ranking.data,
+                              form.careful_ranking.data, form.careful_ranking_noise.data or 1.0,
                               form.break_careful_ties.data, form.cost.data,
                               'csv' in request.args, 'latex' in request.args)
 

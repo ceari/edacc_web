@@ -1,0 +1,35 @@
+{% from "_formhelpers.html" import render_field, render_radio_field %}
+{% extends "base.html" %}
+{% block title %}Careful ranking raw-scores{% endblock %}
+{% block content %}
+    <div class="navigation">
+        » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
+        <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
+        Careful ranking raw-scores
+    </div>
+{% if raw_scores %}
+    <div>
+    <h2>Careful ranking raw-scores matrix</h2>
+    <table id="table_results">
+    <thead>
+        <tr>
+            <th></th>
+            {% for sc in solver_configs %}
+                <th>{{ sc.name }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for sc1 in solver_configs %}
+        <tr>
+            <td style="font-weight: bold;">{{ sc1.name }}</td>
+            {% for sc2 in solver_configs %}
+                <td style="text-align: center;">{{ raw_scores[(sc1.idSolverConfig, sc2.idSolverConfig)] }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div>
+{% endif %}
+{% endblock %}

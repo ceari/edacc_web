@@ -9,9 +9,9 @@
     :license: MIT, see LICENSE for details.
 """
 
-from flaskext.wtf import Form, TextField, PasswordField, TextAreaField, RadioField
+from flaskext.wtf import Form, TextField, PasswordField, TextAreaField, RadioField, DecimalField, FloatField
 from flaskext.wtf import FileField, Required, Length, Email, EqualTo, SelectField
-from flaskext.wtf import ValidationError, BooleanField
+from flaskext.wtf import ValidationError, BooleanField, validators
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
                                             QuerySelectField
 
@@ -238,6 +238,7 @@ class RankingForm(Form):
     calculate_average_dev = BooleanField('Calculate dispersion measures', default=False)
     penalized_average_runtime = BooleanField('Calculate penalized average runtime', default=True)
     careful_ranking = BooleanField("Calculate careful ranking", default=True)
+    careful_ranking_noise = FloatField("Noise", default=1.0, validators=[validators.required()])
     break_careful_ties = BooleanField('Break careful ranking ties', default=False)
     instance_filter = TextField('Filter Instances')
     cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])

@@ -354,12 +354,12 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
             raw[(s2, s1)] = 0
             for idInstance in instance_ids:
                 for r1, r2 in izip(results[idInstance][s1], results[idInstance][s2]):
-                    e1 = (r1.penalized_time10 + r2.penalized_time10) / 2.0
+                    e1 = (r1.penalized_time1 + r2.penalized_time1) / 2.0
                     delta = alpha * math.sqrt(e1)
-                    if r1.penalized_time10 < e1 - delta:
+                    if r1.penalized_time1 < e1 - delta:
                         raw[(s1, s2)] += 1
                         raw[(s2, s1)] -= 1
-                    elif r2.penalized_time10 < e1 - delta:
+                    elif r2.penalized_time1 < e1 - delta:
                         raw[(s2, s1)] += 1
                         raw[(s1, s2)] -= 1
 
@@ -462,4 +462,4 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
                 tie_break[solver] = sum(raw[(solver, s_j)] for s_j in comp)
             comp.sort(key=lambda sc: tie_break[sc], reverse=True)
 
-    return [[sc_by_id[sc] for sc in comp] for comp in l]
+    return [[sc_by_id[sc] for sc in comp] for comp in l], raw, M
