@@ -200,7 +200,7 @@ class RTDComparisonForm(Form):
     solver_config2 = QuerySelectField('Second Solver Configuration', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
     result_property = SelectField('Property')
     log_property = BooleanField("Logarithmic property-axis", default=True)
-    instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
+    i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 
 class RTDPlotsForm(Form):

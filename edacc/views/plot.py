@@ -656,7 +656,7 @@ def result_property_comparison_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
+    instance_ids = [int(id) for id in request.args.getlist('i')] or abort(404)
     s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
     s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
     dim = int(request.args.get('dim', 700))
@@ -669,16 +669,17 @@ def result_property_comparison_plot(database, experiment_id):
     else:
         result_property_name = 'CPU time (s)'
 
-    results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
-                                            .options(joinedload_all('properties'))\
+    results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                             .filter_by(experiment=exp,
-                                               solver_configuration=s1,
-                                               instance=instance).all()]
-    results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
-                                            .options(joinedload_all('properties'))\
+                                               solver_configuration=s1)
+                                            .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids))
+                                            .order_by(db.ExperimentResult.Instances_idInstance, db.ExperimentResult.run).all()]
+
+    results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                             .filter_by(experiment=exp,
-                                               solver_configuration=s2,
-                                               instance=instance).all()]
+                                               solver_configuration=s2)
+                                            .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids))
+                                            .order_by(db.ExperimentResult.Instances_idInstance, db.ExperimentResult.run).all()]
 
     results1 = filter(lambda r: r is not None, results1)
     results2 = filter(lambda r: r is not None, results2)
@@ -686,7 +687,7 @@ def result_property_comparison_plot(database, experiment_id):
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow([result_property_name + ' results of the two solver configurations on ' + str(instance)])
+        csv_writer.writerow([result_property_name + ' results of the two solver configurations'])
         csv_writer.writerow([str(s1), str(s2)])
         for i in xrange(min(len(results1), len(results2))):
             csv_writer.writerow(map(str, [results1[i], results2[i]]))

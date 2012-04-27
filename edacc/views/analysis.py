@@ -269,7 +269,7 @@ def result_property_comparison(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.RTDComparisonForm(request.args)
-    form.instance.query = experiment.get_instances(db) or EmptyQuery()
+    form.i.query = experiment.get_instances(db) or EmptyQuery()
     form.solver_config1.query = experiment.solver_configurations or EmptyQuery()
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
@@ -277,8 +277,9 @@ def result_property_comparison(database, experiment_id):
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
-    if form.solver_config1.data and form.solver_config2.data and form.instance.data:
-        instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
+    if form.solver_config1.data and form.solver_config2.data and form.i.data:
+        instance_ids = [i.idInstance for i in form.i.data]
+        #instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
         s1 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config1'])) or abort(404)
         s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
 
@@ -288,12 +289,15 @@ def result_property_comparison(database, experiment_id):
 
         results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                         .filter_by(experiment=experiment,
-                                                   solver_configuration=s1,
-                                                   instance=instance).all()]
+                                                   solver_configuration=s1)
+                                        .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids))
+                                        .order_by(db.ExperimentResult.Instances_idInstance, db.ExperimentResult.run).all()]
+
         results2 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                         .filter_by(experiment=experiment,
-                                                   solver_configuration=s2,
-                                                   instance=instance).all()]
+                                                   solver_configuration=s2)
+                                        .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids))
+                                        .order_by(db.ExperimentResult.Instances_idInstance, db.ExperimentResult.run).all()]
 
         results1 = filter(lambda r: r is not None, results1)
         results2 = filter(lambda r: r is not None, results2)
