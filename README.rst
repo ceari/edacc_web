@@ -51,7 +51,7 @@ Dependencies
 - R package 'np' (available via CRAN)
 - python-memcached v1.45 + memcached 1.4.5 (optional, enable/disable in config.py)
 
-Quick Installation Guide
+Development Installation Guide
 ------------------------
 
 To illustrate an installation here's what you would have to do on a linux system (assuming Python, python-pip and python-virtualenv are installed,
