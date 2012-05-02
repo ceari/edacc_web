@@ -750,7 +750,9 @@ def property_distributions_plot(database, experiment_id):
 def property_distribution(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
+    #sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
+    solver_configs = db.session.query(db.SolverConfiguration).filter(db.SolverConfiguration.idSolverConfig.in_(int(id) for id in request.args.getlist('sc'))).all()
+    solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
     instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(int(id) for id in request.args.getlist('i'))).all()
     instance_ids = [i.idInstance for i in instances]
     #instance = db.session.query(db.Instance).filter_by(idInstance=int(request.args['instance'])).first() or abort(404)
@@ -764,26 +766,28 @@ def property_distribution(database, experiment_id):
     else:
         result_property_name = 'CPU time (s)'
 
-    results = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult) \
-                                    .options(joinedload_all('properties')) \
-                                    .filter_by(experiment=exp,
-                                               solver_configuration=sc).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()]
-
-    results = filter(lambda r: r is not None, results)
+    results_by_sc = dict()
+    for sc in solver_configs:
+        results_by_sc[sc] = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
+                            .options(joinedload_all('properties'))\
+                            .filter_by(experiment=exp,
+                                solver_configuration=sc).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()]
+        results_by_sc[sc] = filter(lambda r: r is not None, results_by_sc[sc])
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow([result_property_name + ' of ' + str(sc)])
-        csv_writer.writerow(map(str, results))
+        for sc in solver_configs:
+            csv_writer.writerow([result_property_name + ' of ' + str(sc)])
+            csv_writer.writerow(map(str, results_by_sc[sc]))
         csv_response.seek(0)
 
         headers = Headers()
         headers.add('Content-Type', 'text/csv')
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_rtd.csv"))
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_rtd.csv"))
         return Response(response=csv_response.read(), headers=headers)
     else:
-        return make_plot_response(plots.property_distribution, results, result_property_name, log_property, restart_strategy)
+        return make_plot_response(plots.property_distribution, results_by_sc, result_property_name, log_property, restart_strategy)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/kerneldensity-plot/')
 @require_phase(phases=ANALYSIS2)
@@ -791,7 +795,7 @@ def property_distribution(database, experiment_id):
 def kerneldensity(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
-    sc = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config'])) or abort(404)
+    solver_configs = db.session.query(db.SolverConfiguration).filter(db.SolverConfiguration.idSolverConfig.in_(int(id) for id in request.args.getlist('sc'))).all()
     instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(int(id) for id in request.args.getlist('i'))).all()
     instance_ids = [i.idInstance for i in instances]
 
@@ -804,26 +808,28 @@ def kerneldensity(database, experiment_id):
     else:
         result_property_name = 'CPU time (s)'
 
-    results = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
-                                        .options(joinedload_all('properties')) \
-                                        .filter_by(experiment=exp,
-                                               solver_configuration=sc).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()]
-
-    results = filter(lambda r: r is not None, results)
+    results_by_sc = dict()
+    for sc in solver_configs:
+        results_by_sc[sc] = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)\
+        .options(joinedload_all('properties'))\
+        .filter_by(experiment=exp,
+            solver_configuration=sc).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)).all()]
+        results_by_sc[sc] = filter(lambda r: r is not None, results_by_sc[sc])
 
     if request.args.has_key('csv'):
         csv_response = StringIO.StringIO()
         csv_writer = csv.writer(csv_response)
-        csv_writer.writerow([result_property_name + ' of ' + str(sc)])
-        csv_writer.writerow(map(str, results))
+        for sc in results_by_sc:
+            csv_writer.writerow([result_property_name + ' of ' + str(sc)])
+            csv_writer.writerow(map(str, results_by_sc[sc]))
         csv_response.seek(0)
 
         headers = Headers()
         headers.add('Content-Type', 'text/csv')
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_" + str(sc) + "_kerneldensity.csv"))
+        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_kerneldensity.csv"))
         return Response(response=csv_response.read(), headers=headers)
     else:
-        return make_plot_response(plots.kerneldensity, results, result_property_name, log_property, restart_strategy)
+        return make_plot_response(plots.kerneldensity, results_by_sc, result_property_name, log_property, restart_strategy)
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/box-plots-plot/')

@@ -113,11 +113,8 @@
         <a href="{{url_for('analysis.cactus_plot', database=database, experiment_id=experiment.idExperiment)}}">Cactus plot - Number of solved instances within a given amount of a property (e.g. time, memory, ...)</a><br/>
             <a href="{{url_for('analysis.result_property_comparison', database=database, experiment_id=experiment.idExperiment)}}">Property distribution comparison of two solvers</a><br/>
         {% endif %}
-        {% if experiment.get_max_num_runs(db) > 1 %}
-            <a href="{{url_for('analysis.property_distribution', database=database, experiment_id=experiment.idExperiment)}}">Result Property Distribution plot - Distribution and Kernel Density Estimation</a><br/>
-            <a href="{{url_for('analysis.property_distributions', database=database, experiment_id=experiment.idExperiment)}}">Property distributions of solvers on an instance</a><br/>
-            <a href="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">Analysis - Probabilistic Domination of solvers on the instances</a><br/>
-        {% endif %}
+        <a href="{{url_for('analysis.property_distribution', database=database, experiment_id=experiment.idExperiment)}}">Result Property Distribution plots - Distribution and Kernel Density Estimation</a><br/>
+        <a href="{{url_for('analysis.probabilistic_domination', database=database, experiment_id=experiment.idExperiment)}}">Analysis - Probabilistic Domination of solvers on the instances</a><br/>
         {% if experiment.configurationExp %}
             <a href="{{url_for('frontend.configurator_visualisation', database=database, experiment_id=experiment.idExperiment)}}">Configurator visualisation</a><br/>
             <a href="{{url_for('analysis.parameter_plot_1d', database=database, experiment_id=experiment.idExperiment)}}">Cost against one parameter</a><br/>

@@ -25,7 +25,7 @@
                 {{ render_field(form.solver_config2) }}
                 {{ render_field(form.result_property) }}
                 {{ render_field(form.log_property) }}
-                {{ render_field(form.i) }}
+                {{ render_field(form.i, size=10) }}
                 <tr>
                     <td style="vertical-align: middle;">Filter instances</td>
                     <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>

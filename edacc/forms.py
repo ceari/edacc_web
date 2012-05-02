@@ -211,11 +211,11 @@ class RTDPlotsForm(Form):
     instance_filter = TextField('Filter Instances')
 
 class RTDPlotForm(Form):
-    solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
+    #solver_config = QuerySelectField('Solver Configuration', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
+    sc = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
     result_property = SelectField('Property')
     log_property = BooleanField("Logarithmic property-axis", default=True)
     restart_strategy = BooleanField(u"Show restart strategy (t_rs, green=original mean, blue=mean with restarts, red=restart at)")
-    #instance = QuerySelectField('Instance', get_pk=lambda i: i.idInstance, allow_blank=True)
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
 

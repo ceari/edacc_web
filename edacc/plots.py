@@ -30,6 +30,24 @@ robjects.r("library('np')")
 
 robjects.r.setEPS() # set some default options for postscript in EPS format
 
+robjects.r("""plot.multi.dens <- function(s)
+    {
+    junk.x = NULL
+junk.y = NULL
+for(i in 1:length(s))
+    {
+    junk.x = c(junk.x, density(s[[i]])$x)
+junk.y = c(junk.y, density(s[[i]])$y)
+}
+xr <- range(junk.x)
+yr <- range(junk.y)
+plot(density(s[[1]]), xlim = xr, ylim = yr, main = "")
+for(i in 1:length(s))
+    {
+    lines(density(s[[i]]), xlim = xr, ylim = yr, col = i)
+}
+}""")
+
 from threading import Lock
 global_lock = Lock()
 
@@ -566,13 +584,13 @@ def box_plot(data, property_label, filename, format='png'):
 
 
 @synchronized
-def property_distribution(results, property_name, log_property, restart_strategy, filename, format='png'):
-    """Plot of a single property distribution.
+def property_distribution(results_by_sc, property_name, log_property, restart_strategy, filename, format='png'):
+    """Plot of a property distributions.
 
     :param results: result vector
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=600,
+        grdevices.png(file=filename, units="px", width=800,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
@@ -582,14 +600,20 @@ def property_distribution(results, property_name, log_property, restart_strategy
         grdevices.postscript(file=os.devnull, height=7, width=9)
         file = open(filename, 'w')
 
-    max_x = max(results or [0])
+    max_x = 0
+    for sc in results_by_sc:
+        max_x = max(max(results_by_sc[sc]), max_x)
 
     if log_property:
         log = 'x'
-        min_x = min(results or [0.1])
+        min_x = max_x
+        for sc in results_by_sc:
+            min_x = min(min(results_by_sc[sc]), min_x)
     else:
         log = ''
         min_x = 0
+
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
 
     # plot without data to create the frame
     robjects.r.plot(robjects.FloatVector([]), robjects.FloatVector([]),
@@ -604,12 +628,20 @@ def property_distribution(results, property_name, log_property, restart_strategy
                 % (log, min_x, max_x))
         file.write("par(new=T)\n")
 
-    if len(results) > 0:
-        if restart_strategy:
-            mean = numpy.mean(results or [0])
+    # list of colors used in the defined order for the different solvers
+    colors = [
+                 'red', 'green', 'blue', 'darkgoldenrod1', 'darkolivegreen',
+                 'darkorchid', 'deeppink', 'darkgreen', 'blue4'
+             ] * 10
+    col = 0
+    point_style = 0
+
+    for sc in results_by_sc:
+        if restart_strategy and len(results_by_sc) == 1:
+            mean = numpy.mean(results_by_sc[sc] or [0])
             best_i, best_ti, best_mean = 0, 0, None
-            for i, t_i in zip(range(1, len(results)+1), sorted(results)):
-                mp = t_i * len(results) / float(i)
+            for i, t_i in zip(range(1, len(results_by_sc[sc])+1), sorted(results_by_sc[sc])):
+                mp = t_i * len(results_by_sc[sc]) / float(i)
                 if best_mean is None or mp - mean < best_mean - mean:
                     best_mean = mp
                     best_i = i
@@ -624,27 +656,42 @@ def property_distribution(results, property_name, log_property, restart_strategy
                 file.write("abline(v=%f, col='red')\n" % (best_ti, ))
                 file.write("par(new=T)\n")
 
-        robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results or [0])),
-                        main='', xaxt='n', yaxt='n', log=log,
+        robjects.r.plot(robjects.r.ecdf(robjects.FloatVector(results_by_sc[sc] or [0])),
+                        main='', xaxt='n', yaxt='n', log=log, col=colors[col % len(colors)], pch=point_style,
                         xlab='', ylab='', xaxs='i', yaxs='i', las=1,
                         xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(-0.05, 1.05))
 
-        # plot labels and axes
-        robjects.r.mtext(property_name, side=1,
-                         line=3, cex=1.2) # bottom axis label
-        robjects.r.mtext('P(X <= x)', side=2, padj=0,
-                         line=3, cex=1.2) # left axis label
-        robjects.r.mtext(property_name + ' distribution' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''),
-                         padj=1, side=3, line=3, cex=1.7) # plot title
 
-        if format == "rscript":
-            file.write("plot(ecdf(c(%s)), main='', xaxt='n', yaxt='n', log='%s', xlab='', ylab='', xaxs='i', yaxs='i', las=1, xlim=c(%f, %f), ylim=c(-0.05, 1.05))\n"\
-            % (','.join(map(str, results or [0])), log, min_x, max_x))
-            file.write("mtext('%s', side=1, line=3, cex=1.2)\n" % (property_name, ))
-            file.write("mtext('P(X <= x)', side=2, padj=0, line=3, cex=1.2)\n")
-            file.write("mtext('%s', padj=1, side=3, line=3, cex=1.7)\n" \
-                        % (property_name + ' distribution' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''), ))
-    else:
+
+        robjects.r.par(new=1)
+
+        col += 1
+        point_style += 1
+
+    if format == "rscript":
+        file.write("plot(ecdf(c(%s)), main='', xaxt='n', yaxt='n', log='%s', xlab='', ylab='', xaxs='i', yaxs='i', las=1, xlim=c(%f, %f), ylim=c(-0.05, 1.05))\n"\
+        % (','.join(map(str, results or [0])), log, min_x, max_x))
+        file.write("mtext('%s', side=1, line=3, cex=1.2)\n" % (property_name, ))
+        file.write("mtext('P(X <= x)', side=2, padj=0, line=3, cex=1.2)\n")
+        file.write("mtext('%s', padj=1, side=3, line=3, cex=1.7)\n" \
+                    % (property_name + ' distribution' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy and len(results_by_sc) == 1 else ''), ))
+
+    # plot labels and axes
+    robjects.r.mtext(property_name, side=1,
+        line=3, cex=1.2) # bottom axis label
+    robjects.r.mtext('P(X <= x)', side=2, padj=0,
+        line=3, cex=1.2) # left axis label
+    robjects.r.mtext(property_name + ' distribution' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy and len(results_by_sc) == 1 else ''),
+        padj=1, side=3, line=3, cex=1.7) # plot title
+
+    robjects.r.par(xpd=True)
+    # plot legend
+    robjects.r.legend("right", inset=-0.4,
+        legend=robjects.StrVector([newline_split_string(str(sc), 23) for sc in results_by_sc]),
+        col=robjects.StrVector(colors[:len(results_by_sc)]),
+        pch=robjects.IntVector(range(len(results_by_sc))), lty=1, **{'y.intersp': 1.4})
+
+    if not results_by_sc:
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
 
         if format == "rscript":
@@ -654,13 +701,10 @@ def property_distribution(results, property_name, log_property, restart_strategy
 
 
 @synchronized
-def kerneldensity(data, property_name, log_property, restart_strategy, filename, format='png'):
-    """Non-parametric kernel density estimation plot of a result vector.
-
-    :param data: result vector
-    """
+def kerneldensity(results_by_sc, property_name, log_property, restart_strategy, filename, format='png'):
+    """Non-parametric kernel density estimation plots of result vectors."""
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=600,
+        grdevices.png(file=filename, units="px", width=800,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
@@ -670,55 +714,64 @@ def kerneldensity(data, property_name, log_property, restart_strategy, filename,
         grdevices.postscript(file=os.devnull, height=7, width=9)
         file = open(filename, 'w')
 
+    max_x = 0
+    for sc in results_by_sc:
+        max_x = max(max(results_by_sc[sc]), max_x)
+
     if log_property:
         log = 'x'
+        min_x = max_x
+        for sc in results_by_sc:
+            min_x = min(min(results_by_sc[sc]), min_x)
     else:
         log = ''
+        min_x = 0
 
-    if len(data) > 0:
-        #if len(data) > 1000:
-        #    data = random.sample(data, 1000)
-        #d = np.npudens(robjects.FloatVector(data + [max(data or [0]) + 0.00001]))
-        #robjects.r.plot(d, main="", log=log, xaxt="n", yaxt="n", xlab="", ylab="", xaxs="i", yaxs="i", las=1)
-        #vec = 'c(' + ",".join(map(str, data)) + ')'
-        robjects.r.plot(robjects.r.density(robjects.FloatVector(data)), main="", xlab=property_name, log=log)
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
 
-        if format == "rscript":
-            file.write("plot(density(c(%s)), main='', xlab='%s', log='%s')\n" \
-                    % (','.join(map(str,data)), property_name, log))
-        #robjects.r('d <- density('+vec+', bw="nrd0", adjust=1, kernel="gaussian")')
-        #robjects.r("d$bws$xnames = '"+property_name+"'")
-        # add some pseudo value to data because R crashes when the data is constant
-        # and takes python down with it ...
-        #robjects.r("plot(d, main='')")
-        # plot labels and axes
-        if restart_strategy:
-            mean = numpy.mean(data or [0])
-            best_i, best_ti, best_mean = 0, 0, None
-            for i, t_i in zip(range(1, len(data)+1), sorted(data)):
-                mp = t_i * len(data) / float(i)
-                if best_mean is None or mp - mean < best_mean - mean:
-                    best_mean = mp
-                    best_i = i
-                    best_ti = t_i
-            robjects.r.par(new=1)
-            robjects.r.abline(v=best_ti, col='red')
-            robjects.r.abline(v=best_mean, col='blue')
-            robjects.r.abline(v=mean, col='green')
+    col = 0
+    point_style = 0
 
-            if format == "rscript":
-                file.write("par(new=T)\n")
-                file.write("abline(v=%f, col='red')\n" % (best_ti,))
-                file.write("abline(v=%f, col='blue')\n" % (best_mean,))
-                file.write("abline(v=%f, col='green')\n" % (mean,))
+    robjects.r("plot.multi.dens")((robjects.r("list"))(*map(robjects.FloatVector, results_by_sc.values())))
 
-        robjects.r.mtext('Kernel density estimation' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''),
-                         padj=1, side=3, line=3, cex=1.7) # plot title
+    # plot labels and axes
+    if restart_strategy and len(results_by_sc) == 1:
+        sc = results_by_sc.keys()[0]
+        mean = numpy.mean(results_by_sc[sc] or [0])
+        best_i, best_ti, best_mean = 0, 0, None
+        for i, t_i in zip(range(1, len(results_by_sc[sc])+1), sorted(results_by_sc[sc])):
+            mp = t_i * len(results_by_sc[sc]) / float(i)
+            if best_mean is None or mp - mean < best_mean - mean:
+                best_mean = mp
+                best_i = i
+                best_ti = t_i
+        robjects.r.par(new=1)
+        robjects.r.abline(v=best_ti, col='red')
+        robjects.r.abline(v=best_mean, col='blue')
+        robjects.r.abline(v=mean, col='green')
 
         if format == "rscript":
-            file.write("mtext('Kernel density estimation%s', padj=1, side=3, line=3, cex=1.7)\n" \
-                        % ((u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy else ''),))
-    else:
+            file.write("par(new=T)\n")
+            file.write("abline(v=%f, col='red')\n" % (best_ti,))
+            file.write("abline(v=%f, col='blue')\n" % (best_mean,))
+            file.write("abline(v=%f, col='green')\n" % (mean,))
+
+    # plot labels and axes
+
+    robjects.r.mtext('Kernel density estimation' + (u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy and len(results_by_sc) == 1 else ''),
+                     padj=1, side=3, line=3, cex=1.7) # plot title
+
+    if format == "rscript":
+        file.write("mtext('Kernel density estimation%s', padj=1, side=3, line=3, cex=1.7)\n" \
+                    % ((u', t_rs = ' + str(round(best_ti, 4)) if restart_strategy and len(results_by_sc) == 1 else ''),))
+
+    robjects.r.par(xpd=True)
+    # plot legend
+    robjects.r.legend("right", inset=-0.4,
+        legend=robjects.StrVector([newline_split_string(str(sc), 23) for sc in results_by_sc]),
+        col=robjects.StrVector(range(1, len(results_by_sc)+1)), lty=1, **{'y.intersp': 1.4})
+
+    if not results_by_sc:
         robjects.r.frame()
         robjects.r.mtext('not enough data', padj=5, side=3, line=3, cex=1.7)
 

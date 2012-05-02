@@ -26,7 +26,7 @@
         </div>
         <form method="get" action="{{url_for('analysis.property_distribution', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
-                {{ render_field(form.solver_config) }}
+                {{ render_field(form.sc, size=10) }}
                 {{ render_field(form.result_property) }}
                 {{ render_field(form.log_property) }}
                 {{ render_field(form.restart_strategy) }}
@@ -43,9 +43,9 @@
         </form>
     </div>
 
-    {% if form.solver_config.data %}
+    {% if form.sc.data %}
     <div>
-        <div style="text-align: center; margin-left: 20px; margin-bottom: 20px; float: left;">
+        <div style="text-align: center; margin-left: 20px; margin-bottom: 20px;">
             {% autoescape false %}
             <img alt="graph" src="{{url_for('plot.property_distribution', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}" /><br/>
             Download as <a href="{{url_for('plot.property_distribution', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&pdf">PDF</a> | <a href="{{url_for('plot.property_distribution', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&eps">EPS</a> | <a href="{{url_for('plot.property_distribution', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&csv">Raw Data (CSV)</a> | <a href="{{url_for('plot.property_distribution', database=database, experiment_id=experiment.idExperiment)}}?{{GET_data}}&rscript">R script</a>

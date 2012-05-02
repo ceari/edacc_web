@@ -546,7 +546,7 @@ def property_distribution(database, experiment_id):
 
     form = forms.RTDPlotForm(request.args)
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
-    form.solver_config.query = experiment.solver_configurations or EmptyQuery()
+    form.sc.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
     form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
