@@ -205,7 +205,7 @@ def login(database):
 
                 if db.is_competition() and db.competition_phase() == 5:
                     if not user.admin:
-                        session.pop('logged_in')
+                        session.pop('logged_in', None)
                         flash('Website offline for competition computations.')
                         return redirect(url_for('frontend.experiments_index',
                             database=database))

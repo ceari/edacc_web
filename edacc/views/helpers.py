@@ -104,7 +104,7 @@ def require_login(f):
                 return redirect(url_for('frontend.experiments_index',
                 database=kwargs['database']))
             if not g.User or not g.User.admin:
-                session.pop('logged_in')
+                session.pop('logged_in', None)
                 flash('Website offline for competition computations.')
                 return redirect_f(*args, **kwargs)
 
