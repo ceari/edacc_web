@@ -413,17 +413,18 @@ def experiment_results_full_csv(database, experiment_id):
 
     results, _, _ = experiment.get_result_matrix(db, solver_configs, experiment.instances, cost=request.args.get('cost', 'resultTime'))
     name_by_instance = dict((i.idInstance, i.name) for i in experiment.instances)
+    md5_by_instance = dict((i.idInstance, i.md5) for i in experiment.instances)
 
     csv_response = StringIO.StringIO()
     csv_writer = csv.writer(csv_response)
     csv_writer.writerow(['Experiment: ' + experiment.name,])
-    csv_writer.writerow([''] + [sc.name.encode('utf-8') for sc in solver_configs])
+    csv_writer.writerow(['', ''] + [sc.name.encode('utf-8') for sc in solver_configs])
     for idInstance in results.iterkeys():
         max_runs = 0
         for idSolverConfig in solver_config_ids:
             max_runs = max(max_runs, len(results[idInstance][idSolverConfig]))
         for run in range(max_runs):
-            row = [name_by_instance[idInstance].encode('utf-8') + ((u' attempt #' + str((run+1))) if max_runs > 1 else '')]
+            row = [name_by_instance[idInstance].encode('utf-8') + ((u' attempt #' + str((run+1))) if max_runs > 1 else ''), md5_by_instance[idInstance]]
             for idSolverConfig in solver_config_ids:
                 if run < len(results[idInstance][idSolverConfig]):
                     row.append(str(results[idInstance][idSolverConfig][run].resultTime or u''))
