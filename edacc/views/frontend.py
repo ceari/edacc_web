@@ -84,6 +84,8 @@ def experiments_index(database):
         experiments = db.session.query(db.Experiment).all()
         experiments.sort(key=lambda e: e.date)
 
+    if not is_admin() and db.competition_phase() == 5: experiments = []
+
     return render('experiments.html', experiments=experiments, db=db, database=database)
 
 @frontend.route('/<database>/categories')

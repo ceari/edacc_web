@@ -15,7 +15,7 @@
 import hashlib
 from functools import wraps
 
-from flask import abort, session, url_for, redirect, g, request
+from flask import abort, session, url_for, redirect, g, request, flash
 
 from edacc import config, models, config
 
@@ -99,16 +99,26 @@ def require_login(f):
         else:
             g.User = None
 
+        if db.is_competition() and db.competition_phase() == 5:
+            def redirect_f(*args, **kwargs):
+                return redirect(url_for('frontend.experiments_index',
+                database=kwargs['database']))
+            if not g.User or not g.User.admin:
+                session.pop('logged_in')
+                flash('Website offline for competition computations.')
+                return redirect_f(*args, **kwargs)
+
         if db.is_competition() and db.competition_phase() < 7:
             def redirect_f(*args, **kwargs):
                 return redirect(url_for('accounts.login',
-                                        database=kwargs['database']))
+                    database=kwargs['database']))
 
             if not g.User or not session.get('logged_in') or \
                 session.get('idUser', None) is None:
                 return redirect_f(*args, **kwargs)
             if session.get('database') != kwargs['database']:
                 return redirect_f(*args, **kwargs)
+
         return f(*args, **kwargs)
     return decorated_f
 

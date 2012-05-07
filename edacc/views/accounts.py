@@ -202,6 +202,14 @@ def login(database):
                 session['db'] = str(db)
                 session['admin'] = user.admin
                 session.permanent = form.permanent_login.data
+
+                if db.is_competition() and db.competition_phase() == 5:
+                    if not user.admin:
+                        session.pop('logged_in')
+                        flash('Website offline for competition computations.')
+                        return redirect(url_for('frontend.experiments_index',
+                            database=database))
+
                 flash('Login successful')
                 return redirect(url_for('frontend.experiments_index',
                                         database=database))
