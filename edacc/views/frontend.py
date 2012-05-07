@@ -418,7 +418,7 @@ def experiment_results_full_csv(database, experiment_id):
     csv_response = StringIO.StringIO()
     csv_writer = csv.writer(csv_response)
     csv_writer.writerow(['Experiment: ' + experiment.name,])
-    csv_writer.writerow(['', ''] + [sc.name.encode('utf-8') for sc in solver_configs])
+    csv_writer.writerow(['Instance', 'MD5'] + [sc.name.encode('utf-8') for sc in solver_configs])
     for idInstance in results.iterkeys():
         max_runs = 0
         for idSolverConfig in solver_config_ids:
