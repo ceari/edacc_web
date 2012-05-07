@@ -77,7 +77,7 @@
                         {% for run in result[1] %}
                             {% if run == None %}<td></td>
                             {% else %}
-                                {% if run.cost %}
+                                {% if run.cost != None %}
                                 <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ run.cost|result_time|round(3)}} {{ run.result_code_description }}</a></td>
                                 {% else %}
                                     {% if run.status == 0 %}

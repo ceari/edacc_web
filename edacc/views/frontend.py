@@ -626,6 +626,7 @@ def experiment_results_by_instance(database, experiment_id):
                         table.c['Instances_idInstance']==instance.idInstance
                         ),
                     from_obj=table.join(table_result_codes)).order_by(table.c['Instances_idInstance'], table.c['run'])
+
         for run in db.session.connection().execute(s):
             results_by_sc[run.SolverConfig_idSolverConfig].append(run)
 
