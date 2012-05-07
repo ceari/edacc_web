@@ -871,7 +871,7 @@ def experiment_results_csv(database, experiment_id):
 
     conn = db.session.connection()
     base_query = """SELECT SQL_CALC_FOUND_ROWS ExperimentResults.idJob,
-                       SolverConfig.name, Instances.name,
+                       SolverConfig.name, Instances.name, Instances.md5,
                        ExperimentResults.run, ExperimentResults.resultTime, ExperimentResults.wallTime, ExperimentResults.cost,
                        ExperimentResults.seed, ExperimentResults.status,
                        ExperimentResults.resultCode,
@@ -907,7 +907,7 @@ def experiment_results_csv(database, experiment_id):
 
     csv_response = StringIO.StringIO()
     csv_writer = csv.writer(csv_response)
-    csv_writer.writerow(['id', 'Solver', 'Instance', 'Run', 'Time', 'Walltime', 'Cost', 'Seed', 'status code', 'result code', 'Status'] +
+    csv_writer.writerow(['id', 'Solver', 'Instance', 'Instance MD5', 'Run', 'Time', 'Walltime', 'Cost', 'Seed', 'status code', 'result code', 'Status'] +
                         ['Result', 'running time', 'CPUTimeLimit', 'wallClockTimeLimit', 'memoryLimit'] +
                         ['stackSizeLimit', 'computeNode', 'computeNodeIP',
                          'priority', 'computeQueue ID'] +
