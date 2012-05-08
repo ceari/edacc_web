@@ -427,7 +427,10 @@ def experiment_results_full_csv(database, experiment_id):
             row = [name_by_instance[idInstance].encode('utf-8') + ((u' attempt #' + str((run+1))) if max_runs > 1 else ''), md5_by_instance[idInstance]]
             for idSolverConfig in solver_config_ids:
                 if run < len(results[idInstance][idSolverConfig]):
-                    row.append(str(results[idInstance][idSolverConfig][run].resultTime or u''))
+                    if results[idInstance][idSolverConfig][run].status < -1:
+                        row.append('err')
+                    else:
+                        row.append(str(results[idInstance][idSolverConfig][run].resultTime or u''))
                 else: row.append(u"")
             csv_writer.writerow(row)
 
