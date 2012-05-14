@@ -206,6 +206,11 @@ def download_instances(database, experiment_id):
     tar_file.add(os.path.join(config.TEMP_DIR, 'tarballs', g.unique_id), experiment.name)
     tar_file.close()
 
+    import shutil
+    try:
+        shutil.rmtree(os.path.join(config.TEMP_DIR, 'tarballs', str(g.unique_id)))
+    except: pass
+
     file_size = tmp_file.tell()
     tmp_file.seek(0)
 
