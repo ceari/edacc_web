@@ -1165,6 +1165,7 @@ def configuration_results_csv(database, experiment_id):
     csv_response = StringIO.StringIO()
     csv_writer = csv.writer(csv_response)
     csv_writer.writerow(['Name', '#Results', 'Cost'] + [p.name for p in configurable_parameters])
+    csv_writer.writerow([''] * 3 + [experiment.configuration_scenario.get_parameter_domain(p.name) for p in configurable_parameters])
     for solver_config in solver_configs:
         if results_by_solver[solver_config.idSolverConfig]:
             if cost == 'cpu':
