@@ -204,6 +204,12 @@ def download_instances(database, experiment_id):
     tmp_file = tempfile.TemporaryFile("w+b")
     tar_file = tarfile.open(mode='w', fileobj=tmp_file)
     tar_file.add(os.path.join(config.TEMP_DIR, 'tarballs', g.unique_id), experiment.name)
+    instance_tar_info = tarfile.TarInfo("README")
+    README_content = "Recursively extract compressed files by running: find directory/ -name *.lzma -exec unxz {} \\;"
+    instance_tar_info.size = len(README_content)
+    instance_tar_info.type = tarfile.REGTYPE
+    instance_tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
+    tar_file.addfile(instance_tar_info, fileobj=StringIO.StringIO(README_content))
     tar_file.close()
 
     import shutil
