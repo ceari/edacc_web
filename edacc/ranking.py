@@ -194,7 +194,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     vbs_num_solved = 0
     vbs_cumulated_cpu = 0
     from sqlalchemy import func, or_, not_
-    best_instance_runtimes = db.session.query(func.min(cost_property)) \
+    best_instance_runtimes = db.session.query(func.min(cost_property), db.ExperimentResult.Instances_idInstance) \
         .filter_by(experiment=experiment) \
         .filter(db.ExperimentResult.resultCode.like(u'1%')) \
         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
@@ -204,6 +204,9 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     vbs_num_solved = len(best_instance_runtimes) * max_num_runs
     vbs_cumulated_cpu = sum(r[0] or 0.0 for r in best_instance_runtimes) * max_num_runs
     vbs_median = numpy.median([r[0] or 0.0 for r in best_instance_runtimes])
+    best_runtime_by_instance = dict()
+    for bir in best_instance_runtimes:
+        best_runtime_by_instance[bir.Instances_idInstance] = bir[0]
 
     #num_unsolved_instances = len(instances) - len(best_instance_runtimes)
 
@@ -236,6 +239,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                     table.c['status']==1)).select_from(table)
     successful_runs = db.session.connection().execute(s)
 
+    vbs_uses_solver_count = dict((id, 0) for id in solver_config_ids)
     runs_by_solver_and_instance = {}
     for run in successful_runs:
         if not runs_by_solver_and_instance.has_key(run.SolverConfig_idSolverConfig):
@@ -243,6 +247,8 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         if not runs_by_solver_and_instance[run.SolverConfig_idSolverConfig].has_key(run.Instances_idInstance):
             runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance] = []
         runs_by_solver_and_instance[run.SolverConfig_idSolverConfig][run.Instances_idInstance].append(run)
+        if run.cost == best_runtime_by_instance[run.Instances_idInstance]:
+            vbs_uses_solver_count[run.SolverConfig_idSolverConfig] += 1
 
     if calculate_avg_stddev:
         finished_runs_by_solver_and_instance = {}

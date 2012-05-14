@@ -193,16 +193,17 @@ def download_instances(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     instances = experiment.get_instances(db)
+    for instance in instances:
+        instance_blob, compressed = instance.get_compressed_instance(db)
+        instance_path = os.path.join(config.TEMP_DIR, 'tarballs', str(g.unique_id), *(instance.get_class_hierarchy()))
+        try: os.makedirs(instance_path)
+        except: pass
+        with open(os.path.join(instance_path, instance.name + '.lzma' if compressed else ''), 'wb') as f:
+            f.write(instance_blob)
 
     tmp_file = tempfile.TemporaryFile("w+b")
     tar_file = tarfile.open(mode='w', fileobj=tmp_file)
-    for instance in instances:
-        instance_blob = instance.get_instance(db)
-        instance_tar_info = tarfile.TarInfo(name=instance.name)
-        instance_tar_info.size = len(instance_blob)
-        instance_tar_info.type = tarfile.REGTYPE
-        instance_tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
-        tar_file.addfile(instance_tar_info, fileobj=StringIO.StringIO(instance_blob))
+    tar_file.add(os.path.join(config.TEMP_DIR, 'tarballs', g.unique_id), experiment.name)
     tar_file.close()
 
     file_size = tmp_file.tell()

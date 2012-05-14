@@ -88,6 +88,16 @@ class EDACCDatabase(object):
                 if pc.parent_class: return '/.../' + '/'.join(reversed(parent_classes)) + "/" + self.name
                 else: return '/'.join(reversed(parent_classes)) + "/" + self.name
 
+            def get_class_hierarchy(self):
+                if self.instance_classes[0] is None:
+                    return self.name
+                pc = self.instance_classes[0]
+                parent_classes = [pc.name]
+                while pc.parent_class:
+                    pc = pc.parent_class
+                    parent_classes.append(pc.name)
+                return reversed(parent_classes)
+
             def get_property_value(self, property, db):
                 """ Returns the value of the property with the given name. """
                 try:
@@ -121,6 +131,23 @@ class EDACCDatabase(object):
                 else:
                     return self.instance
 
+            def get_compressed_instance(self, db):
+                table = db.metadata.tables['Instances']
+                c_instance = table.c['instance']
+                c_id = table.c['idInstance']
+                # get prefix
+                instance_header = db.session.connection().execute(select([func.substring(c_instance, 1, 4)],
+                    c_id==self.idInstance).select_from(table)).first()[0]
+                data_length = db.session.connection().execute(select([func.length(c_instance)],
+                    c_id==self.idInstance).select_from(table)).first()[0]
+                if instance_header == 'LZMA': # compressed instance?
+                    # get blob without LZMA prefix
+                    instance_blob = db.session.connection().execute(select([func.substring(c_instance, 5)],
+                        c_id==self.idInstance).select_from(table)).first()[0]
+                    return instance_blob, True
+                else:
+                    return self.instance, False
+
             def set_instance(self, uncompressed_instance):
                 """ Compresses the instance and sets the instance blob attribute """
                 self.instance = "LZMA" + utils.lzma_compress(uncompressed_instance)
@@ -144,19 +171,21 @@ class EDACCDatabase(object):
             #        return 0
             #    return num_results / num_solver_configs / num_instances
 
-            def get_sota_solvers(self, db, instances):
+            def get_sota_solvers(self, db, instances, solver_configs):
                 """
                     Returns the set of state-of-the-art solvers of the experiment.
                     A solver is considered SOTA if no other solver solves a strict
                     superset of its solved instances.
                 """
-                if not self.solver_configurations or not instances: return []
+                if not solver_configs or not instances: return []
+                solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
                 instance_ids = [i.idInstance for i in instances]
                 successful_runs = db.session.query(db.ExperimentResult.SolverConfig_idSolverConfig, db.ExperimentResult.Instances_idInstance) \
                         .filter_by(experiment=self).filter(db.ExperimentResult.resultCode.like("1%")) \
                         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+                        .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
                         .filter_by(status=1).all()
-                solved_instances = dict((sc.idSolverConfig, set()) for sc in self.solver_configurations)
+                solved_instances = dict((sc.idSolverConfig, set()) for sc in solver_configs)
                 for run in successful_runs:
                     solved_instances[run.SolverConfig_idSolverConfig].add(run.Instances_idInstance)
 
@@ -171,24 +200,26 @@ class EDACCDatabase(object):
                             break
                     if isSOTA: sota_solvers.append(solver)
 
-                return [sc for sc in self.solver_configurations if sc.idSolverConfig in sota_solvers]
+                return [sc for sc in solver_configs if sc.idSolverConfig in sota_solvers]
 
-            def unique_solver_contributions(self, db, instances):
+            def unique_solver_contributions(self, db, instances, solver_configs):
                 """
                     Returns a dictionary that for each solver configuration specifies the set of IDs
                     of the instances that only this solver config solved.
                 """
-                if not self.solver_configurations or not instances: return {}
+                if not solver_configs or not instances: return {}
+                solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
                 instance_ids = [i.idInstance for i in instances]
                 successful_runs = db.session.query(db.ExperimentResult.SolverConfig_idSolverConfig, db.ExperimentResult.Instances_idInstance)\
-                .filter_by(experiment=self).filter(db.ExperimentResult.resultCode.like("1%"))\
-                .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids))\
-                .filter_by(status=1).all()
-                solved_instances = dict((sc.idSolverConfig, set()) for sc in self.solver_configurations)
+                    .filter_by(experiment=self).filter(db.ExperimentResult.resultCode.like("1%"))\
+                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids))\
+                    .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids))\
+                    .filter_by(status=1).all()
+                solved_instances = dict((sc.idSolverConfig, set()) for sc in solver_configs)
                 for run in successful_runs:
                     solved_instances[run.SolverConfig_idSolverConfig].add(run.Instances_idInstance)
 
-                sc_by_id = dict((sc.idSolverConfig, sc) for sc in self.solver_configurations)
+                sc_by_id = dict((sc.idSolverConfig, sc) for sc in solver_configs)
                 unique_solver_contribs = dict()
                 for solver in solved_instances:
                     solved = set([i for i in solved_instances[solver]])

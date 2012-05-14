@@ -194,10 +194,11 @@ def sota_solvers(database, experiment_id):
 
     form = forms.SOTAForm(request.args)
     form.i.query = experiment.get_instances(db) or EmptyQuery()
+    form.sc.query = experiment.solver_configurations or EmptyQuery()
 
     if form.i.data:
-        sota_solvers = experiment.get_sota_solvers(db, form.i.data)
-        unique_solver_contribs = experiment.unique_solver_contributions(db, form.i.data)
+        sota_solvers = experiment.get_sota_solvers(db, form.i.data, form.scs.data)
+        unique_solver_contribs = experiment.unique_solver_contributions(db, form.i.data, form.scs.data)
         results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
         results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)
 
