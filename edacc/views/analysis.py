@@ -95,7 +95,7 @@ def solver_ranking(database, experiment_id):
                            form_break_ties, cost, csv_response=False, latex_response=False):
             #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
-            ranking_data = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
+            ranking_data, _ = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data, form.calculate_average_dev.data, cost)
 
             careful_rank = dict()
@@ -194,12 +194,38 @@ def sota_solvers(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     form = forms.SOTAForm(request.args)
+    if form.cost.data == 'None': form.cost.data = experiment.defaultCost
     form.i.query = experiment.get_instances(db) or EmptyQuery()
     form.sc.query = experiment.solver_configurations or EmptyQuery()
 
     if form.i.data:
         sota_solvers = experiment.get_sota_solvers(db, form.i.data, form.sc.data)
         unique_solver_contribs = experiment.unique_solver_contributions(db, form.i.data, form.sc.data)
+        ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, form.sc.data, form.cost.data)
+        ranking_data, vbs_uses_solver_count = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
+            False, False, form.cost.data)
+        result_matrix, _, _ = experiment.get_result_matrix(db, form.sc.data, form.i.data, form.cost.data)
+        sc_correlation = dict((sc, dict()) for sc in form.sc.data)
+        for sc1 in form.sc.data:
+            for sc2 in form.sc.data:
+                if sc1 == sc2: sc_correlation[sc1][sc2] = sc_correlation[sc2][sc1] = 1.0; continue
+                if sc1 in sc_correlation and sc2 in sc_correlation[sc1]: continue
+                v1 = []
+                v2 = []
+                for instance in form.i.data:
+                    for sc1run, sc2run in zip(result_matrix[instance.idInstance][sc1.idSolverConfig], result_matrix[instance.idInstance][sc2.idSolverConfig]):
+                        v1.append(sc1run.resultTime)
+                        v2.append(sc2run.resultTime)
+                sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
+                sc_correlation[sc2][sc1] = -1 * sc_correlation[sc1][sc2]
+
+        print ',     '.join([sc.name[:7] for sc in form.sc.data])
+        for sc in form.sc.data:
+            print sc.name[:7] + '  ',
+            print '  '.join(map(lambda x: str(round(x, 3)), [sc_correlation[sc][sc2] for sc2 in form.sc.data]))
+
+
+
         results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
         results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)
 
@@ -208,10 +234,14 @@ def sota_solvers(database, experiment_id):
         for sc in unique_solver_contribs:
             unique_params_by_sc[sc] = unique_params + '&' + '&'.join("i=%d" % (i,) for i in unique_solver_contribs[sc])
 
+        GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
         return render("/analysis/sota_solvers.html", database=database, db=db, form=form,
             instance_properties=db.get_instance_properties(), experiment=experiment,
             sota_solvers=sota_solvers, results_params=results_params, unique_solver_contribs=unique_solver_contribs,
-            unique_params_by_sc=unique_params_by_sc)
+            unique_params_by_sc=unique_params_by_sc, ranking_data=ranking_data,
+            vbs_uses_solver_count=vbs_uses_solver_count, GET_data=GET_data,
+            sc_correlation=sc_correlation)
 
     return render("/analysis/sota_solvers.html", database=database, db=db, form=form,
         instance_properties=db.get_instance_properties(), experiment=experiment,

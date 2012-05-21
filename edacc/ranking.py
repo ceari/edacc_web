@@ -339,7 +339,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         ))
 
     #if calculate_par10: data.sort(key=lambda x: x[7])
-    return data
+    return data, vbs_uses_solver_count
 
 
 def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime", noise=1.0, break_ties=False):

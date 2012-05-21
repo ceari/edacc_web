@@ -1,6 +1,6 @@
 {% from "_formhelpers.html" import render_field, render_radio_field %}
 {% extends "base.html" %}
-{% block title %}State of the art solvers{% endblock %}
+{% block title %}State of the art solvers and VBS analysis{% endblock %}
 {% block head %}
     {{ super() }}
     <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
@@ -11,6 +11,22 @@
 
     <script type="text/javascript">
         $(document).ready(function(){
+            jQuery.fn.dataTableExt.oSort['percent-asc']  = function(a,b) {
+                var x = (a == "-") ? 0 : a.replace( /%/, "" );
+                var y = (b == "-") ? 0 : b.replace( /%/, "" );
+                x = parseFloat( x );
+                y = parseFloat( y );
+                return ((x < y) ? -1 : ((x > y) ?  1 : 0));
+            };
+
+            jQuery.fn.dataTableExt.oSort['percent-desc'] = function(a,b) {
+                var x = (a == "-") ? 0 : a.replace( /%/, "" );
+                var y = (b == "-") ? 0 : b.replace( /%/, "" );
+                x = parseFloat( x );
+                y = parseFloat( y );
+                return ((x < y) ?  1 : ((x > y) ? -1 : 0));
+            };
+
             jQuery.fn.dataTableExt.oSort['anchor-numeric-asc']  = function(x,y) {
                 fx = parseFloat($(x).html());
                 fy = parseFloat($(y).html());
@@ -40,7 +56,38 @@
                         "aoColumns": [null, {"sType": "anchor-numeric"}]
                     });
                     new FixedHeader( oTable );
+
+
+                    {% if ranking_data %}
+                        $(document).ready(function() {
+                            oRankingTable = $('#ranking').dataTable({
+                                "bPaginate": true,
+                                "iDisplayLength": 1000,
+                                "aLengthMenu": [1000, 5000, 10000],
+                                "bLengthChange": false,
+                                "bJQueryUI": true,
+                                "bFilter": true,
+                                "bStateSave": true,
+                                "bInfo": true,
+                                "aaSorting": [[0,'asc']],
+                                "aoColumns": [
+                                    null,
+                                    null,
+                                    null,
+                                    { "sType": "percent" },
+                                    { "sType": "percent" },
+                                    null,
+                                    null,
+                                    null
+                                ]
+                            });
+                            new FixedHeader( oRankingTable );
+                        });
+                    {% endif %}
                 });
+
+
+
             {% endif %}
 
             {% include '/analysis/multiple_instances_filter_js.html' %}
@@ -51,13 +98,14 @@
     <div class="navigation">
         » <a href="{{url_for('frontend.experiments_index', database=database)}}">Experiments</a> ::
         <a href="{{url_for('frontend.experiment', database=database, experiment_id=experiment.idExperiment)}}">{{experiment.name}}</a> ::
-        SOTA Solvers
+        SOTA Solvers and VBS analysis
     </div>
     <h2>State-of-the-Art Solvers</h2>
     <div style="margin-left: 5px;">
         <form method="get" action="{{url_for('analysis.sota_solvers', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
                 {{ render_field(form.sc, size=10) }}
+                {{ render_field(form.cost) }}
                 {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
                 <tr>
                     <td style="vertical-align: middle;">Filter instances</td>
@@ -95,6 +143,64 @@
             {% endfor %}
         </tbody>
     </table>
+    <h3>Percentage of solvable instances solved by each solver</h3>
+    <img src="{{ url_for('plot.perc_solved_alone', database=database, experiment_id=experiment.idExperiment) }}?{{ GET_data }}"/>
+    <h3>Spearman correlation matrix</h3>
+    <table id="table_results">
+        <thead>
+        <tr>
+            <th></th>
+            {% for sc in form.sc.data %}
+                <th>{{ sc.name }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for sc in form.sc.data %}
+            <tr>
+                <td>{{ sc.name }}</td>
+                {% for sc2 in form.sc.data %}
+                    <td style="text-align: center;">{{ sc_correlation[sc][sc2]|round(3) }}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
     {% endif %}
+    {% if ranking_data %}
+        <h3>Simplified ranking with number of runs the VBS uses of each solver. If two or more solvers have the same best time on some instance they all get their runs counted.</h3>
+        <table id="ranking" class="display">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Solver</th>
+                <th># of successful runs</th>
+                <th>% of all runs</th>
+                <th>% of VBS runs</th>
+                <th># runs used by VBS</th>
+                <th>cumulated cost</th>
+                <th>Median cost</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for sc in ranking_data %}
+                <tr>
+                    <td>{{loop.index}}</td>
+                    <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}&cost={{ form.cost.data }}">{{sc.0}}</a>{% else %}{{sc.0}}{% endif %}</td>
+                    <td>{{sc.1}}</td>
+                    <td>{{(sc.2 * 100.0)|round(2)}} %</td>
+                    <td>{{(sc.3 * 100.0)|round(2)}} %</td>
+                    <td>{{ vbs_uses_solver_count[sc.0.idSolverConfig] if sc.0 != "Virtual Best Solver (VBS)" else sc.1}}</td>
+                    <td>{{sc.4|round(3)}}</td>
+                    <td>{{sc.5|round(3)}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+
 
 {% endblock %}

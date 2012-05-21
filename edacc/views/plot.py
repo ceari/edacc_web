@@ -1156,3 +1156,36 @@ def parameter_plot_2d(database, experiment_id):
     else: type = 'png'
     return plot_image(experiment_id, parameter1_id, parameter2_id, measure, instance_ids, runtime_cap,
         last_modified_job, surface_interpolation, type, exp.get_num_jobs(db), log_x, log_y, log_cost)
+
+@plot.route('/<database>/experiment/<int:experiment_id>/perc-solved-alone/')
+@require_phase(phases=ANALYSIS2)
+@require_login
+def perc_solved_alone(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    instance_ids = map(int, request.args.getlist('i'))
+    solver_config_ids = map(int, request.args.getlist('sc'))
+    solver_configs = [sc for sc in exp.solver_configurations if sc.idSolverConfig in solver_config_ids]
+
+    table = db.metadata.tables['ExperimentResults']
+    s = select([table.c['SolverConfig_idSolverConfig'],
+                table.c['Instances_idInstance']],
+        and_(table.c['resultCode'].like(u'1%'),
+            table.c['Instances_idInstance'].in_(instance_ids),
+            table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
+            table.c['Experiment_idExperiment']==exp.idExperiment,
+            table.c['status']==1)).select_from(table)
+    successful_runs = db.session.connection().execute(s)
+
+    solved_instances = set()
+    solved_instances_by_solver = dict((sc, set()) for sc in solver_config_ids)
+    for run in successful_runs:
+        solved_instances.add(run.Instances_idInstance)
+        solved_instances_by_solver[run.SolverConfig_idSolverConfig].add(run.Instances_idInstance)
+
+    perc_solved_by_solver = dict()
+    for sc in solver_configs:
+        perc_solved_by_solver[sc] = len(solved_instances_by_solver[sc.idSolverConfig]) / float(len(solved_instances)) if len(solved_instances) != 0 else 0
+
+    return make_plot_response(plots.perc_solved_alone, perc_solved_by_solver)

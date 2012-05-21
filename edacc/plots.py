@@ -1050,3 +1050,29 @@ def make_error_plot(text, filename, format='png'):
             file.close()
     finally:
         grdevices.dev_off()
+
+@synchronized
+def perc_solved_alone(perc_solved_by_solver, filename, format='png'):
+    if format == 'png':
+        grdevices.png(file=filename, units="px", width=800,
+            height=max(200, 50*len(perc_solved_by_solver)), type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite", height=9, width=7)
+    elif format == 'eps':
+        grdevices.postscript(file=filename, height=7, width=9)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=7, width=9)
+        file = open(filename, 'w')
+
+    try:
+        values = []
+        names = []
+        for k, v in perc_solved_by_solver.iteritems():
+            values.append(v)
+            names.append(k.name)
+        robjects.r.par(mar = robjects.FloatVector([5, 20, 4, 5]))
+        robjects.r.barplot(robjects.FloatVector(values), horiz=True, names=robjects.StrVector(names), las=1)
+    except Exception as ex:
+        raise ex
+    finally:
+        grdevices.dev_off()

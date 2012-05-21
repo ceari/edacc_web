@@ -128,7 +128,7 @@
     <a href="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">Ranking</a><br/>
     {% endif %}
     {% if is_admin() or not db.is_competition() or db.competition_phase() in ANALYSIS1 %}
-    <a href="{{url_for('analysis.sota_solvers', database=database, experiment_id=experiment.idExperiment)}}">SOTA Solvers</a><br/>
+    <a href="{{url_for('analysis.sota_solvers', database=database, experiment_id=experiment.idExperiment)}}">SOTA Solvers and VBS analysis</a><br/>
     {% endif %}
 
 {% endblock %}
