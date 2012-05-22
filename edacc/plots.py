@@ -1071,7 +1071,7 @@ def perc_solved_alone(perc_solved_by_solver, filename, format='png'):
             values.append(v)
             names.append(k.name)
         robjects.r.par(mar = robjects.FloatVector([5, 20, 4, 5]))
-        robjects.r.barplot(robjects.FloatVector(values), horiz=True, names=robjects.StrVector(names), las=1)
+        robjects.r.barplot(robjects.FloatVector(values), horiz=True, names=robjects.StrVector(names), las=1, xlim=robjects.FloatVector([0.0, 1.0]))
     except Exception as ex:
         raise ex
     finally:

@@ -1304,7 +1304,7 @@ def solver_description_download(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
 
-    if not is_admin() and solver.user != g.User: abort(401)
+    if not is_admin() or (not db.competition_phase() in ALL_RESULTS and solver.user != g.User): abort(401)
 
     headers = Headers()
     headers.add('Content-Type', 'application/pdf')

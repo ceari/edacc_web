@@ -43,51 +43,52 @@
             };
 
             {% if form.i.data %}
-                $(document).ready(function() {
-                    var oTable = $('#sota_table').dataTable({
-                        "bPaginate": true,
-                        "iDisplayLength": 1000,
-                        "aLengthMenu": [1000, 5000, 10000],
-                        "bLengthChange": false,
-                        "bJQueryUI": true,
-                        "bFilter": true,
-                        "bStateSave": true,
-                        "bInfo": true,
-                        "aoColumns": [null, {"sType": "anchor-numeric"}]
-                    });
-                    new FixedHeader( oTable );
+            var oTable = $('#sota_table').dataTable({
+                "bPaginate": true,
+                "iDisplayLength": 1000,
+                "aLengthMenu": [1000, 5000, 10000],
+                "bLengthChange": false,
+                "bJQueryUI": true,
+                "bFilter": true,
+                "bStateSave": true,
+                "bInfo": true,
+                "aoColumns": [null, {"sType": "anchor-numeric"}]
+            });
+            new FixedHeader( oTable );
 
+            var oCorTable = $('#table_correlations').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bJQueryUI": true,
+                "bStateSave": true,
+                "bInfo": true,
+            });
 
-                    {% if ranking_data %}
-                        $(document).ready(function() {
-                            oRankingTable = $('#ranking').dataTable({
-                                "bPaginate": true,
-                                "iDisplayLength": 1000,
-                                "aLengthMenu": [1000, 5000, 10000],
-                                "bLengthChange": false,
-                                "bJQueryUI": true,
-                                "bFilter": true,
-                                "bStateSave": true,
-                                "bInfo": true,
-                                "aaSorting": [[0,'asc']],
-                                "aoColumns": [
-                                    null,
-                                    null,
-                                    null,
-                                    { "sType": "percent" },
-                                    { "sType": "percent" },
-                                    null,
-                                    null,
-                                    null
-                                ]
-                            });
-                            new FixedHeader( oRankingTable );
-                        });
-                    {% endif %}
-                });
+            {% if ranking_data %}
+            oRankingTable = $('#ranking').dataTable({
+                "bPaginate": true,
+                "iDisplayLength": 1000,
+                "aLengthMenu": [1000, 5000, 10000],
+                "bLengthChange": false,
+                "bJQueryUI": true,
+                "bFilter": true,
+                "bStateSave": true,
+                "bInfo": true,
+                "aaSorting": [[0,'asc']],
+                "aoColumns": [
+                    null,
+                    null,
+                    null,
+                    { "sType": "percent" },
+                    { "sType": "percent" },
+                    null,
+                    null,
+                    null
+                ]
+            });
+            new FixedHeader( oRankingTable );
 
-
-
+            {% endif %}
             {% endif %}
 
             {% include '/analysis/multiple_instances_filter_js.html' %}
@@ -146,7 +147,7 @@
     <h3>Percentage of solvable instances solved by each solver</h3>
     <img src="{{ url_for('plot.perc_solved_alone', database=database, experiment_id=experiment.idExperiment) }}?{{ GET_data }}"/>
     <h3>Spearman correlation matrix</h3>
-    <table id="table_results">
+    <table id="table_correlations" class="display">
         <thead>
         <tr>
             <th></th>
@@ -158,7 +159,7 @@
         <tbody>
         {% for sc in form.sc.data %}
             <tr>
-                <td>{{ sc.name }}</td>
+                <td style="">{{ sc.name }}</td>
                 {% for sc2 in form.sc.data %}
                     <td style="text-align: center;">{{ sc_correlation[sc][sc2]|round(3) }}
                     </td>
