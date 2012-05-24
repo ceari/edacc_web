@@ -53,7 +53,7 @@
     {% if solver.description_pdf %}
     <tr class="even">
         <td>Description (PDF):</td>
-        <td><a href="{{ url_for('solver_description_download', database=database, solver_id=solver.idSolver)}}">Download</a></td>
+        <td><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=solver.idSolver)}}">Download</a></td>
     </tr>
     {% endif %}
 </table>
