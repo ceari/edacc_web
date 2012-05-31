@@ -924,6 +924,9 @@ def runtime_matrix_plot(database, experiment_id):
                     .select_from(table)
         solver_score = dict((sc[0], sc[1]) for sc in db.session.connection().execute(s))
 
+        # throw out all solver configs for which there are no runs
+        solver_configs = filter(lambda sc: sc.idSolverConfig in solver_score.keys(), solver_configs)
+
         s = select([table.c['Instances_idInstance'],
                     aggregate_func], table.c['Experiment_idExperiment']==experiment_id) \
                     .group_by(table.c['Instances_idInstance']) \

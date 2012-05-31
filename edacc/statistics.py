@@ -13,6 +13,9 @@ from rpy2 import robjects
 from rpy2.robjects.packages import importr
 
 r_stats = importr('stats')
+importr('splines')
+importr('survival')
+importr('surv2sample')
 
 def prob_domination(v1, v2):
     """ Returns an integer indicating if the empirical CDF of Algorithm A
@@ -77,3 +80,25 @@ def wilcox_test(x, y):
     r = r_stats.wilcox_test(robjects.FloatVector(x), robjects.FloatVector(y),
                             alternative='two.sided', paired=False)
     return r[0][0], r[2][0]
+
+def surv_test(x, y, x_censored, y_censored, alpha=0.05):
+    combined_data = x + y
+    sample_indicators = [1] * len(x) + [2] * len(y)
+    censored = [0 if censored else 1 for censored in x_censored] + [0 if censored else 1 for censored in y_censored]
+    surv12 = robjects.r.Surv(robjects.FloatVector(combined_data), robjects.IntVector(censored))
+    p_value = robjects.r('proprate2.gs')(surv12, robjects.IntVector(sample_indicators), model=0)[1] # p-value
+
+    p = 1
+    if p_value is not None and p_value > alpha:
+        w = robjects.r('surv2.ks')(surv12, robjects.IntVector(sample_indicators))
+        p = w[4] # cramer-von-mises p-value
+    else:
+        f = robjects.Formula('surv12 ~ indicators')
+        env = f.environment
+        env['surv12'] = surv12
+        env['indicators'] = robjects.IntVector(sample_indicators)
+        w = robjects.r('survdiff')(f)
+        p = 1 - robjects.r.pchisq(w[4], 1)[0]
+
+    return p[0]
+

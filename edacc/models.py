@@ -394,7 +394,7 @@ class EDACCDatabase(object):
                                 table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                                 table.c['Instances_idInstance'].in_(instance_ids)),
                             from_obj=table.join(table_result_codes))
-                Run = namedtuple('Run', ['idJob', 'status', 'result_code_description', 'resultCode', 'resultTime', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance', 'penalized_time1'])
+                Run = namedtuple('Run', ['idJob', 'status', 'result_code_description', 'resultCode', 'resultTime', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance', 'penalized_time1', 'censored'])
                 for r in db.session.connection().execute(s):
                     if r.Instances_idInstance not in M: continue
                     if r.SolverConfig_idSolverConfig not in M[r.Instances_idInstance]: continue
@@ -403,7 +403,8 @@ class EDACCDatabase(object):
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
                         Run(r.idJob, r.status, r[6], r.resultCode, None if r.status <= 0 else r.cost, str(r.resultCode).startswith('1'),
                             r.cost if str(r.resultCode).startswith('1') else (inf if cost_column == 'cost' else r.limit) * 10,
-                            r.SolverConfig_idSolverConfig, r.Instances_idInstance, r.cost if str(r.resultCode).startswith('1') else (inf if cost_column == 'cost' else r.limit)))
+                            r.SolverConfig_idSolverConfig, r.Instances_idInstance, r.cost if str(r.resultCode).startswith('1') else (inf if cost_column == 'cost' else r.limit),
+                            not str(r.resultCode).startswith('1')))
                 return M, num_successful, num_completed
                     
         class ExperimentResult(object):

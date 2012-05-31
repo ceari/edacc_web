@@ -73,7 +73,10 @@
                     "aaSorting": [[0,'asc']],
                     "aoColumns": [
                         null,
-                        {% if form.careful_ranking.data %}{ "sType": "underscore" },{% endif %}
+                        {% if form.careful_ranking.data %}
+                            { "sType": "underscore" },
+                            null,
+                        {% endif %}
                         null,
                         null,
                         { "sType": "percent" },
@@ -134,7 +137,10 @@
         <thead>
             <tr>
                 <th>#</th>
-                {% if form.careful_ranking.data %}<th>Careful ranking</th>{% endif %}
+                {% if form.careful_ranking.data %}
+                    <th>Careful ranking</th>
+                    <th>Survival ranking</th>
+                {% endif %}
                 <th>Solver</th>
                 <th># of successful runs</th>
                 <th>% of all runs</th>
@@ -155,7 +161,10 @@
         {% for sc in data %}
             <tr>
                 <td>{{loop.index}}</td>
-                {% if form.careful_ranking.data %}<td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(careful_rank[sc.0])}}{% else %}1{% endif %}</td>{% endif %}
+                {% if form.careful_ranking.data %}
+                    <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(careful_rank[sc.0])}}{% else %}1{% endif %}</td>
+                    <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(survival_rank[sc.0])}}{% else %}1{% endif %}</td>
+                {% endif %}
                 <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}&cost={{ form.cost.data }}">{{sc.0}}</a>{% else %}{{sc.0}}{% endif %} {% if sc.0 != 'Virtual Best Solver (VBS)' %} <a href="{{ url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=sc.0.idSolverConfig) }}"><img title="Show solver configuration details" src="{{ url_for('static', filename='img/info.png') }}"/></a>{% endif %}</td>
                 <td>{{sc.1}}</td>
                 <td>{{(sc.2 * 100.0)|round(2)}} %</td>

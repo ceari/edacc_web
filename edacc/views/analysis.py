@@ -58,7 +58,7 @@ def careful_solver_ranking(database, experiment_id):
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-        carefully_ranked_solvers, raw_scores, dom_matrix = ranking.careful_ranking(db, experiment, form.i.data,
+        carefully_ranked_solvers, raw_scores, dom_matrix, _ = ranking.careful_ranking(db, experiment, form.i.data,
                 solver_configs, form.cost.data, noise=form.careful_ranking_noise.data, break_ties=form.break_careful_ties.data)
 
         return render("/analysis/careful_ranking.html", db=db, experiment=experiment, database=database,
@@ -99,8 +99,9 @@ def solver_ranking(database, experiment_id):
                                                     form.penalized_average_runtime.data, form.calculate_average_dev.data, cost)
 
             careful_rank = dict()
+            survival_rank = dict()
             if form_careful_ranking:
-                carefully_ranked_solvers, _, _ = ranking.careful_ranking(db, experiment, form.i.data,
+                carefully_ranked_solvers, _, _, survival_ranked_solvers = ranking.careful_ranking(db, experiment, form.i.data,
                     solver_configs, cost, noise=careful_ranking_noise, break_ties=form_break_ties)
                 careful_rank_counter = 1 # 1 is VBS
                 for tied_solvers in carefully_ranked_solvers:
@@ -111,6 +112,12 @@ def solver_ranking(database, experiment_id):
                         if form_break_ties and len(tied_solvers) > 1:
                             careful_rank[solver] = str(careful_rank[solver]) + "_" + str(careful_rank_comp_counter)
                             careful_rank_comp_counter += 1
+
+                survival_rank_counter = 1
+                for tied_solvers in survival_ranked_solvers:
+                    survival_rank_counter += 1
+                    for solver in tied_solvers:
+                        survival_rank[solver] = survival_rank_counter
 
 
             if csv_response:
@@ -169,7 +176,7 @@ def solver_ranking(database, experiment_id):
             GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
             return render('/analysis/ranking.html', database=database, db=db,
                           experiment=experiment, ranked_solvers=ranked_solvers,
-                          careful_rank=careful_rank,
+                          careful_rank=careful_rank, survival_rank=survival_rank,
                           data=ranking_data, form=form, instance_properties=db.get_instance_properties(), GET_data=GET_data)
 
         last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \

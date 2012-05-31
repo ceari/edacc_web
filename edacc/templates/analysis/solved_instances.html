@@ -40,7 +40,7 @@
             <table id="form_table">
                 {{ render_field(form.result_property) }}
                 {{ render_field(form.run) }}
-                {{ render_field(form.sc) }}
+                {{ render_field(form.sc, size=10) }}
                 {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
                 <tr name="tr_instances_filter">
                     <td style="vertical-align: middle;">Filter instances</td>
