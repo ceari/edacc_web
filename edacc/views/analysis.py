@@ -92,17 +92,21 @@ def solver_ranking(database, experiment_id):
         @cache.memoize(timeout=CACHE_TIME)
         def cached_ranking(database, experiment_id, solver_configs, sc_names, last_modified_job,
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking, careful_ranking_noise,
+                           form_survival_ranking,
                            form_break_ties, cost, csv_response=False, latex_response=False):
-            #ranked_solvers = ranking.avg_point_biserial_correlation_ranking(db, experiment, form.i.data)
+
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
             ranking_data, _ = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data, form.calculate_average_dev.data, cost)
 
+            if form_careful_ranking or form_survival_ranking:
+                results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, cost)
+
             careful_rank = dict()
             survival_rank = dict()
             if form_careful_ranking:
-                carefully_ranked_solvers, _, _, survival_ranked_solvers = ranking.careful_ranking(db, experiment, form.i.data,
-                    solver_configs, cost, noise=careful_ranking_noise, break_ties=form_break_ties)
+                carefully_ranked_solvers, _, _ = ranking.careful_ranking(db, experiment, form.i.data,
+                    solver_configs, results_matrix, cost, noise=careful_ranking_noise, break_ties=form_break_ties)
                 careful_rank_counter = 1 # 1 is VBS
                 for tied_solvers in carefully_ranked_solvers:
                     careful_rank_counter += 1
@@ -112,6 +116,10 @@ def solver_ranking(database, experiment_id):
                         if form_break_ties and len(tied_solvers) > 1:
                             careful_rank[solver] = str(careful_rank[solver]) + "_" + str(careful_rank_comp_counter)
                             careful_rank_comp_counter += 1
+
+            if form_survival_ranking:
+                survival_ranked_solvers = ranking.survival_ranking(db, experiment, form.i.data,
+                    solver_configs, results_matrix, cost)
 
                 survival_rank_counter = 1
                 for tied_solvers in survival_ranked_solvers:
@@ -186,7 +194,7 @@ def solver_ranking(database, experiment_id):
         return cached_ranking(database, experiment_id, solver_configs, ''.join(sc.get_name() for sc in solver_configs),
                               last_modified_job, job_count, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
-                              form.careful_ranking.data, form.careful_ranking_noise.data or 1.0,
+                              form.careful_ranking.data, form.careful_ranking_noise.data or 1.0, form.survival_ranking.data,
                               form.break_careful_ties.data, form.cost.data,
                               'csv' in request.args, 'latex' in request.args)
 

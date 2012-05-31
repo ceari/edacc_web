@@ -344,14 +344,84 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     return data, vbs_uses_solver_count
 
 
-def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime", noise=1.0, break_ties=False):
+def ranking_from_graph(M, edges, vertices, solver_config_ids):
+    outedges_by_node = dict((v, list()) for v in vertices)
+    for e in edges:
+        outedges_by_node[e[0]].append(e)
+
+    indices = dict((v, -1) for v in vertices)
+    lowlinks = indices.copy()
+    index = 0
+    stack = []
+    connected_components = []
+
+    def strongly_connected(v, index):
+        indices[v] = index
+        lowlinks[v] = index
+        index += 1
+        stack.append(v)
+
+        for v, w in outedges_by_node[v]:
+            if indices[w] < 0:
+                strongly_connected(w, index)
+                lowlinks[v] = min(lowlinks[v], lowlinks[w])
+            elif w in stack:
+                lowlinks[v] = min(lowlinks[v], indices[w])
+
+        if indices[v] == lowlinks[v]:
+            connected_components.append([])
+            while stack[-1] != v:
+                connected_components[-1].append(stack.pop())
+            connected_components[-1].append(stack.pop())
+
+    for v in vertices:
+        if indices[v] < 0:
+            strongly_connected(v, index)
+
+    scc_edges = set()
+    for comp in connected_components:
+        for s1 in comp:
+            for s2 in solver_config_ids:
+                if s1 == s2: continue
+                if M[s1][s2] == 1 and s2 not in comp:
+                    scc_edges.add((frozenset(comp), frozenset([c for c in connected_components if s2 in c][0])))
+
+    #for edge in scc_edges:
+    #    print "(", [s.name for s in edge[0]], ", ", [s.name for s in edge[1]], ")"
+
+    def topological_sort():
+        l = []
+        visited = set()
+        s = set()
+        for comp in connected_components:
+            outgoingEdges = False
+            for edge in scc_edges:
+                if frozenset(edge[0]) == frozenset(comp): outgoingEdges = True
+            if not outgoingEdges:
+                s.add(frozenset(comp))
+
+        def visit(n):
+            if n not in visited:
+                visited.add(n)
+                for edge in scc_edges:
+                    if frozenset(edge[1]) == frozenset(n):
+                        visit(frozenset(edge[0]))
+                l.append(list(n))
+        for n in s:
+            visit(n)
+        return l
+
+    l = topological_sort()
+
+    return l
+
+
+def survival_ranking(db, experiment, instances, solver_configs, results, cost="resultTime"):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in solver_configs]
     sc_by_id = dict()
     for sc in solver_configs:
         sc_by_id[sc.idSolverConfig] = sc
-
-    results, _, _ = experiment.get_result_matrix(db, solver_configs, instances, cost)
 
     def values_tied(v1, v2, a=0.02):
         if v1 > v2:
@@ -363,31 +433,13 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
 
         return False
 
-
-    alpha = math.sqrt(noise / 2.0)
-    raw = dict()
     survival_winner = dict()
     for s1 in solver_config_ids:
         for s2 in solver_config_ids:
-            if (s1, s2) in raw: continue
-            raw[(s1, s2)] = 0
-            raw[(s2, s1)] = 0
+            if (s1, s2) in survival_winner: continue
             survival_winner[(s1, s2)] = 0
             survival_winner[(s2, s1)] = 0
             if s1 == s2: continue
-
-            # van Gelder careful ranking
-            for idInstance in instance_ids:
-                for r1, r2 in izip(results[idInstance][s1], results[idInstance][s2]):
-
-                    e1 = (r1.penalized_time1 + r2.penalized_time1) / 2.0
-                    delta = alpha * math.sqrt(e1)
-                    if r1.penalized_time1 < e1 - delta:
-                        raw[(s1, s2)] += 1
-                        raw[(s2, s1)] -= 1
-                    elif r2.penalized_time1 < e1 - delta:
-                        raw[(s2, s1)] += 1
-                        raw[(s1, s2)] -= 1
 
             # our variant
             runs_s1 = list()
@@ -405,6 +457,7 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
                     runs_s1_censored.append(run1.censored)
                     runs_s2_censored.append(run2.censored)
             p_value = statistics.surv_test(runs_s1, runs_s2, runs_s1_censored, runs_s2_censored)
+
             if p_value < 0.05:
                 if numpy.median(runs_s1) > numpy.median(runs_s2):
                     # s2 better
@@ -415,116 +468,72 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
                     survival_winner[(s1, s2)] = 1
                     survival_winner[(s2, s1)] = -1
 
-    edges = set()
     edges_surv = set()
     vertices = set(solver_config_ids)
-    M = dict()
     M_surv = dict()
     for s1 in solver_config_ids:
-        M[s1] = dict()
         M_surv[s1] = dict()
         for s2 in solver_config_ids:
             if s1 == s2:
-                M[s1][s2] = 0
                 M_surv[s1][s2] = 0
                 continue
-            M[s1][s2] = 1 if raw[(s1, s2)] > 0 else 0.5 if raw[(s1, s2)] == 0 else 0
             M_surv[s1][s2] = 1 if survival_winner[(s1, s2)] == 1 else 0.5 if survival_winner[(s1, s2)] == 0 else 0
-            if M[s1][s2] == 1:
-                edges.add((s1, s2))
-            elif M[s1][s2] == 0.5:
-                edges.add((s1, s2))
-                edges.add((s2, s1))
-
             if M_surv[s1][s2] == 1:
                 edges_surv.add((s1, s2))
             elif M_surv[s1][s2] == 0.5:
                 edges_surv.add((s1, s2))
                 edges_surv.add((s2, s1))
 
-#    print "            ",
-#    for s in solver_configs:
-#        print s.name, "  ",
-#    print "\n"
-#    for s in solver_configs:
-#        print s.name, "  ",
-#        for s2 in solver_configs:
-#            print M[s][s2], "               ",
-#        print "\n"
+    l_surv = ranking_from_graph(M_surv, edges_surv, vertices, solver_config_ids)
 
-    def ranking_from_graph(M, edges):
-        outedges_by_node = dict((v, list()) for v in vertices)
-        for e in edges:
-            outedges_by_node[e[0]].append(e)
+    return [[sc_by_id[sc] for sc in comp_surv] for comp_surv in l_surv]
 
-        indices = dict((v, -1) for v in vertices)
-        lowlinks = indices.copy()
-        index = 0
-        stack = []
-        connected_components = []
+def careful_ranking(db, experiment, instances, solver_configs, results, cost="resultTime", noise=1.0, break_ties=False):
+    instance_ids = [i.idInstance for i in instances]
+    solver_config_ids = [s.idSolverConfig for s in solver_configs]
+    sc_by_id = dict()
+    for sc in solver_configs:
+        sc_by_id[sc.idSolverConfig] = sc
 
-        def strongly_connected(v, index):
-            indices[v] = index
-            lowlinks[v] = index
-            index += 1
-            stack.append(v)
+    alpha = math.sqrt(noise / 2.0)
+    raw = dict()
+    for s1 in solver_config_ids:
+        for s2 in solver_config_ids:
+            if (s1, s2) in raw: continue
+            raw[(s1, s2)] = 0
+            raw[(s2, s1)] = 0
+            if s1 == s2: continue
 
-            for v, w in outedges_by_node[v]:
-                if indices[w] < 0:
-                    strongly_connected(w, index)
-                    lowlinks[v] = min(lowlinks[v], lowlinks[w])
-                elif w in stack:
-                    lowlinks[v] = min(lowlinks[v], indices[w])
+            for idInstance in instance_ids:
+                for r1, r2 in izip(results[idInstance][s1], results[idInstance][s2]):
 
-            if indices[v] == lowlinks[v]:
-                connected_components.append([])
-                while stack[-1] != v:
-                    connected_components[-1].append(stack.pop())
-                connected_components[-1].append(stack.pop())
+                    e1 = (r1.penalized_time1 + r2.penalized_time1) / 2.0
+                    delta = alpha * math.sqrt(e1)
+                    if r1.penalized_time1 < e1 - delta:
+                        raw[(s1, s2)] += 1
+                        raw[(s2, s1)] -= 1
+                    elif r2.penalized_time1 < e1 - delta:
+                        raw[(s2, s1)] += 1
+                        raw[(s1, s2)] -= 1
 
-        for v in vertices:
-            if indices[v] < 0:
-                strongly_connected(v, index)
+    edges = set()
 
-        scc_edges = set()
-        for comp in connected_components:
-            for s1 in comp:
-                for s2 in solver_config_ids:
-                    if s1 == s2: continue
-                    if M[s1][s2] == 1 and s2 not in comp:
-                        scc_edges.add((frozenset(comp), frozenset([c for c in connected_components if s2 in c][0])))
+    vertices = set(solver_config_ids)
+    M = dict()
+    for s1 in solver_config_ids:
+        M[s1] = dict()
+        for s2 in solver_config_ids:
+            if s1 == s2:
+                M[s1][s2] = 0
+                continue
+            M[s1][s2] = 1 if raw[(s1, s2)] > 0 else 0.5 if raw[(s1, s2)] == 0 else 0
+            if M[s1][s2] == 1:
+                edges.add((s1, s2))
+            elif M[s1][s2] == 0.5:
+                edges.add((s1, s2))
+                edges.add((s2, s1))
 
-        #for edge in scc_edges:
-        #    print "(", [s.name for s in edge[0]], ", ", [s.name for s in edge[1]], ")"
-
-        def topological_sort():
-            l = []
-            visited = set()
-            s = set()
-            for comp in connected_components:
-                outgoingEdges = False
-                for edge in scc_edges:
-                    if frozenset(edge[0]) == frozenset(comp): outgoingEdges = True
-                if not outgoingEdges:
-                    s.add(frozenset(comp))
-
-            def visit(n):
-                if n not in visited:
-                    visited.add(n)
-                    for edge in scc_edges:
-                        if frozenset(edge[1]) == frozenset(n):
-                            visit(frozenset(edge[0]))
-                    l.append(list(n))
-            for n in s:
-                visit(n)
-            return l
-
-        l = topological_sort()
-
-        return l
-
-    l = ranking_from_graph(M, edges)
-    l_surv = ranking_from_graph(M_surv, edges_surv)
+    l = ranking_from_graph(M, edges, vertices, solver_config_ids)
 
     if break_ties:
         tie_break = dict()
@@ -533,4 +542,4 @@ def careful_ranking(db, experiment, instances, solver_configs, cost="resultTime"
                 tie_break[solver] = sum(raw[(solver, s_j)] for s_j in comp)
             comp.sort(key=lambda sc: tie_break[sc], reverse=True)
 
-    return [[sc_by_id[sc] for sc in comp] for comp in l], raw, M, [[sc_by_id[sc] for sc in comp_surv] for comp_surv in l_surv]
+    return [[sc_by_id[sc] for sc in comp] for comp in l], raw, M

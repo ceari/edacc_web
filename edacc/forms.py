@@ -236,9 +236,10 @@ class BoxPlotForm(Form):
 class RankingForm(Form):
     i = QuerySelectMultipleField('Instances', get_label=lambda i: i.get_name(), get_pk=lambda i: i.idInstance, allow_blank=True)
     calculate_average_dev = BooleanField('Calculate dispersion measures', default=False)
-    penalized_average_runtime = BooleanField('Calculate penalized average runtime', default=True)
-    careful_ranking = BooleanField("Calculate careful ranking", default=True)
+    penalized_average_runtime = BooleanField('Calculate penalized average runtime', default=False)
+    careful_ranking = BooleanField("Calculate careful ranking", default=False)
     careful_ranking_noise = FloatField("Noise", default=1.0, validators=[validators.required()])
+    survival_ranking = BooleanField("Calculate survival ranking", default=False)
     break_careful_ties = BooleanField('Break careful ranking ties', default=False)
     instance_filter = TextField('Filter Instances')
     cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])

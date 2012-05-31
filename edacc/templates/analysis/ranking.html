@@ -75,6 +75,8 @@
                         null,
                         {% if form.careful_ranking.data %}
                             { "sType": "underscore" },
+                        {% endif %}
+                        {% if form.survival_ranking.data %}
                             null,
                         {% endif %}
                         null,
@@ -121,6 +123,7 @@
                     <td>{{ form.careful_ranking.label }}:</td><td>{{ form.careful_ranking }} {{ form.careful_ranking_noise.label }}: {{ form.careful_ranking_noise }}</td>
                 </tr>
                 {{ render_field(form.break_careful_ties)}}
+                {{ render_field(form.survival_ranking) }}
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
             </table>
         </form>
@@ -139,6 +142,8 @@
                 <th>#</th>
                 {% if form.careful_ranking.data %}
                     <th>Careful ranking</th>
+                {% endif %}
+                {% if form.survival_ranking.data %}
                     <th>Survival ranking</th>
                 {% endif %}
                 <th>Solver</th>
@@ -163,6 +168,8 @@
                 <td>{{loop.index}}</td>
                 {% if form.careful_ranking.data %}
                     <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(careful_rank[sc.0])}}{% else %}1{% endif %}</td>
+                {% endif %}
+                {% if form.survival_ranking.data %}
                     <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}{{(survival_rank[sc.0])}}{% else %}1{% endif %}</td>
                 {% endif %}
                 <td>{% if sc.0 != "Virtual Best Solver (VBS)" %}<a href="{{url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment)}}?solver_config={{sc.0.idSolverConfig}}&cost={{ form.cost.data }}">{{sc.0}}</a>{% else %}{{sc.0}}{% endif %} {% if sc.0 != 'Virtual Best Solver (VBS)' %} <a href="{{ url_for('frontend.solver_configuration_details', database=database, experiment_id=experiment.idExperiment, solver_configuration_id=sc.0.idSolverConfig) }}"><img title="Show solver configuration details" src="{{ url_for('static', filename='img/info.png') }}"/></a>{% endif %}</td>
