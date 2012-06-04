@@ -58,6 +58,8 @@ DEFAULT_DATABASES = (
     ('username', 'password', 'db name', 'db label', False),
 )
 
+hidden_experiments = dict()
+
 # override config with local config, if present
 try:
     from edacc.local_config import *

@@ -103,7 +103,6 @@ def solver_ranking(database, experiment_id):
                 results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, cost)
 
             careful_rank = dict()
-            survival_rank = dict()
             if form_careful_ranking:
                 carefully_ranked_solvers, _, _ = ranking.careful_ranking(db, experiment, form.i.data,
                     solver_configs, results_matrix, cost, noise=careful_ranking_noise, break_ties=form_break_ties)
@@ -117,6 +116,7 @@ def solver_ranking(database, experiment_id):
                             careful_rank[solver] = str(careful_rank[solver]) + "_" + str(careful_rank_comp_counter)
                             careful_rank_comp_counter += 1
 
+            survival_rank = dict()
             if form_survival_ranking:
                 survival_ranked_solvers = ranking.survival_ranking(db, experiment, form.i.data,
                     solver_configs, results_matrix, cost)

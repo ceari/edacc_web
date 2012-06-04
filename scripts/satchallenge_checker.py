@@ -21,11 +21,13 @@ limits_by_experiment = {
     18: (900, -1, 6144),
     19: (900, -1, 6144),
     20: (-1, 900, 12288),
+    24: (900, -1, 6144),
+    25: (900, -1, 6144)
 }
 
 # check sequential experiments
 
-for experiment_id in [19, 21, 18, 20]:
+for experiment_id in [19, 21, 18, 20, 24, 25]:
     experiment = db.session.query(db.Experiment).get(experiment_id)
     results_query = db.session.query(db.ExperimentResult).filter_by(experiment=experiment)
     num_jobs = results_query.count()
@@ -40,6 +42,13 @@ for experiment_id in [19, 21, 18, 20]:
         runs_by_instance[run.instance].append(run)
         if (run.CPUTimeLimit, run.wallClockTimeLimit, run.memoryLimit) != limits_by_experiment[experiment_id]:
             print "run " + str(run.idJob) + " has wrong limits!"
+
+
+        if run.SolverConfig_idSolverConfig in (688, 793):
+            if run.output.solverOutput and "Could not create the Java virtual machine" in run.output.solverOutput:
+                print "run " + str(run.idJob) + " couldnt create JVM"
+
+        continue
 
         if run.status == 1 and run.resultCode >= 0:
             # run verifier and check answer again.

@@ -86,6 +86,8 @@ def experiments_index(database):
 
     if not is_admin() and db.is_competition() and db.competition_phase() == 5: experiments = []
 
+    experiments = filter(lambda e: e.idExperiment not in config.hidden_experiments.get(database, []), experiments)
+
     return render('experiments.html', experiments=experiments, db=db, database=database)
 
 @frontend.route('/<database>/categories')
