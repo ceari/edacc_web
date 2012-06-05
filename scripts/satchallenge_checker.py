@@ -27,7 +27,7 @@ limits_by_experiment = {
 
 # check sequential experiments
 
-for experiment_id in [19, 21, 18, 20, 24, 25]:
+for experiment_id in [19, 21, 18, 20, 24]:
     experiment = db.session.query(db.Experiment).get(experiment_id)
     results_query = db.session.query(db.ExperimentResult).filter_by(experiment=experiment)
     num_jobs = results_query.count()
@@ -65,6 +65,7 @@ for experiment_id in [19, 21, 18, 20, 24, 25]:
             proc.wait()
             os.remove(solver_output_path)
 
+    wrong_runs = list()
     # check if there are both SAT and UNSAT answers for instances. Since we check SAT answers the UNSAT answers are wrong.
     for i in runs_by_instance:
         if any(run.resultCode == UNSAT for run in runs_by_instance[i]) and any(run.resultCode == SAT for run in runs_by_instance[i]):
@@ -72,10 +73,11 @@ for experiment_id in [19, 21, 18, 20, 24, 25]:
             offending_solvers = set()
             for run in runs_by_instance[i]:
                 if run.resultCode == UNSAT:
+                    wrong_runs.append(run.idJob)
                     offending_solvers.add(run.solver_configuration)
             print "    Faulty solvers: " + ','.join([s.name for s in offending_solvers])
 
-
+    print "wrong runs: ", ' OR '.join('idJob=%d' % (idJob) for idJob in wrong_runs)
 
     print "-------------------------"
 
