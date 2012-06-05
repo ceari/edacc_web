@@ -40,7 +40,7 @@ function reEscape(str) {
 
 function match(instance, filter) {
     if (filter == '') return true;
-    fields = ["name", {% for prop in instance_properties %}"{{prop.name}}", {% endfor %}]
+    fields = ["name", "md5", {% for prop in instance_properties %}"{{prop.name}}", {% endfor %}]
     for (f in fields) {
         var re = new RegExp(reEscape(fields[f]), 'g');
         if (typeof instance[fields[f]] == 'string') {
