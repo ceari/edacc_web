@@ -44,7 +44,7 @@
     <div>
         The table below lists the instances that are used in the experiment. Click on the name of an instance in the first column
         to get to a page with detailed information about the instance and the option to download the instance file.<br/>
-        {% if not db.is_competition() or is_admin() %}
+        {% if not db.is_competition() or session.admin %}
         <a href="{{url_for('frontend.download_instances', database=database, experiment_id=experiment.idExperiment)}}">Download all instances as tarball</a> ({{experiment.get_total_instance_blob_size(db)|download_size}})
         {% endif %}
     </div>
