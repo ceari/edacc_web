@@ -90,7 +90,7 @@ def surv_test(x, y, x_censored, y_censored, alpha=0.05):
 
     p = 1
     if p_value is not None and p_value > alpha:
-        w = robjects.r('surv2.ks')(surv12, robjects.IntVector(sample_indicators))
+        w = robjects.r('surv2.ks')(surv12, robjects.IntVector(sample_indicators), nsim=200)
         p = w[4] # cramer-von-mises p-value
     else:
         f = robjects.Formula('surv12 ~ indicators')

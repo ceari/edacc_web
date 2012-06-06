@@ -386,9 +386,6 @@ def ranking_from_graph(M, edges, vertices, solver_config_ids):
                 if M[s1][s2] == 1 and s2 not in comp:
                     scc_edges.add((frozenset(comp), frozenset([c for c in connected_components if s2 in c][0])))
 
-    #for edge in scc_edges:
-    #    print "(", [s.name for s in edge[0]], ", ", [s.name for s in edge[1]], ")"
-
     def topological_sort():
         l = []
         visited = set()

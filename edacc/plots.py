@@ -345,7 +345,7 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
     robjects.r.legend("right", inset=-0.40,
                       legend=robjects.StrVector(legend_strs),
                       col=robjects.StrVector(legend_colors),
-                      pch=robjects.IntVector(legend_point_styles), lty=1, **{'y.intersp': 1.4})
+                      pch=robjects.IntVector(legend_point_styles), lty=1, cex=0.75, **{'y.intersp': 1.4})
     if format == 'rscript':
         file.write('legend("right", inset=-0.40, legend=c(%s), col=c(%s), y.intersp=1.4, pch=c(%s), lty=1)\n'
                     % (','.join(map(lambda s: '"' + s + '"', legend_strs)).replace('\n',''),

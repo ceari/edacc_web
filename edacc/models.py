@@ -629,7 +629,7 @@ class EDACCDatabase(object):
         mapper(InstanceClass, metadata.tables['instanceClass'],
             properties = {
                 'parent_class': relationship(InstanceClass, remote_side=metadata.tables['instanceClass'].c['idinstanceClass'],
-                    lazy="joined", join_depth=10)
+                    lazy="joined", join_depth=10, backref='subclasses')
             }
         )
         mapper(Instance, metadata.tables['Instances'],
