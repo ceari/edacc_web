@@ -226,7 +226,8 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
         log = 'y'
         if flip_axes: log = 'x'
 
-    min_x = min_y or 0.01
+    min_y = min(0.000001, min_y)
+    min_x = min_y
     if flip_axes:
         max_x, max_y = max_y, max_x
         min_x, min_y = min_y, min_x
