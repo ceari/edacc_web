@@ -207,19 +207,19 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
         instances solved within y seconds.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=800,
+        grdevices.png(file=filename, units="px", width=1050,
                       height=600, type="cairo")
     elif format == 'pdf':
-        grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
+        grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=13)
     elif format == 'eps':
-        grdevices.postscript(file=filename, height=7, width=9)
+        grdevices.postscript(file=filename, height=7, width=13)
     elif format == 'rscript':
-        grdevices.postscript(file=os.devnull, height=7, width=9)
+        grdevices.postscript(file=os.devnull, height=7, width=13)
         file = open(filename, 'w')
 
-    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 15]))
+    robjects.r.par(mar = robjects.FloatVector([5, 4, 4, 29]))
     if format == 'rscript':
-        file.write('par(mar=c(5,4,4,15))\n')
+        file.write('par(mar=c(5,4,4,29))\n')
 
     log = ''
     if log_property:
@@ -342,10 +342,10 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
         file.write('par(xpd=1)\n')
 
     # plot legend
-    robjects.r.legend("right", inset=-0.40,
+    robjects.r.legend("right", inset=-.65,
                       legend=robjects.StrVector(legend_strs),
                       col=robjects.StrVector(legend_colors),
-                      pch=robjects.IntVector(legend_point_styles), lty=1, cex=0.75, **{'y.intersp': 1.0})
+                      pch=robjects.IntVector(legend_point_styles), ncol=2, lty=1, cex=0.75, **{'y.intersp': 1.0})
     if format == 'rscript':
         file.write('legend("right", inset=-0.40, legend=c(%s), col=c(%s), y.intersp=1.4, pch=c(%s), lty=1)\n'
                     % (','.join(map(lambda s: '"' + s + '"', legend_strs)).replace('\n',''),
