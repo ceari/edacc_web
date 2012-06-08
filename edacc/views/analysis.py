@@ -120,7 +120,7 @@ def solver_ranking(database, experiment_id):
 
             survival_rank = dict()
             if form_survival_ranking:
-                survival_ranked_solvers = ranking.survival_ranking(db, experiment, form.i.data,
+                survival_ranked_solvers, _, _ = ranking.survival_ranking(db, experiment, form.i.data,
                     solver_configs, results_matrix, cost)
 
                 survival_rank_counter = 1

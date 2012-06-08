@@ -31,5 +31,30 @@
     </tbody>
     </table>
     </div>
+
+    <div>
+        <h2>Careful ranking domination matrix</h2>
+        <table id="table_results">
+            <thead>
+            <tr>
+                <th></th>
+                {% for sc in solver_configs %}
+                    <th>{{ sc.name }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for sc1 in solver_configs %}
+                <tr>
+                    <td style="font-weight: bold;">{{ sc1.name }}</td>
+                    {% for sc2 in solver_configs %}
+                        <td style="text-align: center;">{{ dom_matrix[sc1.idSolverConfig][sc2.idSolverConfig] }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endif %}
+
 {% endblock %}
