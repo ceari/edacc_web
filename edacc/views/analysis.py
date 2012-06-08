@@ -58,7 +58,7 @@ def careful_solver_ranking(database, experiment_id):
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-        results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, cost)
+        results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, form.cost.data)
 
         carefully_ranked_solvers, raw_scores, dom_matrix = ranking.careful_ranking(db, experiment, form.i.data,
                 solver_configs, results_matrix, form.cost.data, noise=form.careful_ranking_noise.data, break_ties=form.break_careful_ties.data)
