@@ -205,7 +205,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
     vbs_num_solved = len(best_instance_runtimes) * max_num_runs
     vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes if r[0] is not None) * max_num_runs
-    vbs_median = numpy.median([r[0] or 0.0 for r in best_instance_runtimes])
+    vbs_median = numpy.median([r[0] for r in best_instance_runtimes if r[0] is not None])
     best_runtime_by_instance = dict()
     for bir in best_instance_runtimes:
         best_runtime_by_instance[bir.Instances_idInstance] = bir[0]
