@@ -198,10 +198,10 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     from sqlalchemy import func, or_, not_
     best_instance_runtimes = db.session.query(func.min(cost_property), db.ExperimentResult.Instances_idInstance) \
         .filter_by(experiment=experiment) \
-        .filter(db.ExperimentResult.resultCode.like(u'1%')) \
         .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
         .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
         .group_by(db.ExperimentResult.Instances_idInstance).all()
+        #.filter(db.ExperimentResult.resultCode.like(u'1%')) \
 
     vbs_num_solved = len(best_instance_runtimes) * max_num_runs
     vbs_cumulated_cpu = sum(r[0] or 0.0 for r in best_instance_runtimes) * max_num_runs
