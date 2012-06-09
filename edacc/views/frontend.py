@@ -84,7 +84,7 @@ def experiments_index(database):
         experiments = db.session.query(db.Experiment).all()
         experiments.sort(key=lambda e: e.date)
 
-    if not is_admin() and db.is_competition() and db.competition_phase() == 5: experiments = []
+    #if not is_admin() and db.is_competition() and db.competition_phase() == 5: experiments = []
 
     experiments = filter(lambda e: e.idExperiment not in config.hidden_experiments.get(database, []), experiments)
 

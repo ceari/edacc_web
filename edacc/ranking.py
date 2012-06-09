@@ -173,7 +173,7 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
 def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev, cost):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in ranked_solvers]
-    if not solver_config_ids: return []
+    if not solver_config_ids: return [], None
     
     max_num_runs = experiment.get_max_num_runs(db)
     max_num_runs_per_solver = max_num_runs * len(instance_ids)

@@ -90,16 +90,19 @@ def solver_ranking(database, experiment_id):
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-        #CACHE_TIME = 7*24*60*60 if not db.is_competition() else 1
-        #@cache.memoize(timeout=CACHE_TIME)
-        def cached_ranking(database, experiment_id, solver_configs, sc_names, last_modified_job,
-                           job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking, careful_ranking_noise,
-                           form_survival_ranking,
-                           form_break_ties, cost, csv_response=False, latex_response=False):
+        solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
+
+        #CACHE_TIME = 7*24*60*60
+        #e@cache.memoize(timeout=CACHE_TIME)
+        def cached_ranking(database, experiment_id, solver_config_ids, sc_names, last_modified_job,
+                           job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
+                           careful_ranking_noise, form_survival_ranking,
+                           form_break_ties, cost, csv_response, latex_response):
 
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
             ranking_data, _ = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
-                                                    form.penalized_average_runtime.data, form.calculate_average_dev.data, cost)
+                                                    form.penalized_average_runtime.data,
+                                                    form.calculate_average_dev.data, cost)
 
             if form_careful_ranking or form_survival_ranking:
                 results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, cost)
@@ -193,7 +196,7 @@ def solver_ranking(database, experiment_id):
                                 .filter_by(experiment=experiment).first()
         job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
 
-        return cached_ranking(database, experiment_id, solver_configs, ''.join(sc.get_name() for sc in solver_configs),
+        return cached_ranking(database, experiment_id, solver_config_ids, ''.join(sc.get_name() for sc in solver_configs),
                               last_modified_job, job_count, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               form.careful_ranking.data, form.careful_ranking_noise.data or 1.0, form.survival_ranking.data,
@@ -235,13 +238,6 @@ def sota_solvers(database, experiment_id):
                         v2.append(sc2run.resultTime)
                 sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
                 sc_correlation[sc2][sc1] = -1 * sc_correlation[sc1][sc2]
-
-        print ',     '.join([sc.name[:7] for sc in form.sc.data])
-        for sc in form.sc.data:
-            print sc.name[:7] + '  ',
-            print '  '.join(map(lambda x: str(round(x, 3)), [sc_correlation[sc][sc2] for sc2 in form.sc.data]))
-
-
 
         results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
         results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)

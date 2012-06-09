@@ -99,14 +99,14 @@ def require_login(f):
         else:
             g.User = None
 
-        if db.is_competition() and db.competition_phase() == 5:
-            def redirect_f(*args, **kwargs):
-                return redirect(url_for('frontend.experiments_index',
-                database=kwargs['database']))
-            if not g.User or not g.User.admin:
-                session.pop('logged_in', None)
-                flash('Website offline for competition computations.')
-                return redirect_f(*args, **kwargs)
+#        if db.is_competition() and db.competition_phase() == 5:
+#            def redirect_f(*args, **kwargs):
+#                return redirect(url_for('frontend.experiments_index',
+#                database=kwargs['database']))
+#            if not g.User or not g.User.admin:
+#                session.pop('logged_in', None)
+#                flash('Website offline for competition computations.')
+#                return redirect_f(*args, **kwargs)
 
         if db.is_competition() and db.competition_phase() < 7:
             def redirect_f(*args, **kwargs):
