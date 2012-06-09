@@ -90,8 +90,8 @@ def solver_ranking(database, experiment_id):
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-        CACHE_TIME = 7*24*60*60 if not db.is_competition() else 1
-        @cache.memoize(timeout=CACHE_TIME)
+        #CACHE_TIME = 7*24*60*60 if not db.is_competition() else 1
+        #@cache.memoize(timeout=CACHE_TIME)
         def cached_ranking(database, experiment_id, solver_configs, sc_names, last_modified_job,
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking, careful_ranking_noise,
                            form_survival_ranking,
