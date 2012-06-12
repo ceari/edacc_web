@@ -32,6 +32,7 @@ from scipy.stats.mstats import mquantiles
 from flask import Blueprint
 from flask import render_template as render
 from flask import Response, abort, g, request, redirect, url_for
+from flask import flash
 from werkzeug import Headers, secure_filename
 
 from edacc import utils, models
@@ -1305,6 +1306,10 @@ def solver_code_download(database, solver_id):
 def solver_description_download(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+
+    if not is_admin():
+        flash("Functionality offline for updates.")
+        return redirect(url_for("frontend.experiments_index", database=database))
 
     if not is_admin() and (not db.competition_phase() in ALL_RESULTS and solver.user != g.User): abort(401)
 
