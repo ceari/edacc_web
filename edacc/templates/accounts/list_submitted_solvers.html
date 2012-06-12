@@ -2,16 +2,9 @@
 {% block title %}List of submitted solvers{% endblock %}
 {% block head %}
     {{ super() }}
-    <script type="text/javascript">
-        var doConfirm = function(id) {
-            if (confirm("Do you really want to delete this solver?")) return true;
-            else return false;
-        }
-    </script>
 {% endblock %}
 {% block content %}
 <h2>List of submitted solvers</h2>
-    {% if solvers %}
     <ul>
         {% for solver in solvers %}
             <li>
@@ -22,7 +15,4 @@
             </li>
         {% endfor %}
     </ul>
-    {% else %}
-    {{ (user.firstname + ' ' + user.lastname + " hasn't") if user != g.User else "You haven't"}} submitted any solvers yet.
-    {% endif %}
 {% endblock %}

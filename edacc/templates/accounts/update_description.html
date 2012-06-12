@@ -1,0 +1,14 @@
+{% from "_formhelpers.html" import render_field %}
+{% extends "base.html" %}
+{% block title %}Update description{% endblock %}
+{% block content %}
+    <h2>Update solver description of {{ solver.name }}</h2>
+    <form id="update_description_form" action="{{url_for('accounts.update_description', database=database, solver_id=solver.idSolver)}}" method="post" enctype="multipart/form-data">
+        <table width="800px">
+            {{ render_field(form.description_pdf, size=40, explanation=".pdf file", required=True) }}
+        </table>
+        {% if error %}<div style="color: red;"><b>Error: {{error}}</b></div>{% endif %}
+        <input id="submit" type="submit" value="Submit" />
+    </form>
+
+{% endblock %}

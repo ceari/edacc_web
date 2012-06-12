@@ -105,6 +105,13 @@ class SolverForm(Form):
         if field.data and not field.file.filename.endswith('.pdf'):
             raise ValidationError('Please provide a .pdf file.')
 
+class UpdateDescriptionForm(Form):
+    description_pdf = FileField('Description (PDF)')
+
+    def validate_description_pdf(self, field):
+        if field.data and not field.file.filename.endswith('.pdf'):
+            raise ValidationError('Please provide a .pdf file.')
+
 class BenchmarkForm(Form):
     instance = FileField('File')
     name = TextField('Name')

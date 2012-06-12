@@ -781,3 +781,36 @@ def admin_toggle_solver_freeze(database, solver_id):
 
     return redirect(url_for('frontend.solver_details',
         database=database, solver_id=solver_id))
+
+@accounts.route('/<database>/manage/update-description/<int:solver_id>/', methods=['GET', 'POST'])
+@require_login
+@require_admin
+@require_competition
+def update_description(database, solver_id):
+    db = models.get_database(database) or abort(404)
+    solver = db.session.query(db.Solver).get(solver_id) or abort(404)
+    form = forms.UpdateDescriptionForm(request.form, csrf_enabled=False)
+
+    if form.validate_on_submit():
+        solver.description_pdf = request.files[form.description_pdf.name].read()
+
+        try:
+            db.session.commit()
+            flash("Solver description updated.")
+            return redirect(url_for('accounts.list_submitted_solvers',
+                database=database))
+        except Exception as e:
+            db.session.rollback()
+            flash("Error updating description: " + str(e))
+
+    return render("/accounts/update_description.html", database=database, db=db, solver=solver, form=form)
+
+@accounts.route('/<database>/manage/list-submitted-solvers/')
+@require_login
+@require_admin
+@require_competition
+def list_submitted_solvers(database):
+    db = models.get_database(database) or abort(404)
+    solvers = db.session.query(db.Solver).filter(db.Solver.User_idUser!=None).order_by(db.Solver.name).all()
+
+    return render("/accounts/list_submitted_solvers.html", database=database, db=db, solvers=solvers)
