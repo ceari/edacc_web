@@ -1307,10 +1307,6 @@ def solver_description_download(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
 
-    if not is_admin():
-        flash("Functionality offline for updates.")
-        return redirect(url_for("frontend.experiments_index", database=database))
-
     if not is_admin() and (not db.competition_phase() in ALL_RESULTS and solver.user != g.User): abort(401)
 
     headers = Headers()
