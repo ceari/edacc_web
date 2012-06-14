@@ -897,17 +897,20 @@ def runtime_matrix_plot(database, experiment_id):
         instances = sorted(exp.instances, key=lambda i: i.idInstance)
         solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
 
+        cost = exp.defaultCost
+        cost_limit = 'CPUTimeLimit' if cost == 'resultTime' else 'wallClockTimeLimit' if cost == 'wallTime' else None
+
         table = db.metadata.tables['ExperimentResults']
         if measure == 'par10':
             time_case = expression.case([
-                            (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
-                            else_=table.c['CPUTimeLimit']*10.0)
+                            (table.c['resultCode'].like(u'1%'), table.c[cost])],
+                            else_=table.c[cost_limit]*10.0)
         else:
-            time_case = table.c['resultTime']
+            time_case = table.c[cost]
             
         s = select([time_case,
                     table.c['resultCode'],
-                    table.c['CPUTimeLimit'],
+                    table.c[cost_limit],
                     table.c['SolverConfig_idSolverConfig'],
                     table.c['Instances_idInstance']],
                     table.c['Experiment_idExperiment']==experiment_id).select_from(table)
@@ -964,7 +967,7 @@ def runtime_matrix_plot(database, experiment_id):
                     elif measure == 'par10' or measure is None:
                         time_measure = numpy.average(jobs or [0])
                 if request.args.has_key('csv'): rt_matrix[solver_config.idSolverConfig][instance.idInstance] = time_measure
-                flattened_rt_matrix.append(time_measure)
+                flattened_rt_matrix.append(time_measure + 0.0000001)
         
         if csv:
             csv_response = StringIO.StringIO()
@@ -1067,7 +1070,6 @@ def parameter_plot_1d(database, experiment_id):
     elif request.args.has_key('eps'): type = 'eps'
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
-    print type
     return plot_image(experiment_id, parameter_id, measure, instance_ids, runtime_cap, last_modified_job, type, exp.get_num_jobs(db), log_param, log_cost)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-2d-img/')
