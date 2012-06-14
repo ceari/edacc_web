@@ -278,7 +278,7 @@ def cactus_plot(database, experiment_id):
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
-    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
     form.sc.query = experiment.solver_configurations or EmptyQuery()
     numRuns = experiment.get_max_num_runs(db)
     form.run.choices = [('all', 'All runs'),
@@ -319,7 +319,7 @@ def result_property_comparison(database, experiment_id):
     form.solver_config2.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
-    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     if form.solver_config1.data and form.solver_config2.data and form.i.data:
@@ -329,7 +329,7 @@ def result_property_comparison(database, experiment_id):
         s2 = db.session.query(db.SolverConfiguration).get(int(request.args['solver_config2'])) or abort(404)
 
         result_property = request.args.get('result_property')
-        if result_property != 'cputime':
+        if result_property not in ('resultTime', 'wallTime', 'cost'):
             result_property = db.session.query(db.Property).get(int(result_property)).idProperty
 
         results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
@@ -397,7 +397,7 @@ def property_distributions(database, experiment_id):
     form.sc.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
-    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
@@ -430,7 +430,7 @@ def scatter_2solver_1property(database, experiment_id):
                         ('median', 'All runs - median'),
                         ('all', 'All runs')
                         ] + runs
-    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
 
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
@@ -484,7 +484,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
     form = forms.OneSolverInstanceAgainstResultPropertyPlotForm(request.args)
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
-    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
     form.instance_property.choices = instance_properties
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
@@ -541,8 +541,8 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
 
     form = forms.OneSolverTwoResultPropertiesPlotForm(request.args)
     form.solver_config.query = experiment.solver_configurations or EmptyQuery()
-    form.result_property1.choices = [('cputime', 'CPU Time')] + result_properties
-    form.result_property2.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property1.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
+    form.result_property2.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.run.choices = [('average', 'All runs - average'),
                         ('median', 'All runs - median'),
@@ -594,7 +594,7 @@ def property_distribution(database, experiment_id):
     form.sc.query = experiment.solver_configurations or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
-    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/property_distribution.html', database=database, experiment=experiment,
@@ -623,7 +623,7 @@ def probabilistic_domination(database, experiment_id):
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     result_properties = db.get_plotable_result_properties() # plotable = numeric
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
-    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
 
     if form.solver_config1.data and form.solver_config2.data:
         instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i')))).all()
@@ -695,7 +695,7 @@ def box_plots(database, experiment_id):
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     result_properties = db.get_plotable_result_properties()
     result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
-    form.result_property.choices = [('cputime', 'CPU Time')] + result_properties
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
 
     return render('/analysis/box_plots.html', database=database, db=db,

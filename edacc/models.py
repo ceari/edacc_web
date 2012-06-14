@@ -437,8 +437,12 @@ class EDACCDatabase(object):
                     If the property is an integer, it returns the value of the
                     associated Property with this id.
                 """
-                if property == 'cputime':
+                if property == 'resultTime':
                     return self.get_time()
+                elif property == 'wallTime':
+                    return self.wallTime
+                elif property == 'cost':
+                    return self.cost
                 else:
                     try:
                         for pv in self.properties:

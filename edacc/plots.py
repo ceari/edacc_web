@@ -549,7 +549,7 @@ def box_plot(data, property_label, filename, format='png'):
                  key is used as label for each box.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=600,
+        grdevices.png(file=filename, units="px", width=1000,
                       height=600, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite")
@@ -566,8 +566,9 @@ def box_plot(data, property_label, filename, format='png'):
         data[key] = robjects.FloatVector(data[key])
 
     if any_data:
+        robjects.r.par(mar = robjects.FloatVector([5, 20, 4, 4]))
         robjects.r.boxplot(robjects.Vector([data[k] for k in data]), main="",
-                           names=robjects.StrVector([key for key in data]), horizontal=True)
+                           names=robjects.StrVector([key[:40] for key in data]), horizontal=True, las=1)
         robjects.r.mtext(property_label, side=1,
                          line=3, cex=1.2) # bottom axis label
 

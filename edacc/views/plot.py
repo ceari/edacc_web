@@ -159,7 +159,7 @@ def scatter_2solver_1property(database, experiment_id):
     xscale = request.args['xscale']
     yscale = request.args['yscale']
     result_property = request.args['result_property']
-    if result_property != 'cputime':
+    if result_property not in ('resultTime', 'wallTime', 'cost'):
         solver_prop = db.session.query(db.Property).get(int(result_property))
 
     sc1 = db.session.query(db.SolverConfiguration).get(s1) or abort(404)
@@ -174,9 +174,15 @@ def scatter_2solver_1property(database, experiment_id):
     max_x = max_y = max(max_x, max_y) * 1.1
 
     title = sc1.get_name() + ' vs. ' + sc2.get_name()
-    if result_property == 'cputime':
+    if result_property == 'resultTime':
         xlabel = sc1.get_name() + ' CPU Time'
         ylabel = sc2.get_name() + ' CPU Time'
+    elif result_property == 'wallTime':
+        xlabel = sc1.get_name() + ' Wall Clock Time'
+        ylabel = sc2.get_name() + ' Wall Clock Time'
+    elif result_property == 'cost':
+        xlabel = sc1.get_name() + ' Cost'
+        ylabel = sc2.get_name() + ' Cost'
     else:
         xlabel = sc1.get_name() + ' ' + solver_prop.name
         ylabel = sc2.get_name() + ' ' + solver_prop.name
@@ -304,7 +310,7 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
     for i in xrange(1, instance_groups_count):
         instances.append(db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i'+str(i))))).all())
 
-    if result_property != 'cputime':
+    if result_property not in ('resultTime', 'wallTime', 'cost'):
         solver_prop = db.session.query(db.Property).get(int(result_property))
 
     instance_prop = db.session.query(db.Property).get(int(instance_property))
@@ -317,8 +323,12 @@ def scatter_1solver_instance_vs_result_property(database, experiment_id):
 
     xlabel = instance_prop.name
 
-    if result_property == 'cputime':
+    if result_property == 'resultTime':
         ylabel = 'CPU Time'
+    elif result_property == 'wallTime':
+        ylabel = 'Wall Clock Time'
+    elif result_property == 'cost':
+        ylabel = 'Cost'
     else:
         ylabel = solver_prop.name
 
@@ -450,10 +460,10 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     for i in xrange(1, instance_groups_count):
         instances.append(db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i'+str(i))))).all())
 
-    if result_property1 != 'cputime':
+    if result_property1 not in ('resultTime', 'wallTime', 'cost'):
         solver_prop1 = db.session.query(db.Property).get(int(result_property1))
 
-    if result_property2 != 'cputime':
+    if result_property2 not in ('resultTime', 'wallTime', 'cost'):
         solver_prop2 = db.session.query(db.Property).get(int(result_property2))
 
     solver_config = db.session.query(db.SolverConfiguration).get(solver_config) or abort(404)
@@ -462,13 +472,21 @@ def scatter_1solver_result_vs_result_property(database, experiment_id):
     for instance_group in instances:
         points.append( scatter_1solver_result_vs_result_property_plot(db, exp, solver_config, instance_group, result_property1, result_property2, run))
 
-    if result_property1 == 'cputime':
+    if result_property1 == 'resultTime':
         xlabel = 'CPU Time'
+    elif result_property1 == 'wallTime':
+        xlabel = 'Wall Clock Time'
+    elif result_property1 == 'cost':
+        xlabel = 'Cost Time'
     else:
         xlabel = solver_prop1.name
 
-    if result_property2 == 'cputime':
+    if result_property2 == 'resultTime':
         ylabel = 'CPU Time'
+    elif result_property2 == 'wallTime':
+        ylabel = 'Wall Clock Time'
+    elif result_property2 == 'cost':
+        ylabel = 'Cost'
     else:
         ylabel = solver_prop2.name
 
@@ -553,8 +571,8 @@ def cactus_plot(database, experiment_id):
     for i in xrange(1, instance_groups_count):
         instances.append([int(id) for id in request.args.getlist('i'+str(i))])
 
-    result_property = request.args.get('result_property') or 'cputime'
-    if result_property != 'cputime':
+    result_property = request.args.get('result_property') or 'resultTime'
+    if result_property not in ('resultTime', 'wallTime', 'cost'):
         solver_prop = db.session.query(db.Property).get(int(result_property))
 
     solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('sc')]
@@ -592,8 +610,11 @@ def cactus_plot(database, experiment_id):
                                         .filter(db.ExperimentResult.Instances_idInstance==id) \
                                         .filter(or_(db.ExperimentResult.status!=1,
                                                     not_(db.ExperimentResult.resultCode.like('1%')))).count()
-                    if result_property == 'cputime':
+                    if result_property == 'resultTime':
                         penalized_time = sum([j.get_penalized_time(10) for j in res if not str(j.resultCode).startswith('1')])
+                        res_vals = [r.get_property_value(result_property, db) for r in res if str(r.resultCode.startswith('1'))]
+                    elif result_property == 'wallTime':
+                        penalized_time = sum([j.wallClockTimeLimit * 10 for j in res if not str(j.resultCode).startswith('1')])
                         res_vals = [r.get_property_value(result_property, db) for r in res if str(r.resultCode.startswith('1'))]
                     else:
                         penalized_time = 0
@@ -624,9 +645,15 @@ def cactus_plot(database, experiment_id):
     max_x = max([max(s['xs'] or [0]) for s in solvers] or [0]) + 10
     max_y = max([max(s['ys'] or [0]) for s in solvers] or [0]) * 1.1
 
-    if result_property == 'cputime':
+    if result_property == 'resultTime':
         ylabel = 'CPU Time (s)'
         title = 'Number of solved instances within a given amount of CPU time'
+    elif result_property == 'wallTime':
+        ylabel = 'Wall Clock Time (s)'
+        title = 'Number of solved instances within a given amount of wall clock time'
+    elif result_property == 'cost':
+        ylabel = 'Cost'
+        title = 'Number of solved instances within a given amount of cost value'
     else:
         ylabel = solver_prop.name
         title = 'Number of solved instances within a given amount of ' + solver_prop.name
@@ -637,7 +664,7 @@ def cactus_plot(database, experiment_id):
         for s in solvers:
             csv_writer.writerow(['%s (G%d)' % (s['name'], s['instance_group'])])
             csv_writer.writerow(['number of solved instances'] + map(str, s['xs']))
-            csv_writer.writerow(['CPU Time (s)'] + map(str, s['ys']))
+            csv_writer.writerow(['Cost'] + map(str, s['ys']))
         csv_response.seek(0)
 
         headers = Headers()
@@ -663,11 +690,15 @@ def result_property_comparison_plot(database, experiment_id):
 
     log_property = request.args.has_key('log_property')
     result_property = request.args.get('result_property')
-    if result_property != 'cputime':
+    if result_property == 'resultTime':
+        result_property_name = 'CPU time (s)'
+    elif result_property == 'wallTime':
+        result_property_name = 'Wall Clock time (s)'
+    elif result_property == 'cost':
+        result_property_name = 'Cost'
+    else:
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
         result_property_name = db.session.query(db.Property).get(int(result_property)).name
-    else:
-        result_property_name = 'CPU time (s)'
 
     results1 = [r.get_property_value(result_property, db) for r in db.session.query(db.ExperimentResult)
                                             .filter_by(experiment=exp,
@@ -714,11 +745,15 @@ def property_distributions_plot(database, experiment_id):
 
     log_property = request.args.has_key('log_property')
     result_property = request.args.get('result_property')
-    if result_property != 'cputime':
+    if result_property == 'resultTime':
+        result_property_name = 'CPU time (s)'
+    elif result_property == 'wallTime':
+        result_property_name = 'Wall Clock time (s)'
+    elif result_property == 'cost':
+        result_property_name = 'Cost'
+    else:
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
         result_property_name = db.session.query(db.Property).get(int(result_property)).name
-    else:
-        result_property_name = 'CPU time (s)'
 
     results = []
     for sc in solver_configs:
@@ -760,11 +795,15 @@ def property_distribution(database, experiment_id):
     log_property = request.args.has_key('log_property')
     restart_strategy = request.args.has_key('restart_strategy')
     result_property = request.args.get('result_property')
-    if result_property != 'cputime':
+    if result_property == 'resultTime':
+        result_property_name = 'CPU time (s)'
+    elif result_property == 'wallTime':
+        result_property_name = 'Wall Clock time (s)'
+    elif result_property == 'cost':
+        result_property_name = 'Cost'
+    else:
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
         result_property_name = db.session.query(db.Property).get(int(result_property)).name
-    else:
-        result_property_name = 'CPU time (s)'
 
     results_by_sc = dict()
     for sc in solver_configs:
@@ -802,11 +841,15 @@ def kerneldensity(database, experiment_id):
     log_property = request.args.has_key('log_property')
     restart_strategy = request.args.has_key('restart_strategy')
     result_property = request.args.get('result_property')
-    if result_property != 'cputime':
+    if result_property == 'resultTime':
+        result_property_name = 'CPU time (s)'
+    elif result_property == 'wallTime':
+        result_property_name = 'Wall Clock time (s)'
+    elif result_property == 'cost':
+        result_property_name = 'Cost'
+    else:
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
         result_property_name = db.session.query(db.Property).get(int(result_property)).name
-    else:
-        result_property_name = 'CPU time (s)'
 
     results_by_sc = dict()
     for sc in solver_configs:
@@ -843,11 +886,16 @@ def box_plots(database, experiment_id):
     solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('solver_configs')]
 
     result_property = request.args.get('result_property')
-    if result_property != 'cputime':
+    if result_property == 'resultTime':
+        result_property_name = 'CPU time (s)'
+    elif result_property == 'wallTime':
+        result_property_name = 'Wall Clock Time (s)'
+    elif result_property == 'cost':
+        result_property_name = 'Cost'
+    else:
         result_property = db.session.query(db.Property).get(int(result_property)).idProperty
         result_property_name = db.session.query(db.Property).get(int(result_property)).name
-    else:
-        result_property_name = 'CPU time (s)'
+
 
     results = {}
     for sc in solver_configs:
