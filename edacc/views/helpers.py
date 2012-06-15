@@ -99,6 +99,11 @@ def require_login(f):
         else:
             g.User = None
 
+        if db.is_competition() and db.competition_phase() == 7:
+            session.pop('logged_in', None)
+            session.pop('idUser', None)
+            g.User = None
+
 #        if db.is_competition() and db.competition_phase() == 5:
 #            def redirect_f(*args, **kwargs):
 #                return redirect(url_for('frontend.experiments_index',

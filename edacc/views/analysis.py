@@ -97,7 +97,7 @@ def solver_ranking(database, experiment_id):
         def cached_ranking(database, experiment_id, solver_config_ids, sc_names, last_modified_job,
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
                            careful_ranking_noise, form_survival_ranking,
-                           form_break_ties, cost, csv_response, latex_response):
+                           form_break_ties, cost, csv_response, latex_response, user_id):
 
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
             ranking_data, _ = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
@@ -201,7 +201,7 @@ def solver_ranking(database, experiment_id):
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               form.careful_ranking.data, form.careful_ranking_noise.data or 1.0, form.survival_ranking.data,
                               form.break_careful_ties.data, form.cost.data,
-                              'csv' in request.args, 'latex' in request.args)
+                              'csv' in request.args, 'latex' in request.args, session.get('idUser', None))
 
     return render('/analysis/ranking.html', database=database, db=db,
               experiment=experiment, form=form, instance_properties=db.get_instance_properties())
@@ -223,7 +223,7 @@ def sota_solvers(database, experiment_id):
         instance_ids = [i.idInstance for i in form.i.data]
 
         @cache.memoize(7*24*60*60)
-        def cached_sota_solvers(database, experiment_id, solver_config_ids, sc_names, instance_ids, job_count, last_modified_job):
+        def cached_sota_solvers(database, experiment_id, solver_config_ids, sc_names, instance_ids, job_count, last_modified_job, user_id):
             sota_solvers = experiment.get_sota_solvers(db, form.i.data, form.sc.data)
             unique_solver_contribs = experiment.unique_solver_contributions(db, form.i.data, form.sc.data)
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, form.sc.data, form.cost.data)
@@ -265,7 +265,8 @@ def sota_solvers(database, experiment_id):
                                             .filter_by(experiment=experiment).first()
         job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
 
-        return cached_sota_solvers(database, experiment_id, solver_config_ids, ''.join(sc.get_name() for sc in form.sc.data), instance_ids, job_count, last_modified_job)
+        return cached_sota_solvers(database, experiment_id, solver_config_ids, ''.join(sc.get_name() for sc in form.sc.data),
+            instance_ids, job_count, last_modified_job, session.get('idUser', None))
 
     return render("/analysis/sota_solvers.html", database=database, db=db, form=form,
         instance_properties=db.get_instance_properties(), experiment=experiment,
