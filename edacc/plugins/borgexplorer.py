@@ -25,7 +25,7 @@ from sqlalchemy import not_, func
 from edacc import models
 from edacc.web import cache
 from edacc.constants import STATUS_PROCESSING
-from edacc.views.helpers import require_login
+from edacc.views.helpers import require_login, require_phase
 
 from threading import Lock
 global_lock = Lock()
@@ -47,6 +47,7 @@ borgexplorer = Blueprint('borgexplorer', __name__, template_folder='static')
 
 @borgexplorer.route('/<database>/experiment/<int:experiment_id>/borg-explorer/')
 @require_login
+@require_phase(phases=(6, 7))
 def borg_explorer(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
@@ -55,6 +56,7 @@ def borg_explorer(database, experiment_id):
 
 @borgexplorer.route('/<database>/experiment/<int:experiment_id>/borg-explorer-data/')
 @require_login
+@require_phase(phases=(6, 7))
 def borg_explorer_data(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
