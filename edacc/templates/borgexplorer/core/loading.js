@@ -5,7 +5,7 @@ bv.loading = {};
 
 bv.loading.create = function(view) {
     var loading = Object.create(bv.loading);
-    var markup = '<div id="bv-loading-dialog" title="Loading Resources"><p id="bv-loading-p">Starting to load resources. This might take a while. Data is cached for 10 minutes after the first request.</p><div id="bv-loading-progress"></div></div>';
+    var markup = '<div id="bv-loading-dialog" title="Loading Resources"><p id="bv-loading-p">Starting to load resources. This might take a while.</p><div id="bv-loading-progress"></div></div>';
 
     $(markup)
         .appendTo("body")

@@ -20,11 +20,12 @@ except:
 
 from flask import Blueprint, abort, request
 from flask import render_template as render
-from sqlalchemy import not_
+from sqlalchemy import not_, func
 
 from edacc import models
 from edacc.web import cache
 from edacc.constants import STATUS_PROCESSING
+from edacc.views.helpers import require_login
 
 from threading import Lock
 global_lock = Lock()
@@ -45,6 +46,7 @@ def synchronized(f):
 borgexplorer = Blueprint('borgexplorer', __name__, template_folder='static')
 
 @borgexplorer.route('/<database>/experiment/<int:experiment_id>/borg-explorer/')
+@require_login
 def borg_explorer(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
@@ -52,6 +54,7 @@ def borg_explorer(database, experiment_id):
     return render('borgexplorer/index.html', db=db, database=database, experiment=experiment)
 
 @borgexplorer.route('/<database>/experiment/<int:experiment_id>/borg-explorer-data/')
+@require_login
 def borg_explorer_data(database, experiment_id):
     db = models.get_database(database) or abort(404)
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
@@ -60,15 +63,19 @@ def borg_explorer_data(database, experiment_id):
     if type == 'categories.json':
         return json_dumps([{"path": experiment.name, "name": experiment.name}])
 
+    last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified))\
+        .filter_by(experiment=experiment).first()
+    job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
+
     @synchronized
-    #@cache.memoize(600)
-    def get_data(database, experiment_id):
+    @cache.memoize(7*24*60*60)
+    def get_data(database, experiment_id, job_count, last_modified_job):
         runs = db.session.query(db.ExperimentResult) \
                                 .filter(db.ExperimentResult.Experiment_idExperiment==experiment_id) \
                                 .filter(not_(db.ExperimentResult.status.in_(STATUS_PROCESSING))).order_by('idJob').all()
         return CategoryData().fit([(0, r.instance.name, r.result_code.description, r.resultTime, 0, r.solver_configuration.name, 0) for r in runs])
 
-    data = get_data(database, experiment_id)
+    data = get_data(database, experiment_id, job_count, last_modified_job)
 
     if type == 'runs.json':
         return json_dumps(data.table)

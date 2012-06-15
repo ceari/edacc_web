@@ -563,124 +563,132 @@ def cactus_plot(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    instance_groups_count = int(request.args.get('instance_groups_count', 0))
-    use_colors_for = request.args.get('use_colors_for', 'solvers')
-    colored_instance_groups = (use_colors_for == 'instance_groups')
-    log_property = request.args.has_key('log_property')
-    flip_axes = request.args.has_key('flip_axes')
-    run = request.args.get('run', 'all')
+    last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
+                                        .filter_by(experiment=exp).first()
+    job_count = db.session.query(db.ExperimentResult).filter_by(experiment=exp).count()
 
-    results = db.session.query(db.ExperimentResult)
-    results = results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
-    results = results.options(joinedload(db.ExperimentResult.properties))
-    results = results.filter_by(experiment=exp)
-    instances = [[int(id) for id in request.args.getlist('i')]]
-    for i in xrange(1, instance_groups_count):
-        instances.append([int(id) for id in request.args.getlist('i'+str(i))])
+    @cache.memoize(6*24*60*60)
+    def cached_cactus_plot(database, experiment_id, request_args, job_count, last_modified_job, plot_type):
+        instance_groups_count = int(request.args.get('instance_groups_count', 0))
+        use_colors_for = request.args.get('use_colors_for', 'solvers')
+        colored_instance_groups = (use_colors_for == 'instance_groups')
+        log_property = request.args.has_key('log_property')
+        flip_axes = request.args.has_key('flip_axes')
+        run = request.args.get('run', 'all')
+        result_property = request.args.get('result_property') or 'resultTime'
 
-    result_property = request.args.get('result_property') or 'resultTime'
-    if result_property not in ('resultTime', 'wallTime', 'cost'):
-        solver_prop = db.session.query(db.Property).get(int(result_property))
+        results = db.session.query(db.ExperimentResult)
+        results = results.enable_eagerloads(True).options(joinedload(db.ExperimentResult.solver_configuration))
+        results = results.options(joinedload(db.ExperimentResult.properties))
+        results = results.filter_by(experiment=exp)
+        instances = [[int(id) for id in request.args.getlist('i')]]
+        for i in xrange(1, instance_groups_count):
+            instances.append([int(id) for id in request.args.getlist('i'+str(i))])
 
-    solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('sc')]
+        if result_property not in ('resultTime', 'wallTime', 'cost'):
+            solver_prop = db.session.query(db.Property).get(int(result_property))
 
-    solvers = []
+        solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('sc')]
 
-    random_run = random.randint(0, exp.get_max_num_runs(db) - 1)
+        solvers = []
 
-    for instance_group in xrange(instance_groups_count):
-        for sc in solver_configs:
-            s = {'xs': [], 'ys': [], 'name': sc.get_name(), 'instance_group': instance_group}
-            sc_res = results.filter_by(solver_configuration=sc, status=1).filter(db.ExperimentResult.resultCode.like('1%')) \
-                             .filter(db.ExperimentResult.Instances_idInstance.in_(instances[instance_group]))
-            if run == 'all':
-                sc_results = filter(lambda j: j is not None, [r.get_property_value(result_property, db) for r in sc_res.all()])
-            elif run in ('average', 'median'):
-                sc_results = []
-                for id in instances[instance_group]:
-                    res = sc_res.filter(db.ExperimentResult.Instances_idInstance==id).all()
+        random_run = random.randint(0, exp.get_max_num_runs(db) - 1)
+
+        for instance_group in xrange(instance_groups_count):
+            for sc in solver_configs:
+                s = {'xs': [], 'ys': [], 'name': sc.get_name(), 'instance_group': instance_group}
+                sc_res = results.filter_by(solver_configuration=sc, status=1).filter(db.ExperimentResult.resultCode.like('1%')) \
+                                 .filter(db.ExperimentResult.Instances_idInstance.in_(instances[instance_group]))
+                if run == 'all':
+                    sc_results = filter(lambda j: j is not None, [r.get_property_value(result_property, db) for r in sc_res.all()])
+                elif run in ('average', 'median'):
+                    sc_results = []
+                    for id in instances[instance_group]:
+                        res = sc_res.filter(db.ExperimentResult.Instances_idInstance==id).all()
+                        res = [r.get_property_value(result_property, db) for r in res]
+                        res = filter(lambda r: r is not None, res)
+                        if len(res) > 0:
+                            if run == 'average':
+                                sc_results.append(numpy.average(res))
+                            elif run == 'median':
+                                sc_results.append(numpy.median(res or [0]))
+                elif run == 'random':
+                    sc_results = [r.get_property_value(result_property, db) for r in sc_res.filter_by(run=random_run).all()]
+                    sc_results = filter(lambda r: r is not None, sc_results)
+                elif run == 'penalized_average':
+                    sc_results = []
+                    for id in instances[instance_group]:
+                        res = sc_res.filter(db.ExperimentResult.Instances_idInstance==id).all()
+                        num_penalized = results.filter_by(solver_configuration=sc) \
+                                            .filter(db.ExperimentResult.Instances_idInstance==id) \
+                                            .filter(or_(db.ExperimentResult.status!=1,
+                                                        not_(db.ExperimentResult.resultCode.like('1%')))).count()
+                        if result_property == 'resultTime':
+                            penalized_time = sum([j.get_penalized_time(10) for j in res if not str(j.resultCode).startswith('1')])
+                            res_vals = [r.get_property_value(result_property, db) for r in res if str(r.resultCode.startswith('1'))]
+                        elif result_property == 'wallTime':
+                            penalized_time = sum([j.wallClockTimeLimit * 10 for j in res if not str(j.resultCode).startswith('1')])
+                            res_vals = [r.get_property_value(result_property, db) for r in res if str(r.resultCode.startswith('1'))]
+                        else:
+                            penalized_time = 0
+                            res_vals = [r.get_property_value(result_property, db) for r in res]
+                        penalized_avg = (sum(res_vals) + penalized_time) / (num_penalized + len(res_vals))
+                        sc_results.append(penalized_avg)
+                else:
+                    run_number = int(run)
+                    res = sc_res.filter_by(run=run_number).all()
                     res = [r.get_property_value(result_property, db) for r in res]
-                    res = filter(lambda r: r is not None, res)
-                    if len(res) > 0:
-                        if run == 'average':
-                            sc_results.append(numpy.average(res))
-                        elif run == 'median':
-                            sc_results.append(numpy.median(res or [0]))
-            elif run == 'random':
-                sc_results = [r.get_property_value(result_property, db) for r in sc_res.filter_by(run=random_run).all()]
-                sc_results = filter(lambda r: r is not None, sc_results)
-            elif run == 'penalized_average':
-                sc_results = []
-                for id in instances[instance_group]:
-                    res = sc_res.filter(db.ExperimentResult.Instances_idInstance==id).all()
-                    num_penalized = results.filter_by(solver_configuration=sc) \
-                                        .filter(db.ExperimentResult.Instances_idInstance==id) \
-                                        .filter(or_(db.ExperimentResult.status!=1,
-                                                    not_(db.ExperimentResult.resultCode.like('1%')))).count()
-                    if result_property == 'resultTime':
-                        penalized_time = sum([j.get_penalized_time(10) for j in res if not str(j.resultCode).startswith('1')])
-                        res_vals = [r.get_property_value(result_property, db) for r in res if str(r.resultCode.startswith('1'))]
-                    elif result_property == 'wallTime':
-                        penalized_time = sum([j.wallClockTimeLimit * 10 for j in res if not str(j.resultCode).startswith('1')])
-                        res_vals = [r.get_property_value(result_property, db) for r in res if str(r.resultCode.startswith('1'))]
-                    else:
-                        penalized_time = 0
-                        res_vals = [r.get_property_value(result_property, db) for r in res]
-                    penalized_avg = (sum(res_vals) + penalized_time) / (num_penalized + len(res_vals))
-                    sc_results.append(penalized_avg)
-            else:
-                run_number = int(run)
-                res = sc_res.filter_by(run=run_number).all()
-                res = [r.get_property_value(result_property, db) for r in res]
-                sc_results = filter(lambda r: r is not None, res)
+                    sc_results = filter(lambda r: r is not None, res)
 
-            sc_results = sorted(sc_results)
-            if not log_property:
-                s['ys'].append(0)
-                s['xs'].append(0)
+                sc_results = sorted(sc_results)
+                if not log_property:
+                    s['ys'].append(0)
+                    s['xs'].append(0)
 
-            # sc_results = (y_1, y_2, ..., y_n) : y_1 <= y_2 <= ... <= y_n
-            # s = {(x, y) \in R² : y = sc_results[x], x = 1, ..., n }
-            i = 1
-            for r in sc_results:
-                s['ys'].append(r)
-                s['xs'].append(i)
-                i += 1
-            solvers.append(s)
+                # sc_results = (y_1, y_2, ..., y_n) : y_1 <= y_2 <= ... <= y_n
+                # s = {(x, y) \in R² : y = sc_results[x], x = 1, ..., n }
+                i = 1
+                for r in sc_results:
+                    s['ys'].append(r)
+                    s['xs'].append(i)
+                    i += 1
+                solvers.append(s)
 
-    min_y = min([min(s['ys'] or [0.01]) for s in solvers] or [0.01])
-    max_x = max([max(s['xs'] or [0]) for s in solvers] or [0]) + 10
-    max_y = max([max(s['ys'] or [0]) for s in solvers] or [0]) * 1.1
+        min_y = min([min(s['ys'] or [0.01]) for s in solvers] or [0.01])
+        max_x = max([max(s['xs'] or [0]) for s in solvers] or [0]) + 10
+        max_y = max([max(s['ys'] or [0]) for s in solvers] or [0]) * 1.1
 
-    if result_property == 'resultTime':
-        ylabel = 'CPU Time (s)'
-        title = 'Number of solved instances within a given amount of CPU time'
-    elif result_property == 'wallTime':
-        ylabel = 'Wall Clock Time (s)'
-        title = 'Number of solved instances within a given amount of wall clock time'
-    elif result_property == 'cost':
-        ylabel = 'Cost'
-        title = 'Number of solved instances within a given amount of cost value'
-    else:
-        ylabel = solver_prop.name
-        title = 'Number of solved instances within a given amount of ' + solver_prop.name
+        if result_property == 'resultTime':
+            ylabel = 'CPU Time (s)'
+            title = 'Number of solved instances within a given amount of CPU time'
+        elif result_property == 'wallTime':
+            ylabel = 'Wall Clock Time (s)'
+            title = 'Number of solved instances within a given amount of wall clock time'
+        elif result_property == 'cost':
+            ylabel = 'Cost'
+            title = 'Number of solved instances within a given amount of cost value'
+        else:
+            ylabel = solver_prop.name
+            title = 'Number of solved instances within a given amount of ' + solver_prop.name
 
-    if request.args.has_key('csv'):
-        csv_response = StringIO.StringIO()
-        csv_writer = csv.writer(csv_response)
-        for s in solvers:
-            csv_writer.writerow(['%s (G%d)' % (s['name'], s['instance_group'])])
-            csv_writer.writerow(['number of solved instances'] + map(str, s['xs']))
-            csv_writer.writerow(['Cost'] + map(str, s['ys']))
-        csv_response.seek(0)
+        if plot_type == 'csv':
+            csv_response = StringIO.StringIO()
+            csv_writer = csv.writer(csv_response)
+            for s in solvers:
+                csv_writer.writerow(['%s (G%d)' % (s['name'], s['instance_group'])])
+                csv_writer.writerow(['number of solved instances'] + map(str, s['xs']))
+                csv_writer.writerow(['Cost'] + map(str, s['ys']))
+            csv_response.seek(0)
 
-        headers = Headers()
-        headers.add('Content-Type', 'text/csv')
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_cactus.csv"))
-        return Response(response=csv_response.read(), headers=headers)
-    else:
-        return make_plot_response(plots.cactus, solvers, instance_groups_count, colored_instance_groups,
-                                  max_x, max_y, min_y, log_property, flip_axes, ylabel, title)
+            headers = Headers()
+            headers.add('Content-Type', 'text/csv')
+            headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_cactus.csv"))
+            return Response(response=csv_response.read(), headers=headers)
+        else:
+            return make_plot_response(plots.cactus, solvers, instance_groups_count, colored_instance_groups,
+                                      max_x, max_y, min_y, log_property, flip_axes, ylabel, title)
+
+    return cached_cactus_plot(database, experiment_id, request.args, job_count, last_modified_job, get_request_plot_type())
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/rp-comparison-plot/')
