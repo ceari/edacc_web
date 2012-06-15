@@ -92,8 +92,8 @@ def solver_ranking(database, experiment_id):
 
         solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
 
-        #CACHE_TIME = 7*24*60*60
-        #e@cache.memoize(timeout=CACHE_TIME)
+        CACHE_TIME = 7*24*60*60
+        @cache.memoize(timeout=CACHE_TIME)
         def cached_ranking(database, experiment_id, solver_config_ids, sc_names, last_modified_job,
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
                            careful_ranking_noise, form_survival_ranking,
@@ -219,42 +219,53 @@ def sota_solvers(database, experiment_id):
     form.sc.query = experiment.solver_configurations or EmptyQuery()
 
     if form.i.data:
-        sota_solvers = experiment.get_sota_solvers(db, form.i.data, form.sc.data)
-        unique_solver_contribs = experiment.unique_solver_contributions(db, form.i.data, form.sc.data)
-        ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, form.sc.data, form.cost.data)
-        ranking_data, vbs_uses_solver_count = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
-            False, False, form.cost.data)
-        result_matrix, _, _ = experiment.get_result_matrix(db, form.sc.data, form.i.data, form.cost.data)
-        sc_correlation = dict((sc, dict()) for sc in form.sc.data)
-        for sc1 in form.sc.data:
-            for sc2 in form.sc.data:
-                if sc1 == sc2: sc_correlation[sc1][sc2] = sc_correlation[sc2][sc1] = 1.0; continue
-                if sc1 in sc_correlation and sc2 in sc_correlation[sc1]: continue
-                v1 = []
-                v2 = []
-                for instance in form.i.data:
-                    for sc1run, sc2run in zip(result_matrix[instance.idInstance][sc1.idSolverConfig], result_matrix[instance.idInstance][sc2.idSolverConfig]):
-                        v1.append(sc1run.resultTime)
-                        v2.append(sc2run.resultTime)
-                sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
-                sc_correlation[sc2][sc1] = -1 * sc_correlation[sc1][sc2]
+        solver_config_ids = [sc.idSolverConfig for sc in form.sc.data]
+        instance_ids = [i.idInstance for i in form.i.data]
 
-        results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
-        results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)
+        @cache.memoize(7*24*60*60)
+        def cached_sota_solvers(database, experiment_id, solver_config_ids, sc_names, instance_ids, job_count, last_modified_job):
+            sota_solvers = experiment.get_sota_solvers(db, form.i.data, form.sc.data)
+            unique_solver_contribs = experiment.unique_solver_contributions(db, form.i.data, form.sc.data)
+            ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, form.sc.data, form.cost.data)
+            ranking_data, vbs_uses_solver_count = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
+                False, False, form.cost.data)
+            result_matrix, _, _ = experiment.get_result_matrix(db, form.sc.data, form.i.data, form.cost.data)
+            sc_correlation = dict((sc, dict()) for sc in form.sc.data)
+            for sc1 in form.sc.data:
+                for sc2 in form.sc.data:
+                    if sc1 == sc2: sc_correlation[sc1][sc2] = sc_correlation[sc2][sc1] = 1.0; continue
+                    if sc1 in sc_correlation and sc2 in sc_correlation[sc1]: continue
+                    v1 = []
+                    v2 = []
+                    for instance in form.i.data:
+                        for sc1run, sc2run in zip(result_matrix[instance.idInstance][sc1.idSolverConfig], result_matrix[instance.idInstance][sc2.idSolverConfig]):
+                            v1.append(sc1run.resultTime)
+                            v2.append(sc2run.resultTime)
+                    sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
+                    sc_correlation[sc2][sc1] = -1 * sc_correlation[sc1][sc2]
 
-        unique_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
-        unique_params_by_sc = dict()
-        for sc in unique_solver_contribs:
-            unique_params_by_sc[sc] = unique_params + '&' + '&'.join("i=%d" % (i,) for i in unique_solver_contribs[sc])
+            results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
+            results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)
 
-        GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+            unique_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
+            unique_params_by_sc = dict()
+            for sc in unique_solver_contribs:
+                unique_params_by_sc[sc] = unique_params + '&' + '&'.join("i=%d" % (i,) for i in unique_solver_contribs[sc])
 
-        return render("/analysis/sota_solvers.html", database=database, db=db, form=form,
-            instance_properties=db.get_instance_properties(), experiment=experiment,
-            sota_solvers=sota_solvers, results_params=results_params, unique_solver_contribs=unique_solver_contribs,
-            unique_params_by_sc=unique_params_by_sc, ranking_data=ranking_data,
-            vbs_uses_solver_count=vbs_uses_solver_count, GET_data=GET_data,
-            sc_correlation=sc_correlation)
+            GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
+
+            return render("/analysis/sota_solvers.html", database=database, db=db, form=form,
+                instance_properties=db.get_instance_properties(), experiment=experiment,
+                sota_solvers=sota_solvers, results_params=results_params, unique_solver_contribs=unique_solver_contribs,
+                unique_params_by_sc=unique_params_by_sc, ranking_data=ranking_data,
+                vbs_uses_solver_count=vbs_uses_solver_count, GET_data=GET_data,
+                sc_correlation=sc_correlation)
+
+        last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
+                                            .filter_by(experiment=experiment).first()
+        job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
+
+        return cached_sota_solvers(database, experiment_id, solver_config_ids, ''.join(sc.get_name() for sc in form.sc.data), instance_ids, job_count, last_modified_job)
 
     return render("/analysis/sota_solvers.html", database=database, db=db, form=form,
         instance_properties=db.get_instance_properties(), experiment=experiment,

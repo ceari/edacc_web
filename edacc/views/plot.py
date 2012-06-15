@@ -35,6 +35,13 @@ random.seed()
 
 plot = Blueprint('plot', __name__, template_folder='static')
 
+def get_request_plot_type():
+    if request.args.has_key('pdf'): return 'pdf'
+    elif request.args.has_key('eps'): return 'eps'
+    elif request.args.has_key('rscript'): return 'rscript'
+    elif request.args.has_key('csv'): return 'csv'
+    else: return 'png'
+
 def make_plot_response(function, *args, **kwargs):
     if request.args.has_key('pdf'): type = 'pdf'; mime='application/pdf'
     elif request.args.has_key('eps'): type = 'eps'; mime='application/eps'
@@ -882,43 +889,53 @@ def box_plots(database, experiment_id):
     db = models.get_database(database) or abort(404)
     exp = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
-    instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(int(id) for id in request.args.getlist('i'))).all()
-    solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('solver_configs')]
+    instance_ids = map(int, request.args.getlist('i'))
+    solver_config_ids = map(int, request.args.getlist('solver_configs'))
 
-    result_property = request.args.get('result_property')
-    if result_property == 'resultTime':
-        result_property_name = 'CPU time (s)'
-    elif result_property == 'wallTime':
-        result_property_name = 'Wall Clock Time (s)'
-    elif result_property == 'cost':
-        result_property_name = 'Cost'
-    else:
-        result_property = db.session.query(db.Property).get(int(result_property)).idProperty
-        result_property_name = db.session.query(db.Property).get(int(result_property)).name
+    last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified))\
+        .filter_by(experiment=exp).first()
+    job_count = db.session.query(db.ExperimentResult).filter_by(experiment=exp).count()
+
+    @cache.memoize(7*24*60*60)
+    def cached_box_plot(database, experiment_id, instance_ids, solver_config_ids, job_count, last_modified_job, result_property, plot_type):
+        instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(instance_ids)).all()
+        solver_configs = db.session.query(db.SolverConfiguration).filter(db.SolverConfiguration.idSolverConfig.in_(solver_config_ids)).all()
+
+        if result_property == 'resultTime':
+            result_property_name = 'CPU time (s)'
+        elif result_property == 'wallTime':
+            result_property_name = 'Wall Clock Time (s)'
+        elif result_property == 'cost':
+            result_property_name = 'Cost'
+        else:
+            result_property = db.session.query(db.Property).get(int(result_property)).idProperty
+            result_property_name = db.session.query(db.Property).get(int(result_property)).name
 
 
-    results = {}
-    for sc in solver_configs:
-        points = []
-        for instance in instances:
-            points += filter(lambda r: r is not None, [res.get_property_value(result_property, db) for res in db.session.query(db.ExperimentResult)\
-                                                            .options(joinedload_all('properties')) \
-                                                            .filter_by(experiment=exp, instance=instance, solver_configuration=sc).all()])
-        results[sc.name] = points
+        results = {}
+        for sc in solver_configs:
+            points = []
+            for instance in instances:
+                points += filter(lambda r: r is not None, [res.get_property_value(result_property, db) for res in db.session.query(db.ExperimentResult)\
+                                                                .options(joinedload_all('properties')) \
+                                                                .filter_by(experiment=exp, instance=instance, solver_configuration=sc).all()])
+            results[sc.name] = points
 
-    if request.args.has_key('csv'):
-        csv_response = StringIO.StringIO()
-        csv_writer = csv.writer(csv_response)
-        for k, v in results.iteritems():
-            csv_writer.writerow([k] + map(str, v))
-        csv_response.seek(0)
+        if plot_type == 'csv':
+            csv_response = StringIO.StringIO()
+            csv_writer = csv.writer(csv_response)
+            for k, v in results.iteritems():
+                csv_writer.writerow([k] + map(str, v))
+            csv_response.seek(0)
 
-        headers = Headers()
-        headers.add('Content-Type', 'text/csv')
-        headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_box_plots.csv"))
-        return Response(response=csv_response.read(), headers=headers)
-    else:
-        return make_plot_response(plots.box_plot, results, result_property_name)
+            headers = Headers()
+            headers.add('Content-Type', 'text/csv')
+            headers.add('Content-Disposition', 'attachment', filename=secure_filename(exp.name + "_box_plots.csv"))
+            return Response(response=csv_response.read(), headers=headers)
+        else:
+            return make_plot_response(plots.box_plot, results, result_property_name)
+
+    return cached_box_plot(database, experiment_id, instance_ids, solver_config_ids, job_count, last_modified_job, request.args.get('result_property'), get_request_plot_type())
 
 
 @plot.route('/<database>/experiment/<int:experiment_id>/barplot/<int:gt>/<int:eq>/<int:lt>')
