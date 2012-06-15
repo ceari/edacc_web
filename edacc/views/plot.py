@@ -919,14 +919,20 @@ def box_plots(database, experiment_id):
             result_property = db.session.query(db.Property).get(int(result_property)).idProperty
             result_property_name = db.session.query(db.Property).get(int(result_property)).name
 
+        prop_value = dict((sc.idSolverConfig, dict()) for sc in solver_configs)
+        for run in db.session.query(db.ExperimentResult).options(joinedload_all('properties')) \
+                    .filter_by(experiment=exp).filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
+                    .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)).all():
+            if not run.Instances_idInstance in prop_value[run.SolverConfig_idSolverConfig]:
+                prop_value[run.SolverConfig_idSolverConfig][run.Instances_idInstance] = list()
+            prop_value[run.SolverConfig_idSolverConfig][run.Instances_idInstance].append(run.get_property_value(result_property, db))
+
 
         results = {}
         for sc in solver_configs:
             points = []
             for instance in instances:
-                points += filter(lambda r: r is not None, [res.get_property_value(result_property, db) for res in db.session.query(db.ExperimentResult)\
-                                                                .options(joinedload_all('properties')) \
-                                                                .filter_by(experiment=exp, instance=instance, solver_configuration=sc).all()])
+                points += filter(lambda r: r is not None, prop_value[sc.idSolverConfig][instance.idInstance])
             results[sc.name] = points
 
         if plot_type == 'csv':

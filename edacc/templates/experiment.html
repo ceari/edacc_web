@@ -101,6 +101,9 @@
 
     {% if is_admin() or not db.is_competition() or db.competition_phase() in ANALYSIS2 %}
         <h2>Analysis</h2>
+        <div style="font-weight: bold; margin-bottom: 5px; margin-top: 5px;">
+            Note: Since most of the following analysis pages are generated live from the current information in the database,<br/> it may take a while for them to load.
+        </div>
         <a href="{{url_for('analysis.box_plots', database=database, experiment_id=experiment.idExperiment)}}">Box plots - Box plots of the results of solvers on instances</a><br/>
         <a href="{{url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - One result property of two solvers (e.g. CPU time vs. CPU time)</a><br/>
         <a href="{{url_for('analysis.scatter_1solver_result_vs_result_property', database=database, experiment_id=experiment.idExperiment)}}">Scatter plot - Two result properties of a solver (e.g. CPU time vs. Memory)</a><br/>

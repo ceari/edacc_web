@@ -78,8 +78,8 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
         Returns a list with the points in device (pixel) coordinates.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=800,
-                      height=600, type="cairo")
+        grdevices.png(file=filename, units="px", width=1066,
+                      height=800, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=9)
     elif format == 'eps':
@@ -169,7 +169,7 @@ def scatter(points, xlabel, ylabel, title, max_x, max_y, filename, format='png',
     robjects.r.mtext(title, padj=-1.7, side=3, line=3, cex=1.7) # plot title
 
     robjects.r.par(xpd=True)
-    robjects.r.legend("right", inset=-0.35,
+    robjects.r.legend("right", inset=-0.30,
                       legend=robjects.StrVector(legend_strs),
                       col=robjects.StrVector(legend_colors),
                       pch=robjects.IntVector(legend_point_styles))
@@ -207,8 +207,8 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
         instances solved within y seconds.
     """
     if format == 'png':
-        grdevices.png(file=filename, units="px", width=1050,
-                      height=600, type="cairo")
+        grdevices.png(file=filename, units="px", width=1280,
+                      height=800, type="cairo")
     elif format == 'pdf':
         grdevices.bitmap(file=filename, type="pdfwrite", height=7, width=13)
     elif format == 'eps':
@@ -283,6 +283,9 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
             col = color_styles[s['name']]
             pch = point_styles[s['instance_group']]
 
+        if instance_groups_count == 1:
+            pch = solvers.index(s) / 9 + 1
+
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
                         type='p', col=col, pch=pch, log=log,
                         xlim=robjects.r.c(min_x,max_x), ylim=robjects.r.c(min_y,max_y),
@@ -343,7 +346,7 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
         file.write('par(xpd=1)\n')
 
     # plot legend
-    robjects.r.legend("right", inset=-.65,
+    robjects.r.legend("right", inset=-.45,
                       legend=robjects.StrVector(legend_strs),
                       col=robjects.StrVector(legend_colors),
                       pch=robjects.IntVector(legend_point_styles), ncol=2, lty=1, cex=0.75, **{'y.intersp': 1.0})

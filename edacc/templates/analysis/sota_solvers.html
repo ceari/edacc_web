@@ -161,7 +161,7 @@
             <tr>
                 <td style="">{{ sc.name }}</td>
                 {% for sc2 in form.sc.data %}
-                    <td style="text-align: center;">{{ sc_correlation[sc][sc2]|round(3) }}
+                    <td style="text-align: center;"><a href="{{ url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment) }}?solver_config1={{ sc2.idSolverConfig }}&solver_config2={{ sc.idSolverConfig }}&{{ GET_data }}&run=all&xscale=&yscale=&result_property={{ form.cost.data }}">{{ sc_correlation[sc][sc2]|round(3) }}</a>
                     </td>
                 {% endfor %}
             </tr>
