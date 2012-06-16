@@ -91,6 +91,9 @@ methods. This package can be installed by running "install.packages('np')" withi
 
 8. Run "python server.py" which will start a web server on port 5000 listening on all IPs of the machine (Make sure
    the virtual environment is activated, see 3.)
+
+Summary:
+pip install mysql-python pil pylzma numpy scipy flask flask-cache flask-wtf flask-actions flask-mail flask-kvsession rpy2 lxml scikits.learn sqlalchemy
    
 Installation
 ------------
@@ -171,4 +174,3 @@ same machine that the EDACC database runs on::
     > service apache2 restart
 
 The web frontend should now be running under http://foo.server.com/
-

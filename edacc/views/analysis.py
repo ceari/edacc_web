@@ -104,6 +104,10 @@ def solver_ranking(database, experiment_id):
                                                     form.penalized_average_runtime.data,
                                                     form.calculate_average_dev.data, cost)
 
+            faulty_solvers_ids = db.session.query(db.ExperimentResult.SolverConfig_idSolverConfig)\
+                                .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids))\
+                                .filter(db.ExperimentResult.resultCode==-1).distinct().all()
+
             if form_careful_ranking or form_survival_ranking:
                 results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, cost)
 
@@ -190,7 +194,8 @@ def solver_ranking(database, experiment_id):
             return render('/analysis/ranking.html', database=database, db=db,
                           experiment=experiment, ranked_solvers=ranked_solvers,
                           careful_rank=careful_rank, survival_rank=survival_rank,
-                          data=ranking_data, form=form, instance_properties=db.get_instance_properties(), GET_data=GET_data)
+                          data=ranking_data, form=form, instance_properties=db.get_instance_properties(), GET_data=GET_data,
+                          faulty_solvers_ids=faulty_solvers_ids)
 
         last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
                                 .filter_by(experiment=experiment).first()
@@ -242,7 +247,7 @@ def sota_solvers(database, experiment_id):
                             v1.append(sc1run.resultTime)
                             v2.append(sc2run.resultTime)
                     sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
-                    sc_correlation[sc2][sc1] = -1 * sc_correlation[sc1][sc2]
+                    sc_correlation[sc2][sc1] = sc_correlation[sc1][sc2]
 
             results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
             results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)
