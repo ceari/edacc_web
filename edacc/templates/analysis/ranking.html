@@ -133,8 +133,9 @@
     <div>
         The virtual best solver (VBS) solves an instance if any of the experiment's solvers are<br/>
         sucessful on that instance in any of their runs. In this case the VBS gets<br/>
-        the maximum number of successful runs on that instance and for each run the run time of the best solver.
-        The maximum number of runs is determined by the solver that was given the highest number of runs on any instance.
+        the maximum number of successful runs on that instance and for each run the run time of the best solver.<br/>
+        The maximum number of runs is determined by the solver that was given the highest number of runs on any instance.<br/>
+        Details on the solvers marked with <strong>*</strong> can be found in the solver configuration details (click on <img title="Show solver configuration details" src="{{ url_for('static', filename='img/info.png') }}"/>).
     </div>
     <h3>Ranking</h3>
     {% if data %}
