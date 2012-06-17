@@ -60,7 +60,6 @@
                 "bPaginate": false,
                 "bLengthChange": false,
                 "bJQueryUI": true,
-                "bStateSave": true,
                 "bInfo": true,
             });
 
@@ -151,24 +150,24 @@
         <thead>
         <tr>
             <th></th>
-            {% for sc in form.sc.data %}
+            {% for sc in form.sc.data|sort(attribute='name') %}
                 <th>{{ sc.name }}</th>
             {% endfor %}
         </tr>
         </thead>
         <tbody>
-        {% for sc in form.sc.data %}
+        {% for sc in form.sc.data|sort(attribute='name') %}
             <tr>
                 <td style="">{{ sc.name }}</td>
-                {% for sc2 in form.sc.data %}
-                    <td style="text-align: center;"><a href="{{ url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment) }}?solver_config1={{ sc2.idSolverConfig }}&solver_config2={{ sc.idSolverConfig }}&{{ GET_data }}&run=all&xscale=&yscale=&result_property={{ form.cost.data }}">{{ sc_correlation[sc][sc2]|round(3) }}</a>
+                {% for sc2 in form.sc.data|sort(attribute='name') %}
+                    <td style="text-align: center;"><a href="{{ url_for('analysis.scatter_2solver_1property', database=database, experiment_id=experiment.idExperiment) }}?solver_config1={{ sc.idSolverConfig }}&solver_config2={{ sc2.idSolverConfig }}&{{ GET_data }}&run=all&xscale=&yscale=&result_property={{ form.cost.data }}">{{ sc_correlation[sc][sc2]|round(3) }}</a>
                     </td>
                 {% endfor %}
             </tr>
         {% endfor %}
         </tbody>
     </table>
-
+    <img src="{{ url_for('plot.correlation_matrix_plot', database=database, experiment_id=experiment.idExperiment) }}?{{ GET_data }}"/>
     {% endif %}
     {% if ranking_data %}
         <h3>Simplified ranking with number of runs the VBS uses of each solver. If two or more solvers have the same best time on some instance they all get their runs counted.</h3>

@@ -30,6 +30,7 @@ from edacc.web import cache
 from sqlalchemy.orm import joinedload
 from edacc.views.helpers import require_phase, require_login
 from edacc.constants import ANALYSIS1, ANALYSIS2
+from edacc import statistics
 
 random.seed()
 
@@ -1273,3 +1274,30 @@ def perc_solved_alone(database, experiment_id):
         perc_solved_by_solver[sc] = len(solved_instances_by_solver[sc.idSolverConfig]) / float(len(solved_instances)) if len(solved_instances) != 0 else 0
 
     return make_plot_response(plots.perc_solved_alone, perc_solved_by_solver)
+
+@plot.route('/<database>/experiment/<int:experiment_id>/correlation-matrix-plot/')
+@require_phase(phases=ANALYSIS2)
+@require_login
+def correlation_matrix_plot(database, experiment_id):
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i')))).all()
+    solver_configs = db.session.query(db.SolverConfiguration).filter(db.SolverConfiguration.idSolverConfig.in_(map(int, request.args.getlist('sc')))).all()
+
+    result_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, instances, request.args.get('cost', 'resultTime'))
+    sc_correlation = dict((sc, dict()) for sc in solver_configs)
+    for sc1 in solver_configs:
+        for sc2 in solver_configs:
+            if sc1 == sc2: sc_correlation[sc1][sc2] = sc_correlation[sc2][sc1] = 1.0; continue
+            if sc1 in sc_correlation and sc2 in sc_correlation[sc1]: continue
+            v1 = []
+            v2 = []
+            for instance in instances:
+                for sc1run, sc2run in zip(result_matrix[instance.idInstance][sc1.idSolverConfig], result_matrix[instance.idInstance][sc2.idSolverConfig]):
+                    v1.append(sc1run.resultTime)
+                    v2.append(sc2run.resultTime)
+            sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
+            sc_correlation[sc2][sc1] = sc_correlation[sc1][sc2]
+
+    return make_plot_response(plots.correlation_matrix_plot, sc_correlation)

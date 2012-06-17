@@ -19,6 +19,7 @@ grdevices = importr('grDevices') # plotting target devices
 stats = importr('stats') # statistical methods
 akima = importr('akima') # surface interpolation
 fields = importr('fields') # image plotting
+ellipse = importr('ellipse') # correlation matrix plots
 
 #with open(os.devnull) as devnull:
     # redirect the annoying np package import output to nirvana
@@ -1083,3 +1084,33 @@ def perc_solved_alone(perc_solved_by_solver, filename, format='png'):
         raise ex
     finally:
         grdevices.dev_off()
+
+@synchronized
+def correlation_matrix_plot(correlations, filename, format='png'):
+    if format == 'png':
+        grdevices.png(file=filename, units="px", width=1000,
+            height=1000, type="cairo")
+    elif format == 'pdf':
+        grdevices.bitmap(file=filename, type="pdfwrite", height=9, width=9)
+    elif format == 'eps':
+        grdevices.postscript(file=filename, height=9, width=9)
+    elif format == 'rscript':
+        grdevices.postscript(file=os.devnull, height=9, width=9)
+        file = open(filename, 'w')
+
+    scs = correlations.keys()
+    corr = list()
+    for sc in sorted(scs, key=lambda x: x.name):
+        for sc2 in sorted(scs, key=lambda x: x.name):
+            corr.append(correlations[sc][sc2])
+
+    sc_names = robjects.StrVector([sc.get_name() for sc in sorted(scs, key=lambda x: x.name)])
+    dimnames = robjects.r.list(sc_names, sc_names)
+
+    colors = ["#A50F15","#DE2D26","#FB6A4A","#FCAE91","#FEE5D9","white",
+                "#EFF3FF","#BDD7E7","#6BAED6","#3182BD","#08519C"]
+    corr_colors = [colors[int(5*c + 6) - 1] for c in corr]
+
+    robjects.r.plotcorr(robjects.r.matrix(robjects.FloatVector(corr), nrow=len(scs), dimnames=dimnames), col=robjects.StrVector(corr_colors))
+
+    grdevices.dev_off()
