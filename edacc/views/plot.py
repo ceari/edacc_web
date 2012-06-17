@@ -1285,19 +1285,28 @@ def correlation_matrix_plot(database, experiment_id):
     instances = db.session.query(db.Instance).filter(db.Instance.idInstance.in_(map(int, request.args.getlist('i')))).all()
     solver_configs = db.session.query(db.SolverConfiguration).filter(db.SolverConfiguration.idSolverConfig.in_(map(int, request.args.getlist('sc')))).all()
 
-    result_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, instances, request.args.get('cost', 'resultTime'))
-    sc_correlation = dict((sc, dict()) for sc in solver_configs)
-    for sc1 in solver_configs:
-        for sc2 in solver_configs:
-            if sc1 == sc2: sc_correlation[sc1][sc2] = sc_correlation[sc2][sc1] = 1.0; continue
-            if sc1 in sc_correlation and sc2 in sc_correlation[sc1]: continue
-            v1 = []
-            v2 = []
-            for instance in instances:
-                for sc1run, sc2run in zip(result_matrix[instance.idInstance][sc1.idSolverConfig], result_matrix[instance.idInstance][sc2.idSolverConfig]):
-                    v1.append(sc1run.penalized_time1)
-                    v2.append(sc2run.penalized_time1)
-            sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
-            sc_correlation[sc2][sc1] = sc_correlation[sc1][sc2]
+    @cache.memoize(7*24*60*60)
+    def cached_correlation_matrix_plot(database, experiment_id, sc_names, request_args, job_count, last_modified_job):
+        result_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, instances, request.args.get('cost', 'resultTime'))
+        sc_correlation = dict((sc, dict()) for sc in solver_configs)
+        for sc1 in solver_configs:
+            for sc2 in solver_configs:
+                if sc1 == sc2: sc_correlation[sc1][sc2] = sc_correlation[sc2][sc1] = 1.0; continue
+                if sc1 in sc_correlation and sc2 in sc_correlation[sc1]: continue
+                v1 = []
+                v2 = []
+                for instance in instances:
+                    for sc1run, sc2run in zip(result_matrix[instance.idInstance][sc1.idSolverConfig], result_matrix[instance.idInstance][sc2.idSolverConfig]):
+                        v1.append(sc1run.penalized_time1)
+                        v2.append(sc2run.penalized_time1)
+                sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
+                sc_correlation[sc2][sc1] = sc_correlation[sc1][sc2]
 
-    return make_plot_response(plots.correlation_matrix_plot, sc_correlation)
+        return make_plot_response(plots.correlation_matrix_plot, sc_correlation)
+
+
+    last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified))\
+                                .filter_by(experiment=experiment).first()
+    job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
+
+    return cached_correlation_matrix_plot(database, experiment_id, ''.join(sc.name for sc in solver_configs), request.args, job_count, last_modified_job)
