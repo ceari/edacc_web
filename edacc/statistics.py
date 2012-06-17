@@ -48,7 +48,7 @@ def spearman_correlation(x, y):
     try:
         r = r_stats.cor_test(robjects.FloatVector(x), robjects.FloatVector(y),
                              method='spearman')
-    except Exception:
+    except Exception as e:
         return 0.0, 1.0
     cor, p_value = r[3][0], r[2][0] # r is a vector of vectors
     return cor, p_value

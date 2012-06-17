@@ -1295,8 +1295,8 @@ def correlation_matrix_plot(database, experiment_id):
             v2 = []
             for instance in instances:
                 for sc1run, sc2run in zip(result_matrix[instance.idInstance][sc1.idSolverConfig], result_matrix[instance.idInstance][sc2.idSolverConfig]):
-                    v1.append(sc1run.resultTime)
-                    v2.append(sc2run.resultTime)
+                    v1.append(sc1run.penalized_time1)
+                    v2.append(sc2run.penalized_time1)
             sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
             sc_correlation[sc2][sc1] = sc_correlation[sc1][sc2]
 
