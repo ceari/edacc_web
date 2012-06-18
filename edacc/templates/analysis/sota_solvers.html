@@ -201,7 +201,7 @@
         </table>
     {% endif %}
     {% if minimum_covering_set_solver_combinations %}
-        <h3>Minimum sets of solvers to run in parallel to solve all solved instances.</h3>
+        <h3>Minimum solver set(s) to cover all solved instances.</h3>
         <ul>
         {% for min_comb in minimum_covering_set_solver_combinations %}
             <li>{% for sc_id in min_comb %}{{ sc_by_id[sc_id].get_name() }}, {% endfor %}</li>
