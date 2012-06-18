@@ -23,7 +23,7 @@ from flask import render_template as render, g, session
 from flask import abort, request, jsonify, Response
 from werkzeug import Headers, secure_filename
 
-from edacc import models, forms, ranking, statistics
+from edacc import models, forms, ranking, statistics, algorithms
 from edacc.web import cache
 from edacc.views.helpers import require_phase, require_login, is_admin
 from edacc.constants import RANKING, ANALYSIS1, ANALYSIS2, OWN_RESULTS
@@ -249,6 +249,19 @@ def sota_solvers(database, experiment_id):
                     sc_correlation[sc1][sc2] = statistics.spearman_correlation(v1, v2)[0]
                     sc_correlation[sc2][sc1] = sc_correlation[sc1][sc2]
 
+            solved_instances = experiment.get_solved_instance_ids_by_solver_id(db, form.i.data, form.sc.data)
+            solved_instance_ids = set()
+            for sc in solved_instances:
+                for solved_instance in solved_instances[sc]:
+                    solved_instance_ids.add(solved_instance)
+            min_covering_sets = algorithms.min_set_cover(set(solved_instance_ids), [set(solved_instances[sc_id]) for sc_id in solver_config_ids])
+
+            minimum_covering_set_solver_combinations = []
+            for min_cov_set in min_covering_sets:
+                minimum_covering_set_solver_combinations.append([sc_id for sc_id in solver_config_ids if set(solved_instances[sc_id]) in min_cov_set])
+
+            sc_by_id = dict((sc.idSolverConfig, sc) for sc in form.sc.data)
+
             results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
             results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)
 
@@ -264,7 +277,7 @@ def sota_solvers(database, experiment_id):
                 sota_solvers=sota_solvers, results_params=results_params, unique_solver_contribs=unique_solver_contribs,
                 unique_params_by_sc=unique_params_by_sc, ranking_data=ranking_data,
                 vbs_uses_solver_count=vbs_uses_solver_count, GET_data=GET_data,
-                sc_correlation=sc_correlation)
+                sc_correlation=sc_correlation, sc_by_id=sc_by_id, minimum_covering_set_solver_combinations=minimum_covering_set_solver_combinations)
 
         last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
                                             .filter_by(experiment=experiment).first()

@@ -171,6 +171,21 @@ class EDACCDatabase(object):
             #        return 0
             #    return num_results / num_solver_configs / num_instances
 
+            def get_solved_instance_ids_by_solver_id(self, db, instances, solver_configs):
+                if not solver_configs or not instances: return []
+                solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
+                instance_ids = [i.idInstance for i in instances]
+                successful_runs = db.session.query(db.ExperimentResult.SolverConfig_idSolverConfig, db.ExperimentResult.Instances_idInstance)\
+                                                    .filter_by(experiment=self).filter(db.ExperimentResult.resultCode.like("1%"))\
+                                                    .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids))\
+                                                    .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids))\
+                                                    .filter_by(status=1).all()
+                solved_instances = dict((sc.idSolverConfig, set()) for sc in solver_configs)
+                for run in successful_runs:
+                    solved_instances[run.SolverConfig_idSolverConfig].add(run.Instances_idInstance)
+
+                return solved_instances
+
             def get_sota_solvers(self, db, instances, solver_configs):
                 """
                     Returns the set of state-of-the-art solvers of the experiment.
