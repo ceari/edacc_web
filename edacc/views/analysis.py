@@ -260,7 +260,7 @@ def sota_solvers(database, experiment_id):
             #for min_cov_set in min_covering_sets:
             #    minimum_covering_set_solver_combinations.append([sc_id for sc_id in solver_config_ids if set(solved_instances[sc_id]) in min_cov_set])
 
-            #sc_by_id = dict((sc.idSolverConfig, sc) for sc in form.sc.data)
+            sc_by_id = dict((sc.idSolverConfig, sc) for sc in form.sc.data)
 
             results_params = '&'.join("solver_configs=%d" % (sc.idSolverConfig,) for sc in sota_solvers)
             results_params += '&' + '&'.join("i=%d" % (i.idInstance,) for i in form.i.data)
