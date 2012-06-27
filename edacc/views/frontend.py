@@ -201,7 +201,7 @@ def download_instances(database, experiment_id):
         instance_path = os.path.join(config.TEMP_DIR, 'tarballs', str(g.unique_id), *(instance.get_class_hierarchy()))
         try: os.makedirs(instance_path)
         except: pass
-        with open(os.path.join(instance_path, instance.name + '.lzma' if compressed else ''), 'wb') as f:
+        with open(os.path.join(instance_path, instance.name + ('.lzma' if compressed else '')), 'wb') as f:
             f.write(instance_blob)
 
     tmp_file = tempfile.TemporaryFile("w+b")
