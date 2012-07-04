@@ -181,10 +181,27 @@ def experiment_instances(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
 
     instances = experiment.get_instances(db)
+    instance_properties = db.get_instance_properties()
+
+    if request.args.has_key('csv'):
+        csv_response = StringIO.StringIO()
+        csv_writer = csv.writer(csv_response)
+        csv_writer.writerow(["Name", "MD5"] + [p.name for p in instance_properties])
+
+        for instance in instances:
+            csv_writer.writerow([instance.name, instance.md5] + [instance.get_property_value(prop.idProperty, db) for prop in instance_properties])
+
+
+        csv_response.seek(0)
+        headers = Headers()
+        headers.add('Content-Type', 'text/csv')
+        headers.add('Content-Disposition', 'attachment',
+            filename=secure_filename(experiment.name + "_full_results.csv"))
+        return Response(response=csv_response.read(), headers=headers)
 
     return render('experiment_instances.html', instances=instances,
                   experiment=experiment, database=database, db=db,
-                  instance_properties=db.get_instance_properties())
+                  instance_properties=instance_properties)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/download-instances')

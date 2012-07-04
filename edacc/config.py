@@ -52,6 +52,9 @@ DEFAULT_MAIL_SENDER="bla@gmail.com"
 # folder used to upload benchmarks to
 UPLOAD_FOLDER = "/tmp"
 
+# folder with external binaries etc.
+CONTRIB_DIR = "contrib"
+
 # List of databases this server connects to at startup
 # Format: Tuples of username, password, database, label (used on the pages), hidden
 DEFAULT_DATABASES = (
