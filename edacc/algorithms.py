@@ -36,6 +36,9 @@ def ak_min_set_cover(U, sets, set_ids):
 
     sol = subprocess.Popen([os.path.join(config.CONTRIB_DIR, 'setcover/verify_msc'), os.path.join(tempdir, "instance"),
                             os.path.join(tempdir, "solution")], stdout=subprocess.PIPE, preexec_fn=setlimits)
-    sc_ids = map(int, sol.communicate()[0].splitlines())
+    output = sol.communicate()[0]
+    min_sets = []
+    for line in output.splitlines():
+        min_sets.append(map(int, line.split()))
 
-    return [sc_ids]
+    return min_sets
