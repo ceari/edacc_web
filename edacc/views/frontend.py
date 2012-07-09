@@ -314,7 +314,7 @@ def experiment_results(database, experiment_id):
                 time_measure = None
                 coeff_variation = None
                 quartile_coeff_dispersion = None
-                if len(runtimes) > 0:
+                if len(runtimes) > 0 or form.display_measure.data == 'par10' or form.display_measure.data is None:
                     if form.display_measure.data == 'mean':
                         time_measure = numpy.average(runtimes)
                     elif form.display_measure.data == 'median':

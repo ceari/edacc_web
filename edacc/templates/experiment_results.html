@@ -186,7 +186,8 @@
                                 {% if job.time_measure != None %}
                                 {{job.time_measure|round(4)}} {{job.first_job.result_code_description}}
                                 {% else %}
-                                    {% if job.first_job.status == 0 %}running{% endif %}
+                                    {% if job.first_job.status == 0 %}running
+                                    {% else %}-{% endif %}
                                 {% endif %}
                             </a>
                         </td>
