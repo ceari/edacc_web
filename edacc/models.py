@@ -81,11 +81,11 @@ class EDACCDatabase(object):
                 pc = self.instance_classes[0]
                 parent_classes = [pc.name]
                 count = 1
-                while pc.parent_class and count < 3:
+                while pc.parent_class:
                     pc = pc.parent_class
                     parent_classes.append(pc.name)
                     count += 1
-                if pc.parent_class: return '/.../' + '/'.join(reversed(parent_classes)) + "/" + self.name
+                if pc.parent_class: return '/'.join(reversed(parent_classes)) + "/" + self.name
                 else: return '/'.join(reversed(parent_classes)) + "/" + self.name
 
             def get_class_hierarchy(self):

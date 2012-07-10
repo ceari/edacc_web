@@ -377,13 +377,13 @@ def experiment_results(database, experiment_id):
             csv_writer = csv.writer(csv_response)
 
             csv_writer.writerow(['Measure: ' + (form.display_measure.data or 'par10')])
-            head = ['Instance', 'Best time']
+            head = ['Instance', 'MD5', 'Best time']
             for sc in solver_configs_dict.values():
                 head += [str(sc)]
             csv_writer.writerow(head)
 
             for row in results:
-                write_row = [row['instance'].name, str(row['best_time'])]
+                write_row = [row['instance'].name, row['instance'].md5, str(row['best_time'])]
                 for sc_results in row['times']:
                     if form.calculate_dispersion.data:
                         write_row.append(str(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '') + " (%.4f, %.4f)" % (sc_results['coeff_variation'], sc_results['quartile_coeff_dispersion']))
@@ -391,11 +391,11 @@ def experiment_results(database, experiment_id):
                         write_row.append(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '')
                 csv_writer.writerow(write_row)
 
-            csv_writer.writerow(['Average', ''] + map(lambda x: str(round(x, 4)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
-            csv_writer.writerow(['Sum', ''] + map(lambda x: str(round(x, 4)), [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+            csv_writer.writerow(['Average', '', ''] + map(lambda x: str(round(x, 4)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+            csv_writer.writerow(['Sum', '', ''] + map(lambda x: str(round(x, 4)), [sum_by_solver[sc.idSolverConfig] for sc in solver_configs]))
             if form.calculate_dispersion.data:
-                csv_writer.writerow(['Avg. coefficient of variation', ''] + map(lambda x: str(round(x, 4)), [avg_cv_by_solver[sc.idSolverConfig] for sc in solver_configs]))
-                csv_writer.writerow(['Avg. quartile coefficient of dispersion', ''] + map(lambda x: str(round(x, 4)), [avg_qcd_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+                csv_writer.writerow(['Avg. coefficient of variation', '', ''] + map(lambda x: str(round(x, 4)), [avg_cv_by_solver[sc.idSolverConfig] for sc in solver_configs]))
+                csv_writer.writerow(['Avg. quartile coefficient of dispersion', '', ''] + map(lambda x: str(round(x, 4)), [avg_qcd_by_solver[sc.idSolverConfig] for sc in solver_configs]))
 
             csv_response.seek(0)
             headers = Headers()
@@ -524,7 +524,7 @@ def experiment_results_by_solver(database, experiment_id):
             cost_limit_column = table.c['CPUTimeLimit']
 
         s = select([expression.label('cost', expression.case([(table.c['status'] > 0 , cost_column)], else_=None)), table.c['resultCode'], table.c['idJob'],
-                    table.c['Instances_idInstance'], table.c['status'], table_instances.c['name'], expression.label('result_code_description', table_result_codes.c['description']),
+                    table.c['Instances_idInstance'], table.c['status'], table_instances.c['name'], table_instances.c['md5'], expression.label('result_code_description', table_result_codes.c['description']),
                     expression.label('limit', cost_limit_column)],
             and_(table.c['SolverConfig_idSolverConfig'] == solver_config.idSolverConfig,
                 table.c['Experiment_idExperiment']==experiment_id
@@ -538,8 +538,10 @@ def experiment_results_by_solver(database, experiment_id):
         runs_by_instance = {}
         jobs_by_instance = {}
         name_by_instance = {}
+        md5_by_instance = {}
         for r in db.session.connection().execute(s):
             name_by_instance[r.Instances_idInstance] = r.name
+            md5_by_instance[r.Instances_idInstance] = r.md5
             if not r.Instances_idInstance in runs_by_instance:
                 runs_by_instance[r.Instances_idInstance] = [r]
             else:
@@ -569,8 +571,8 @@ def experiment_results_by_solver(database, experiment_id):
         if 'csv' in request.args:
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
-            csv_writer.writerow(['Instance'] + ['Run'] * num_runs + ['penalized avg. runtime'] + ['Variance'])
-            results = [[name_by_instance[res[0]]] + [('' if r.cost is None else round(r.cost, 3)) for r in res[1]] +
+            csv_writer.writerow(['Instance', 'MD5'] + ['Run'] * num_runs + ['penalized avg. runtime'] + ['Variance'])
+            results = [[name_by_instance[res[0]], md5_by_instance[res[0]]] + [('' if r.cost is None else round(r.cost, 3)) for r in res[1]] +
                        ['' if par10_by_instance[res[0]] is None else round(par10_by_instance[res[0]], 4)] +
                        ['' if var_by_instance[res[0]] is None else round(var_by_instance[res[0]], 4)] for res in results]
 
@@ -600,7 +602,8 @@ def experiment_results_by_solver(database, experiment_id):
                   solver_configs=solver_configs, experiment=experiment,
                   form=form, results=results, par10_by_instance=par10_by_instance, num_runs=num_runs,
                   var_by_instance=var_by_instance, std_by_instance=std_by_instance, mean_by_instance=mean_by_instance,
-                  instance_properties=db.get_instance_properties(), name_by_instance=name_by_instance)
+                  instance_properties=db.get_instance_properties(), name_by_instance=name_by_instance,
+                    md5_by_instance=md5_by_instance)
 
     return render('experiment_results_by_solver.html', db=db, database=database,
                   solver_configs=solver_configs, experiment=experiment,

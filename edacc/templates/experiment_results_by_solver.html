@@ -27,7 +27,7 @@
                 "oLanguage": {
                     "sZeroRecords": "No matching results"
                 },
-                "aoColumns": [{"bSearchable": true},
+                "aoColumns": [{"bSearchable": true}, {"bSearchable": true},
                               {% for i in range(num_runs) %}{"bSortable":false,"bSearchable":false},{% endfor %} {% if num_runs > 1 %} {"bSearchable": false}, {% endif %}]
                               //{"bSearchable": false}, {"bSearchable": false}, {"bSearchable": false}, {"bSearchable": false}]
             });
@@ -86,6 +86,7 @@
             <thead>
                 <tr>
                     <th>Instance</th>
+                    <th>MD5</th>
                     {% for i in range(num_runs) %}<th>{{i}}</th>{% endfor %}
                     {% if num_runs > 1 %}<th title="Penalized average runtime is the average runtime on an instance with a penalty of 10 times the experiment's timeout for unsuccessful runs" id="th_par10">penalized avg. runtime</th>{% endif %}
                     <!--<th>Mean</th>
@@ -100,6 +101,7 @@
                         <td nowrap="nowrap">
                             <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment)}}?instance={{result.0}}&cost={{ form.cost.data }}">{{ name_by_instance[result.0] }}</a>
                         </td>
+                        <td>{{ md5_by_instance[result.0] }}</td>
                         {% for run in result.1 %}
                             {% if run == None %}
                                 <td></td>
