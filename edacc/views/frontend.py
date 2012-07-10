@@ -383,7 +383,7 @@ def experiment_results(database, experiment_id):
             csv_writer.writerow(head)
 
             for row in results:
-                write_row = [row['instance'].name, row['instance'].md5, str(row['best_time'])]
+                write_row = [row['instance'].get_name(), row['instance'].md5, str(row['best_time'])]
                 for sc_results in row['times']:
                     if form.calculate_dispersion.data:
                         write_row.append(str(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '') + " (%.4f, %.4f)" % (sc_results['coeff_variation'], sc_results['quartile_coeff_dispersion']))
@@ -542,10 +542,15 @@ def experiment_results_by_solver(database, experiment_id):
         for r in db.session.connection().execute(s):
             name_by_instance[r.Instances_idInstance] = r.name
             md5_by_instance[r.Instances_idInstance] = r.md5
+
             if not r.Instances_idInstance in runs_by_instance:
                 runs_by_instance[r.Instances_idInstance] = [r]
             else:
                 runs_by_instance[r.Instances_idInstance].append(r)
+
+        instance_by_id = {}
+        for instance in experiment.get_instances(db):
+            instance_by_id[instance.idInstance] = instance
 
         for instance in runs_by_instance.keys():
             total_time, count = 0.0, 0
@@ -572,7 +577,7 @@ def experiment_results_by_solver(database, experiment_id):
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Instance', 'MD5'] + ['Run'] * num_runs + ['penalized avg. runtime'] + ['Variance'])
-            results = [[name_by_instance[res[0]], md5_by_instance[res[0]]] + [('' if r.cost is None else round(r.cost, 3)) for r in res[1]] +
+            results = [[instance_by_id[res[0]].get_name(), md5_by_instance[res[0]]] + [('' if r.cost is None else round(r.cost, 3)) for r in res[1]] +
                        ['' if par10_by_instance[res[0]] is None else round(par10_by_instance[res[0]], 4)] +
                        ['' if var_by_instance[res[0]] is None else round(var_by_instance[res[0]], 4)] for res in results]
 
