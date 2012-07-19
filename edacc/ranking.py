@@ -206,6 +206,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     vbs_num_solved = len(best_instance_runtimes) * max_num_runs
     vbs_cumulated_cpu = sum(r[0] for r in best_instance_runtimes if r[0] is not None) * max_num_runs
     vbs_median = numpy.median([r[0] for r in best_instance_runtimes if r[0] is not None])
+    vbs_average = numpy.average([r[0] for r in best_instance_runtimes if r[0] is not None])
     best_runtime_by_instance = dict()
     for bir in best_instance_runtimes:
         best_runtime_by_instance[bir.Instances_idInstance] = bir[0]
@@ -223,6 +224,8 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
              vbs_cumulated_cpu,                             # cumulated CPU time
              (0.0 if vbs_num_solved == 0 else
                      vbs_median),
+             (0.0 if vbs_num_solved == 0 else
+              vbs_average),
              0.0, # avg stddev
              0.0,
              0.0,
@@ -305,6 +308,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                                             / (len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]))
 
         median_runtime = numpy.median([j.cost_limit for j in failed_runs_by_solver[solver.idSolverConfig]] + [j.cost for j in successful_runs])
+        average_runtime = numpy.average([j.cost for j in successful_runs])
 
         avg_stddev_runtime = 0.0
         avg_cv = 0.0
@@ -334,6 +338,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             successful_runs_sum,
             #numpy.average([j[0] or 0.0 for j in successful_runs] or 0),
             median_runtime,
+            average_runtime,
             avg_stddev_runtime,
             avg_cv,
             avg_qcd,

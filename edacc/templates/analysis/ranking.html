@@ -84,6 +84,7 @@
                         { "sType": "percent" },
                         { "sType": "percent" },
                         null,
+                        null,
                         null
                         {% if form.calculate_average_dev.data %}, null, null, null{% endif %}
                         {% if form.penalized_average_runtime.data %}, null{% endif %}
@@ -155,6 +156,7 @@
                 <th>% of VBS runs</th>
                 <th>cumulated cost</th>
                 <th>Median cost</th>
+                <th>Average cost</th>
                 {% if form.calculate_average_dev.data %}
                 <th>avg. deviation of successful runs</th>
                 <th>avg. coefficient of variation</th>
@@ -181,13 +183,14 @@
                 <td>{{(sc.3 * 100.0)|round(2)}} %</td>
                 <td>{{sc.4|round(3)}}</td>
                 <td>{{sc.5|round(3)}}</td>
-                {% if form.calculate_average_dev.data %}
                 <td>{{sc.6|round(3)}}</td>
+                {% if form.calculate_average_dev.data %}
                 <td>{{sc.7|round(3)}}</td>
                 <td>{{sc.8|round(3)}}</td>
+                <td>{{sc.9|round(3)}}</td>
                 {% endif %}
                 {% if form.penalized_average_runtime.data %}
-                <td>{{sc.9|round(4)}}</td>
+                <td>{{sc.10|round(4)}}</td>
                 {% endif %}
             </tr>
         {% endfor %}
