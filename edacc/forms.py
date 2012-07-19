@@ -9,9 +9,9 @@
     :license: MIT, see LICENSE for details.
 """
 
-from flaskext.wtf import Form, TextField, PasswordField, TextAreaField, RadioField, DecimalField, FloatField
-from flaskext.wtf import FileField, Required, Length, Email, EqualTo, SelectField
-from flaskext.wtf import ValidationError, BooleanField, validators
+from flask_wtf import Form, TextField, PasswordField, TextAreaField, RadioField, DecimalField, FloatField
+from flask_wtf import FileField, Required, Length, Email, EqualTo, SelectField
+from flask_wtf import ValidationError, BooleanField, validators
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
                                             QuerySelectField
 

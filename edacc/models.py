@@ -685,7 +685,7 @@ class EDACCDatabase(object):
         )
         mapper(SolverConfiguration, metadata.tables['SolverConfig'],
             properties = {
-                'parameter_instances': relation(ParameterInstance),
+                'parameter_instances': relation(ParameterInstance, backref="solver_configuration"),
                 'solver_binary': relation(SolverBinary, backref="solver_configurations"),
                 'experiment': relation(Experiment),
             }
@@ -719,7 +719,7 @@ class EDACCDatabase(object):
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
                 'output': relation(ExperimentResultOutput, backref='result', uselist=False),
-                'solver_configuration': relation(SolverConfiguration),
+                'solver_configuration': relation(SolverConfiguration, backref='runs'),
                 'properties': relationship(ExperimentResultProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),
                 'instance': relation(Instance, backref='results'),
