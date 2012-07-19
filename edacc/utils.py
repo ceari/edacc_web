@@ -40,6 +40,8 @@ def job_status_color(value):
 
 def job_result_code_color(value):
     """ Returns an HTML conform color string for the job result code """
+    if str(value).startswith("1"):
+        return "#00CC33"
     if value not in JOB_RESULT_CODE_COLOR:
         return 'grey'
     else:
