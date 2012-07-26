@@ -272,6 +272,7 @@ class RuntimeMatrixPlotForm(Form):
     measure = SelectField('Measure', default='par10',
                                   choices=[('mean', 'mean'),
                                     ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
+    result_property = SelectField('Result property', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])
 
 class ParameterPlot2DForm(Form):
     parameter1 = SelectField('First parameter')

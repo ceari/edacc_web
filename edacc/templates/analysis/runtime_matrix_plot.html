@@ -34,6 +34,7 @@
         <form method="get" action="{{url_for('analysis.runtime_matrix_plot', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
             {{ render_field(form.measure) }}
+            {{ render_field(form.result_property) }}
             <tr><td><input type="submit" value="Show" /></td></tr>
             </table>
         </form>

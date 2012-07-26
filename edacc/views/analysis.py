@@ -743,6 +743,9 @@ def runtime_matrix_plot(database, experiment_id):
     experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
     
     form = forms.RuntimeMatrixPlotForm(request.args)
+    result_properties = db.get_plotable_result_properties()
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
+    form.result_property.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
     GET_data = "&".join(['='.join(list(t)) for t in request.args.items(multi=True)])
     if request.args.get('measure') is None: GET_data += "&measure=par10"
 

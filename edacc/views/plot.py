@@ -20,6 +20,7 @@ import random
 from sqlalchemy import or_, not_, func
 from sqlalchemy.sql import select, and_, functions, expression, alias
 from sqlalchemy.orm import joinedload_all
+import sqlalchemy.types
 
 from flask import Blueprint, render_template as render
 from flask import Response, abort, request, g
@@ -969,31 +970,44 @@ def runtime_matrix_plot(database, experiment_id):
     measure = request.args.get('measure', 'par10') or abort(404)
     last_modified_job = db.session.query(func.max(db.ExperimentResult.date_modified)) \
                                 .filter_by(experiment=exp).first()
-    
-    CACHE_TIME = 14*24*60*60
-    @cache.memoize(timeout=CACHE_TIME)
-    def make_rtm_response(experiment_id, last_modified_job, measure, num_jobs, csv=False, type='png'):
+    cost = request.args.get('result_property', 'resultTime')
+
+    #CACHE_TIME = 14*24*60*60
+    #@cache.memoize(timeout=CACHE_TIME)
+    def make_rtm_response(experiment_id, last_modified_job, measure, num_jobs, cost, csv=False, type='png'):
         solver_configs = sorted(exp.solver_configurations, key=lambda sc: sc.idSolverConfig)
         instances = sorted(exp.instances, key=lambda i: i.idInstance)
         solver_configs_dict = dict((sc.idSolverConfig, sc) for sc in solver_configs)
 
-        cost = exp.defaultCost
-        cost_limit = 'CPUTimeLimit' if cost == 'resultTime' else 'wallClockTimeLimit' if cost == 'wallTime' else None
-
         table = db.metadata.tables['ExperimentResults']
+        from_table = table
+        table_has_prop = db.metadata.tables['ExperimentResult_has_Property']
+        table_has_prop_value = db.metadata.tables['ExperimentResult_has_PropertyValue']
+        cost_limit = table.c['CPUTimeLimit'] if cost == 'resultTime' else table.c['wallClockTimeLimit'] if cost == 'wallTime' else exp.cost_penalty if cost == 'cost' else None
+
+        if cost in ('resultTime', 'wallTime', 'cost'):
+            cost_c = table.c[cost]
+        else:
+            cost_c = table_has_prop_value.c['value']
+            from_table = table.join(table_has_prop, and_(table_has_prop.c['idProperty']==int(cost),
+                table_has_prop.c['idExperimentResults']==table.c['idJob'])).join(table_has_prop_value)
+
+        if cost not in ('resultTime', 'wallTime', 'cost'):
+            s = select([func.max(expression.cast(cost_c, sqlalchemy.types.Float))], table.c['Experiment_idExperiment']==experiment_id).select_from(from_table)
+            cost_limit = float(db.session.connection().execute(s).fetchone()[0])
+
         if measure == 'par10':
             time_case = expression.case([
-                            (table.c['resultCode'].like(u'1%'), table.c[cost])],
-                            else_=table.c[cost_limit]*10.0)
+                            (table.c['resultCode'].like(u'1%'), expression.cast(cost_c, sqlalchemy.types.Float))],
+                            else_=cost_limit*10.0)
         else:
-            time_case = table.c[cost]
-            
+            time_case = cost_c
+
         s = select([time_case,
                     table.c['resultCode'],
-                    table.c[cost_limit],
                     table.c['SolverConfig_idSolverConfig'],
                     table.c['Instances_idInstance']],
-                    table.c['Experiment_idExperiment']==experiment_id).select_from(table)
+                    table.c['Experiment_idExperiment']==experiment_id).select_from(from_table)
         runs = db.session.connection().execute(s)
 
         if measure == 'mean': aggregate_func = func.AVG(time_case)
@@ -1004,8 +1018,8 @@ def runtime_matrix_plot(database, experiment_id):
         s = select([table.c['SolverConfig_idSolverConfig'],
                     aggregate_func], table.c['Experiment_idExperiment']==experiment_id) \
                     .group_by(table.c['SolverConfig_idSolverConfig']) \
-                    .select_from(table)
-        solver_score = dict((sc[0], sc[1]) for sc in db.session.connection().execute(s))
+                    .select_from(from_table)
+        solver_score = dict((sc[0], float(sc[1])) for sc in db.session.connection().execute(s))
 
         # throw out all solver configs for which there are no runs
         solver_configs = filter(lambda sc: sc.idSolverConfig in solver_score.keys(), solver_configs)
@@ -1013,19 +1027,20 @@ def runtime_matrix_plot(database, experiment_id):
         s = select([table.c['Instances_idInstance'],
                     aggregate_func], table.c['Experiment_idExperiment']==experiment_id) \
                     .group_by(table.c['Instances_idInstance']) \
-                    .select_from(table)
-        instance_hardness = dict((inst[0], inst[1]) for inst in db.session.connection().execute(s))
+                    .select_from(from_table)
+        instance_hardness = dict((inst[0], float(inst[1])) for inst in db.session.connection().execute(s))
 
         results_by_instance = {}
         for r in runs:
+            c = float(r[0])
             if r.Instances_idInstance not in results_by_instance:
-                results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [r[0]]}
+                results_by_instance[r.Instances_idInstance] = {r.SolverConfig_idSolverConfig: [c]}
             else:
                 rs = results_by_instance[r.Instances_idInstance]
                 if r.SolverConfig_idSolverConfig not in rs:
-                    rs[r.SolverConfig_idSolverConfig] = [r[0]]
+                    rs[r.SolverConfig_idSolverConfig] = [c]
                 else:
-                    rs[r.SolverConfig_idSolverConfig].append(r[0])
+                    rs[r.SolverConfig_idSolverConfig].append(c)
 
         sorted_solver_configs = sorted(solver_configs, key=lambda sc: solver_score[sc.idSolverConfig])
         sorted_instances = sorted(instances, key=lambda i: instance_hardness[i.idInstance])
@@ -1072,7 +1087,7 @@ def runtime_matrix_plot(database, experiment_id):
     elif request.args.has_key('eps'): type = 'eps'
     elif request.args.has_key('rscript'): type = 'rscript'
     else: type = 'png'
-    return make_rtm_response(experiment_id, last_modified_job, measure, exp.get_num_jobs(db), request.args.has_key('csv'), type)
+    return make_rtm_response(experiment_id, last_modified_job, measure, exp.get_num_jobs(db), cost, request.args.has_key('csv'), type)
 
 @plot.route('/<database>/experiment/<int:experiment_id>/parameter-plot-1d-img/')
 @require_phase(phases=ANALYSIS2)
