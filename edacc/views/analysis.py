@@ -85,6 +85,10 @@ def solver_ranking(database, experiment_id):
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     if len(experiment.solver_configurations) > 100 and not form.i.data: form.careful_ranking.data = False
 
+    result_properties = db.get_plotable_result_properties()
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
+    form.cost.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
+
     if form.i.data:
         solver_configs = experiment.solver_configurations
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
@@ -98,6 +102,8 @@ def solver_ranking(database, experiment_id):
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
                            careful_ranking_noise, form_survival_ranking,
                            form_break_ties, cost, csv_response, latex_response, user_id):
+
+            if cost not in ('resultTime', 'wallTime', 'cost'): cost = int(cost)
 
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
             ranking_data, _ = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
