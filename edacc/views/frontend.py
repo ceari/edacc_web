@@ -380,7 +380,7 @@ def experiment_results(database, experiment_id):
 
             csv_writer.writerow(['Measure: ' + (form.display_measure.data or 'par10')])
             head = ['Instance', 'MD5', 'Best time']
-            for sc in solver_configs_dict.values():
+            for sc in solver_configs:
                 head += [str(sc)]
             csv_writer.writerow(head)
 
@@ -390,7 +390,7 @@ def experiment_results(database, experiment_id):
                     if form.calculate_dispersion.data:
                         write_row.append(str(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '') + " (%.4f, %.4f)" % (sc_results['coeff_variation'], sc_results['quartile_coeff_dispersion']))
                     else:
-                        write_row.append(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else '')
+                        write_row.append(round(sc_results['time_measure'], 4) if isinstance(sc_results['time_measure'], float) else repr(sc_results['time_measure']))
                 csv_writer.writerow(write_row)
 
             csv_writer.writerow(['Average', '', ''] + map(lambda x: str(round(x, 4)), [avg_by_solver[sc.idSolverConfig] for sc in solver_configs]))
