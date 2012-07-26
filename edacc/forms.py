@@ -262,7 +262,7 @@ class ResultsBySolverAndInstanceForm(Form):
     cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])
     display_measure = SelectField('Display measure', default='par10',
                                   choices=[('mean', 'mean'), ('median', 'median'),
-                                    ('par10', 'par10'), ('min', 'min'), ('max', 'max')])
+                                    ('par10', 'par10'), ('min', 'min'), ('max', 'max'), ('par1', 'par1')])
     i = QuerySelectMultipleField('Instances', get_pk=lambda i: i.idInstance, allow_blank=True)
     instance_filter = TextField('Filter Instances')
     calculate_dispersion = BooleanField('Calculate dispersion measures', default=False)
