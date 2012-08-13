@@ -105,7 +105,7 @@ def configuration_runs(database, experiment_id):
             parameter_values[pv.SolverConfig_idSolverConfig] = dict()
         parameter_values[pv.SolverConfig_idSolverConfig][pv.Parameters_idParameter] = pv.value
 
-    results, _, _ = experiment.get_result_matrix(db, experiment.solver_configurations, experiment.get_instances(db))
+    results, _, _ = experiment.get_result_matrix(db, experiment.solver_configurations, experiment.get_instances(db), cost=experiment.defaultCost)
 
     csv_response = StringIO.StringIO()
     csv_writer = csv.writer(csv_response)
