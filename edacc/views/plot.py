@@ -1113,11 +1113,12 @@ def parameter_plot_1d(database, experiment_id):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         if measure == 'par10':
+            to_expr = (exp.costPenalty if exp.defaultCost == 'cost' else table.c['CPUTimeLimit'] if exp.costPenalty == 'resultTime' else table.c['wallClockTimeLimit'])
             time_case = expression.case([
-                (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
-                else_=table.c['CPUTimeLimit']*10.0)
+                (table.c['resultCode'].like(u'1%'), table.c[exp.defaultCost])],
+                else_=to_expr*10.0)
         else:
-            time_case = table.c['resultTime']
+            time_case = table.c[exp.defaultCost]
 
         s = select([time_case,
                     table.c['SolverConfig_idSolverConfig']],
@@ -1200,11 +1201,12 @@ def parameter_plot_2d(database, experiment_id):
         table_sc_params2 = alias(db.metadata.tables['SolverConfig_has_Parameters'], "param2")
 
         if measure == 'par10':
+            to_expr = (exp.costPenalty if exp.defaultCost == 'cost' else table.c['CPUTimeLimit'] if exp.costPenalty == 'resultTime' else table.c['wallClockTimeLimit'])
             time_case = expression.case([
-                (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
-                else_=table.c['CPUTimeLimit']*10.0)
+                (table.c['resultCode'].like(u'1%'), table.c[exp.defaultCost])],
+                else_=to_expr*10.0)
         else:
-            time_case = table.c['resultTime']
+            time_case = table.c[exp.defaultCost]
 
         s = select([time_case,
                     table.c['SolverConfig_idSolverConfig']],
@@ -1245,6 +1247,7 @@ def parameter_plot_2d(database, experiment_id):
                 cost = min(solver_config_times[sc])
             elif measure == "median":
                 cost = numpy.median(solver_config_times[sc])
+
             data.append(sc_param_values[sc] + (cost,))
 
         return make_plot_response(plots.parameter_plot_2d, data, parameter1_name, parameter2_name, measure,

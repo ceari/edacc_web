@@ -1003,9 +1003,6 @@ def parameter_plot_2d(data, parameter1_name, parameter2_name, measure, surface_i
             robjects.r.par(new=1)
             robjects.r.points(robjects.FloatVector([min_cost_point[0]]), robjects.FloatVector([min_cost_point[1]]),  type='p', pch=3, col='red', cex=3)
         else:
-            xs = map(lambda x: 0.0 if x <= 0.000000001 else math.log10(x), xs)
-            ys = map(lambda x: 0.0 if x <= 0.000000001 else math.log10(x), ys)
-
             min_x, max_x = min(xs), max(xs)
             min_y, max_y = min(ys), max(ys)
 

@@ -774,11 +774,12 @@ def parameter_plot_1d(database, experiment_id):
         table = db.metadata.tables['ExperimentResults']
         table_sc = db.metadata.tables['SolverConfig']
         if form.measure.data == 'par10':
+            to_expr = (experiment.costPenalty if experiment.defaultCost == 'cost' else table.c['CPUTimeLimit'] if experiment.costPenalty == 'resultTime' else table.c['wallClockTimeLimit'])
             time_case = expression.case([
-                (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
-                else_=table.c['CPUTimeLimit']*10.0)
+                (table.c['resultCode'].like(u'1%'), table.c[experiment.defaultCost])],
+                else_=to_expr*10.0)
         else:
-            time_case = table.c['resultTime']
+            time_case = table.c[experiment.defaultCost]
 
         s = select([func.max(time_case)],
             and_(table.c['Experiment_idExperiment']==experiment_id,
@@ -808,9 +809,10 @@ def parameter_plot_2d(database, experiment_id):
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
 
     table = db.metadata.tables['ExperimentResults']
+    to_expr = (experiment.costPenalty if experiment.defaultCost == 'cost' else table.c['CPUTimeLimit'] if experiment.costPenalty == 'resultTime' else table.c['wallClockTimeLimit'])
     time_case = expression.case([
-        (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
-        else_=table.c['CPUTimeLimit']*10.0)
+        (table.c['resultCode'].like(u'1%'), table.c[experiment.defaultCost])],
+        else_=to_expr*10.0)
 
     s = select([table.c['Instances_idInstance'], func.AVG(time_case)],
                 and_(
@@ -834,10 +836,10 @@ def parameter_plot_2d(database, experiment_id):
         table_sc = db.metadata.tables['SolverConfig']
         if form.measure.data == 'par10':
             time_case = expression.case([
-                (table.c['resultCode'].like(u'1%'), table.c['resultTime'])],
-                else_=table.c['CPUTimeLimit']*10.0)
+                (table.c['resultCode'].like(u'1%'), table.c[experiment.defaultCost])],
+                else_=to_expr*10.0)
         else:
-            time_case = table.c['resultTime']
+            time_case = table.c[experiment.defaultCost]
 
         s = select([func.max(time_case)],
             and_(table.c['Experiment_idExperiment']==experiment_id,
