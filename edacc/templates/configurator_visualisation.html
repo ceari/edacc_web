@@ -8,6 +8,7 @@
 
 <script>
     function checkFormular(){
+    return true;
         //checks if input is correct
         {%for c in configuration['paramAttribute'] if configuration['paramAttribute'][c]['domain'] == 'num'%}
                 if (document.Formular.min_{{configuration['paramAttribute'][c]['id']}}.value == "") {
@@ -36,7 +37,7 @@
                 chkZMax = 1;
                 for (i = 0; i < document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value.length; ++i){
                     if (!(document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value.charAt(i) >= "0" &&
-                        document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value.charAt(i) <= "9" || 
+                        document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value.charAt(i) <= "9" ||
                         document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.value.charAt(i) == ".")){
                         chkZMax = -1;
                     }
@@ -46,7 +47,7 @@
                         document.Formular.max_{{configuration['paramAttribute'][c]['id']}}.focus();
                         return false;
                 }
-            
+
         {%endfor%}
    }
     window.onload = function (e){
