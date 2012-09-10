@@ -334,7 +334,7 @@ class config_vis(object):
                     if min(values) < 0:
                         negNum = 1
                     if math.fabs(min(values))>max(values):
-                        values = project(values, math.fabs(min(values)))
+                        values = [(v-min(values)) / max(values) for v in values] # project(values, math.fabs(min(values)))
                     else:
                         values = [(v-min(values)) / max(values) for v in values] # project(values, max(values))
                 if max(values)>absMax:
