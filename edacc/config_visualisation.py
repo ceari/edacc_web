@@ -112,6 +112,7 @@ class config_vis(object):
         solverConfigName =  dict((s.idSolverConfig, s.name) 
                         for s in db.session.query(db.SolverConfiguration).
                             filter(db.SolverConfiguration.Experiment_idExperiment == expID))
+
         if page == 0:
             choosenConfigs = solverConfigName.keys()
                                 
@@ -335,7 +336,7 @@ class config_vis(object):
                     if math.fabs(min(values))>max(values):
                         values = project(values, math.fabs(min(values)))
                     else:
-                        values = project(values, max(values))
+                        values = [(v-min(values)) / max(values) for v in values] # project(values, max(values))
                 if max(values)>absMax:
                     absMax = max(values)
                 if math.fabs(min(values))>absMax:
