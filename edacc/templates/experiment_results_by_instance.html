@@ -12,6 +12,21 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
+            jQuery.fn.dataTableExt.oSort['anchor-numeric-asc']  = function(x,y) {
+                fx = parseFloat($(x).html());
+                fy = parseFloat($(y).html());
+                if (isNaN(fx)) fx = 0;
+                if (isNaN(fy)) fy = 0;
+                return ((fx < fy) ? -1 : ((fx > fy) ?  1 : 0));
+            };
+            jQuery.fn.dataTableExt.oSort['anchor-numeric-desc'] = function(x,y) {
+                fx = parseFloat($(x).html());
+                fy = parseFloat($(y).html());
+                if (isNaN(fx)) fx = 0;
+                if (isNaN(fy)) fy = 0;
+                return ((fx < fy) ?  1 : ((fx > fy) ? -1 : 0));
+            };
+
             oTable = $('#table_results').dataTable({
                 "bPaginate": false,
                 "bLengthChange": false,
@@ -22,9 +37,9 @@
                     "sZeroRecords": "No matching results"
                 },
                 "aoColumns": [{"bSearchable": true},
-                              {% for i in range(num_runs) %}{"bSearchable":false},{% endfor %}
+                              {% for i in range(num_runs) %}{"bSearchable":false, "sType": "anchor-numeric"},{% endfor %}
                                {% if num_runs > 1 %}
-                                    {"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false},{"bSearchable": false}
+                                    {"bSearchable": false,"sType": "anchor-numeric"},{"bSearchable": false,"sType": "anchor-numeric"},{"bSearchable": false,"sType": "anchor-numeric"},{"bSearchable": false,"sType": "anchor-numeric"},{"bSearchable": false,"sType": "anchor-numeric"}
                                {%  endif %}
                             ]
             });
