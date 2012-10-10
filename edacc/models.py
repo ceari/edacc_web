@@ -639,6 +639,16 @@ class EDACCDatabase(object):
             useexisting=True, autoload=True
         )
 
+        schema.Table("Experiment", metadata,
+            schema.Column('costPenalty', sqlalchemy.Float),
+            useexisting=True, autoload=True
+        )
+
+        schema.Table("SolverConfig", metadata,
+            schema.Column('cost', sqlalchemy.Float),
+            useexisting=True, autoload=True
+        )
+
         # Table-Class mapping
         mapper(GridQueue, metadata.tables['gridQueue'])
         mapper(Client, metadata.tables['Client'],
