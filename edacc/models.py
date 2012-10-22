@@ -505,6 +505,9 @@ class EDACCDatabase(object):
 
         class GridQueue(object):
             pass
+
+        class Course(object):
+            pass
         
         class ConfigurationScenario(object):
             def get_parameter_domain(self, parameter_name):
@@ -597,6 +600,9 @@ class EDACCDatabase(object):
                 except ValueError:
                     return None
 
+        class VerifierConfig(object): pass
+        class VerifierConfigParameter(object): pass
+
         self.Solver = Solver
         self.SolverConfiguration = SolverConfiguration
         self.Parameter = Parameter
@@ -614,6 +620,9 @@ class EDACCDatabase(object):
         self.Experiment_has_Client = Experiment_has_Client
         self.ConfigurationScenario = ConfigurationScenario
         self.ConfigurationScenarioParameter = ConfigurationScenarioParameter
+        self.Course = Course
+        self.VerifierConfig = VerifierConfig
+        self.VerifierConfigParameter = VerifierConfigParameter
 
         self.User = User
         self.DBConfiguration = DBConfiguration
@@ -650,6 +659,13 @@ class EDACCDatabase(object):
         )
 
         # Table-Class mapping
+        mapper(VerifierConfig, metadata.tables['VerifierConfig'],
+            properties = {
+                'parameters': relation(VerifierConfigParameter, backref='verifier_config'),
+            }
+        )
+        mapper(VerifierConfigParameter, metadata.tables['VerifierConfig_has_VerifierParameter'])
+        mapper(Course, metadata.tables['Course'])
         mapper(GridQueue, metadata.tables['gridQueue'])
         mapper(Client, metadata.tables['Client'],
             properties = {
@@ -715,6 +731,7 @@ class EDACCDatabase(object):
             properties = {
                 'parameters': relation(ConfigurationScenarioParameter),
                 'solver_binary': relation(SolverBinary),
+                'course': relation(Course, backref='configuration_scenario'),
             }
         )
         mapper(Experiment, metadata.tables['Experiment'],
@@ -726,6 +743,7 @@ class EDACCDatabase(object):
                     secondary=metadata.tables['Experiment_has_gridQueue']),
                 'results': relation(ExperimentResult),
                 'configuration_scenario': relation(ConfigurationScenario, uselist=False),
+                'verifier_config': relation(VerifierConfig, backref='experiment', uselist=False),
             }
         )
         mapper(StatusCodes, metadata.tables['StatusCodes'])
