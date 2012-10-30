@@ -93,12 +93,13 @@ def solver_ranking(database, experiment_id):
         solver_configs = experiment.solver_configurations
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
+        show_top = form.show_top.data
 
         solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
 
         CACHE_TIME = 7*24*60*60
         @cache.memoize(timeout=CACHE_TIME)
-        def cached_ranking(database, experiment_id, solver_config_ids, sc_names, last_modified_job,
+        def cached_ranking(database, experiment_id, solver_config_ids, sc_names, last_modified_job, show_top,
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
                            careful_ranking_noise, form_survival_ranking,
                            form_break_ties, cost, csv_response, latex_response, user_id):
@@ -109,6 +110,9 @@ def solver_ranking(database, experiment_id):
             ranking_data, _ = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data,
                                                     form.calculate_average_dev.data, cost)
+
+            if len(ranking_data) > show_top:
+                ranking_data = ranking_data[:show_top]
 
             faulty_solvers_ids = db.session.query(db.ExperimentResult.SolverConfig_idSolverConfig)\
                                 .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids))\
@@ -208,7 +212,7 @@ def solver_ranking(database, experiment_id):
         job_count = db.session.query(db.ExperimentResult).filter_by(experiment=experiment).count()
 
         return cached_ranking(database, experiment_id, solver_config_ids, ''.join(sc.get_name() for sc in solver_configs),
-                              last_modified_job, job_count, [i.idInstance for i in form.i.data],
+                              last_modified_job, show_top, job_count, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               form.careful_ranking.data, form.careful_ranking_noise.data or 1.0, form.survival_ranking.data,
                               form.break_careful_ties.data, form.cost.data,

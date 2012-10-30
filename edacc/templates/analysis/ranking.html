@@ -117,6 +117,7 @@
                         Example: (numAtoms &gt;= 6000 && numAtoms &lt;= 8000 && name.match(/k3/))
                     </td>
                 </tr>
+                {{ render_field(form.show_top) }}
                 {{ render_field(form.cost) }}
                 {{ render_field(form.calculate_average_dev, explanation="Averaged instance cost dispersion measures")}}
                 {{ render_field(form.penalized_average_runtime, explanation="10 * cost limit for unsuccessful runs")}}

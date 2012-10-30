@@ -10,7 +10,7 @@
 """
 
 from flask.ext.wtf import Form, TextField, PasswordField, TextAreaField, RadioField, DecimalField, FloatField
-from flask.ext.wtf import FileField, Required, Length, Email, EqualTo, SelectField
+from flask.ext.wtf import FileField, Required, Length, Email, EqualTo, SelectField, IntegerField
 from flask.ext.wtf import ValidationError, BooleanField, validators
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
                                             QuerySelectField
@@ -251,6 +251,7 @@ class RankingForm(Form):
     instance_filter = TextField('Filter Instances')
     cost = SelectField('Cost', choices = [('resultTime', 'CPU Time'), ('wallTime', 'Walltime'), ('cost', 'Cost')])
     property_limit = FloatField("Property limit (for result properties)", default=1.0, validators=[validators.required()])
+    show_top = IntegerField("Maximum number of configurations displayed", default=1000)
 
 class SOTAForm(Form):
     sc = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
