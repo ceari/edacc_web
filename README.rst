@@ -9,12 +9,12 @@ An instance of this web frontend is running at http://edacc2.informatik.uni-ulm.
 Description
 -----------
 
-This project accompanies the EDACC Java Swing application and provides a simple way to publish
-experiment information and results on the web that can be accessed using a web browser.
+This project provides a simple way to publish experiment information and results on
+the web that can be accessed using a web browser.
 
-It features the same graphical analysis options as the Java application using the language R
+It features graphical and statistical analysis options, using the language R
 to draw various graphs and lets users see the solver configurations and instances used in an experiment
-aswell as the individual jobs that were run.
+as well as the individual jobs that were run.
 
 Additionally, you can set up an EDACC database to run a solver competition, where users can register
 and submit solvers using the web frontend.
