@@ -126,7 +126,7 @@
                 </tr>
                 {{ render_field(form.break_careful_ties)}}
                 {%  if db.is_competition() %}
-                <!--{{ render_field(form.survival_ranking) }} -->
+                {{ render_field(form.survival_ranking) }}
                 {% endif %}
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
             </table>
