@@ -88,10 +88,11 @@ def surv_test(x, y, x_censored, y_censored, alpha=0.05):
     surv12 = robjects.r.Surv(robjects.FloatVector(combined_data), robjects.IntVector(censored))
     p_value = robjects.r('proprate2.gs')(surv12, robjects.IntVector(sample_indicators), model=0)[1] # p-value
 
-    p = 1
+    p = (1,)
     if p_value is not None and p_value > alpha:
         w = robjects.r('surv2.ks')(surv12, robjects.IntVector(sample_indicators), nsim=200)
         p = w[4] # cramer-von-mises p-value
+        test_performed = "cm"
     else:
         f = robjects.Formula('surv12 ~ indicators')
         env = f.environment
@@ -99,6 +100,7 @@ def surv_test(x, y, x_censored, y_censored, alpha=0.05):
         env['indicators'] = robjects.IntVector(sample_indicators)
         w = robjects.r('survdiff')(f)
         p = 1 - robjects.r.pchisq(w[4], 1)[0]
+        test_performed = "lr"
 
-    return p[0]
+    return p[0], test_performed
 

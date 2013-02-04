@@ -202,6 +202,11 @@
         <a href="{{ url_for('analysis.careful_solver_ranking', database=database, experiment_id=experiment.idExperiment) }}?{{ GET_data }}">Careful ranking details</a>
     </div>
     {% endif %}
+    {% if form.survival_ranking.data %}
+    <div>
+        <a href="{{ url_for('analysis.survival_solver_ranking', database=database, experiment_id=experiment.idExperiment) }}?{{ GET_data }}">Survival ranking details</a>
+    </div>
+    {% endif %}
     {% endif %}
 
 {% endblock %}

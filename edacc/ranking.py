@@ -407,6 +407,10 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
 
 def ranking_from_graph(M, edges, vertices, solver_config_ids):
+    """Determine the ranking of the solvers with IDs given in solver_config_ids and vertices
+    and the graph described by the adjacency matrix M and list of edges. Returns a list of
+    lists of solver config IDs. Each list holds the solvers that are ranked equally.
+    """
     outedges_by_node = dict((v, list()) for v in vertices)
     for e in edges:
         outedges_by_node[e[0]].append(e)
@@ -499,9 +503,15 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
     # survival_winner[(solver1, solver2)] = 1 if solver1 signif. better than solver2
     # and -1 otherwise
     survival_winner = dict()
+    p_values = dict()
+    tests_performed = dict()
     for s1 in solver_config_ids:
         for s2 in solver_config_ids:
             if (s1, s2) in survival_winner: continue
+            p_values[(s1, s2)] = 1
+            p_values[(s2, s1)] = 1
+            tests_performed[(s1, s2)] = "-"
+            tests_performed[(s2, s1)] = "-"
             survival_winner[(s1, s2)] = 0
             survival_winner[(s2, s1)] = 0
             if s1 == s2: continue
@@ -516,16 +526,21 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
                     if values_tied(run1.penalized_time1, run2.penalized_time1):
                         runs_s1.append((run1.penalized_time1 + run2.penalized_time1) / 2.0)
                         runs_s2.append((run1.penalized_time1 + run2.penalized_time1) / 2.0)
+                        runs_s1_censored.append(run1.censored and run2.censored)
+                        runs_s2_censored.append(run1.censored and run2.censored)
                     else:
                         runs_s1.append(run1.penalized_time1)
                         runs_s2.append(run2.penalized_time1)
-                    runs_s1_censored.append(run1.censored)
-                    runs_s2_censored.append(run2.censored)
+                        runs_s1_censored.append(run1.censored)
+                        runs_s2_censored.append(run2.censored)
             # calculate p-value of the survival-analysis hypothesis test
-            p_value = statistics.surv_test(runs_s1, runs_s2, runs_s1_censored, runs_s2_censored)
+            p_value, test_performed = statistics.surv_test(runs_s1, runs_s2, runs_s1_censored, runs_s2_censored)
 
-            if p_value < 0.05:
-                if numpy.median(runs_s1) > numpy.median(runs_s2):
+            p_values[(s1, s2)] = p_values[(s2, s1)] = p_value
+            tests_performed[(s1, s2)] = tests_performed[(s2, s1)] = test_performed
+
+            if p_value < 0.1:
+                if numpy.average(runs_s1) > numpy.average(runs_s2):
                     # s2 better
                     survival_winner[(s1, s2)] = -1
                     survival_winner[(s2, s1)] = 1
@@ -534,7 +549,7 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
                     survival_winner[(s1, s2)] = 1
                     survival_winner[(s2, s1)] = -1
 
-    # build graph matrix
+    # calculate adjacency matrix and list of edges (v1, v2) of the graph
     edges_surv = set()
     vertices = set(solver_config_ids)
     M_surv = dict()
@@ -554,7 +569,7 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
     # find strongly connected components and sort topologically
     l_surv = ranking_from_graph(M_surv, edges_surv, vertices, solver_config_ids)
 
-    return [[sc_by_id[sc] for sc in comp_surv] for comp_surv in l_surv], survival_winner, M_surv
+    return [[sc_by_id[sc] for sc in comp_surv] for comp_surv in l_surv], survival_winner, M_surv, p_values, tests_performed
 
 def careful_ranking(db, experiment, instances, solver_configs, results, cost="resultTime", noise=1.0, break_ties=False):
     instance_ids = [i.idInstance for i in instances]

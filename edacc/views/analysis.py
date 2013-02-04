@@ -68,6 +68,36 @@ def careful_solver_ranking(database, experiment_id):
 
     return render("/analysis/careful_ranking.html", db=db, experiment=experiment, database=database)
 
+@analysis.route('/<database>/experiment/<int:experiment_id>/survival-ranking/')
+@require_phase(phases=RANKING)
+@require_login
+def survival_solver_ranking(database, experiment_id):
+    """
+        Display the domination matrix that is calculated for the survival ranking
+    """
+    db = models.get_database(database) or abort(404)
+    experiment = db.session.query(db.Experiment).get(experiment_id) or abort(404)
+
+    form = forms.RankingForm(request.args)
+    form.i.query = experiment.get_instances(db) or EmptyQuery()
+
+    if form.i.data:
+        if form.cost.data == 'None': form.cost.data = experiment.defaultCost
+
+        solver_configs = experiment.solver_configurations
+        if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+            solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
+
+        results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, form.cost.data)
+
+        survival_ranked_solvers, survival_winner, M_surv, p_values, tests_performed = ranking.survival_ranking(db, experiment, form.i.data,
+            solver_configs, results_matrix, form.cost.data)
+
+        return render("/analysis/survival_ranking.html", db=db, experiment=experiment, database=database,
+            survival_winner=survival_winner, solver_configs=solver_configs, p_values=p_values,
+            tests_performed=tests_performed)
+
+    return render("/analysis/survival_ranking.html", db=db, experiment=experiment, database=database)
 
 
 @analysis.route('/<database>/experiment/<int:experiment_id>/ranking/')
@@ -137,7 +167,7 @@ def solver_ranking(database, experiment_id):
 
             survival_rank = dict()
             if form_survival_ranking:
-                survival_ranked_solvers, _, _ = ranking.survival_ranking(db, experiment, form.i.data,
+                survival_ranked_solvers, _, _, _, _ = ranking.survival_ranking(db, experiment, form.i.data,
                     solver_configs, results_matrix, cost)
 
                 survival_rank_counter = 1
