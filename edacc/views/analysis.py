@@ -90,12 +90,12 @@ def survival_solver_ranking(database, experiment_id):
 
         results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, form.cost.data)
 
-        survival_ranked_solvers, survival_winner, M_surv, p_values, tests_performed = ranking.survival_ranking(db, experiment, form.i.data,
-            solver_configs, results_matrix, form.cost.data)
+        survival_ranked_solvers, survival_winner, M_surv, p_values, tests_performed, dot_code, count_values_tied = ranking.survival_ranking(db, experiment, form.i.data,
+            solver_configs, results_matrix, form.cost.data, form.survnoise.data, form.survival_ranking_alpha.data)
 
         return render("/analysis/survival_ranking.html", db=db, experiment=experiment, database=database,
             survival_winner=survival_winner, solver_configs=solver_configs, p_values=p_values,
-            tests_performed=tests_performed)
+            tests_performed=tests_performed, dot_code=dot_code, count_values_tied=count_values_tied)
 
     return render("/analysis/survival_ranking.html", db=db, experiment=experiment, database=database)
 
@@ -131,7 +131,7 @@ def solver_ranking(database, experiment_id):
         @cache.memoize(timeout=CACHE_TIME)
         def cached_ranking(database, experiment_id, solver_config_ids, sc_names, last_modified_job, show_top,
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
-                           careful_ranking_noise, form_survival_ranking,
+                           careful_ranking_noise, form_survival_ranking, form_survnoise, form_survival_ranking_alpha,
                            form_break_ties, cost, csv_response, latex_response, user_id):
 
             if cost not in ('resultTime', 'wallTime', 'cost'): cost = int(cost)
@@ -167,8 +167,8 @@ def solver_ranking(database, experiment_id):
 
             survival_rank = dict()
             if form_survival_ranking:
-                survival_ranked_solvers, _, _, _, _ = ranking.survival_ranking(db, experiment, form.i.data,
-                    solver_configs, results_matrix, cost)
+                survival_ranked_solvers, _, _, _, _, _, _ = ranking.survival_ranking(db, experiment, form.i.data,
+                    solver_configs, results_matrix, cost, form_survnoise, form_survival_ranking_alpha)
 
                 survival_rank_counter = 1
                 for tied_solvers in survival_ranked_solvers:
@@ -245,6 +245,7 @@ def solver_ranking(database, experiment_id):
                               last_modified_job, show_top, job_count, [i.idInstance for i in form.i.data],
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               form.careful_ranking.data, form.careful_ranking_noise.data or 1.0, form.survival_ranking.data,
+                              form.survnoise.data, form.survival_ranking_alpha.data,
                               form.break_careful_ties.data, form.cost.data,
                               'csv' in request.args, 'latex' in request.args, session.get('idUser', None))
 

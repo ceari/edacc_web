@@ -125,8 +125,9 @@
                     <td>{{ form.careful_ranking.label }}:</td><td>{{ form.careful_ranking }} {{ form.careful_ranking_noise.label }}: {{ form.careful_ranking_noise }}</td>
                 </tr>
                 {{ render_field(form.break_careful_ties)}}
-
-                {{ render_field(form.survival_ranking) }}
+                <tr>
+                    <td>{{ form.survival_ranking.label }}:</td><td>{{ form.survival_ranking }} {{ form.survnoise.label }}: {{ form.survnoise }} {{ form.survival_ranking_alpha.label }}: {{ form.survival_ranking_alpha }}</td>
+                </tr>
 
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
             </table>
