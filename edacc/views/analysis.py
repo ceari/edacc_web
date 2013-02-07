@@ -173,8 +173,12 @@ def solver_ranking(database, experiment_id):
                 survival_rank_counter = 1
                 for tied_solvers in survival_ranked_solvers:
                     survival_rank_counter += 1
+                    survival_rank_comp_counter = 1
                     for solver in tied_solvers:
                         survival_rank[solver] = survival_rank_counter
+                        if len(tied_solvers) > 1: # TODO and break ties checked
+                            survival_rank[solver] = str(survival_rank[solver]) + "_" + str(survival_rank_comp_counter)
+                            survival_rank_comp_counter += 1
 
 
             if csv_response:

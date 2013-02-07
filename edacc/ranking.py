@@ -506,6 +506,7 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
     p_values = dict()
     tests_performed = dict()
     count_values_tied = dict()
+    better_solver = dict()
     for s1 in solver_config_ids:
         for s2 in solver_config_ids:
             if (s1, s2) in survival_winner: continue
@@ -517,6 +518,8 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
             survival_winner[(s2, s1)] = 0
             count_values_tied[(s1, s2)] = 0
             count_values_tied[(s2, s1)] = 0
+            better_solver[(s1, s2)] = False
+            better_solver[(s2, s1)] = False
             if s1 == s2: continue
 
             runs_s1 = list()
@@ -545,8 +548,15 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
             p_values[(s1, s2)] = p_values[(s2, s1)] = p_value
             tests_performed[(s1, s2)] = tests_performed[(s2, s1)] = test_performed
 
-            if p_value < alpha:
-                if numpy.average(runs_s1) > numpy.average(runs_s2):
+            if numpy.average(runs_s1) > numpy.average(runs_s2):
+                better_solver[(s1, s2)] = False
+                better_solver[(s2, s1)] = True
+            else:
+                better_solver[(s1, s2)] = True
+                better_solver[(s2, s1)] = False
+
+            if p_value <= alpha:
+                if better_solver[(s2, s1)]:
                     # s2 better
                     survival_winner[(s1, s2)] = -1
                     survival_winner[(s2, s1)] = 1
@@ -583,6 +593,47 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
     # find strongly connected components and sort topologically
     l_surv = ranking_from_graph(M_surv, edges_surv, vertices, solver_config_ids)
 
+    for comp in l_surv:
+        comp_p_values = set([1]) # always include alpha 1
+        for sc1 in comp:
+            for sc2 in comp:
+                comp_p_values.add(p_values[(sc1, sc2)])
+
+        #print "SC:", [sc_by_id[sc].name for sc in comp], "p-values:", comp_p_values
+
+        for alpha in sorted(comp_p_values):
+            edges_comp = set()
+            M_comp = dict()
+            for sc1 in comp:
+                M_comp[sc1] = dict()
+                for sc2 in comp:
+                    if sc1 == sc2:
+                        M_surv[sc1][sc2] = 0
+                        continue
+
+                    M_comp[sc1][sc2] = 0.5
+                    if p_values[(sc1, sc2)] <= alpha:
+                        if better_solver[(sc1, sc2)]:
+                            M_comp[sc1][sc2] = 1
+                        else:
+                            M_comp[sc1][sc2] = 0
+
+                    if M_comp[sc1][sc2] == 1:
+                        edges_comp.add((sc1, sc2))
+                    elif M_comp[sc1][sc2] == 0.5:
+                        edges_comp.add((sc1, sc2))
+                        edges_comp.add((sc2, sc1))
+
+            l_comp = ranking_from_graph(M_comp, edges_comp, set(comp), comp)
+
+            if len(l_comp) == len(comp):
+                flattened = [i[0] for i in l_comp]
+                comp.sort(key=lambda x: flattened.index(x))
+                #print "alpha", alpha, "SCs: ", [[sc_by_id[sc].name for sc in c] for c in l_comp]
+                break
+
+
+
     return [[sc_by_id[sc] for sc in comp_surv] for comp_surv in l_surv], survival_winner, M_surv, p_values, tests_performed, dot_code, count_values_tied
 
 def careful_ranking(db, experiment, instances, solver_configs, results, cost="resultTime", noise=1.0, break_ties=False):
@@ -603,6 +654,9 @@ def careful_ranking(db, experiment, instances, solver_configs, results, cost="re
 
             for idInstance in instance_ids:
                 for r1, r2 in izip(results[idInstance][s1], results[idInstance][s2]):
+
+                    if r1.censored and r2.censored:
+                        continue
 
                     e1 = (r1.penalized_time10 + r2.penalized_time10) / 2.0
                     delta = alpha * math.sqrt(e1)

@@ -77,7 +77,7 @@
                             { "sType": "underscore" },
                         {% endif %}
                         {% if form.survival_ranking.data %}
-                            null,
+                            { "sType": "underscore" },
                         {% endif %}
                         null,
                         null,
@@ -124,6 +124,7 @@
                 <tr>
                     <td>{{ form.careful_ranking.label }}:</td><td>{{ form.careful_ranking }} {{ form.careful_ranking_noise.label }}: {{ form.careful_ranking_noise }} {{ form.break_careful_ties.label }}: {{ form.break_careful_ties }}</td>
                 </tr>
+
 
                 <tr>
                     <td>{{ form.survival_ranking.label }}:</td><td>{{ form.survival_ranking }} {{ form.survnoise.label }}: {{ form.survnoise }} {{ form.survival_ranking_alpha.label }}: {{ form.survival_ranking_alpha }}</td>
