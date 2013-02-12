@@ -651,21 +651,39 @@ def careful_ranking(db, experiment, instances, solver_configs, results, cost="re
             raw[(s1, s2)] = 0
             raw[(s2, s1)] = 0
             if s1 == s2: continue
+            #print "Comparing ", sc_by_id[s1].name, " and ", sc_by_id[s2].name
 
             for idInstance in instance_ids:
                 for r1, r2 in izip(results[idInstance][s1], results[idInstance][s2]):
+                    #print (str(r1.penalized_time1) + ("+" if r1.censored else "")), "vs.", (str(r2.penalized_time1) + ("+" if r2.censored else "")),
 
                     if r1.censored and r2.censored:
+                        #print " .. tied"
                         continue
-
-                    e1 = (r1.penalized_time10 + r2.penalized_time10) / 2.0
-                    delta = alpha * math.sqrt(e1)
-                    if r1.penalized_time10 < e1 - delta:
-                        raw[(s1, s2)] += 1
-                        raw[(s2, s1)] -= 1
-                    elif r2.penalized_time10 < e1 - delta:
+                    elif r1.censored and not r2.censored:
+                        #print " uncensored wins"
                         raw[(s2, s1)] += 1
                         raw[(s1, s2)] -= 1
+                        continue
+                    elif not r1.censored and r2.censored:
+                        #print " uncensored wins"
+                        raw[(s1, s2)] += 1
+                        raw[(s2, s1)] -= 1
+                        continue
+
+                    e1 = (r1.penalized_time1 + r2.penalized_time1) / 2.0
+                    delta = alpha * math.sqrt(e1)
+                    #print "Tiezone: [", e1 - delta, ",", e1 + delta, "]",
+                    if r1.penalized_time1 < e1 - delta:
+                        #print r1.penalized_time1, "<", e1 - delta
+                        raw[(s1, s2)] += 1
+                        raw[(s2, s1)] -= 1
+                    elif r2.penalized_time1 < e1 - delta:
+                        #print r2.penalized_time1, "<", e1 - delta
+                        raw[(s2, s1)] += 1
+                        raw[(s1, s2)] -= 1
+                    #else:
+                        #print " .. tied"
 
     edges = set()
 
