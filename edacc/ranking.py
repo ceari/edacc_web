@@ -576,12 +576,12 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
             if s1 == s2:
                 M_surv[s1][s2] = 0
                 continue
-            M_surv[s1][s2] = 1 if survival_winner[(s1, s2)] == 1 else 0.5 if survival_winner[(s1, s2)] == 0 else 0
+            M_surv[s1][s2] = 1 if survival_winner[(s1, s2)] >= 0 else 0
             if M_surv[s1][s2] == 1:
                 edges_surv.add((s1, s2))
-            elif M_surv[s1][s2] == 0.5:
-                edges_surv.add((s1, s2))
-                edges_surv.add((s2, s1))
+            #elif M_surv[s1][s2] == 0.5:
+            #    edges_surv.add((s1, s2))
+            #    edges_surv.add((s2, s1))
 
     dot_code = "digraph ranking {\n"
     for sc in solver_configs:
@@ -611,7 +611,7 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
                         M_surv[sc1][sc2] = 0
                         continue
 
-                    M_comp[sc1][sc2] = 0.5
+                    M_comp[sc1][sc2] = 0
                     if p_values[(sc1, sc2)] <= alpha:
                         if better_solver[(sc1, sc2)]:
                             M_comp[sc1][sc2] = 1
@@ -620,9 +620,6 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
 
                     if M_comp[sc1][sc2] == 1:
                         edges_comp.add((sc1, sc2))
-                    elif M_comp[sc1][sc2] == 0.5:
-                        edges_comp.add((sc1, sc2))
-                        edges_comp.add((sc2, sc1))
 
             l_comp = ranking_from_graph(M_comp, edges_comp, set(comp), comp)
 
@@ -695,12 +692,12 @@ def careful_ranking(db, experiment, instances, solver_configs, results, cost="re
             if s1 == s2:
                 M[s1][s2] = 0
                 continue
-            M[s1][s2] = 1 if raw[(s1, s2)] > 0 else 0.5 if raw[(s1, s2)] == 0 else 0
+            M[s1][s2] = 1 if raw[(s1, s2)] >= 0 else 0
             if M[s1][s2] == 1:
                 edges.add((s1, s2))
-            elif M[s1][s2] == 0.5:
-                edges.add((s1, s2))
-                edges.add((s2, s1))
+            #elif M[s1][s2] == 0.5:
+            #    edges.add((s1, s2))
+            #    edges.add((s2, s1))
 
     l = ranking_from_graph(M, edges, vertices, solver_config_ids)
 
