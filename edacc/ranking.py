@@ -479,7 +479,7 @@ def ranking_from_graph(M, edges, vertices, solver_config_ids):
     return l
 
 
-def survival_ranking(db, experiment, instances, solver_configs, results, cost="resultTime", a=0.02, alpha=0.05):
+def survival_ranking(db, experiment, instances, solver_configs, results, cost="resultTime", a=0.00, alpha=0.05):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in solver_configs]
     sc_by_id = dict()
