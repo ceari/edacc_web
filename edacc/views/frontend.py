@@ -29,6 +29,7 @@ import time
 import os
 from scipy.stats.mstats import mquantiles
 
+import flask
 from flask import Blueprint
 from flask import render_template as render
 from flask import Response, abort, g, request, redirect, url_for
@@ -1341,6 +1342,65 @@ def solver_description_download(database, solver_id):
     headers.add('Content-Disposition', 'attachment', filename=secure_filename(solver.name + '_description.pdf'))
 
     return Response(response=solver.description_pdf, headers=headers)
+
+@frontend.route('/<database>/solver-download/<int:solver_config_id>')
+@require_competition
+@require_login
+def solver_download(database, solver_config_id):
+    db = models.get_database(database) or abort(404)
+    solver_config = db.session.query(db.SolverConfiguration).get(solver_config_id) or abort(404)
+    solver = solver_config.solver_binary.solver
+    solver_binary = solver_config.solver_binary
+
+    if solver.public not in (1,2,3): abort(404)
+
+    tmp_file = tempfile.TemporaryFile("w+b")
+    tar_file = tarfile.open(mode='w', fileobj=tmp_file)
+
+    # Add README file
+    tar_info = tarfile.TarInfo("README.txt")
+    readme_template = flask.current_app.jinja_env.get_template("other/solver_download_readme.txt")
+    README_content = readme_template.render(solver=solver, solver_config=solver_config, db=db,)
+    tar_info.size = len(README_content)
+    tar_info.type = tarfile.REGTYPE
+    tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
+    tar_file.addfile(tar_info, fileobj=StringIO.StringIO(README_content))
+
+    if solver.public in (1, 3) and solver_binary.binaryArchive:
+        # Add solver binary
+        tar_solver = tarfile.TarInfo("binary.zip")
+        tar_solver.size = len(solver_binary.binaryArchive)
+        tar_solver.type = tarfile.REGTYPE
+        tar_solver.mtime = time.mktime(datetime.datetime.now().timetuple())
+        tar_file.addfile(tar_solver, fileobj=StringIO.StringIO(solver_binary.binaryArchive))
+
+    if solver.public in (2, 3) and solver.code:
+        # Add solver code
+        tar_code = tarfile.TarInfo("code.zip")
+        tar_code.size = len(solver.code)
+        tar_code.type = tarfile.REGTYPE
+        tar_code.mtime = time.mktime(datetime.datetime.now().timetuple())
+        tar_file.addfile(tar_code, fileobj=StringIO.StringIO(solver.code))
+
+    if solver.description_pdf:
+        # Add solver description
+        tar_description = tarfile.TarInfo("description.pdf")
+        tar_description.size = len(solver.description_pdf)
+        tar_description.type = tarfile.REGTYPE
+        tar_description.mtime = time.mktime(datetime.datetime.now().timetuple())
+        tar_file.addfile(tar_description, fileobj=StringIO.StringIO(solver.description_pdf))
+
+    tar_file.close()
+
+    file_size = tmp_file.tell()
+    tmp_file.seek(0)
+
+    headers = Headers()
+    headers.add('Content-Type', 'application/x-tar')
+    headers.add('Content-Length', file_size)
+    headers.add('Content-Disposition', 'attachment',
+                filename=(secure_filename(db.label + "_" + solver.name + ".tar")))
+    return Response(tmp_file, headers=headers, direct_passthrough=True)
 
 
 @frontend.route('/<database>/experiment/<int:experiment_id>/result/')

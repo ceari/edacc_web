@@ -56,6 +56,12 @@
         <td><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=solver.idSolver)}}">Download</a></td>
     </tr>
     {% endif %}
+    {% if solver.public in (1,2,3) %}
+    <tr class="even">
+        <td>Binary/Code (tar):</td>
+        <td><a href="{{ url_for('frontend.solver_download', database=database, solver_config_id=solver_config.idSolverConfig)}}">Download</a></td>
+    </tr>
+    {% endif %}
 </table>
 
 <strong>Launch Command: {{solver_config|launch_command}}</strong><br/>
