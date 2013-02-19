@@ -198,7 +198,7 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
     return list(sorted(solver_configs,cmp=comp,reverse=True))
 
 
-def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev, cost):
+def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev, cost, par_factor=1):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in ranked_solvers]
     if not solver_config_ids: return [], None
@@ -270,7 +270,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
 
     #num_unsolved_instances = len(instances) - len(best_instance_runtimes)
 
-    vbs_par10 = 0.0
+    vbs_parX = 0.0
 
     # Virtual best solver data
     data = [('Virtual Best Solver (VBS)',                   # name of the solver
@@ -280,13 +280,13 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
              1.0,                                           # % of vbs runs
              vbs_cumulated_cpu,                             # cumulated CPU time
              (0.0 if vbs_num_solved == 0 else
-                     vbs_median),
-             (0.0 if vbs_num_solved == 0 else
               vbs_average),
+             (0.0 if vbs_num_solved == 0 else
+              vbs_median),
              0.0, # avg stddev
              0.0,
              0.0,
-             vbs_par10
+             vbs_parX
              )]
 
     # single query fetch of all/most required data
@@ -353,7 +353,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                                 for run in ilist]
         else:
             successful_runs = []
-        successful_runs_sum = sum(float(j.cost) or 0.0 for j in successful_runs)
+        successful_runs_sum = sum(float(j.cost) for j in successful_runs)
 
         penalized_average_runtime = 0.0
         if calculate_par10:
@@ -361,11 +361,19 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                 # this should mean there are no jobs of this solver yet
                 penalized_average_runtime = 0.0
             else:
-                penalized_average_runtime = (sum([j.cost_limit*10.0 if cost in ('resultTime', 'wallTime') else experiment.costPenalty * 10.0 if cost == 'cost' else property_limit*10 for j in failed_runs_by_solver[solver.idSolverConfig]]) + successful_runs_sum) \
+                penalized_average_runtime = (sum([j.cost_limit*par_factor if cost in ('resultTime', 'wallTime') else experiment.costPenalty * par_factor if cost == 'cost' else property_limit*par_factor for j in failed_runs_by_solver[solver.idSolverConfig]]) + successful_runs_sum) \
                                             / (len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]))
 
-        median_runtime = numpy.median([j.cost_limit*10.0 if cost in ('resultTime', 'wallTime') else experiment.costPenalty * 10.0 if cost == 'cost' else property_limit*10 for j in failed_runs_by_solver[solver.idSolverConfig]] + [float(j.cost) for j in successful_runs])
-        average_runtime = numpy.average([float(j.cost) for j in successful_runs])
+        par1_median_runtime = numpy.median([j.cost_limit if cost in ('resultTime', 'wallTime') else \
+                                           experiment.costPenalty if cost == 'cost' else property_limit for j in failed_runs_by_solver[solver.idSolverConfig]] + [float(j.cost) for j in successful_runs])
+        #average_runtime = numpy.average([float(j.cost) for j in successful_runs])
+        cumulated_par1 = sum([j.cost_limit if cost in ('resultTime', 'wallTime') else \
+                                  experiment.costPenalty if cost == 'cost' else \
+                                      property_limit for j in failed_runs_by_solver[solver.idSolverConfig]]) + successful_runs_sum
+        if len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig]) == 0:
+            par1 = 0.0
+        else:
+            par1 = cumulated_par1 / float((len(successful_runs) + len(failed_runs_by_solver[solver.idSolverConfig])))
 
         avg_stddev_runtime = 0.0
         avg_cv = 0.0
@@ -392,10 +400,9 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             len(successful_runs),
             0 if len(successful_runs) == 0 else len(successful_runs) / float(max_num_runs_per_solver),
             0 if vbs_num_solved == 0 else len(successful_runs) / float(vbs_num_solved),
-            successful_runs_sum,
-            #numpy.average([j[0] or 0.0 for j in successful_runs] or 0),
-            median_runtime,
-            average_runtime,
+            cumulated_par1,
+            par1,
+            par1_median_runtime,
             avg_stddev_runtime,
             avg_cv,
             avg_qcd,

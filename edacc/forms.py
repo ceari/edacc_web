@@ -244,6 +244,8 @@ class RankingForm(Form):
     i = QuerySelectMultipleField('Instances', get_label=lambda i: i.get_name(), get_pk=lambda i: i.idInstance, allow_blank=True)
     calculate_average_dev = BooleanField('Calculate dispersion measures', default=False)
     penalized_average_runtime = BooleanField('Calculate penalized average cost', default=False)
+    median_runtime = BooleanField('Calculate penalized median cost', default=False)
+    par_factor = IntegerField('Penalty factor', default=1)
     careful_ranking = BooleanField("Calculate careful ranking", default=False)
     careful_ranking_noise = FloatField("Noise", default=1.0, validators=[validators.required()])
     survnoise = FloatField("Noise", default=0.0, validators=[validators.required()])

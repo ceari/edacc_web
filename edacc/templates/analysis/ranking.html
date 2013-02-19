@@ -84,8 +84,8 @@
                         { "sType": "percent" },
                         { "sType": "percent" },
                         null,
-                        null,
                         null
+                        {% if form.median_runtime.data %}, null{%endif%}
                         {% if form.calculate_average_dev.data %}, null, null, null{% endif %}
                         {% if form.penalized_average_runtime.data %}, null{% endif %}
                     ]
@@ -119,13 +119,13 @@
                 </tr>
                 {{ render_field(form.show_top) }}
                 {{ render_field(form.cost) }}
+                <tr>
+                    <td>{{ form.penalized_average_runtime.label }}:</td><td>{{ form.penalized_average_runtime }} {{ form.median_runtime.label }}: {{ form.median_runtime }} {{ form.par_factor.label }}: {{ form.par_factor}}</td>
+                </tr>
                 {{ render_field(form.calculate_average_dev, explanation="Averaged instance cost dispersion measures")}}
-                {{ render_field(form.penalized_average_runtime, explanation="10 * cost limit for unsuccessful runs")}}
                 <tr>
                     <td>{{ form.careful_ranking.label }}:</td><td>{{ form.careful_ranking }} {{ form.careful_ranking_noise.label }}: {{ form.careful_ranking_noise }} {{ form.break_careful_ties.label }}: {{ form.break_careful_ties }}</td>
                 </tr>
-
-
                 <tr>
                     <td>{{ form.survival_ranking.label }}:</td><td>{{ form.survival_ranking }} {{ form.survnoise.label }}: {{ form.survnoise }} {{ form.survival_ranking_alpha.label }}: {{ form.survival_ranking_alpha }}</td>
                 </tr>
@@ -157,16 +157,18 @@
                 <th># of successful runs</th>
                 <th>% of all runs</th>
                 <th>% of VBS runs</th>
-                <th>cumulated cost</th>
+                <th>Penalized cumulated cost</th>
+                <th>Penalized average cost</th>
+                {% if form.median_runtime.data %}
                 <th>Penalized median cost</th>
-                <th>Average cost</th>
+                {% endif %}
                 {% if form.calculate_average_dev.data %}
                 <th>avg. deviation of successful runs</th>
                 <th>avg. coefficient of variation</th>
                 <th>avg. quartile coefficient of dispersion</th>
                 {% endif %}
                 {% if form.penalized_average_runtime.data %}
-                <th>penalized avg. cost</th>
+                <th>penalized avg. cost {{form.par_factor.data}}</th>
                 {% endif %}
             </tr>
         </thead>
@@ -186,7 +188,9 @@
                 <td>{{(sc.3 * 100.0)|round(2)}} %</td>
                 <td>{{sc.4|round(3)}}</td>
                 <td>{{sc.5|round(3)}}</td>
+                {% if form.median_runtime.data %}
                 <td>{{sc.6|round(3)}}</td>
+                {% endif %}
                 {% if form.calculate_average_dev.data %}
                 <td>{{sc.7|round(3)}}</td>
                 <td>{{sc.8|round(3)}}</td>

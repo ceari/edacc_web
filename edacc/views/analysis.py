@@ -128,18 +128,19 @@ def solver_ranking(database, experiment_id):
         solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
 
         CACHE_TIME = 7*24*60*60
+        #CACHE_TIME = 1
         @cache.memoize(timeout=CACHE_TIME)
         def cached_ranking(database, experiment_id, solver_config_ids, sc_names, last_modified_job, show_top,
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
                            careful_ranking_noise, form_survival_ranking, form_survnoise, form_survival_ranking_alpha,
-                           form_break_ties, cost, csv_response, latex_response, user_id):
+                           form_break_ties, cost, form_par_factor, form_median_runtime, csv_response, latex_response, user_id):
 
             if cost not in ('resultTime', 'wallTime', 'cost'): cost = int(cost)
 
             ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
             ranking_data, _ = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data,
-                                                    form.calculate_average_dev.data, cost)
+                                                    form.calculate_average_dev.data, cost, form_par_factor)
 
             if len(ranking_data) > show_top:
                 ranking_data = ranking_data[:show_top]
@@ -183,7 +184,7 @@ def solver_ranking(database, experiment_id):
 
             if csv_response:
                 head = ['#', 'Solver', '# of successful runs', '% of all runs', '% of VBS runs',
-                                     'cumulated cost', 'median cost']
+                                     'penalized cumulated cost', 'penalized median cost']
 
                 if form.calculate_average_dev.data:
                     head.append('avg. deviation of successful runs')
@@ -250,7 +251,7 @@ def solver_ranking(database, experiment_id):
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               form.careful_ranking.data, form.careful_ranking_noise.data or 1.0, form.survival_ranking.data,
                               form.survnoise.data, form.survival_ranking_alpha.data,
-                              form.break_careful_ties.data, form.cost.data,
+                              form.break_careful_ties.data, form.cost.data, form.par_factor.data, form.median_runtime.data,
                               'csv' in request.args, 'latex' in request.args, session.get('idUser', None))
 
     return render('/analysis/ranking.html', database=database, db=db,
@@ -272,7 +273,7 @@ def sota_solvers(database, experiment_id):
         solver_config_ids = [sc.idSolverConfig for sc in form.sc.data]
         instance_ids = [i.idInstance for i in form.i.data]
 
-        @cache.memoize(7*24*60*60)
+        @cache.memoize(1) # 7*24*60*60
         def cached_sota_solvers(database, experiment_id, solver_config_ids, sc_names, instance_ids, job_count, last_modified_job, user_id):
             sota_solvers = experiment.get_sota_solvers(db, form.i.data, form.sc.data)
             unique_solver_contribs = experiment.unique_solver_contributions(db, form.i.data, form.sc.data)
