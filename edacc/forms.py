@@ -242,6 +242,7 @@ class BoxPlotForm(Form):
 
 class RankingForm(Form):
     i = QuerySelectMultipleField('Instances', get_label=lambda i: i.get_name(), get_pk=lambda i: i.idInstance, allow_blank=True)
+    sc = QuerySelectMultipleField('Solver Configurations', get_label=lambda sc: truncate_name(sc.name, MAX_SC_LEN))
     calculate_average_dev = BooleanField('Calculate dispersion measures', default=False)
     penalized_average_runtime = BooleanField('Calculate penalized average cost', default=False)
     median_runtime = BooleanField('Calculate penalized median cost', default=False)

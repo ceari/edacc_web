@@ -95,6 +95,16 @@
             {% endif %}
 
             {% include '/analysis/multiple_instances_filter_js.html' %}
+
+            $('#sc').bind('keypress', 'ctrl+a', function() {
+                $('#sc option').attr("selected", "selected");
+                return false;
+            });
+
+
+            {% if not form.sc.data %}
+            $('#sc option').attr("selected", "selected");
+            {% endif %}
           });
     </script>
 
@@ -117,6 +127,7 @@
                         Example: (numAtoms &gt;= 6000 && numAtoms &lt;= 8000 && name.match(/k3/))
                     </td>
                 </tr>
+                {{ render_field(form.sc, size=10) }}
                 {{ render_field(form.show_top) }}
                 {{ render_field(form.cost) }}
                 <tr>

@@ -113,6 +113,9 @@ def solver_ranking(database, experiment_id):
     form = forms.RankingForm(request.args)
     if form.cost.data == 'None': form.cost.data = experiment.defaultCost
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
+    form.sc.query = experiment.solver_configurations or EmptyQuery()
+    if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
+        form.sc.query = filter(lambda sc: sc.solver_binary.solver.user == g.User, form.sc.query) or EmptyQuery()
     if len(experiment.solver_configurations) > 100 and not form.i.data: form.careful_ranking.data = False
 
     result_properties = db.get_plotable_result_properties()
@@ -120,7 +123,7 @@ def solver_ranking(database, experiment_id):
     form.cost.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
 
     if form.i.data:
-        solver_configs = experiment.solver_configurations
+        solver_configs = form.sc.data
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
         show_top = form.show_top.data
