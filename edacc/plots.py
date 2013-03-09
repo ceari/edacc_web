@@ -20,6 +20,8 @@ stats = importr('stats') # statistical methods
 akima = importr('akima') # surface interpolation
 fields = importr('fields') # image plotting
 ellipse = importr('ellipse') # correlation matrix plots
+color_brewer = importr('RColorBrewer') # correlation matrix plots
+cluster = importr('cluster') # correlation matrix plots
 
 #with open(os.devnull) as devnull:
     # redirect the annoying np package import output to nirvana
@@ -1108,6 +1110,10 @@ def correlation_matrix_plot(correlations, filename, format='png'):
                 "#EFF3FF","#BDD7E7","#6BAED6","#3182BD","#08519C"]
     corr_colors = [colors[int(5*c + 6) - 1] for c in corr]
 
-    robjects.r.plotcorr(robjects.r.matrix(robjects.FloatVector(corr), nrow=len(scs), dimnames=dimnames), col=robjects.StrVector(corr_colors))
+    #robjects.r.plotcorr(robjects.r.matrix(robjects.FloatVector(corr), nrow=len(scs), dimnames=dimnames), col=robjects.StrVector(corr_colors))
+
+    colorpalette = robjects.r("brewer.pal")(9, "YlOrRd") #yellow -> red transition
+    robjects.r.heatmap(robjects.r.matrix(robjects.FloatVector(corr), nrow=len(scs), dimnames=dimnames), Colv=True,
+                       Rowv=True, scale='none', col=colorpalette, margins=robjects.IntVector([20, 20]))
 
     grdevices.dev_off()
