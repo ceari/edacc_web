@@ -48,7 +48,7 @@ Dependencies
 - scikits.learn (borgexplorer plugin dependency)
 - scipy (borgexplorer plugin dependency)
 - R 2.11 (language for statistical computing and graphics)
-- R packages 'np', 'ellipse', 'fields', 'surv2sample', 'akima' (available via CRAN)
+- R packages 'np', 'ellipse', 'fields', 'surv2sample', 'akima', 'RColorBrewer' (available via CRAN)
 - python-memcached v1.45 + memcached 1.4.5 (optional, enable/disable in config.py)
 
 Development Installation Guide
