@@ -15,10 +15,10 @@ import uuid, datetime, os
 from jinja2 import FileSystemBytecodeCache
 from werkzeug import ImmutableDict
 from flask import Flask, Request, g, Blueprint
-from flaskext.cache import Cache
-from flaskext.mail import Mail
+from flask.ext.cache import Cache
+from flask.ext.mail import Mail
 from simplekv.fs import FilesystemStore
-from flaskext.kvsession import KVSessionExtension
+from flask.ext.kvsession import KVSessionExtension
 from edacc import config, models, utils
 
 try:

@@ -23,7 +23,7 @@ from cStringIO import StringIO
 from flask import Blueprint
 from flask import render_template as render, g
 from flask import Response, abort, request, session, url_for, redirect, flash
-from flaskext.mail import Message
+from flask.ext.mail import Message
 from werkzeug import Headers, secure_filename
 
 from edacc import utils, models, forms, config

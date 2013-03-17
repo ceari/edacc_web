@@ -72,6 +72,7 @@ def index():
 
     return render('/databases.html', databases=databases)
 
+@frontend.route('/<database>/')
 @frontend.route('/<database>/index')
 @frontend.route('/<database>/experiments/')
 @require_phase(phases=(1, 2, 3, 4, 5, 6, 7))
