@@ -266,6 +266,9 @@ def experiment_results(database, experiment_id):
         solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
     form = forms.ResultsBySolverAndInstanceForm(request.args, csrf_enabled=False)
+    result_properties = db.get_plotable_result_properties()
+    result_properties = zip([p.idProperty for p in result_properties], [p.name for p in result_properties])
+    form.cost.choices = [('resultTime', 'CPU Time'), ('wallTime', 'Wall Clock Time'), ('cost', 'Cost')] + result_properties
     if form.cost.data == 'None': form.cost.data = experiment.defaultCost
     form.i.query = sorted(experiment.get_instances(db), key=lambda i: i.get_name()) or EmptyQuery()
     form.solver_configs.query = solver_configs or EmptyQuery()

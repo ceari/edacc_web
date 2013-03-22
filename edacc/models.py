@@ -380,7 +380,7 @@ class EDACCDatabase(object):
                 return results_by_instance
 
             
-            def get_result_matrix(self, db, solver_configs, instances, cost='resultTime'):
+            def  get_result_matrix(self, db, solver_configs, instances, cost='resultTime'):
                 """ Returns the results as matrix of lists of result tuples, i.e.
                     Dict<idInstance, Dict<idSolverConfig, List of runs>> """
                 num_successful = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
@@ -392,33 +392,50 @@ class EDACCDatabase(object):
                     return M, 0, 0
                 table = db.metadata.tables['ExperimentResults']
                 table_result_codes = db.metadata.tables['ResultCodes']
+                from_table = table
+                table_has_prop = db.metadata.tables['ExperimentResult_has_Property']
+                table_has_prop_value = db.metadata.tables['ExperimentResult_has_PropertyValue']
+
                 if cost == 'resultTime':
-                    cost_column = 'resultTime'
+                    cost_column = table.c['resultTime']
+                    cost_property = db.ExperimentResult.resultTime
                     cost_limit_column = table.c['CPUTimeLimit']
                 elif cost == 'wallTime':
-                    cost_column = 'wallTime'
+                    cost_column = table.c['wallTime']
+                    cost_property = db.ExperimentResult.wallTime
                     cost_limit_column = table.c['wallClockTimeLimit']
+                elif cost == 'cost':
+                    cost_column = table.c['cost']
+                    cost_property = db.ExperimentResult.cost
+                    inf = float('inf')
+                    cost_limit_column = table.c['CPUTimeLimit'] # doesnt matter
                 else:
-                    cost_column = 'cost'
+                    cost_column = table_has_prop_value.c['value']
+                    cost_property = db.ResultPropertyValue.value
                     inf = float('inf')
                     cost_limit_column = table.c['CPUTimeLimit']
-                s = select([table.c['idJob'], table.c['resultCode'], expression.label('cost', table.c[cost_column]), table.c['status'],
+                    from_table = table.join(table_has_prop, and_(table_has_prop.c['idProperty']==int(cost),
+                                                                 table_has_prop.c['idExperimentResults']==table.c['idJob'])).join(table_has_prop_value)
+
+                s = select([table.c['idJob'], table.c['resultCode'], expression.label('cost', cost_column), table.c['status'],
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
                             table_result_codes.c['description'], expression.label('limit', cost_limit_column)],
                             and_(table.c['Experiment_idExperiment'] == self.idExperiment,
                                 table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                                 table.c['Instances_idInstance'].in_(instance_ids)),
-                            from_obj=table.join(table_result_codes))
+                            from_obj=from_table.join(table_result_codes))
+
                 Run = namedtuple('Run', ['idJob', 'status', 'result_code_description', 'resultCode', 'resultTime', 'successful', 'penalized_time10', 'idSolverConfig', 'idInstance', 'penalized_time1', 'censored'])
+
                 for r in db.session.connection().execute(s):
                     if r.Instances_idInstance not in M: continue
                     if r.SolverConfig_idSolverConfig not in M[r.Instances_idInstance]: continue
                     if str(r.resultCode).startswith('1'): num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     if r.status not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
-                        Run(r.idJob, r.status, r[6], r.resultCode, None if r.status <= 0 else r.cost, str(r.resultCode).startswith('1'),
-                            r.cost if str(r.resultCode).startswith('1') else (inf if cost_column == 'cost' else r.limit) * 10,
-                            r.SolverConfig_idSolverConfig, r.Instances_idInstance, r.cost if str(r.resultCode).startswith('1') else (inf if cost_column == 'cost' else r.limit),
+                        Run(r.idJob, r.status, r[6], r.resultCode, None if r.status <= 0 else float(r.cost), str(r.resultCode).startswith('1'),
+                            float(r.cost) if str(r.resultCode).startswith('1') else (inf if cost not in ('resultTime', 'wallTime') else r.limit) * 10,
+                            r.SolverConfig_idSolverConfig, r.Instances_idInstance, float(r.cost) if str(r.resultCode).startswith('1') else (inf if cost not in ('resultTime', 'wallTime') else r.limit),
                             not str(r.resultCode).startswith('1')))
                 return M, num_successful, num_completed
                     
