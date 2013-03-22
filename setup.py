@@ -25,5 +25,6 @@ setup(
         "scikits.learn==0.8.1",
         "numpy>=1.5.1",
         "lxml>=2.3",
+	"pbkdf2",
     ]
 )

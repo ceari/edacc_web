@@ -16,6 +16,7 @@ import hashlib
 from functools import wraps
 
 from flask import abort, session, url_for, redirect, g, request, flash
+import pbkdf2
 
 from edacc import config, models, config
 
@@ -132,7 +133,4 @@ def password_hash(password):
     """ Returns a cryptographic hash of the given password salted with
         SECRET_KEY as hexstring.
     """
-    hash = hashlib.sha256()
-    hash.update(config.SECRET_KEY)
-    hash.update(password)
-    return hash.hexdigest()
+    return pbkdf2.crypt(config.SECRET_KEY + password, iterations=10000)

@@ -8,7 +8,7 @@
         After registration you will receive an e-mail with a link you have to follow to activate your account.<br/>
         Furthermore, all registrations have to be verified by the organizers before you can log in.<br/>We will send a notification e-mail when your account is verified.<br/>
         All information submitted here is only accessible by the organizers.<br/>
-        Passwords are stored as salted SHA-hashes. Fields marked with <strong>*</strong> are required.
+        Passwords are stored as PBKFD2 hashes. Fields marked with <strong>*</strong> are required.
     </div>
 
     <form action="{{url_for('accounts.register', database=database)}}" method="post">

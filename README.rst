@@ -41,6 +41,7 @@ Dependencies
 - Jinja2 2.5 (Template Engine)
 - PyLZMA 0.4.2 (Python LZMA SDK bindings)
 - rpy2 2.1.4 (Python R interface)
+- pbkdf2 (Python PBKDF2 hash function implementation)
 - PIL 1.1.7
 - numpy 1.5.1
 - pygame 1.9
@@ -153,7 +154,7 @@ same machine that the EDACC database runs on::
     > pip install mysql-python
     > pip install rpy2
     > pip install flask flask-wtf flask-actions flask-mail flask-cache flask-kvsession
-    > pip install sqlalchemy pylzma
+    > pip install sqlalchemy pylzma pbkdf2
 
     - Install R libraries ("R" launches the R interpreter):
     > R
