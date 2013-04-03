@@ -4,6 +4,7 @@
 {% block content %}
     <h2>Update solver description of {{ solver.name }}</h2>
     <form id="update_description_form" action="{{url_for('accounts.update_description', database=database, solver_id=solver.idSolver)}}" method="post" enctype="multipart/form-data">
+        {{ form.csrf_token }}
         <table width="800px">
             {{ render_field(form.description_pdf, size=40, explanation=".pdf file", required=True) }}
         </table>

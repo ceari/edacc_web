@@ -12,7 +12,7 @@
     </div>
 
     <form action="{{url_for('accounts.register', database=database)}}" method="post">
-        {{ form.csrf }}
+        {{ form.csrf_token }}
         <table>
             {{ render_field(form.lastname, size=40, maxlength=255, required=True) }}
             {{ render_field(form.firstname, size=40, maxlength=255, required=True) }}

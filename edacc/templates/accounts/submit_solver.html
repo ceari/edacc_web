@@ -88,7 +88,7 @@
     </div>
     {% endif %}
     <form id="solver_form" action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
-        {{ form.csrf }}
+        {{ form.csrf_token }}
         <table width="800px">
             {{ render_field(form.name, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
             {{ render_field(form.version, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}

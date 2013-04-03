@@ -4,7 +4,7 @@
 {% block content %}
     <h2>Submit Benchmark</h2>
     <form action="{{url_for('accounts.submit_benchmark', database=database)}}" method="post" enctype="multipart/form-data">
-        {{ form.csrf }}
+        {{ form.csrf_token }}
         <table width="800px">
             {{ render_field(form.instance) }}
             {{ render_field(form.name, size=40, maxlength=255, explanation='Name of the instance. If left blank the filename will be used.') }}

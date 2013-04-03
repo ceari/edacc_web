@@ -74,7 +74,7 @@
         Please include benchmark descriptions simply as text or PDF file in the submitted archive.
     </div>
     <form id="upload_form" action="{{url_for('accounts.submit_benchmarks', database=database)}}" method="post" enctype="multipart/form-data">
-        {{ form.csrf }}
+        {{ form.csrf_token }}
         <table width="800px">
             <tr>
                 <td colspan="2"><div id="uploader">You browser doesn't seem to support any of the uploader implementations (HTML5, Flash)</div></td>
