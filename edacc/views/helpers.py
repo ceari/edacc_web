@@ -133,4 +133,4 @@ def password_hash(password):
     """ Returns a cryptographic hash of the given password salted with
         SECRET_KEY as hexstring.
     """
-    return pbkdf2.crypt(config.SECRET_KEY + password, iterations=10000)
+    return pbkdf2.crypt(password, salt=config.SECRET_KEY, iterations=10000)
