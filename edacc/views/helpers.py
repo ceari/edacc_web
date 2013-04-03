@@ -42,7 +42,7 @@ def require_admin(f):
 def redirect_ssl(f):
     @wraps(f)
     def decorated_f(*args, **kwargs):
-        if request.url.startswith('http://') and not config.DEBUG:
+        if request.url.startswith('http://') and not config.DEBUG and config.ENABLE_SSL:
             def redirect_f(*args, **kwargs):
                 return redirect('https://' + request.url[7:])
             return redirect_f(*args, **kwargs)

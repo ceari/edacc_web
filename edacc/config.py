@@ -23,6 +23,9 @@ TEMP_DIR = '/tmp/edacc-webfrontend'
 LOGGING = False
 LOG_FILE = '/srv/edacc_web/error.log'
 
+# Use SSL for login pages etc.
+ENABLE_SSL = False
+
 # Enable use of piwik web analytics tool
 PIWIK = False
 # URL of the piwik installation to use (omit http://). Trailing slash is important!

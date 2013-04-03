@@ -11,3 +11,5 @@ edacc.komodoproject
 edacc/local_config.py
 .idea/
 scripts/satchallenge_local_config.py
+scripts/satcomp13_local_config.py
+scripts/satcomp13*
