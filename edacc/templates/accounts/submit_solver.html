@@ -102,7 +102,7 @@
             <tr>
                 <td>Launch command preview:</td><td><span id="launch_command_preview"></span></td>
             </tr>
-            {{ render_field(form.competition_categories, explanation='<strong>Required</strong>. Hold the Ctrl key to select multiple categories.', required=True) }}
+            {{ render_field(form.competition_categories, size=8, explanation='<strong>Required</strong>. Hold the Ctrl key to select multiple categories.', required=True) }}
             {{ render_field(form.parameters, size=40, explanation="<strong>Required</strong>", required=True) }}
             <tr>
                 <td></td>
