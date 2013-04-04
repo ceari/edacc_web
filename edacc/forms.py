@@ -15,6 +15,8 @@ from flask.ext.wtf import ValidationError, BooleanField, validators
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField,\
                                             QuerySelectField
 
+from edacc import constants
+
 ERROR_REQUIRED = 'This field is required.'
 
 MAX_SC_LEN = 100 # maximum length of solver config names to display before truncating
@@ -56,6 +58,8 @@ class RegistrationForm(Form):
                                         message='Passwords must match.')])
     address = TextAreaField('Postal Address')
     affiliation = TextAreaField('Affiliation')
+    affiliation_type = SelectField('Type of affiliation', [Required()], choices=[('company', 'Company'), ('public_institution', 'Public institution')], default='public_institution')
+    country = SelectField('Country', [Required()], choices=sorted(constants.COUNTRIES, key=lambda x: x[1]))
     accepted_terms = BooleanField('I have read, understood and accepted the terms and conditions.', [Required(ERROR_REQUIRED)])
     captcha = TextField()
 

@@ -26,7 +26,7 @@ from flask import Response, abort, request, session, url_for, redirect, flash
 from flask.ext.mail import Message
 from werkzeug import Headers, secure_filename
 
-from edacc import utils, models, forms, config
+from edacc import utils, models, forms, config, constants
 from edacc.views.helpers import require_phase, require_competition, \
                                 require_login, password_hash, redirect_ssl,\
                                 require_admin, is_admin
@@ -74,6 +74,8 @@ def register(database):
             user.affiliation = form.affiliation.data
             user.verified = False
             user.accepted_terms = form.accepted_terms.data
+            user.affiliation_type = form.affiliation_type.data
+            user.country = form.country.data
 
             hash = hashlib.sha256()
             hash.update(config.SECRET_KEY)
@@ -132,9 +134,11 @@ def activate(database, activation_hash):
                    "First name: %s\n" \
                    "E-mail: %s\n" \
                    "Postal address: %s\n" \
-                   "Affiliation: %s\n\n\n\n" \
+                   "Affiliation: %s\n" \
+                   "Affiliation type: %s\n" \
+                   "Country: %s\n\n\n" \
                    "Use the following link to verify this user: " + request.url_root[:-1] + url_for('accounts.verify_user', database=database, user_id=user.idUser)) \
-                    % (user.lastname, user.firstname, user.email, user.postal_address, user.affiliation)
+                    % (user.lastname, user.firstname, user.email, user.postal_address, user.affiliation, user.affiliation_type, user.country)
         mail.send(msg)
         flash('Account activated. You will be able to log in when your account was verified by an administrator.')
     except Exception as e:
