@@ -21,8 +21,8 @@
             {{ render_field(form.password_confirm, size=40, maxlength=255, required=True) }}
             {{ render_field(form.address, cols=30, rows=5) }}
             {{ render_field(form.affiliation, cols=30, rows=5) }}
-            {{ render_field(form.affiliation_type) }}
-            {{ render_field(form.country) }}
+            {{ render_field(form.affiliation_type), required=True }}
+            {{ render_field(form.country), required=True }}
             <tr>
                 <td>Give a solution <strong>*</strong><br/>(Spam bot protection)</td>
                 <td>{{session.captcha|render_formula}}<br/>(space-separated, e.g. 1 0 1 for A=1, B=0, C=1<br/> Don't use your solver for this!)<br/><input size="40" type="text" name="captcha" /></td>
