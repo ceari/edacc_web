@@ -576,16 +576,27 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
     # calculate adjacency matrix and list of edges (v1, v2) of the graph
     edges_surv = set()
     vertices = set(solver_config_ids)
-    M_surv = dict()
+    M_surv = dict((i, dict()) for i in solver_config_ids)
     for s1 in solver_config_ids:
-        M_surv[s1] = dict()
         for s2 in solver_config_ids:
-            if s1 == s2:
-                M_surv[s1][s2] = 0
-                continue
-            M_surv[s1][s2] = 1 if survival_winner[(s1, s2)] >= 0 else 0
-            if M_surv[s1][s2] == 1:
+            M_surv[s1][s2] = 0
+            if s1 == s2: continue
+
+            if survival_winner[(s1, s2)] == 1:
+                M_surv[s1][s2] = 1
                 edges_surv.add((s1, s2))
+            elif survival_winner[(s1, s2)] == -1:
+                M_surv[s2][s1] = 1
+                edges_surv.add((s2, s1))
+            elif survival_winner[(s1, s2)] == 0:
+                M_surv[s1][s2] = 1
+                M_surv[s2][s1] = 1
+                edges_surv.add((s1, s2))
+                edges_surv.add((s2, s1))
+
+            #M_surv[s1][s2] = 1 if survival_winner[(s1, s2)] >= 0 else 0
+            #if M_surv[s1][s2] == 1:
+            #    edges_surv.add((s1, s2))
             #elif M_surv[s1][s2] == 0.5:
             #    edges_surv.add((s1, s2))
             #    edges_surv.add((s2, s1))
@@ -624,6 +635,8 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
                             M_comp[sc1][sc2] = 1
                         else:
                             M_comp[sc1][sc2] = 0
+                    else:
+                        M_comp[sc1][sc2] = 1
 
                     if M_comp[sc1][sc2] == 1:
                         edges_comp.add((sc1, sc2))
