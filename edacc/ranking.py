@@ -555,7 +555,7 @@ def survival_ranking(db, experiment, instances, solver_configs, results, cost="r
             p_values[(s1, s2)] = p_values[(s2, s1)] = p_value
             tests_performed[(s1, s2)] = tests_performed[(s2, s1)] = test_performed
 
-            if numpy.average(runs_s1) > numpy.average(runs_s2):
+            if numpy.median(runs_s1) > numpy.median(runs_s2):
                 better_solver[(s1, s2)] = False
                 better_solver[(s2, s1)] = True
             else:
