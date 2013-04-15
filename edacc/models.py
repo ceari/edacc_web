@@ -19,7 +19,7 @@ import sqlalchemy
 from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
-from sqlalchemy.orm import relation, relationship, joinedload_all
+from sqlalchemy.orm import relation, relationship, joinedload_all, backref
 from sqlalchemy.sql import and_, not_, select, label, expression
 from sqlalchemy import schema
 
@@ -769,7 +769,7 @@ class EDACCDatabase(object):
         mapper(ExperimentResult, metadata.tables['ExperimentResults'],
             properties = {
                 'output': relation(ExperimentResultOutput, backref='result', uselist=False),
-                'solver_configuration': relation(SolverConfiguration, backref='runs'),
+                'solver_configuration': relation(SolverConfiguration, backref=backref('runs', passive_deletes=True)),
                 'properties': relationship(ExperimentResultProperty, backref='experiment_result'),
                 'experiment': relation(Experiment, backref='experiment_results'),
                 'instance': relation(Instance, backref='results'),

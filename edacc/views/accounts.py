@@ -250,7 +250,7 @@ def manage(database):
 @require_competition
 def submit_benchmarks(database):
     db = models.get_database(database) or abort(404)
-    form = forms.BenchmarksForm(request.form)
+    form = forms.BenchmarksForm()
 
     if form.validate_on_submit():
         upload_dir = os.path.join(config.UPLOAD_FOLDER, database, str(g.User.idUser))
@@ -404,7 +404,7 @@ def submit_solver(database, id=None):
                 form.run_command.data = solver_binary.runCommand
                 form.run_path.data = solver_binary.runPath
     else:
-        form = forms.SolverForm(request.form)
+        form = forms.SolverForm()
 
     form.competition_categories.query = db.session.query(db.CompetitionCategory).all()
 
@@ -622,7 +622,7 @@ def delete_solver(database, solver_id):
 @require_competition
 def reset_password(database):
     db = models.get_database(database) or abort(404)
-    form = forms.ResetPasswordForm(request.form)
+    form = forms.ResetPasswordForm()
 
     if form.validate_on_submit():
         # find user by lower case email address
@@ -664,7 +664,7 @@ def change_password(database, reset_hash):
     db = models.get_database(database) or abort(404)
     user = db.session.query(db.User).filter_by(activation_hash='pw_reset_'+reset_hash).first() or abort(404)
 
-    form = forms.ChangePasswordForm(request.form)
+    form = forms.ChangePasswordForm()
     if form.validate_on_submit():
         user.activation_hash = ''
         user.password = password_hash(form.password.data)
@@ -793,7 +793,7 @@ def admin_toggle_solver_freeze(database, solver_id):
 def update_description(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
-    form = forms.UpdateDescriptionForm(request.form, csrf_enabled=False)
+    form = forms.UpdateDescriptionForm()
 
     if form.validate_on_submit():
         solver.description_pdf = request.files[form.description_pdf.name].stream.read()
