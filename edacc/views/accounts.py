@@ -425,14 +425,14 @@ def submit_solver(database, id=None):
             error = 'Solver with this name and version already exists'
             valid = False
 
-        if id is None and not form.code.file and not form.binary.file:
+        if id is None and not form.code.data and not form.binary.data:
             error = 'Please provide either a binary or the code (or both).'
             valid = False
 
         bin = None
-        if (id is None or (id is not None and form.binary.file)) and form.binary.file:
+        if (id is None or (id is not None and form.binary.data)) and form.binary.data:
             # if this is a new solver or a resubmission with new binary update binary
-            bin = request.files[form.binary.name].read()
+            bin = request.files[form.binary.name].stream.read()
             hash = hashlib.md5()
             hash.update(bin)
 
@@ -444,22 +444,22 @@ def submit_solver(database, id=None):
             with open(os.path.join(store_path, hash.hexdigest()), 'wb') as f:
                 f.write(bin)
 
-            if not form.binary.file.filename.endswith('.zip'):
+            if not form.binary.data.filename.endswith('.zip'):
                 tmpfile = StringIO()
                 zip_file = zipfile.ZipFile(tmpfile, 'w', compression=zipfile.ZIP_DEFLATED)
-                zip_file.writestr(form.binary.file.filename, bin)
+                zip_file.writestr(form.binary.data.filename, bin)
                 zip_file.close()
                 tmpfile.seek(0)
                 bin = tmpfile.read()
-                run_path = form.binary.file.filename
+                run_path = form.binary.data.filename
             else:
                 if not run_path:
                     error = 'Since your binary is a .zip file, please provide the path of the executable within the archive'
                     valid = False
 
         code = None
-        if id is None or (id is not None and form.code.file):
-            code = request.files[form.code.name].read()
+        if id is None or (id is not None and form.code.data):
+            code = request.files[form.code.name].stream.read()
             code_hash = hashlib.md5()
             code_hash.update(code)
 
@@ -472,9 +472,9 @@ def submit_solver(database, id=None):
                 f.write(code)
 
         description_pdf = None
-        if id is None or (id is not None and form.description_pdf.file):
-            description_pdf = request.files[form.description_pdf.name].read()
-        if id is None and not form.description_pdf.file:
+        if id is None or (id is not None and form.description_pdf.data):
+            description_pdf = request.files[form.description_pdf.name].stream.read()
+        if id is None and not description_pdf:
             valid = False
             error = "Please provide a description pdf."
 
@@ -796,7 +796,7 @@ def update_description(database, solver_id):
     form = forms.UpdateDescriptionForm(request.form, csrf_enabled=False)
 
     if form.validate_on_submit():
-        solver.description_pdf = request.files[form.description_pdf.name].read()
+        solver.description_pdf = request.files[form.description_pdf.name].stream.read()
 
         try:
             db.session.commit()
