@@ -20,7 +20,7 @@ from sqlalchemy import create_engine, MetaData, func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session, deferred
 from sqlalchemy.orm import relation, relationship, joinedload_all, backref
-from sqlalchemy.sql import and_, not_, select, label, expression
+from sqlalchemy.sql import and_, not_, select, label, expression, literal
 from sqlalchemy import schema
 
 from edacc import config, utils
@@ -380,7 +380,7 @@ class EDACCDatabase(object):
                 return results_by_instance
 
             
-            def  get_result_matrix(self, db, solver_configs, instances, cost='resultTime'):
+            def  get_result_matrix(self, db, solver_configs, instances, cost='resultTime', fixed_limit=None):
                 """ Returns the results as matrix of lists of result tuples, i.e.
                     Dict<idInstance, Dict<idSolverConfig, List of runs>> """
                 num_successful = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)
@@ -396,14 +396,34 @@ class EDACCDatabase(object):
                 table_has_prop = db.metadata.tables['ExperimentResult_has_Property']
                 table_has_prop_value = db.metadata.tables['ExperimentResult_has_PropertyValue']
 
+                status_column = table.c['status']
+                result_code_column = table.c['resultCode']
                 if cost == 'resultTime':
                     cost_column = table.c['resultTime']
                     cost_property = db.ExperimentResult.resultTime
                     cost_limit_column = table.c['CPUTimeLimit']
+
+                    if fixed_limit:
+                        cost_column = expression.case([(table.c['resultTime'] > fixed_limit, fixed_limit)],
+                                                      else_=table.c['resultTime'])
+                        cost_limit_column = literal(fixed_limit)
+                        status_column = expression.case([(table.c['resultTime'] > fixed_limit, literal(21))],
+                                                        else_=table.c['status'])
+                        result_code_column = expression.case([(table.c['resultTime'] > fixed_limit, literal(-21))],
+                                                             else_=table.c['resultCode'])
                 elif cost == 'wallTime':
                     cost_column = table.c['wallTime']
                     cost_property = db.ExperimentResult.wallTime
                     cost_limit_column = table.c['wallClockTimeLimit']
+
+                    if fixed_limit:
+                        cost_column = expression.case([(table.c['wallTime'] > fixed_limit, fixed_limit)],
+                                                      else_=table.c['wallTime'])
+                        cost_limit_column = literal(fixed_limit)
+                        status_column = expression.case([(table.c['wallTime'] > fixed_limit, literal(22))],
+                                                        else_=table.c['status'])
+                        result_code_column = expression.case([(table.c['wallTime'] > fixed_limit, literal(-22))],
+                                                             else_=table.c['resultCode'])
                 elif cost == 'cost':
                     cost_column = table.c['cost']
                     cost_property = db.ExperimentResult.cost
@@ -417,7 +437,7 @@ class EDACCDatabase(object):
                     from_table = table.join(table_has_prop, and_(table_has_prop.c['idProperty']==int(cost),
                                                                  table_has_prop.c['idExperimentResults']==table.c['idJob'])).join(table_has_prop_value)
 
-                s = select([table.c['idJob'], table.c['resultCode'], expression.label('cost', cost_column), table.c['status'],
+                s = select([table.c['idJob'], expression.label('resultCode', result_code_column), expression.label('cost', cost_column), expression.label('status', status_column),
                             table.c['SolverConfig_idSolverConfig'], table.c['Instances_idInstance'],
                             table_result_codes.c['description'], expression.label('limit', cost_limit_column)],
                             and_(table.c['Experiment_idExperiment'] == self.idExperiment,
@@ -433,9 +453,9 @@ class EDACCDatabase(object):
                     if str(r.resultCode).startswith('1'): num_successful[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     if r.status not in STATUS_PROCESSING: num_completed[r.Instances_idInstance][r.SolverConfig_idSolverConfig] += 1
                     M[r.Instances_idInstance][r.SolverConfig_idSolverConfig].append(
-                        Run(r.idJob, r.status, r[6], r.resultCode, None if r.status <= 0 else float(r.cost), str(r.resultCode).startswith('1'),
-                            float(r.cost) if str(r.resultCode).startswith('1') else (inf if cost not in ('resultTime', 'wallTime') else r.limit) * 10,
-                            r.SolverConfig_idSolverConfig, r.Instances_idInstance, float(r.cost) if str(r.resultCode).startswith('1') else (inf if cost not in ('resultTime', 'wallTime') else r.limit),
+                        Run(r.idJob, int(r.status), r[6], int(r.resultCode), None if int(r.status) <= 0 else float(r.cost), str(r.resultCode).startswith('1'),
+                            float(r.cost) if str(r.resultCode).startswith('1') else (inf if cost not in ('resultTime', 'wallTime') else float(r.limit)) * 10,
+                            r.SolverConfig_idSolverConfig, r.Instances_idInstance, float(r.cost) if str(r.resultCode).startswith('1') else (inf if cost not in ('resultTime', 'wallTime') else float(r.limit)),
                             not str(r.resultCode).startswith('1')))
                 return M, num_successful, num_completed
                     

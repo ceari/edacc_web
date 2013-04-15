@@ -13,7 +13,7 @@ import numpy, math
 from scipy.stats.mstats import mquantiles
 from itertools import izip
 
-from sqlalchemy.sql import select, and_, functions, not_, expression
+from sqlalchemy.sql import select, and_, functions, not_, expression, literal
 
 from edacc import statistics
 
@@ -107,7 +107,7 @@ def avg_point_biserial_correlation_ranking(db, experiment, instances):
     return list(sorted(experiment.solver_configurations, cmp=comp))
 
 
-def number_of_solved_instances_ranking(db, experiment, instances, solver_configs, cost='resultTime'):
+def number_of_solved_instances_ranking(db, experiment, instances, solver_configs, cost='resultTime', fixed_limit=None):
     """ Ranking by the number of instances correctly solved.
         This is determined by an resultCode that starts with '1' and a 'finished' status
         of a job.
@@ -130,9 +130,27 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
     if cost == 'resultTime':
         cost_column = table.c['resultTime']
         cost_limit_column = table.c['CPUTimeLimit']
+
+        if fixed_limit:
+            cost_column = expression.case([(table.c['resultTime'] > fixed_limit, fixed_limit)],
+                                          else_=table.c['resultTime'])
+            cost_limit_column = literal(fixed_limit)
+            c_result_code = expression.case([(table.c['resultTime'] > fixed_limit, literal(-21))],
+                                            else_=table.c['resultCode'])
+            c_status = expression.case([(table.c['resultTime'] > fixed_limit, literal(21))],
+                                       else_=table.c['status'])
     elif cost == 'wallTime':
         cost_column = table.c['wallTime']
         cost_limit_column = table.c['wallClockTimeLimit']
+
+        if fixed_limit:
+            cost_column = expression.case([(table.c['wallTime'] > fixed_limit, fixed_limit)],
+                                          else_=table.c['wallTime'])
+            cost_limit_column = literal(fixed_limit)
+            c_result_code = expression.case([(table.c['wallTime'] > fixed_limit, literal(-22))],
+                                            else_=table.c['resultCode'])
+            c_status = expression.case([(table.c['wallTime'] > fixed_limit, literal(22))],
+                                       else_=table.c['status'])
     elif cost == 'cost':
         cost_column = table.c['cost']
         inf = float('inf')
@@ -198,7 +216,7 @@ def number_of_solved_instances_ranking(db, experiment, instances, solver_configs
     return list(sorted(solver_configs,cmp=comp,reverse=True))
 
 
-def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev, cost, par_factor=1):
+def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10, calculate_avg_stddev, cost, par_factor=1, fixed_limit=None):
     instance_ids = [i.idInstance for i in instances]
     solver_config_ids = [s.idSolverConfig for s in ranked_solvers]
     if not solver_config_ids: return [], None
@@ -210,14 +228,34 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     from_table = table
     table_has_prop = db.metadata.tables['ExperimentResult_has_Property']
     table_has_prop_value = db.metadata.tables['ExperimentResult_has_PropertyValue']
+    status_column = table.c['status']
+    result_code_column = table.c['resultCode']
     if cost == 'resultTime':
         cost_column = table.c['resultTime']
         cost_property = db.ExperimentResult.resultTime
         cost_limit_column = table.c['CPUTimeLimit']
+
+        if fixed_limit:
+            cost_column = expression.case([(table.c['resultTime'] > fixed_limit, fixed_limit)],
+                                          else_=table.c['resultTime'])
+            cost_limit_column = literal(fixed_limit)
+            status_column = expression.case([(table.c['resultTime'] > fixed_limit, literal(21))],
+                                            else_=table.c['status'])
+            result_code_column = expression.case([(table.c['resultTime'] > fixed_limit, literal(-21))],
+                                                 else_=table.c['resultCode'])
     elif cost == 'wallTime':
         cost_column = table.c['wallTime']
         cost_property = db.ExperimentResult.wallTime
         cost_limit_column = table.c['wallClockTimeLimit']
+
+        if fixed_limit:
+            cost_column = expression.case([(table.c['wallTime'] > fixed_limit, fixed_limit)],
+                                          else_=table.c['wallTime'])
+            cost_limit_column = literal(fixed_limit)
+            status_column = expression.case([(table.c['wallTime'] > fixed_limit, literal(22))],
+                                            else_=table.c['status'])
+            result_code_column = expression.case([(table.c['wallTime'] > fixed_limit, literal(-22))],
+                                                 else_=table.c['resultCode'])
     elif cost == 'cost':
         cost_column = table.c['cost']
         cost_property = db.ExperimentResult.cost
@@ -239,7 +277,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
     if cost in ('resultTime', 'wallTime', 'cost'):
         best_instance_runtimes = db.session.query(func.min(cost_property), db.ExperimentResult.Instances_idInstance) \
             .filter(db.ExperimentResult.Experiment_idExperiment==experiment.idExperiment) \
-            .filter(db.ExperimentResult.resultCode.like(u'1%')) \
+            .filter(result_code_column.like(u'1%')) \
             .filter(db.ExperimentResult.Instances_idInstance.in_(instance_ids)) \
             .filter(db.ExperimentResult.SolverConfig_idSolverConfig.in_(solver_config_ids)) \
             .group_by(db.ExperimentResult.Instances_idInstance).all()
@@ -290,15 +328,14 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
              )]
 
     # single query fetch of all/most required data
-    table = db.metadata.tables['ExperimentResults']
     s = select([expression.label('cost', cost_column),
                 table.c['SolverConfig_idSolverConfig'],
                 table.c['Instances_idInstance']],
-                and_(table.c['resultCode'].like(u'1%'),
+                and_(result_code_column.like(u'1%'),
                     table.c['Instances_idInstance'].in_(instance_ids),
                     table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                     table.c['Experiment_idExperiment']==experiment.idExperiment,
-                    table.c['status']==1)).select_from(from_table)
+                    status_column==1)).select_from(from_table)
     successful_runs = db.session.connection().execute(s)
 
     vbs_uses_solver_count = dict((id, 0) for id in solver_config_ids)
@@ -320,7 +357,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
             and_(table.c['Instances_idInstance'].in_(instance_ids),
                 table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                 table.c['Experiment_idExperiment']==experiment.idExperiment,
-                not_(table.c['status'].in_((-1,0))))).select_from(from_table)
+                not_(status_column.in_((-1,0))))).select_from(from_table)
         finished_runs = db.session.connection().execute(s)
         for run in finished_runs:
             if not finished_runs_by_solver_and_instance.has_key(run.SolverConfig_idSolverConfig):
@@ -337,10 +374,10 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
                     table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
                     and_(
                         or_(
-                            table.c['status']!=1,
-                            not_(table.c['resultCode'].like(u'1%'))
+                            status_column!=1,
+                            not_(result_code_column.like(u'1%'))
                         ),
-                        not_(table.c['status'].in_([-1,0]))
+                        not_(status_column.in_([-1,0]))
                     )
                 )).select_from(from_table)
     failed_runs = db.session.connection().execute(s)

@@ -58,7 +58,7 @@ def careful_solver_ranking(database, experiment_id):
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-        results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, form.cost.data)
+        results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, form.cost.data, form.fixed_limit.data)
 
         carefully_ranked_solvers, raw_scores, dom_matrix = ranking.careful_ranking(db, experiment, form.i.data,
                 solver_configs, results_matrix, form.cost.data, noise=form.careful_ranking_noise.data, break_ties=form.break_careful_ties.data)
@@ -88,7 +88,7 @@ def survival_solver_ranking(database, experiment_id):
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
 
-        results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, form.cost.data)
+        results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, form.cost.data, form.fixed_limit.data)
 
         survival_ranked_solvers, survival_winner, M_surv, p_values, tests_performed, dot_code, count_values_tied = ranking.survival_ranking(db, experiment, form.i.data,
             solver_configs, results_matrix, form.cost.data, form.survnoise.data, form.survival_ranking_alpha.data)
@@ -136,14 +136,14 @@ def solver_ranking(database, experiment_id):
         def cached_ranking(database, experiment_id, solver_config_ids, sc_names, last_modified_job, show_top,
                            job_count, form_i_data, form_par, form_avg_dev, form_careful_ranking,
                            careful_ranking_noise, form_survival_ranking, form_survnoise, form_survival_ranking_alpha,
-                           form_break_ties, cost, form_par_factor, form_median_runtime, csv_response, latex_response, user_id):
+                           form_break_ties, cost, form_par_factor, form_fixed_limit, form_median_runtime, csv_response, latex_response, user_id):
 
             if cost not in ('resultTime', 'wallTime', 'cost'): cost = int(cost)
 
-            ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost)
+            ranked_solvers = ranking.number_of_solved_instances_ranking(db, experiment, form.i.data, solver_configs, cost, form_fixed_limit)
             ranking_data, _ = ranking.get_ranking_data(db, experiment, ranked_solvers, form.i.data,
                                                     form.penalized_average_runtime.data,
-                                                    form.calculate_average_dev.data, cost, form_par_factor)
+                                                    form.calculate_average_dev.data, cost, form_par_factor, form_fixed_limit)
 
             if len(ranking_data) > show_top:
                 ranking_data = ranking_data[:show_top]
@@ -153,7 +153,7 @@ def solver_ranking(database, experiment_id):
                                 .filter(db.ExperimentResult.resultCode==-1).distinct().all()
 
             if form_careful_ranking or form_survival_ranking:
-                results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, cost)
+                results_matrix, _, _ = experiment.get_result_matrix(db, solver_configs, form.i.data, cost, form_fixed_limit)
 
             careful_rank = dict()
             if form_careful_ranking:
@@ -254,8 +254,8 @@ def solver_ranking(database, experiment_id):
                               form.penalized_average_runtime.data, form.calculate_average_dev.data,
                               form.careful_ranking.data, form.careful_ranking_noise.data or 1.0, form.survival_ranking.data,
                               form.survnoise.data, form.survival_ranking_alpha.data,
-                              form.break_careful_ties.data, form.cost.data, form.par_factor.data, form.median_runtime.data,
-                              'csv' in request.args, 'latex' in request.args, session.get('idUser', None))
+                              form.break_careful_ties.data, form.cost.data, form.par_factor.data, form.fixed_limit.data,
+                              form.median_runtime.data, 'csv' in request.args, 'latex' in request.args, session.get('idUser', None))
 
     return render('/analysis/ranking.html', database=database, db=db,
               experiment=experiment, form=form, instance_properties=db.get_instance_properties())

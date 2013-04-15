@@ -130,6 +130,7 @@
                 {{ render_field(form.sc, size=10) }}
                 {{ render_field(form.show_top) }}
                 {{ render_field(form.cost) }}
+                {{ render_field(form.fixed_limit, explanation="Applies to CPU/Wall time limit. Leave blank for actual limits.") }}
                 <tr>
                     <td>{{ form.penalized_average_runtime.label }}:</td><td>{{ form.penalized_average_runtime }} {{ form.median_runtime.label }}: {{ form.median_runtime }} {{ form.par_factor.label }}: {{ form.par_factor}}</td>
                 </tr>
