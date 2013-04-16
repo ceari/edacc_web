@@ -82,12 +82,11 @@ class ResetPasswordForm(Form):
 class SolverForm(Form):
     name = TextField('Name', [Required(ERROR_REQUIRED)])
     binary = FileField('Binary')
-    code = FileField('Code')
+    code = FileField('Code archive')
     description = TextAreaField('Description')
     description_pdf = FileField('Description (PDF)')
     version = TextField('Version', [Required(ERROR_REQUIRED)])
-    run_path = TextField('Binary name')
-    run_command = TextField('Run command')
+    run_command = TextField('Run command', [Required(ERROR_REQUIRED)])
     authors = TextField('Authors', [Required(ERROR_REQUIRED)])
     parameters = TextField('Parameters', [Required(ERROR_REQUIRED)])
     competition_categories = QuerySelectMultipleField(

@@ -398,11 +398,7 @@ def submit_solver(database, id=None):
         if request.method == 'GET':
             form.parameters.data = utils.parameter_template(solver)
             form.description_pdf.data = ''
-            form.binary.data = ''
             form.code.data = ''
-            if solver_binary:
-                form.run_command.data = solver_binary.runCommand
-                form.run_path.data = solver_binary.runPath
     else:
         form = forms.SolverForm()
 
@@ -417,7 +413,6 @@ def submit_solver(database, id=None):
         version = form.version.data
         authors = form.authors.data
         parameters = form.parameters.data
-        run_path = form.run_path.data
 
         if id is None and db.session.query(db.Solver)\
                           .filter_by(name=name, version=version)\
@@ -425,37 +420,9 @@ def submit_solver(database, id=None):
             error = 'Solver with this name and version already exists'
             valid = False
 
-        if id is None and not form.code.data and not form.binary.data:
-            error = 'Please provide either a binary or the code (or both).'
+        if id is None and not form.code.data:
+            error = 'Please provide the code zip archive.'
             valid = False
-
-        bin = None
-        if (id is None or (id is not None and form.binary.data)) and form.binary.data:
-            # if this is a new solver or a resubmission with new binary update binary
-            bin = request.files[form.binary.name].stream.read()
-            hash = hashlib.md5()
-            hash.update(bin)
-
-            # save the binary in the FS as log
-            store_path = os.path.join(config.UPLOAD_FOLDER, 'solvers', secure_filename(str(g.User.idUser) + '-' + g.User.lastname), 'bin')
-            try:
-                os.makedirs(store_path)
-            except: pass
-            with open(os.path.join(store_path, hash.hexdigest()), 'wb') as f:
-                f.write(bin)
-
-            if not form.binary.data.filename.endswith('.zip'):
-                tmpfile = StringIO()
-                zip_file = zipfile.ZipFile(tmpfile, 'w', compression=zipfile.ZIP_DEFLATED)
-                zip_file.writestr(form.binary.data.filename, bin)
-                zip_file.close()
-                tmpfile.seek(0)
-                bin = tmpfile.read()
-                run_path = form.binary.data.filename
-            else:
-                if not run_path:
-                    error = 'Since your binary is a .zip file, please provide the path of the executable within the archive'
-                    valid = False
 
         code = None
         if id is None or (id is not None and form.code.data):
@@ -463,41 +430,27 @@ def submit_solver(database, id=None):
             code_hash = hashlib.md5()
             code_hash.update(code)
 
-            # save the code in the FS as log
-            store_path = os.path.join(config.UPLOAD_FOLDER, 'solvers', secure_filename(str(g.User.idUser) + '-' + g.User.lastname), 'code')
-            try:
-                os.makedirs(store_path)
-            except: pass
-            with open(os.path.join(store_path, code_hash.hexdigest()), 'wb') as f:
-                f.write(code)
-
         description_pdf = None
         if id is None or (id is not None and form.description_pdf.data):
             description_pdf = request.files[form.description_pdf.name].stream.read()
         if id is None and not description_pdf:
             valid = False
-            error = "Please provide a description pdf."
+            error = "Please provide a description PDF."
 
         params = utils.parse_parameters(parameters)
 
         if valid:
             if id is None:
                 solver = db.Solver()
-                if bin:
-                    solver_binary = db.SolverBinary()
-                    solver_binary.solver = solver
-                else:
-                    solver_binary = None
+                solver_binary = None
             else:
                 if solver_binary:
+                    # Remove all current solver configurations and jobs
                     for solver_config in solver_binary.solver_configurations:
                         for pi in solver_config.parameter_instances: db.session.delete(pi)
                         db.session.commit()
                         db.session.delete(solver_config)
                     db.session.commit()
-                if not solver_binary and bin:
-                    solver_binary = db.SolverBinary()
-                    solver_binary.solver = solver
 
             solver.name = name
             solver.description = description
@@ -505,25 +458,31 @@ def submit_solver(database, id=None):
             solver.user = g.User
             solver.version = version
             solver.competition_categories = form.competition_categories.data
-            if solver_binary:
-                solver_binary.binaryName = name
-                solver_binary.runPath = run_path
-                solver_binary.version = version
-                solver_binary.runCommand = form.run_command.data
-            if bin:
-                # new or updated binary
-                solver_binary.binaryArchive = bin
-                solver_binary.md5 = hash.hexdigest()
             if code:
                 # new or updated code
                 solver.code = code
+
+                # save the code in the FS as log
+                store_path = os.path.join(config.UPLOAD_FOLDER, 'solvers', secure_filename(str(g.User.idUser) + '-' + g.User.lastname), 'code')
+                try:
+                    os.makedirs(store_path)
+                except: pass
+                with open(os.path.join(store_path, code_hash.hexdigest() + '.zip'), 'wb') as f:
+                    f.write(code)
+
             if description_pdf:
                 # new or updated description pdf
                 solver.description_pdf = description_pdf
 
+            # save run command to text file along the code
+            store_path = os.path.join(config.UPLOAD_FOLDER, 'solvers', secure_filename(str(g.User.idUser) + '-' + g.User.lastname), 'code')
+            try:
+                os.makedirs(store_path)
+            except: pass
+            with open(os.path.join(store_path, code_hash.hexdigest() + '.txt'), 'wb') as f:
+                f.write(form.run_command.data)
+
             db.session.add(solver)
-            if bin:
-                db.session.add(solver_binary)
 
             # on resubmissions delete old parameters
             if id is not None:
@@ -536,7 +495,7 @@ def submit_solver(database, id=None):
                 param.name = None if p[0] == '' else p[0]
                 param.prefix = None if p[1] == '' else p[1]
                 param.defaultValue = p[2] or ''
-                param.hasValue = not p[3] # p[3] actually means 'is boolean'
+                param.hasValue = not p[3] # p[3] actually means 'is boolean (flag)'
                 param.order = int(p[4])
                 param.space = p[5]
                 param.solver = solver
@@ -555,7 +514,7 @@ def submit_solver(database, id=None):
                 return render('/accounts/submit_solver.html', database=database,
                               error=error, db=db, id=id, form=form)
 
-            flash('Solver submitted successfully. If you provided a binary, test jobs will be generated within the next minute. You will be notified by email once they are computed. Please check the Results page at any time for the computation progress.')
+            flash('Solver submitted successfully. Once we compiled your solver and ran the test experiments, you will be notified by email. Please check the results page at any time for the computation progress.')
             return redirect(url_for('accounts.list_solvers',
                                     database=database, user_id=g.User.idUser))
 
