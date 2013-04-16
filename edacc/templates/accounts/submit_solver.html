@@ -23,8 +23,8 @@
                     alert("Description PDF is required.");
                     return false;
                 }
-                if (!$.trim($('#binary').val()) && !$.trim($('#code').val())) {
-                    alert("Please upload either a binary or code, or both.");
+                if (!$.trim($('#code').val())) {
+                    alert("Please upload a code archive.");
                     return false;
                 }
                 {% endif %}
@@ -37,44 +37,16 @@
                     return false;
                 }
             });
-
-            function update_launch_command() {
-                if ($('#run_path').val().trim() != '') {
-                    binary_name = $('#run_path').val();
-                } else if ($('#binary').val()) {
-                    binary_name = $('#binary').val();
-                } else {
-                    binary_name = 'submitted_binary_name';
-                }
-
-                $('#launch_command_preview').html($('#run_command').val() + ' /internal/path/to/solver/folder/' +  binary_name + ' ' + $('#parameters').val());
-            }
-
-            $('#run_command').keyup(function() {
-                update_launch_command();
-            });
-
-            $('#run_path').keyup(function() {
-                update_launch_command();
-            });
-
-            $('#parameters').keyup(function() {
-                update_launch_command();
-            });
-
-            $('#binary').change(function() {
-                update_launch_command();
-            });
-
-            update_launch_command();
         });
     </script>
 {% endblock %}
 {% block content %}
     <h2>Submit Solver</h2>
     <div>
-        <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" />
-        Fields marked with <strong>*</strong> are required. You have to submit either a binary or code, or both.<br/>
+        <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" /> <strong>Important:</strong>
+        The code archive should be a ZIP (application/zip MIME type) archive that contains a build.sh script which<br/>
+        compiles the code within a "code/" subfolder and puts the executables into a "binary/" subfolder.<br/><br/>
+        Fields marked with <strong>*</strong> are required.<br/>
         <strong>Regarding temporary files:</strong> Please note that you should use the directory given as parameter TEMPDIR,<br/>
         which will be a unique and clean directory for every solver run. Because your solver might concurrently run more than<br/>
         once on a machine, simply using /tmp might result in conflicts. You should also avoid to write to your solver's own<br/>
@@ -83,8 +55,8 @@
     {% if id %}
     <div>
         <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" /><strong>
-        You are about to submit a new version of a solver you previously submitted. All results of the solver will be deleted and new test jobs generated.<br/>
-        If you don't provide a new binary, code or description pdf, the old one will be used.</strong>
+        You are about to submit a new version of a solver you previously submitted. All results of the solver will be deleted and new test jobs generated once we compiled the new version.<br/>
+        If you don't provide new code or description pdf, the old one will be used.</strong>
     </div>
     {% endif %}
     <form id="solver_form" action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
@@ -95,14 +67,8 @@
             {{ render_field(form.authors, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
             {{ render_field(form.description, cols=38, rows=5, explanation="Optional short description") }}
             {{ render_field(form.description_pdf, size=40, explanation="<strong>Required</strong> .pdf file", required=True) }}
-            {{ render_field(form.binary, size=40, explanation="If your solver consists of more than one file please provide a .zip archive.") }}
-            {{ render_field(form.code, size=40, explanation="Optional (.zip file)") }}
-            {{ render_field(form.run_path, size=40, maxlength=255, explanation="If your binary is a .zip archive, specify the relative path of the main solver executable within the submitted binary .zip file") }}
-            {{ render_field(form.run_command, size=40, maxlength=255, explanation="If your solver has to be run via another program, e.g. if it is a JAR file put 'java -jar' here. Alternatively you can use a wrapper script as main solver binary.") }}
-            <tr>
-                <td>Launch command preview:</td><td><span id="launch_command_preview"></span></td>
-            </tr>
-            {{ render_field(form.competition_categories, size=8, explanation='<strong>Required</strong>. Hold the Ctrl key to select multiple categories.', required=True) }}
+            {{ render_field(form.code, size=40, required=True) }}
+            {{ render_field(form.run_command, size=40, maxlength=255, required=True, explanation="Run command of your solver from its top level directory, excluding the parameters (Parameters are specified below). For example \"./binaryName\" or \"java -jar binary.jar\".") }}
             {{ render_field(form.parameters, size=40, explanation="<strong>Required</strong>", required=True) }}
             <tr>
                 <td></td>
@@ -116,6 +82,7 @@
                     </div>
                 </td>
             </tr>
+            {{ render_field(form.competition_categories, size=8, explanation='<strong>Required</strong>. Hold the Ctrl key to select multiple categories.', required=True) }}
         </table>
         {% if error %}<div style="color: red;"><b>Error: {{error}}</b></div>{% endif %}
         <input id="submit" type="submit" value="Submit" />
