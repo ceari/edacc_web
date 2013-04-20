@@ -425,14 +425,14 @@ def submit_solver(database, id=None):
             valid = False
 
         code = None
-        if id is None or (id is not None and form.code.data):
-            code = request.files[form.code.name].stream.read()
+        if id is None or (id is not None and 'code' in request.files):
+            code = request.files['code'].read()
             code_hash = hashlib.md5()
             code_hash.update(code)
 
         description_pdf = None
-        if id is None or (id is not None and form.description_pdf.data):
-            description_pdf = request.files[form.description_pdf.name].stream.read()
+        if id is None or (id is not None and 'description_pdf' in request.files):
+            description_pdf = request.files[form.description_pdf.name].read()
         if id is None and not description_pdf:
             valid = False
             error = "Please provide a description PDF."
@@ -458,7 +458,7 @@ def submit_solver(database, id=None):
             solver.user = g.User
             solver.version = version
             solver.competition_categories = form.competition_categories.data
-            if code:
+            if code is not None:
                 # new or updated code
                 solver.code = code
 
