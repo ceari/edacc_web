@@ -505,7 +505,7 @@ def submit_solver(database, id=None):
                 if code:
                     msg = Message("[" + db.label + "][Admin] Code submitted",
                         recipients=[config.DEFAULT_MAIL_SENDER])
-                    msg.body = ("The user %s %s just submitted code for the solver with id %d.\n\nArchive MD5: " % (g.User.firstname, g.User.lastname, solver.idSolver, code_hash.hexdigest()))
+                    msg.body = ("The user %s %s just submitted code for the solver with id %d.\n\nArchive MD5: %s" % (g.User.firstname, g.User.lastname, solver.idSolver, code_hash.hexdigest()))
                     mail.send(msg)
             except Exception as e:
                 print e
