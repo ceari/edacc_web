@@ -57,7 +57,7 @@ class RegistrationForm(Form):
                                      [EqualTo('password',
                                         message='Passwords must match.')])
     address = TextAreaField('Postal Address')
-    affiliation = TextAreaField('Affiliation')
+    affiliation = TextAreaField('Affiliation', [Required(ERROR_REQUIRED)])
     affiliation_type = SelectField('Type of affiliation', [Required()], choices=[('company', 'Company'), ('public_institution', 'Public institution')], default='public_institution')
     country = SelectField('Country', [Required()], choices=sorted(constants.COUNTRIES, key=lambda x: x[1]))
     accepted_terms = BooleanField('I have read, understood and accepted the terms and conditions.', [Required(ERROR_REQUIRED)])

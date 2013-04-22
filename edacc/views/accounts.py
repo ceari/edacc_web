@@ -450,6 +450,7 @@ def submit_solver(database, id=None):
                         for pi in solver_config.parameter_instances: db.session.delete(pi)
                         db.session.commit()
                         db.session.delete(solver_config)
+                    db.session.delete(solver_binary)
                     db.session.commit()
 
             solver.name = name
