@@ -459,6 +459,7 @@ def submit_solver(database, id=None):
             solver.user = g.User
             solver.version = version
             solver.competition_categories = form.competition_categories.data
+            solver.competition_launch_command = form.competition_launch_command.data
             if code is not None:
                 # new or updated code
                 solver.code = code
@@ -481,7 +482,7 @@ def submit_solver(database, id=None):
                 os.makedirs(store_path)
             except: pass
             with open(os.path.join(store_path, code_hash.hexdigest() + '.txt'), 'wb') as f:
-                f.write(form.run_command.data)
+                f.write(form.competition_launch_command.data)
 
             db.session.add(solver)
 
