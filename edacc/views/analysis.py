@@ -126,7 +126,7 @@ def solver_ranking(database, experiment_id):
         solver_configs = form.sc.data
         if not is_admin() and db.is_competition() and db.competition_phase() in OWN_RESULTS:
             solver_configs = filter(lambda sc: sc.solver_binary.solver.user == g.User, solver_configs)
-        show_top = form.show_top.data
+        show_top = 10000
 
         solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
 

@@ -6,6 +6,7 @@
     <link type="text/css" href="{{url_for('static', filename='css/smoothness/jquery-ui-1.8.16.custom.css')}}" rel="Stylesheet" />
     <link type="text/css" href="{{url_for('static', filename='css/demo_table_jui.css')}}" rel="Stylesheet" />
     <script src="{{url_for('static', filename='js/jquery.dataTables.min.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/jquery.tooltip.min.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/FixedHeader.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='js/jquery-ui-1.8.16.custom.min.js')}}" type="text/javascript"></script>
 
@@ -59,6 +60,10 @@
         };
 
         $(document).ready(function(){
+            $('#input_explanation').tooltip();
+            $('#statistics_explanation').tooltip();
+            $('#rankings_explanation').tooltip();
+
             {% if data %}
             $(document).ready(function() {
                 oTable = $('#ranking').dataTable({
@@ -119,8 +124,8 @@
     <div id="ranking_form" >
         <form method="get" action="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
-                <tr><td style="border-bottom: none;"><strong>Input data</strong></td><td style="border-bottom: none;"></td></tr>
-                {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
+                <tr><td colspan=2 style="border-bottom: none;"><strong>Input data</strong></td></tr>
+                {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=7) }}
                 <tr>
                     <td style="vertical-align: middle;">Filter instances</td>
                     <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
@@ -128,24 +133,18 @@
                         Example: (numAtoms &gt;= 6000 && numAtoms &lt;= 8000 && name.match(/k3/))
                     </td>
                 </tr>
-                {{ render_field(form.sc, size=10) }}
-                {{ render_field(form.show_top) }}
+                {{ render_field(form.sc, size=7) }}
                 <tr>
                     <td>{{form.cost.label}}</td><td>{{form.cost}}{{form.fixed_limit.label}}: {{form.fixed_limit}}</td>
                 </tr>
-                <tr><td style="border-bottom: none;"><strong>Statistics</strong></td><td style="border-bottom: none;"></td></tr>
+                <tr><td colspan=2 style="border-bottom: none;"><strong>Statistics</strong></td></tr>
                 <tr>
-                    <td>{{ form.penalized_average_runtime.label }}</td><td>{{ form.penalized_average_runtime }} {{ form.median_runtime.label }}: {{ form.median_runtime }} {{ form.par_factor.label }}: {{ form.par_factor}}</td>
+                    <td></td><td>{{ form.penalized_average_runtime.label }}: {{ form.penalized_average_runtime }} {{ form.median_runtime.label }}: {{ form.median_runtime }} {{ form.par_factor.label }}: {{ form.par_factor}}</td>
                 </tr>
-                {{ render_field(form.calculate_average_dev, explanation="Averaged instance cost dispersion measures")}}
-                <tr><td style="border-bottom: none;"><strong>Rankings</strong></td><td style="border-bottom: none;"></td></tr>
+                <tr><td colspan=2 style="border-bottom: none;"><strong>Rankings</strong></td></tr>
                 <tr>
                     <td>{{ form.careful_ranking.label }}</td><td>{{ form.careful_ranking }} {{ form.careful_ranking_noise.label }}: {{ form.careful_ranking_noise }} {{ form.break_careful_ties.label }}: {{ form.break_careful_ties }}</td>
                 </tr>
-                <tr>
-                    <td>{{ form.survival_ranking.label }}</td><td>{{ form.survival_ranking }} {{ form.survnoise.label }}: {{ form.survnoise }} {{ form.survival_ranking_alpha.label }}: {{ form.survival_ranking_alpha }}</td>
-                </tr>
-
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
             </table>
         </form>
