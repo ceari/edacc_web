@@ -116,9 +116,10 @@
         Ranking
     </div>
     <h2>Ranking</h2>
-    <div style="margin-left: 5px;">
+    <div id="ranking_form" >
         <form method="get" action="{{url_for('analysis.solver_ranking', database=database, experiment_id=experiment.idExperiment)}}">
             <table id="form_table">
+                <tr><td style="border-bottom: none;"><strong>Input data</strong></td><td style="border-bottom: none;"></td></tr>
                 {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
                 <tr>
                     <td style="vertical-align: middle;">Filter instances</td>
@@ -129,29 +130,25 @@
                 </tr>
                 {{ render_field(form.sc, size=10) }}
                 {{ render_field(form.show_top) }}
-                {{ render_field(form.cost) }}
-                {{ render_field(form.fixed_limit, explanation="Applies to CPU/Wall time limit. Leave blank for actual limits.") }}
                 <tr>
-                    <td>{{ form.penalized_average_runtime.label }}:</td><td>{{ form.penalized_average_runtime }} {{ form.median_runtime.label }}: {{ form.median_runtime }} {{ form.par_factor.label }}: {{ form.par_factor}}</td>
+                    <td>{{form.cost.label}}</td><td>{{form.cost}}{{form.fixed_limit.label}}: {{form.fixed_limit}}</td>
+                </tr>
+                <tr><td style="border-bottom: none;"><strong>Statistics</strong></td><td style="border-bottom: none;"></td></tr>
+                <tr>
+                    <td>{{ form.penalized_average_runtime.label }}</td><td>{{ form.penalized_average_runtime }} {{ form.median_runtime.label }}: {{ form.median_runtime }} {{ form.par_factor.label }}: {{ form.par_factor}}</td>
                 </tr>
                 {{ render_field(form.calculate_average_dev, explanation="Averaged instance cost dispersion measures")}}
+                <tr><td style="border-bottom: none;"><strong>Rankings</strong></td><td style="border-bottom: none;"></td></tr>
                 <tr>
-                    <td>{{ form.careful_ranking.label }}:</td><td>{{ form.careful_ranking }} {{ form.careful_ranking_noise.label }}: {{ form.careful_ranking_noise }} {{ form.break_careful_ties.label }}: {{ form.break_careful_ties }}</td>
+                    <td>{{ form.careful_ranking.label }}</td><td>{{ form.careful_ranking }} {{ form.careful_ranking_noise.label }}: {{ form.careful_ranking_noise }} {{ form.break_careful_ties.label }}: {{ form.break_careful_ties }}</td>
                 </tr>
                 <tr>
-                    <td>{{ form.survival_ranking.label }}:</td><td>{{ form.survival_ranking }} {{ form.survnoise.label }}: {{ form.survnoise }} {{ form.survival_ranking_alpha.label }}: {{ form.survival_ranking_alpha }}</td>
+                    <td>{{ form.survival_ranking.label }}</td><td>{{ form.survival_ranking }} {{ form.survnoise.label }}: {{ form.survnoise }} {{ form.survival_ranking_alpha.label }}: {{ form.survival_ranking_alpha }}</td>
                 </tr>
 
                 <tr><td colspan="2"><input type="submit" value="Show" /><input type="submit" name="csv" value="CSV" /><input type="submit" name="latex" value="LaTeX table" /></td></tr>
             </table>
         </form>
-    </div>
-    <div>
-        The virtual best solver (VBS) solves an instance if any of the experiment's solvers are<br/>
-        sucessful on that instance in any of their runs. In this case the VBS gets<br/>
-        the maximum number of successful runs on that instance and for each run the run time of the best solver.
-        The maximum number of runs is determined by the solver that was given the highest number of runs on any instance.<br/>
-        Details on the solvers marked with <strong>*</strong> can be found in the solver configuration details (click on <img title="Show solver configuration details" src="{{ url_for('static', filename='img/info.png') }}"/>).
     </div>
     <h3>Ranking</h3>
     {% if data %}
