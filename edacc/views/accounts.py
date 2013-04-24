@@ -749,12 +749,13 @@ def admin_toggle_solver_freeze(database, solver_id):
 
 @accounts.route('/<database>/manage/update-description/<int:solver_id>/', methods=['GET', 'POST'])
 @require_login
-@require_admin
 @require_competition
 def update_description(database, solver_id):
     db = models.get_database(database) or abort(404)
     solver = db.session.query(db.Solver).get(solver_id) or abort(404)
     form = forms.UpdateDescriptionForm()
+
+    if not is_admin() and solver.user.idUser != g.User.idUser: abort(401)
 
     if form.validate_on_submit():
         solver.description_pdf = request.files[form.description_pdf.name].stream.read()
@@ -762,7 +763,7 @@ def update_description(database, solver_id):
         try:
             db.session.commit()
             flash("Solver description updated.")
-            return redirect(url_for('accounts.list_submitted_solvers',
+            return redirect(url_for('accounts.manage',
                 database=database))
         except Exception as e:
             db.session.rollback()
