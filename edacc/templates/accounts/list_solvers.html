@@ -18,7 +18,7 @@
                 <a href="{{ url_for('frontend.solver_details', database=database, solver_id=solver.idSolver) }}">{{solver.name}}</a>
                 <a href="{{ url_for('accounts.submit_solver', database=database, id=solver.idSolver) }}">[Edit]</a>
                 <a onclick="return doConfirm(this.id);" href="{{ url_for('accounts.delete_solver', database=database, solver_id=solver.idSolver) }}">[Delete]</a>
-                {% if is_admin() %}
+                {% if session.admin %}
                 <a href="{{ url_for('accounts.update_description', database=database, solver_id=solver.idSolver) }}">[Update description]</a>
                 {% endif %}
             </li>
