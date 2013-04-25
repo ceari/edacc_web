@@ -67,7 +67,7 @@
             {{ render_field(form.description, cols=38, rows=5, explanation="Optional short description") }}
             {{ render_field(form.description_pdf, size=40, explanation="<strong>Required</strong> .pdf file", required=True) }}
             {{ render_field(form.code, size=40, required=True) }}
-            {{ render_field(form.competition_launch_command, size=40, maxlength=255, required=True, explanation="Run command of your solver from its top level directory, excluding the parameters (Parameters are specified below). For example \"./binaryName\" or \"java -jar binary.jar\".") }}
+            {{ render_field(form.competition_launch_command, size=40, maxlength=255, required=True, explanation="Run command of your solver <strong>within the binary/ folder<strong>, excluding the parameters (Parameters are specified below). For example \"./binaryName\" or \"java -jar binary.jar\".") }}
             {{ render_field(form.parameters, size=40, explanation="<strong>Required</strong>", required=True) }}
             <tr>
                 <td></td>
