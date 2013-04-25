@@ -460,7 +460,7 @@ def submit_solver(database, id=None):
             solver.version = version
             solver.competition_categories = form.competition_categories.data
             solver.competition_launch_command = form.competition_launch_command.data
-            if code is not None:
+            if code:
                 # new or updated code
                 solver.code = code
 
