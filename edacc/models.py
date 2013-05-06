@@ -54,7 +54,7 @@ class EDACCDatabase(object):
             """
             def get_name(self):
                 """ Returns the name of the solver configuration. """
-                return self.name
+                return self.name + " " + self.solver_binary.version
 
             def __str__(self):
                 return self.get_name()
