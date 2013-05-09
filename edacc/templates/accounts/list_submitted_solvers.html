@@ -18,6 +18,15 @@
                 <a href="{{ url_for('accounts.submit_solver', database=database, id=solver.idSolver) }}">[Edit]</a>
                 <a onclick="return doConfirm(this.id);" href="{{ url_for('accounts.delete_solver', database=database, solver_id=solver.idSolver) }}">[Delete]</a>
                 <a href="{{ url_for('accounts.update_description', database=database, solver_id=solver.idSolver) }}">[Update description]</a>
+                {% if solver.binaries %}
+                <ul>
+                    {% for solver_binary in solver.binaries %}
+                    {% for solver_config in solver_binary.solver_configurations %}
+                    <li><a href={{ url_for('frontend.experiment', database=database, experiment_id=solver_config.Experiment_idExperiment) }}>{{solver_config.experiment.name}}</a></li>
+                    {% endfor %}
+                    {% endfor %}
+                </ul>
+                {% endif %}
             </li>
         {% endfor %}
     </ul>
