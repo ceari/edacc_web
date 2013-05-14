@@ -105,6 +105,15 @@ def require_login(f):
             session.pop('idUser', None)
             g.User = None
 
+        # log out normal users during competition computation phase
+        if db.is_competition() and db.competition_phase() == 5 and not g.User.admin:
+            session.pop('logged_in', None)
+            session.pop('idUser', None)
+            g.User = None
+            def redirect_f(*args, **kwargs):
+                return redirect(url_for('frontend.experiments_index',
+                    database=kwargs['database']))
+
 #        if db.is_competition() and db.competition_phase() == 5:
 #            def redirect_f(*args, **kwargs):
 #                return redirect(url_for('frontend.experiments_index',
