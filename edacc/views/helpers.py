@@ -106,7 +106,7 @@ def require_login(f):
             g.User = None
 
         # log out normal users during competition computation phase
-        if db.is_competition() and db.competition_phase() == 5 and not g.User.admin:
+        if g.User and db.is_competition() and db.competition_phase() == 5 and not g.User.admin:
             session.pop('logged_in', None)
             session.pop('idUser', None)
             g.User = None
