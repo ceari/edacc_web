@@ -87,7 +87,7 @@
 
     {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS.union(OWN_RESULTS) %}
     <h2>Results</h2>
-    <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">By solver configuration and instance</a> (runs accumulated) <a href="{{url_for('frontend.experiment_results_full_csv', database=database, experiment_id=experiment.idExperiment)}}">(CSV)</a><br/>
+    <a href="{{url_for('frontend.experiment_results', database=database, experiment_id=experiment.idExperiment)}}">By solver configuration and instance</a> (runs accumulated) (CSV <a href="{{url_for('frontend.experiment_results_full_csv', database=database, experiment_id=experiment.idExperiment)}}">time</a>/<a href="{{url_for('frontend.experiment_results_full_csv', database=database, experiment_id=experiment.idExperiment)}}?answers">answers</a>)<br/>
     <a href="{{ url_for('frontend.experiment_results_by_solver', database=database, experiment_id=experiment.idExperiment) }}">By solver configuration</a><br/>
     <a href="{{ url_for('frontend.experiment_results_by_instance', database=database, experiment_id=experiment.idExperiment) }}">By instance</a><br/>
     {% if not db.is_competition() or db.competition_phase() in ALL_RESULTS %}
