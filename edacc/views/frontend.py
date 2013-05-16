@@ -469,7 +469,10 @@ def experiment_results_full_csv(database, experiment_id):
                     if results[idInstance][idSolverConfig][run].status < -1:
                         row.append('err')
                     else:
-                        row.append(str(results[idInstance][idSolverConfig][run].resultTime or u''))
+                        if request.args.has_key('answers'):
+                            row.append(str(results[idInstance][idSolverConfig][run].result_code_description or u''))
+                        else:
+                            row.append(str(results[idInstance][idSolverConfig][run].resultTime or u''))
                 else: row.append(u"")
             csv_writer.writerow(row)
 
