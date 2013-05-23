@@ -3,8 +3,8 @@
 {% block title %}Configurator Visualisation{% endblock %}1.0
 {% block head %}
     {{ super() }}
-        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.common.core.js')}}" ></script>       
-        <script src="{{url_for('static', filename='js/RGraph/libraries/RGraph.line.js')}}" ></script>               <!-- Just needed for line graphs -->
+        <script src="{{url_for('static', filename='js/vendor/RGraph/libraries/RGraph.common.core.js')}}" ></script>
+        <script src="{{url_for('static', filename='js/vendor/RGraph/libraries/RGraph.line.js')}}" ></script>               <!-- Just needed for line graphs -->
 
 <script>
     function checkFormular(){
