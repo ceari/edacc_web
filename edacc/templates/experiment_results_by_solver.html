@@ -111,7 +111,7 @@
                                 {% elif run.status == -1 %}
                                     <td style="text-align: center; background-color: #FF8040;"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">-</a></td>
                                 {% else %}
-                                    <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ (run.cost|result_time) if not run.cost else (run.cost|result_time|round(3))}} {{ run.result_code_description }}</a></td>
+                                    <td style="text-align: center; background-color: {{run.resultCode|job_result_code_color}};"><a style="color: black;" href="{{ url_for('frontend.experiment_result', database=database, experiment_id=experiment.idExperiment, id=run.idJob) }}">{{ (run.penalized_time1|result_time) if not run.cost else (run.penalized_time1|result_time|round(3))}} {{ run.result_code_description }}</a></td>
                                 {% endif %}
                             {% endif %}
                         {% endfor %}

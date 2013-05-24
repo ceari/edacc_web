@@ -362,7 +362,7 @@ class EDACCDatabase(object):
                         )],
                         else_=None)
                     ),
-                    c_limit,
+                    expression.label('limit', c_limit),
                     ],
                     and_(
                         c['Experiment_idExperiment']==self.idExperiment,
@@ -380,7 +380,7 @@ class EDACCDatabase(object):
                 return results_by_instance
 
             
-            def  get_result_matrix(self, db, solver_configs, instances, cost='resultTime', fixed_limit=None):
+            def get_result_matrix(self, db, solver_configs, instances, cost='resultTime', fixed_limit=None):
                 """ Returns the results as matrix of lists of result tuples, i.e.
                     Dict<idInstance, Dict<idSolverConfig, List of runs>> """
                 num_successful = dict((i.idInstance, dict((sc.idSolverConfig, 0) for sc in solver_configs)) for i in instances)

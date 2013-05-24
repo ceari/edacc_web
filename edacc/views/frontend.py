@@ -515,7 +515,9 @@ def experiment_results_by_solver(database, experiment_id):
                                     database=database, experiment_id=experiment.idExperiment,
                                     solver_configuration_id=solver_config.idSolverConfig))
 
-        table = db.metadata.tables['ExperimentResults']
+
+
+        """table = db.metadata.tables['ExperimentResults']
         table_result_codes = db.metadata.tables['ResultCodes']
         table_instances = db.metadata.tables['Instances']
         form_cost = form.cost.data
@@ -539,7 +541,9 @@ def experiment_results_by_solver(database, experiment_id):
             and_(table.c['SolverConfig_idSolverConfig'] == solver_config.idSolverConfig,
                 table.c['Experiment_idExperiment']==experiment_id
             ),
-            from_obj=table.join(table_result_codes).join(table_instances)).order_by(table.c['run'])
+            from_obj=table.join(table_result_codes).join(table_instances)).order_by(table.c['run'])"""
+
+        results, _, _ = experiment.get_result_matrix(db, [solver_config], experiment.instances, form.cost.data)
 
         mean_by_instance = {}
         par10_by_instance = {} # penalized average runtime (timeout * 10 for unsuccessful runs) by instance
@@ -547,16 +551,10 @@ def experiment_results_by_solver(database, experiment_id):
         std_by_instance = {}
         runs_by_instance = {}
         jobs_by_instance = {}
-        name_by_instance = {}
-        md5_by_instance = {}
-        for r in db.session.connection().execute(s):
-            name_by_instance[r.Instances_idInstance] = r.name
-            md5_by_instance[r.Instances_idInstance] = r.md5
-
-            if not r.Instances_idInstance in runs_by_instance:
-                runs_by_instance[r.Instances_idInstance] = [r]
-            else:
-                runs_by_instance[r.Instances_idInstance].append(r)
+        name_by_instance = dict((i.idInstance, i.name) for i in experiment.instances)
+        md5_by_instance = dict((i.idInstance, i.md5) for i in experiment.instances)
+        for i in experiment.instances:
+            runs_by_instance[i.idInstance] = results[i.idInstance][solver_config.idSolverConfig]
 
         instance_by_id = {}
         for instance in experiment.get_instances(db):
@@ -567,11 +565,8 @@ def experiment_results_by_solver(database, experiment_id):
             runtimes = []
             for run in runs_by_instance[instance]:
                 count += 1
-                if run.cost is None: continue
-                if run.status != 1 or not str(run.resultCode).startswith('1'):
-                    runtimes.append(run.limit * 10.0)
-                else:
-                    runtimes.append(run.cost)
+                if run.penalized_time1 is None: continue
+                runtimes.append(run.penalized_time1)
             total_time = sum(runtimes)
 
             var_by_instance[instance] = numpy.var(runtimes) if runtimes else None
@@ -587,7 +582,7 @@ def experiment_results_by_solver(database, experiment_id):
             csv_response = StringIO.StringIO()
             csv_writer = csv.writer(csv_response)
             csv_writer.writerow(['Instance', 'MD5'] + ['Run'] * num_runs + ['penalized avg. runtime'] + ['Variance'])
-            results = [[instance_by_id[res[0]].get_name(), md5_by_instance[res[0]]] + [('' if r.cost is None else round(r.cost, 3)) for r in res[1]] +
+            results = [[instance_by_id[res[0]].get_name(), md5_by_instance[res[0]]] + [('' if r.penalized_time1 is None else round(r.penalized_time1, 3)) for r in res[1]] +
                        ['' if par10_by_instance[res[0]] is None else round(par10_by_instance[res[0]], 4)] +
                        ['' if var_by_instance[res[0]] is None else round(var_by_instance[res[0]], 4)] for res in results]
 
@@ -653,36 +648,8 @@ def experiment_results_by_instance(database, experiment_id):
                                     database=database, instance_id=instance.idInstance))
 
         solver_config_ids = [sc.idSolverConfig for sc in solver_configs]
-        results_by_sc = dict((id, list()) for id in solver_config_ids)
-
-        table = db.metadata.tables['ExperimentResults']
-        table_result_codes = db.metadata.tables['ResultCodes']
-        form_cost = form.cost.data
-        if form_cost == 'None': form_cost = experiment.defaultCost
-        if form_cost == 'resultTime':
-            cost_property = db.ExperimentResult.resultTime
-            cost_column = table.c['resultTime']
-            cost_limit_column = table.c['CPUTimeLimit']
-        elif form_cost == 'wallTime':
-            cost_property = db.ExperimentResult.wallTime
-            cost_column = table.c['wallTime']
-            cost_limit_column = table.c['wallClockTimeLimit']
-        else:
-            cost_property = db.ExperimentResult.cost
-            cost_column = table.c['cost']
-            cost_limit_column = table.c['CPUTimeLimit']
-
-        s = select([expression.label('cost', expression.case([(table.c['status'] > 0 , cost_column)], else_=None)), table.c['resultCode'], table.c['idJob'],
-                    table.c['SolverConfig_idSolverConfig'], table.c['status'], expression.label('result_code_description', table_result_codes.c['description']),
-                    expression.label('limit', cost_limit_column)],
-                    and_(table.c['SolverConfig_idSolverConfig'].in_(solver_config_ids),
-                        table.c['Experiment_idExperiment']==experiment_id,
-                        table.c['Instances_idInstance']==instance.idInstance
-                        ),
-                    from_obj=table.join(table_result_codes)).order_by(table.c['Instances_idInstance'], table.c['run'])
-
-        for run in db.session.connection().execute(s):
-            results_by_sc[run.SolverConfig_idSolverConfig].append(run)
+        results_by_sc = experiment.get_results_by_instance(db, solver_configs, instance, True,
+                                                           result_property=form.cost.data)
 
         min_mean_sc, min_mean = None, 0
         min_median_sc, min_median = None, 0
@@ -691,7 +658,7 @@ def experiment_results_by_instance(database, experiment_id):
         min_qcd_sc, min_qcd = None, 0
 
         for sc in solver_configs:
-            runs = results_by_sc[sc.idSolverConfig]
+            runs = results_by_sc[sc.idSolverConfig].values()
 
             mean, median, par10, cv, qcd = None, None, None, None, None
             successful = len([j for j in runs if str(j.resultCode).startswith("1")])
