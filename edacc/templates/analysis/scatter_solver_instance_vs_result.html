@@ -75,7 +75,7 @@
             {{ render_field(form.i, explanation='Hold Ctrl to select multiple instances.', size=10) }}
 			<tr name="tr_instances_filter">
 			    <td style="vertical-align: middle;">Filter instances</td>
-			    <td>{{form.instance_filter}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
+			    <td>{{form.instance_filter(size=50)}}<img id="instance_filter_apply" src="{{url_for('static', filename='img/search.png')}}"/><img id="instance_filter_clear" src="{{url_for('static', filename='img/clear.png')}}"/><br/>
 			        JS expression filter. Valid variables are {% for prop in instance_properties %}{{prop.name}}, {% endfor %} <br/>
 			        Example: (numAtoms >= 6000 && numAtoms <= 8000 && name.match(/k3/))
 			    </td>
