@@ -1338,7 +1338,7 @@ def solver_download(database, solver_config_id):
     tar_info.size = len(README_content)
     tar_info.type = tarfile.REGTYPE
     tar_info.mtime = time.mktime(datetime.datetime.now().timetuple())
-    tar_file.addfile(tar_info, fileobj=StringIO.StringIO(README_content))
+    tar_file.addfile(tar_info, fileobj=StringIO.StringIO(README_content.encode('utf-8')))
 
     if solver.public in (1, 3) and solver_binary.binaryArchive:
         # Add solver binary
