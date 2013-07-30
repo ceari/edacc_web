@@ -17,6 +17,7 @@ importr('splines')
 importr('survival')
 importr('surv2sample')
 
+
 def prob_domination(v1, v2):
     """ Returns an integer indicating if the empirical CDF of Algorithm A
         obtained from the runtimes vector v1 probabilistically dominates
@@ -53,6 +54,7 @@ def spearman_correlation(x, y):
     cor, p_value = r[3][0], r[2][0] # r is a vector of vectors
     return cor, p_value
 
+
 def pearson_correlation(x, y):
     """ Calculates the pearson correlation coefficient.
         Returns a tuple (rho, p-value)
@@ -65,6 +67,7 @@ def pearson_correlation(x, y):
     cor, p_value = r[3][0], r[2][0] # r is a vector of vectors
     return cor, p_value
 
+
 def kolmogorow_smirnow_2sample_test(x, y):
     """ Calculates the Kolmogorow-Smirnow two-sample statistic
         Returns a tuple (value, p-value)
@@ -73,6 +76,7 @@ def kolmogorow_smirnow_2sample_test(x, y):
                         alternative='two.sided')
     return r[0][0], r[1][0]
 
+
 def wilcox_test(x, y):
     """ Calculates the two sample Wilcoxon test statistic (aka Mann-Whitney)
         Returns a tuple (value, p-value)
@@ -80,6 +84,7 @@ def wilcox_test(x, y):
     r = r_stats.wilcox_test(robjects.FloatVector(x), robjects.FloatVector(y),
                             alternative='two.sided', paired=False)
     return r[0][0], r[2][0]
+
 
 def surv_test(x, y, x_censored, y_censored, alpha=0.05):
     combined_data = x + y

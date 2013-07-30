@@ -27,9 +27,9 @@ except OSError:
     pass
 
 Flask.jinja_options = ImmutableDict({
-                            'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
-                            'bytecode_cache': FileSystemBytecodeCache(config.TEMP_DIR),
-                            'trim_blocks':True
+    'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
+    'bytecode_cache': FileSystemBytecodeCache(config.TEMP_DIR),
+    'trim_blocks': True
 })
 app = Flask(__name__)
 app.Debug = config.DEBUG
@@ -41,6 +41,7 @@ if config.LOGGING:
     # set up logging if configured
     import logging
     from logging.handlers import RotatingFileHandler
+
     file_handler = RotatingFileHandler(config.LOG_FILE)
     file_handler.setLevel(logging.WARNING)
     formatter = logging.Formatter("---------------------------\n" + \
@@ -58,10 +59,11 @@ class LimitedRequest(Request):
     """ extending Flask's request class to limit form uploads to 500 MB """
     max_form_memory_size = 500 * 1024 * 1024
 
+
 app.request_class = LimitedRequest
 app.config.update(
-    SECRET_KEY = config.SECRET_KEY,
-    PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=14),
+    SECRET_KEY=config.SECRET_KEY,
+    PERMANENT_SESSION_LIFETIME=datetime.timedelta(days=14),
     CACHE_TYPE='filesystem',
     CACHE_DIR=config.TEMP_DIR,
     MAIL_SERVER=config.MAIL_SERVER,
@@ -92,6 +94,7 @@ app.register_blueprint(plot)
 app.register_blueprint(api)
 
 from edacc.plugins.borgexplorer import borgexplorer
+
 app.register_blueprint(borgexplorer)
 
 app.jinja_env.filters['download_size'] = utils.download_size

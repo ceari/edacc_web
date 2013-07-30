@@ -29,7 +29,7 @@ STATUS_PROCESSING = (
     STATUS_RUNNING)
 
 STATUS_EXCEEDED_LIMITS = (
-    21,22,23,24,25
+    21, 22, 23, 24, 25
 )
 
 JOB_RESULT_CODE_COLOR = {
@@ -50,9 +50,9 @@ JOB_STATUS_COLOR = {
     -3: '#FF0000',
     -2: '#FF0000',
     -1: '#4169E1',
-    0:  'orange',
-    1:  '#00CC33',
-    2:  '#FF6600',
+    0: 'orange',
+    1: '#00CC33',
+    2: '#FF6600',
     21: '#FF6600',
     22: '#FF6600',
     23: '#FF6600',
@@ -73,7 +73,9 @@ ANALYSIS1 = set([6, 7])          # phases where some plots are shown (cactus)
 ANALYSIS2 = set([6, 7])             # phases where the other plots are shown
 RANKING = set([2, 3, 4, 5, 6, 7])               # phases where ranking is shown
 
+
 def _(x): return x
+
 
 COUNTRIES = (
     ('AD', _('Andorra')),

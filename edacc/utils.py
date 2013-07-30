@@ -17,19 +17,26 @@ import pylzma
 
 from edacc.constants import JOB_STATUS_COLOR, JOB_RESULT_CODE_COLOR
 
+
 def newline_split_string(s, n):
     """ Splits the string s up into parts of size n and returns
         the concatenation of these parts separated by newline characters
         as result. """
     if n == 0: return s
-    return '\n'.join([s[i:i+n] for i in range(0, len(s), n)])
+    return '\n'.join([s[i:i + n] for i in range(0, len(s), n)])
+
 
 def download_size(value):
     """ Takes an integer number of bytes and returns a pretty string representation """
-    if value <= 0: return "0 Bytes"
-    elif value < 1024: return str(value) + " Bytes"
-    elif value < 1024*1024: return "%.1f kB" % (value / 1024.0)
-    else: return "%.1f MB" % (value / 1024.0 / 1024.0)
+    if value <= 0:
+        return "0 Bytes"
+    elif value < 1024:
+        return str(value) + " Bytes"
+    elif value < 1024 * 1024:
+        return "%.1f kB" % (value / 1024.0)
+    else:
+        return "%.1f MB" % (value / 1024.0 / 1024.0)
+
 
 def job_status_color(value):
     """ Returns an HTML conform color string for the job status """
@@ -37,6 +44,7 @@ def job_status_color(value):
         return 'grey'
     else:
         return JOB_STATUS_COLOR[value]
+
 
 def job_result_code_color(value):
     """ Returns an HTML conform color string for the job result code """
@@ -46,6 +54,7 @@ def job_result_code_color(value):
         return 'grey'
     else:
         return JOB_RESULT_CODE_COLOR[value]
+
 
 def parameter_string(solver_config):
     """ Returns a string of the solver configuration parameters """
@@ -66,6 +75,7 @@ def parameter_string(solver_config):
                 args.append(p.value or "")
     return " ".join(args)
 
+
 def parameter_template(solver):
     """ Returns a string of the solver configuration parameters """
     parameters = solver.parameters
@@ -84,6 +94,7 @@ def parameter_template(solver):
         args.append(" ")
     return "".join(args)
 
+
 def result_time(time):
     """ Returns a representation of the time value. If time is None
         a dash character is returned, otherwise the time is returned """
@@ -92,11 +103,14 @@ def result_time(time):
     else:
         return time
 
+
 def launch_command(solver_config):
     """ Returns a string of what the solver launch command looks like
     given the solver configuration
     """
-    return (solver_config.solver_binary.runCommand or "") + " ./" + (solver_config.solver_binary.runPath or "") + " " + parameter_string(solver_config)
+    return (solver_config.solver_binary.runCommand or "") + " ./" + (
+    solver_config.solver_binary.runPath or "") + " " + parameter_string(solver_config)
+
 
 def datetimeformat(value, format='%H:%M, %d-%m-%Y'):
     """ Returns the passed datetime value as formatted string according to the formatting string
@@ -105,16 +119,26 @@ def datetimeformat(value, format='%H:%M, %d-%m-%Y'):
     if value is None: return ""
     return value.strftime(format)
 
+
 def competition_phase(value):
     """ Returns a textual label of a competiton phase given by an integer value """
-    if value == 1: return "Category Definition Phase"
-    elif value == 2: return "Registration and Submission Phase"
-    elif value == 3: return "Solver Testing Phase"
-    elif value == 4: return "Solver Resubmission Phase"
-    elif value == 5: return "Competition Phase"
-    elif value == 6: return "Release Phase"
-    elif value == 7: return "Post-Release Phase"
-    else: return "unknown phase"
+    if value == 1:
+        return "Category Definition Phase"
+    elif value == 2:
+        return "Registration and Submission Phase"
+    elif value == 3:
+        return "Solver Testing Phase"
+    elif value == 4:
+        return "Solver Resubmission Phase"
+    elif value == 5:
+        return "Competition Phase"
+    elif value == 6:
+        return "Release Phase"
+    elif value == 7:
+        return "Post-Release Phase"
+    else:
+        return "unknown phase"
+
 
 def parse_parameters(parameters):
     """ Parse parameters from the solver submission form, returns a list
@@ -126,8 +150,8 @@ def parse_parameters(parameters):
     while i < len(parameters):
         if parameters[i].startswith('-') and not "=" in parameters[i]:
             # prefixed parameter
-            if i+1 < len(parameters) and (parameters[i+1].lower() in ('seed', 'instance', 'tempdir')):
-                pname = parameters[i+1].lower()
+            if i + 1 < len(parameters) and (parameters[i + 1].lower() in ('seed', 'instance', 'tempdir')):
+                pname = parameters[i + 1].lower()
                 prefix = parameters[i]
                 default_value = ''
                 boolean = False
@@ -136,18 +160,19 @@ def parse_parameters(parameters):
             else:
                 pname = parameters[i]
                 prefix = parameters[i]
-                if i+1 == len(parameters) or parameters[i+1].startswith('-'):
+                if i + 1 == len(parameters) or parameters[i + 1].startswith('-'):
                     boolean = True
                     default_value = ''
                     params.append((pname, prefix, default_value, boolean, i, True))
                     i += 1
                 else:
                     boolean = False
-                    default_value = parameters[i+1]
+                    default_value = parameters[i + 1]
                     params.append((pname, prefix, default_value, boolean, i, True))
                     i += 2
         else:
-            if "=" in parameters[i] and ("INSTANCE" in parameters[i] or "SEED" in parameters[i] or "TEMPDIR" in parameters[i]):
+            if "=" in parameters[i] and (
+                        "INSTANCE" in parameters[i] or "SEED" in parameters[i] or "TEMPDIR" in parameters[i]):
                 pname = parameters[i].split("=")[1].lower()
                 prefix = parameters[i].split("=")[0] + "="
                 default_value = ''
@@ -173,11 +198,15 @@ def parse_parameters(parameters):
 
 # some SAT functions
 random.seed()
+
+
 def random_clause(l):
     return [random.randint(0, 1) for _ in xrange(l)]
 
+
 def random_formula(clauses, clauseLength):
     return [random_clause(clauseLength) for _ in xrange(clauses)]
+
 
 def assignment(n):
     if n == 1:
@@ -188,6 +217,7 @@ def assignment(n):
             yield a + [0]
             yield a + [1]
 
+
 def satisfies(a, f):
     sat_clauses = 0
     for clause in f:
@@ -197,31 +227,38 @@ def satisfies(a, f):
         return True
     return False
 
+
 def SAT(f):
     for a in assignment(len(f[0])):
         if satisfies(a, f): return a
     return None
+
 
 def render_formula(f):
     res = []
     for c in f:
         cl = []
         for i in xrange(len(c)):
-            if c[i] == 0: cl.append(u'\u00ac' + chr(i + ord('A')))
-            else: cl.append(chr(i + ord('A')))
+            if c[i] == 0:
+                cl.append(u'\u00ac' + chr(i + ord('A')))
+            else:
+                cl.append(chr(i + ord('A')))
         res.append('(' + u' \u2228 '.join(cl) + ')')
     return u' \u2227 '.join(res)
 
+
 def formatOutputFile(data):
     if data is not None:
-        if len(data) > 4*1024:
+        if len(data) > 4 * 1024:
             # show only the first and last 2048 characters if the resultFile is larger than 4kB
-            resultFile_text = data[:2048] + "\n\n... [truncated " + str(int((len(data) - 4096) / 1024.0)) + " kB]\n\n" + data[-2048:]
+            resultFile_text = data[:2048] + "\n\n... [truncated " + str(
+                int((len(data) - 4096) / 1024.0)) + " kB]\n\n" + data[-2048:]
         else:
             resultFile_text = data
     else:
         resultFile_text = "No output"
     return resultFile_text
+
 
 def lzma_decompress(data):
     """
@@ -241,6 +278,7 @@ def lzma_decompress(data):
         # is no EOS marker
         return pylzma.decompress(data[:5] + data[13:], maxlength=coded_length)
 
+
 def lzma_compress(data):
     """ LZMA compression using pylzma """
     c = pylzma.compressfile(StringIO(data), dictionary=8, fastBytes=128,
@@ -249,7 +287,8 @@ def lzma_compress(data):
     result += struct.pack('<Q', len(data))
     return result + c.read()
 
+
 def truncate_name(s, l=100):
     if len(s) > l:
-        return s[:l/2] + " [..] " + s[-l/2:]
+        return s[:l / 2] + " [..] " + s[-l / 2:]
     return s
