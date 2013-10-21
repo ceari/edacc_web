@@ -436,7 +436,7 @@ def get_ranking_data(db, experiment, ranked_solvers, instances, calculate_par10,
         if calculate_avg_stddev:
             count = 0
             for instance in instance_ids:
-                if solver.idSolverConfig in finished_runs_by_solver_and_instance and
+                if solver.idSolverConfig in finished_runs_by_solver_and_instance and \
                         finished_runs_by_solver_and_instance[solver.idSolverConfig].has_key(instance):
                     instance_runtimes = finished_runs_by_solver_and_instance[solver.idSolverConfig][instance]
                     runtimes = [j[0] or 0.0 for j in instance_runtimes]
