@@ -287,7 +287,7 @@ def cactus(solvers, instance_groups_count, colored_instance_groups, max_x, max_y
             pch = point_styles[s['instance_group']]
 
         if instance_groups_count == 1:
-            pch = solvers.index(s) / 9 + 1
+            pch = solvers.index(s) + 1
 
         robjects.r.plot(robjects.FloatVector(xs), robjects.FloatVector(ys),
                         type='p', col=col, pch=pch, log=log,
