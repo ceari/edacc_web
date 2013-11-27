@@ -646,15 +646,17 @@ def cactus_plot(database, experiment_id):
         solver_configs = [db.session.query(db.SolverConfiguration).get(int(id)) for id in request.args.getlist('sc')]
 
         solvers = []
+        num_solved = dict()
 
         random_run = random.randint(0, exp.get_max_num_runs(db) - 1)
 
         for instance_group in xrange(instance_groups_count):
             for sc in solver_configs:
-                s = {'xs': [], 'ys': [], 'name': sc.get_name(), 'instance_group': instance_group}
+                s = {'xs': [], 'ys': [], 'name': sc.get_name(), 'instance_group': instance_group, 'solver_config': sc}
                 sc_res = results.filter_by(solver_configuration=sc, status=1).filter(
                     db.ExperimentResult.resultCode.like('1%')) \
                     .filter(db.ExperimentResult.Instances_idInstance.in_(instances[instance_group]))
+                num_solved[sc] = sc_res.count()
                 if run == 'all':
                     sc_results = filter(lambda j: j is not None,
                                         [r.get_property_value(result_property, db) for r in sc_res.all()])
@@ -715,6 +717,8 @@ def cactus_plot(database, experiment_id):
                     s['xs'].append(i)
                     i += 1
                 solvers.append(s)
+
+        solvers.sort(key=lambda x: num_solved[x['solver_config']], reverse=True)
 
         min_y = min([min(s['ys'] or [0.01]) for s in solvers] or [0.01])
         max_x = max([max(s['xs'] or [0]) for s in solvers] or [0]) + 10
