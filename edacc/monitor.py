@@ -14,7 +14,7 @@ from pygame import gfxdraw
 
 pygame.font.init()
 from math import *
-import Image, ImageDraw
+from PIL import Image, ImageDraw
 
 from sqlalchemy import func, text
 
