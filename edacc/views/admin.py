@@ -43,6 +43,7 @@ def phase(database):
     return render('/admin/phase.html', database=database, phases=range(1, 8),
                   competition=competition, competition_phase=competition_phase)
 
+
 @admin.route('/admin/databases/')
 @require_admin
 def databases():

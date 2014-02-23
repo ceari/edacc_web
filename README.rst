@@ -2,7 +2,7 @@ EDACC Web Frontend
 ==================
 
 Experiment Design and Administration for Computer Clusters for SAT Solvers.
-See http://sourceforge.net/projects/edacc/ for the EDACC project.
+See http://edacc.github.io/ for the EDACC project.
 
 An instance of this web frontend is running at http://edacc2.informatik.uni-ulm.de
 

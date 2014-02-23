@@ -4,6 +4,7 @@
 env/
 client_libs/
 *.pyc
+*.pyo
 *~
 *.kpf
 er_model.mwb.bak

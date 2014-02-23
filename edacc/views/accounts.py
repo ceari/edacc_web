@@ -28,8 +28,8 @@ from werkzeug import Headers, secure_filename
 
 from edacc import utils, models, forms, config, constants
 from edacc.views.helpers import require_phase, require_competition, \
-                                require_login, password_hash, redirect_ssl,\
-                                require_admin, is_admin
+    require_login, password_hash, redirect_ssl, \
+    require_admin, is_admin
 from edacc.web import mail
 
 accounts = Blueprint('accounts', __name__, template_folder='static')
@@ -54,8 +54,9 @@ def register(database):
     errors = []
     if form.validate_on_submit():
         if db.session.query(db.User).filter_by(email=form.email.data.lower()) \
-                                    .count() > 0:
-            errors.append("An account with this email address already exists. Please check your e-mail account for the activation link.")
+            .count() > 0:
+            errors.append(
+                "An account with this email address already exists. Please check your e-mail account for the activation link.")
 
         try:
             captcha = map(int, form.captcha.data.split())
@@ -100,7 +101,8 @@ def register(database):
                           recipients=[user.email])
             msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" + \
                        "Please use the following link to activate your account:\n" + \
-                       request.url_root[:-1] + url_for('accounts.activate', database=database, activation_hash=user.activation_hash)
+                       request.url_root[:-1] + url_for('accounts.activate', database=database,
+                                                       activation_hash=user.activation_hash)
             mail.send(msg)
             flash("Account created successfully. An e-mail has been sent to your account with an activation link.")
             return redirect(url_for('frontend.experiments_index',
@@ -117,6 +119,7 @@ def register(database):
     return render('/accounts/register.html', database=database, db=db,
                   errors=errors, form=form)
 
+
 @accounts.route('/<database>/activate/<activation_hash>')
 @require_phase(phases=(2,))
 @require_competition
@@ -128,17 +131,20 @@ def activate(database, activation_hash):
         db.session.commit()
         user = db.session.query(db.User).filter_by(email=user.email).first()
         msg = Message("[" + db.label + "][Admin] Account was activated",
-            recipients=[config.DEFAULT_MAIL_SENDER])
+                      recipients=[config.DEFAULT_MAIL_SENDER])
         msg.body = ("The following account was just activated by a user:\n\n" + \
-                   "Last name: %s\n" \
-                   "First name: %s\n" \
-                   "E-mail: %s\n" \
-                   "Postal address: %s\n" \
-                   "Affiliation: %s\n" \
-                   "Affiliation type: %s\n" \
-                   "Country: %s\n\n\n" \
-                   "Use the following link to verify this user: " + request.url_root[:-1] + url_for('accounts.verify_user', database=database, user_id=user.idUser)) \
-                    % (user.lastname, user.firstname, user.email, user.postal_address, user.affiliation, user.affiliation_type, user.country)
+                    "Last name: %s\n" \
+                    "First name: %s\n" \
+                    "E-mail: %s\n" \
+                    "Postal address: %s\n" \
+                    "Affiliation: %s\n" \
+                    "Affiliation type: %s\n" \
+                    "Country: %s\n\n\n" \
+                    "Use the following link to verify this user: " + request.url_root[:-1] + url_for(
+            'accounts.verify_user', database=database, user_id=user.idUser)) \
+                   % (
+        user.lastname, user.firstname, user.email, user.postal_address, user.affiliation, user.affiliation_type,
+        user.country)
         mail.send(msg)
         flash('Account activated. You will be able to log in when your account was verified by an administrator.')
     except Exception as e:
@@ -146,7 +152,8 @@ def activate(database, activation_hash):
         print e
         flash('Could not activate account. Please contact an administrator.')
     return redirect(url_for('frontend.experiments_index',
-        database=database))
+                            database=database))
+
 
 @accounts.route('/<database>/verify-user/<int:user_id>/')
 @require_competition
@@ -157,15 +164,15 @@ def verify_user(database, user_id):
     if user.verified:
         flash('User already verified.')
         return redirect(url_for('frontend.experiments_index',
-            database=database))
+                                database=database))
 
     user.verified = True
     try:
         db.session.commit()
         msg = Message("[" + db.label + "] Account verified",
-            recipients=[user.email])
-        msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" +\
-                   "Your account was verified and you can now log in:\n" +\
+                      recipients=[user.email])
+        msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" + \
+                   "Your account was verified and you can now log in:\n" + \
                    request.url_root[:-1] + url_for('accounts.login', database=database)
         mail.send(msg)
         flash('Verified the account.')
@@ -174,7 +181,8 @@ def verify_user(database, user_id):
         flash("Couldn't update verification status of user or send the notification mail: " + str(e))
 
     return redirect(url_for('frontend.experiments_index',
-        database=database))
+                            database=database))
+
 
 @accounts.route('/<database>/login/', methods=['GET', 'POST'])
 @require_competition
@@ -244,6 +252,7 @@ def manage(database):
 
     return render('/accounts/manage.html', database=database, db=db)
 
+
 @accounts.route('/<database>/submit-benchmarks/', methods=['GET', 'POST'])
 @require_login
 @require_phase(phases=(2, 4, 5))
@@ -255,10 +264,14 @@ def submit_benchmarks(database):
     if form.validate_on_submit():
         upload_dir = os.path.join(config.UPLOAD_FOLDER, database, str(g.User.idUser))
         move_dir = os.path.join(config.UPLOAD_FOLDER, database, secure_filename(form.category.data), str(g.User.idUser))
-        try: os.makedirs(upload_dir, mode=0700)
-        except: pass
-        try: os.makedirs(move_dir, mode=0700)
-        except: pass
+        try:
+            os.makedirs(upload_dir, mode=0700)
+        except:
+            pass
+        try:
+            os.makedirs(move_dir, mode=0700)
+        except:
+            pass
 
         try:
             for file in session.get('benchmarks', list()):
@@ -270,8 +283,9 @@ def submit_benchmarks(database):
             flash('Benchmark submission successful.')
             try:
                 msg = Message("[" + db.label + "][Admin] Benchmarks submitted",
-                    recipients=[config.DEFAULT_MAIL_SENDER])
-                msg.body = ("The user %s %s with id %d just submitted some benchmarks" % (g.User.firstname, g.User.lastname, g.User.idUser))
+                              recipients=[config.DEFAULT_MAIL_SENDER])
+                msg.body = ("The user %s %s with id %d just submitted some benchmarks" % (
+                g.User.firstname, g.User.lastname, g.User.idUser))
                 mail.send(msg)
             except:
                 pass
@@ -283,6 +297,7 @@ def submit_benchmarks(database):
             flash('Error occured when trying to move the uploaded files.')
 
     return render('/accounts/submit_benchmarks.html', db=db, database=database, form=form)
+
 
 @accounts.route('/<database>/upload-benchmarks/', methods=['GET', 'POST'])
 @require_login
@@ -389,9 +404,10 @@ def submit_solver(database, id=None):
         solver = db.session.query(db.Solver).get(id) or abort(404)
         if solver.user.idUser != g.User.idUser: abort(401)
         if db.competition_phase() == 4 and solver.competition_frozen:
-            flash('This solver was found to be compatible with our execution environment, i.e. has no crashed test runs or test runs with unknown result, and can not be updated anymore. Please contact the organizers if there\'s a reason to submit a new version.')
+            flash(
+                'This solver was found to be compatible with our execution environment, i.e. has no crashed test runs or test runs with unknown result, and can not be updated anymore. Please contact the organizers if there\'s a reason to submit a new version.')
             return redirect(url_for('accounts.list_solvers',
-                database=database, user_id=g.User.idUser))
+                                    database=database, user_id=g.User.idUser))
 
         solver_binary = solver.binaries[0] if solver.binaries else None
         form = forms.SolverForm(request.form, solver)
@@ -414,9 +430,9 @@ def submit_solver(database, id=None):
         authors = form.authors.data
         parameters = form.parameters.data
 
-        if id is None and db.session.query(db.Solver)\
-                          .filter_by(name=name, version=version)\
-                          .first() is not None:
+        if id is None and db.session.query(db.Solver) \
+            .filter_by(name=name, version=version) \
+            .first() is not None:
             error = 'Solver with this name and version already exists'
             valid = False
 
@@ -506,8 +522,9 @@ def submit_solver(database, id=None):
                 db.session.commit()
                 if code:
                     msg = Message("[" + db.label + "][Admin] Code submitted",
-                        recipients=[config.DEFAULT_MAIL_SENDER])
-                    msg.body = ("The user %s %s just submitted code for the solver %s with id %d.\n\nArchive MD5: %s" % (g.User.firstname, g.User.lastname, solver.name + " " + solver.version, solver.idSolver, code_hash.hexdigest()))
+                                  recipients=[config.DEFAULT_MAIL_SENDER])
+                    msg.body = ("The user %s %s just submitted code for the solver with id %d" % (
+                    g.User.firstname, g.User.lastname, solver.idSolver))
                     mail.send(msg)
             except Exception as e:
                 print e
@@ -543,12 +560,15 @@ def list_solver_descriptions(database):
         solvers_by_category[category] = [s for s in category.solvers if s.User_idUser]
         filtered_solvers_by_category[category] = []
         for s in solvers_by_category[category]:
-            if not any(ss.description_pdf == s.description_pdf and s.description_pdf for ss in filtered_solvers_by_category[category]):
+            if not any(ss.description_pdf == s.description_pdf and s.description_pdf for ss in
+                       filtered_solvers_by_category[category]):
                 filtered_solvers_by_category[category].append(s)
 
-    return render('/accounts/list_solver_descriptions.html', database=database, categories=sorted(solvers_by_category.keys(), key=lambda c: c.name),
-        db=db, solvers=solvers, solvers_by_category=solvers_by_category, sorted=sorted, filtered_solvers=filtered_solvers,
-        filtered_solvers_by_category=filtered_solvers_by_category)
+    return render('/accounts/list_solver_descriptions.html', database=database,
+                  categories=sorted(solvers_by_category.keys(), key=lambda c: c.name),
+                  db=db, solvers=solvers, solvers_by_category=solvers_by_category, sorted=sorted,
+                  filtered_solvers=filtered_solvers,
+                  filtered_solvers_by_category=filtered_solvers_by_category)
 
 
 @accounts.route('/<database>/delete-solver/<int:solver_id>', methods=['GET'])
@@ -579,6 +599,7 @@ def delete_solver(database, solver_id):
 
     return redirect(url_for('accounts.list_solvers', database=database, user_id=None))
 
+
 @accounts.route('/<database>/reset-password/', methods=['GET', 'POST'])
 @require_competition
 def reset_password(database):
@@ -605,11 +626,12 @@ def reset_password(database):
             db.session.commit()
 
             msg = Message("[" + db.label + "] Password reset instructions",
-                recipients=[user.email])
-            msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" +\
-                       "If you did not use the password reset link on the website ignore this mail.\n\n" +\
-                       "To reset your password please use the following link:\n" +\
-                       request.url_root[:-1] + url_for('accounts.change_password', database=database, reset_hash=hash.hexdigest())
+                          recipients=[user.email])
+            msg.body = "Dear " + user.firstname + " " + user.lastname + ",\n\n" + \
+                       "If you did not use the password reset link on the website ignore this mail.\n\n" + \
+                       "To reset your password please use the following link:\n" + \
+                       request.url_root[:-1] + url_for('accounts.change_password', database=database,
+                                                       reset_hash=hash.hexdigest())
             mail.send(msg)
 
             flash('E-mail was sent. Please refer to the mail for further instructions.')
@@ -619,11 +641,12 @@ def reset_password(database):
 
     return render('/accounts/reset_password.html', db=db, database=database, form=form)
 
+
 @accounts.route('/<database>/change-password/<reset_hash>', methods=['GET', 'POST'])
 @require_competition
 def change_password(database, reset_hash):
     db = models.get_database(database) or abort(404)
-    user = db.session.query(db.User).filter_by(activation_hash='pw_reset_'+reset_hash).first() or abort(404)
+    user = db.session.query(db.User).filter_by(activation_hash='pw_reset_' + reset_hash).first() or abort(404)
 
     form = forms.ChangePasswordForm()
     if form.validate_on_submit():
@@ -638,9 +661,10 @@ def change_password(database, reset_hash):
             flash('Could not set password in db. Please contact an administrator.')
 
         return redirect(url_for('frontend.experiments_index',
-                database=database))
+                                database=database))
 
     return render('/accounts/change_password.html', db=db, database=database, form=form, reset_hash=reset_hash)
+
 
 @accounts.route('/<database>/manage/solvers/')
 @accounts.route('/<database>/manage/solvers/<int:user_id>')
@@ -670,6 +694,7 @@ def list_users(database):
     db = models.get_database(database) or abort(404)
     return render('/accounts/list_users.html', db=db, database=database, users=db.session.query(db.User).all())
 
+
 @accounts.route('/<database>/manage/benchmarks/')
 @accounts.route('/<database>/manage/benchmarks/<int:user_id>')
 @require_login
@@ -683,7 +708,8 @@ def list_benchmarks(database, user_id=None):
     for file in os.listdir(directory):
         if os.path.isdir(os.path.join(directory, file)):
             for user_dir in os.listdir(os.path.join(directory, file)):
-                if (is_admin() and user_id and user_dir == str(user_id)) or (not user_id and user_dir == str(g.User.idUser)):
+                if (is_admin() and user_id and user_dir == str(user_id)) or (
+                    not user_id and user_dir == str(g.User.idUser)):
                     if not file in uploaded_files: uploaded_files[file] = list()
                     files = os.listdir(os.path.join(directory, file, user_dir))
                     files_full_path = [os.path.join(directory, file, user_dir, f) for f in files]
@@ -691,6 +717,7 @@ def list_benchmarks(database, user_id=None):
 
     return render('/accounts/list_benchmarks.html', database=database,
                   db=db, uploaded_files=uploaded_files, user_id=user_id)
+
 
 @accounts.route('/<database>/manage/admin-benchmarks/')
 @require_login
@@ -709,10 +736,12 @@ def admin_list_benchmarks(database):
                 files = os.listdir(os.path.join(directory, file, user_dir))
                 files_full_path = [os.path.join(directory, file, user_dir, f) for f in files]
                 files_sizes = [os.stat(f).st_size for f in files_full_path]
-                uploaded_files[file] += zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path], [user_dir] * len(files), files_sizes)
+                uploaded_files[file] += zip(files, [time.ctime(os.path.getmtime(f)) for f in files_full_path],
+                                            [user_dir] * len(files), files_sizes)
 
     return render('/accounts/admin_list_benchmarks.html', database=database,
-        db=db, uploaded_files=uploaded_files)
+                  db=db, uploaded_files=uploaded_files)
+
 
 @accounts.route('/<database>/manage/admin-download-benchmark/<category>/<user_dir>/<filename>')
 @require_login
@@ -728,6 +757,7 @@ def admin_download_benchmark(database, category, user_dir, filename):
     headers.add('Content-Disposition', 'attachment', filename=secure_filename(filename))
 
     return Response(response=open(os.path.join(directory, category, user_dir, filename), 'rb'), headers=headers)
+
 
 @accounts.route('/<database>/manage/admin-toggle-solver-freeze/<int:solver_id>/')
 @require_login
@@ -745,7 +775,8 @@ def admin_toggle_solver_freeze(database, solver_id):
         flash('DB error when commiting. Rolled back.')
 
     return redirect(url_for('frontend.solver_details',
-        database=database, solver_id=solver_id))
+                            database=database, solver_id=solver_id))
+
 
 @accounts.route('/<database>/manage/update-description/<int:solver_id>/', methods=['GET', 'POST'])
 @require_login
@@ -771,12 +802,13 @@ def update_description(database, solver_id):
 
     return render("/accounts/update_description.html", database=database, db=db, solver=solver, form=form)
 
+
 @accounts.route('/<database>/manage/list-submitted-solvers/')
 @require_login
 @require_admin
 @require_competition
 def list_submitted_solvers(database):
     db = models.get_database(database) or abort(404)
-    solvers = db.session.query(db.Solver).filter(db.Solver.User_idUser!=None).order_by(db.Solver.name).all()
+    solvers = db.session.query(db.Solver).filter(db.Solver.User_idUser != None).order_by(db.Solver.name).all()
 
     return render("/accounts/list_submitted_solvers.html", database=database, db=db, solvers=solvers)
