@@ -41,7 +41,7 @@ class EDACCDatabase(object):
                   password=password, host=config.DATABASE_HOST,
                   port=config.DATABASE_PORT, database=database,
                   query={'charset': 'utf8', 'use_unicode': 0})
-        self.engine = create_engine(url, convert_unicode=True)
+        self.engine = create_engine(url, convert_unicode=True, pool_recycle=3600)
         self.metadata = metadata = MetaData(bind=self.engine)
 
         class Solver(object):
