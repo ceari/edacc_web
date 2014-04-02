@@ -9,7 +9,9 @@
     :license: MIT, see LICENSE for details.
 """
 
-from wtforms import Form, TextField, PasswordField, TextAreaField, RadioField, DecimalField, FloatField
+from flask.ext.wtf import Form
+
+from wtforms import TextField, PasswordField, TextAreaField, RadioField, DecimalField, FloatField
 from wtforms import FileField, SelectField, IntegerField
 from wtforms import ValidationError, BooleanField, validators
 from wtforms.validators import Required, Length, Email, EqualTo

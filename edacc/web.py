@@ -72,7 +72,7 @@ app.config.update(
     MAIL_USE_SSL=config.MAIL_USE_SSL,
     MAIL_USERNAME=config.MAIL_USERNAME,
     MAIL_PASSWORD=config.MAIL_PASSWORD,
-    DEFAULT_MAIL_SENDER=config.DEFAULT_MAIL_SENDER
+    MAIL_DEFAULT_SENDER=config.DEFAULT_MAIL_SENDER
 )
 cache.init_app(app)
 mail.init_app(app)
