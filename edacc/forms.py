@@ -114,21 +114,9 @@ class SolverForm(Form):
         if not 'INSTANCE' in field.data:
             raise ValidationError('You have to specify INSTANCE as a parameter.')
 
-    def validate_code(self, field):
-        if field.data and not field.file.filename.endswith('.zip'):
-            raise ValidationError('The code archive has to be a .zip file.')
-
-    def validate_description_pdf(self, field):
-        if field.data and not field.file.filename.endswith('.pdf'):
-            raise ValidationError('Please provide a .pdf file.')
-
 
 class UpdateDescriptionForm(Form):
     description_pdf = FileField('Description (PDF)')
-
-    def validate_description_pdf(self, field):
-        if field.data and not field.file.filename.endswith('.pdf'):
-            raise ValidationError('Please provide a .pdf file.')
 
 
 class BenchmarkForm(Form):
@@ -155,7 +143,7 @@ class BenchmarkForm(Form):
                                   an existing one.')
 
     def validate_instance(self, field):
-        if not field.file.filename:
+        if not field.data:
             raise ValidationError(ERROR_REQUIRED)
 
 
@@ -172,7 +160,7 @@ class BenchmarksForm(Form):
                            default='random')
 
     #def validate_benchmarks(self, field):
-    #    if not field.file.filename:
+    #    if not field.data:
     #        raise ValidationError(ERROR_REQUIRED)
     #    filename = field.file.filename
     #    if not (filename.endswith('.zip') or filename.endswith('.7z') or filename.endswith('.tar.gz') \
