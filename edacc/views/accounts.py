@@ -413,6 +413,7 @@ def submit_solver(database, id=None):
         form = forms.SolverForm(request.form, solver)
         if request.method == 'GET':
             form.parameters.data = utils.parameter_template(solver)
+            form.unsat_parameters.data = utils.unsat_parameter_template(solver)
             form.description_pdf.data = ''
             form.code.data = ''
     else:
@@ -429,6 +430,7 @@ def submit_solver(database, id=None):
         version = form.version.data
         authors = form.authors.data
         parameters = form.parameters.data
+        unsat_parameters = form.unsat_parameters.data
 
         if id is None and db.session.query(db.Solver) \
             .filter_by(name=name, version=version) \
@@ -454,6 +456,7 @@ def submit_solver(database, id=None):
             error = "Please provide a description PDF."
 
         params = utils.parse_parameters(parameters)
+        unsat_params = utils.parse_parameters(unsat_parameters)
 
         if valid:
             if id is None:
@@ -517,6 +520,17 @@ def submit_solver(database, id=None):
                 param.order = int(p[4])
                 param.space = p[5]
                 param.solver = solver
+                db.session.add(param)
+            for p in unsat_params:
+                param = db.Parameter()
+                param.name = None if p[0] == '' else p[0]
+                param.prefix = None if p[1] == '' else p[1]
+                param.defaultValue = p[2] or ''
+                param.hasValue = not p[3] # p[3] actually means 'is boolean (flag)'
+                param.order = 2*len(params) + int(p[4])
+                param.space = p[5]
+                param.solver = solver
+                param.unsat_parameter = True
                 db.session.add(param)
             try:
                 db.session.commit()

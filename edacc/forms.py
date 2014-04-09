@@ -98,17 +98,16 @@ class SolverForm(Form):
     binary = FileField('Binary')
     code = FileField('Code archive')
     description = TextAreaField('Description')
-    description_pdf = FileField('Description (PDF)')
+    description_pdf = FileField('Description (.zip file containing Latex sources and PDF)')
     version = TextField('Version', [Required(ERROR_REQUIRED)])
     competition_launch_command = TextField('Run command', [Required(ERROR_REQUIRED)])
     authors = TextField('Authors', [Required(ERROR_REQUIRED)])
     parameters = TextField('Parameters', [Required(ERROR_REQUIRED)])
+    unsat_parameters = TextField("UNSAT Parameters")
     competition_categories = QuerySelectMultipleField(
-        'Competition Categories',
+        'Tracks',
         query_factory=lambda: [],
-        validators=[Required('Please choose one or more \
-                                                     categories for your solver \
-                                                     to compete in.')])
+        validators=[Required('Select either any subset of the sequential tracks, or any subset of the parallel track, or the MiniSAT hack-track.')])
 
     def validate_parameters(self, field):
         if not 'INSTANCE' in field.data:

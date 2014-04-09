@@ -81,6 +81,7 @@ def parameter_template(solver):
     parameters = solver.parameters
     args = []
     for p in sorted(parameters, key=lambda p: p.order):
+        if p.unsat_parameter: continue
         if p.prefix: args.append(p.prefix)
         if p.space and p.prefix and p.hasValue: args.append(" ")
         if p.name == 'seed':
@@ -89,6 +90,19 @@ def parameter_template(solver):
             args.append("TEMPDIR")
         if p.name == 'instance':
             args.append("INSTANCE")
+        if p.hasValue:
+            args.append(p.defaultValue or "")
+        args.append(" ")
+    return "".join(args)
+
+def unsat_parameter_template(solver):
+    """ Returns a string of the solver configuration parameters """
+    parameters = solver.parameters
+    args = []
+    for p in sorted(parameters, key=lambda p: p.order):
+        if not p.unsat_parameter: continue
+        if p.prefix: args.append(p.prefix)
+        if p.space and p.prefix and p.hasValue: args.append(" ")
         if p.hasValue:
             args.append(p.defaultValue or "")
         args.append(" ")

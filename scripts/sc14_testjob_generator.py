@@ -39,16 +39,20 @@ def create_test_jobs(competition_category, solver_binary):
 
     # create solver configuration
     solver_config = db.SolverConfiguration()
-    solver_config.name = solver.name
+    solver_config.name = solver_binary.solver.name
     solver_config.seed_group = None
     solver_config.experiment = experiment
     solver_config.solver_binary = solver_binary
     solver_config.hint = ""
-    for parameter in solver.parameters:
+    for parameter in solver_binary.solver.parameters:
+        if competition_category.name.lower.contains("certified unsat") and not parameter.unsat_parameter:
+            continue
         pi = db.ParameterInstance()
         pi.parameter = parameter
         pi.value = str(parameter.defaultValue) if parameter.hasValue else ""
         solver_config.parameter_instances.append(pi)
+
+
     db.session.add(solver_config)
 
     # generate testing jobs, one for each instance
