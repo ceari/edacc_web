@@ -128,7 +128,7 @@ def activate(database, activation_hash):
     user = db.session.query(db.User).filter_by(activation_hash=activation_hash).first()
     if not user:
         flash('Activation link already used. Please try to log in.')
-        return redirect(url_for('login', database=database))
+        return redirect(url_for('accounts.login', database=database))
     user.activation_hash = ""
     try:
         db.session.commit()
