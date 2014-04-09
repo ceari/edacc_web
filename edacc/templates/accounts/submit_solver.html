@@ -69,7 +69,6 @@
             {{ render_field(form.code, size=40, required=True) }}
             {{ render_field(form.competition_launch_command, size=40, maxlength=255, required=True, explanation="Run command of your solver <strong>within the binary/ folder<strong>, excluding the parameters (Parameters are specified below). For example \"./binaryName\" or \"java -jar binary.jar\".") }}
             {{ render_field(form.parameters, size=40, explanation="<strong>Required</strong>", required=True) }}
-            {{ render_field(form.unsat_parameters, size=40, explanation="<strong>Additional</strong> parameters when running in UNSAT tracks", required=True) }}
             <tr>
                 <td></td>
                 <td>Please provide the parameters your solver should use here.
@@ -82,6 +81,7 @@
                     </div>
                 </td>
             </tr>
+            {{ render_field(form.unsat_parameters, size=40, explanation="<strong>Additional</strong> parameters when running in UNSAT tracks", required=True) }}
             {{ render_field(form.competition_categories, size=8, explanation='<strong>Required</strong>. Hold the Ctrl key to select multiple categories. Select either any subset of the sequential tracks, or any subset of the parallel track, or the MiniSAT hack-track.', required=True) }}
         </table>
         {% if error %}<div style="color: red;"><b>Error: {{error}}</b></div>{% endif %}
