@@ -125,7 +125,10 @@ def register(database):
 @require_competition
 def activate(database, activation_hash):
     db = models.get_database(database) or abort(404)
-    user = db.session.query(db.User).filter_by(activation_hash=activation_hash).first() or abort(404)
+    user = db.session.query(db.User).filter_by(activation_hash=activation_hash).first()
+    if not user:
+        flash('Activation link already used. Please try to log in.')
+        return redirect(url_for('login', database=database))
     user.activation_hash = ""
     try:
         db.session.commit()
