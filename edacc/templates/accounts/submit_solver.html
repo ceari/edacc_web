@@ -55,7 +55,7 @@
     <div>
         <img alt="Info" title="Info" src="{{url_for('static', filename='img/info.png')}}" /><strong>
         You are about to submit a new version of a solver you previously submitted. All results of the solver will be deleted and new test jobs generated once we compiled the new version.<br/>
-        If you don't provide new code or description pdf, the old one will be used.</strong>
+        If you don't provide new code or description zip, the old one will be used.</strong>
     </div>
     {% endif %}
     <form id="solver_form" action="{{url_for('accounts.submit_solver', database=database, id=id)}}" method="post" enctype="multipart/form-data">
@@ -65,7 +65,7 @@
             {{ render_field(form.version, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
             {{ render_field(form.authors, size=40, maxlength=255, explanation="<strong>Required</strong>", required=True) }}
             {{ render_field(form.description, cols=38, rows=5, explanation="Optional short description") }}
-            {{ render_field(form.description_pdf, size=40, explanation="<strong>Required</strong> .pdf file", required=True) }}
+            {{ render_field(form.description_pdf, size=40, explanation="<strong>Required</strong> .zip file", required=True) }}
             {{ render_field(form.code, size=40, required=True) }}
             {{ render_field(form.competition_launch_command, size=40, maxlength=255, required=True, explanation="Run command of your solver <strong>within the binary/ folder<strong>, excluding the parameters (Parameters are specified below). For example \"./binaryName\" or \"java -jar binary.jar\".") }}
             {{ render_field(form.parameters, size=40, explanation="<strong>Required</strong>", required=True) }}
