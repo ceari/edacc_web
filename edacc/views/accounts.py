@@ -456,7 +456,7 @@ def submit_solver(database, id=None):
             description_pdf = request.files[form.description_pdf.name].read()
         if id is None and not description_pdf:
             valid = False
-            error = "Please provide a description PDF."
+            error = "Please provide a description ZIP."
 
         params = utils.parse_parameters(parameters)
         unsat_params = utils.parse_parameters(unsat_parameters)

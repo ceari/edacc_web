@@ -44,7 +44,7 @@
         <li><a href="{{ url_for('frontend.solver_code_download', database=database, solver_id=solver.idSolver) }}">Download</a> solver code</li>
         {% endif %}
         {% if solver.description_pdf %}
-        <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=solver.idSolver) }}">Download</a> description PDF</li>
+        <li><a href="{{ url_for('frontend.solver_description_download', database=database, solver_id=solver.idSolver) }}">Download</a> description</li>
         {% endif %}
     </ul>
 </div>
