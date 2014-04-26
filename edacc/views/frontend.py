@@ -1380,8 +1380,8 @@ def solver_description_download(database, solver_id):
     if not is_admin() and (not db.competition_phase() in ALL_RESULTS and solver.user != g.User): abort(401)
 
     headers = Headers()
-    headers.add('Content-Type', 'application/pdf')
-    headers.add('Content-Disposition', 'attachment', filename=secure_filename(solver.name + '_description.pdf'))
+    headers.add('Content-Type', 'application/zip')
+    headers.add('Content-Disposition', 'attachment', filename=secure_filename(solver.name + '_description.zip'))
 
     return Response(response=solver.description_pdf, headers=headers)
 
@@ -1427,7 +1427,7 @@ def solver_download(database, solver_config_id):
 
     if solver.description_pdf:
         # Add solver description
-        tar_description = tarfile.TarInfo("description.pdf")
+        tar_description = tarfile.TarInfo("description.zip")
         tar_description.size = len(solver.description_pdf)
         tar_description.type = tarfile.REGTYPE
         tar_description.mtime = time.mktime(datetime.datetime.now().timetuple())
