@@ -115,7 +115,7 @@ class SolverForm(Form):
 
 
 class UpdateDescriptionForm(Form):
-    description_pdf = FileField('Description (PDF)')
+    description_pdf = FileField('Description (ZIP)')
 
 
 class BenchmarkForm(Form):
