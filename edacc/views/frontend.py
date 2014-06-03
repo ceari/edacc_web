@@ -500,7 +500,7 @@ def experiment_results_full_csv(database, experiment_id):
                         if request.args.has_key('answers'):
                             row.append(str(results[idInstance][idSolverConfig][run].result_code_description or u''))
                         else:
-                            row.append(str(results[idInstance][idSolverConfig][run].resultTime or u''))
+                            row.append(str(results[idInstance][idSolverConfig][run].penalized_time1 or u''))
                 else:
                     row.append(u"")
             csv_writer.writerow(row)
