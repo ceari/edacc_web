@@ -11,7 +11,7 @@ except:
     pass
 
 from edacc import models, config, constants
-from satcomp13_config import *
+from sc14_config import *
 
 db = models.add_database(DB_USER, DB_PASSWORD, DB_NAME, DB_NAME)
 
